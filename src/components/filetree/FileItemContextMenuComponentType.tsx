@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { Workspace } from "@/workspace/Workspace";
 import React from "react";
 

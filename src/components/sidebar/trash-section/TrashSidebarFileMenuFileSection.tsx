@@ -1,4 +1,4 @@
-import { TrashFileTreeContextMenu } from "@/components/sidebar/FileTree/TrashFileTreeContextMenu";
+import { TrashFileTreeContextMenu } from "@/components/sidebar/file-menu/TrashFileTreeContextMenu";
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/sidebar/trash-section/TinyNotice";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";

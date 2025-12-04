@@ -1,5 +1,5 @@
+import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
-import { ROOT_NODE } from "@/components/sidebar/FileTree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";

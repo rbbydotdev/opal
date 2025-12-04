@@ -1,4 +1,4 @@
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { createThumbnail } from "@/lib/createThumbnail";
 import { NotFoundError } from "@/lib/errors";

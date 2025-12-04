@@ -1,4 +1,4 @@
-import { DestinationRecord } from "@/components/sidebar/FileTree/DestinationRecord";
+import { DestinationRecord } from "@/data/dao/DestinationRecord";
 import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { DestinationSchemaTypeMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";

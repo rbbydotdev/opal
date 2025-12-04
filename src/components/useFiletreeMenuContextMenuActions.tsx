@@ -1,7 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { AbsPath } from "@/lib/paths2";

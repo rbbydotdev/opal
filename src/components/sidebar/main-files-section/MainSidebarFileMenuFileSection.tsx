@@ -1,7 +1,7 @@
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
-import { RepoInfoProvider } from "@/components/sidebar/FileTree/FileTreeRepoProvider";
-import { ROOT_NODE } from "@/components/sidebar/FileTree/TreeNode";
+import { ROOT_NODE } from "@/components/filetree/TreeNode";
+import { RepoInfoProvider } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/RootFileMenuBanner";
 import { useFlashTooltip } from "@/components/sidebar/main-files-section/useFlashTooltip";

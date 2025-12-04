@@ -3,8 +3,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/filetree/TreeNode";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
-import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";

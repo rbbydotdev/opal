@@ -1,5 +1,5 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { SpecialDirs } from "@/data/SpecialDirs";

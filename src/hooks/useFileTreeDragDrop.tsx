@@ -1,6 +1,6 @@
+import { allowedFiletreePathMove } from "@/components/filetree/allowedFiletreePathMove";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
-import { allowedFiletreePathMove } from "@/components/sidebar/FileTree/allowedFiletreePathMove";
-import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 import { errF } from "@/lib/errors";
 import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";

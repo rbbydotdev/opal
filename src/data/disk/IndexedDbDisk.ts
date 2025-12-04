@@ -1,5 +1,5 @@
-import { FileTree } from "@/components/sidebar/FileTree/Filetree";
-import { TreeDirRootJType } from "@/components/sidebar/FileTree/TreeNode";
+import { FileTree } from "@/components/filetree/Filetree";
+import { TreeDirRootJType } from "@/components/filetree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
