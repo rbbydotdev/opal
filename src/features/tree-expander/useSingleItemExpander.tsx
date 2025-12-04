@@ -1,7 +1,7 @@
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useSingleItemExpander(id: string, defaultValue = false) {
-  const { storedValue, setStoredValue: setValue } = useLocalStorage2(id, defaultValue);
+  const { storedValue, setStoredValue: setValue } = useLocalStorage(id, defaultValue);
   const setExpand = (state: boolean) => setValue(state);
   return [storedValue, setExpand] as const;
 }

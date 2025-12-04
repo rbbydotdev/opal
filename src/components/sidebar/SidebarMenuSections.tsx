@@ -29,7 +29,7 @@ import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";
 import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { IS_MAC } from "@/lib/isMac";
 import { Workspace } from "@/workspace/Workspace";
@@ -63,7 +63,7 @@ type DndSectionType = "build" | "git" | "export" | "trash" | "files" | "treeview
 
 export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { setStoredValue, storedValue, defaultValues } = useLocalStorage2(
+  const { setStoredValue, storedValue, defaultValues } = useLocalStorage(
     "SidebarFileMenu/Dnd",
     dndSections as DndSectionType[]
   );

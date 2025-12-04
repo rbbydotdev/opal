@@ -1,6 +1,6 @@
 import { DEFAULT_THEME_STATE, ResolvedTheme, ThemePreference, ThemeState } from "@/features/theme/theme-constants";
 import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/features/theme/theme-lib";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 interface ThemeContextValue {
@@ -35,13 +35,13 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Light/dark mode preference
-  const { storedValue: modePreference, setStoredValue: setModePreference } = useLocalStorage2<ThemePreference>(
+  const { storedValue: modePreference, setStoredValue: setModePreference } = useLocalStorage<ThemePreference>(
     "theme/lightdark",
     "system"
   );
 
   // Theme selection state
-  const { storedValue: themeState, setStoredValue: setThemeState } = useLocalStorage2<ThemeState>(
+  const { storedValue: themeState, setStoredValue: setThemeState } = useLocalStorage<ThemeState>(
     "app-theme",
     DEFAULT_THEME_STATE,
     { initializeWithValue: true }

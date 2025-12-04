@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -32,12 +32,12 @@ export const useSidebarPanes = ({
   registerKeyboardListeners?: boolean;
 } = {}) => {
   // Left pane state
-  const leftWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
-  const leftCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
+  const leftWidth = useLocalStorage<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
+  const leftCollapsed = useLocalStorage<boolean>(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
 
   // Right pane state
-  const rightWidth = useLocalStorage2<number>(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, DEFAULT_RIGHT_PANE_WIDTH);
-  const rightCollapsed = useLocalStorage2<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, true);
+  const rightWidth = useLocalStorage<number>(LOCAL_STORAGE_KEY_RIGHT_PANE_WIDTH, DEFAULT_RIGHT_PANE_WIDTH);
+  const rightCollapsed = useLocalStorage<boolean>(LOCAL_STORAGE_KEY_RIGHT_PANE_COLLAPSED, true);
 
   // Derived values for display
   const leftDisplayWidth = leftCollapsed.storedValue ? COLLAPSED_STATE_WIDTH : leftWidth.storedValue;
@@ -88,11 +88,11 @@ export const useSidebarPanes = ({
 
 // Legacy hooks for backward compatibility
 export function useLeftCollapsed() {
-  return useLocalStorage2(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
+  return useLocalStorage(LOCAL_STORAGE_KEY_IS_COLLAPSED, false);
 }
 
 export const useLeftWidth = () => {
-  return useLocalStorage2<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
+  return useLocalStorage<number>(LOCAL_STORAGE_KEY_OPEN_WIDTH, DEFAULT_OPEN_WIDTH);
 };
 
 export const EditorSidebarLayout = ({

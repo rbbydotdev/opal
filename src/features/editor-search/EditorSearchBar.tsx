@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { useSidebarPanes } from "@/features/live-preview/EditorSidebarLayout";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { IS_MAC } from "@/lib/isMac";
 import clsx from "clsx";
@@ -200,7 +200,7 @@ export function EditorSearchBar({
     return () => window.removeEventListener("resize", updatePosition);
   }, [leftSidebarWidth, rightSideBarWidth, isRightSidebarCollapsed, calculateRightPosition]);
 
-  const { setStoredValue: setSearchBarSetting, storedValue: searchBarSetting } = useLocalStorage2("EditorSearchBar", {
+  const { setStoredValue: setSearchBarSetting, storedValue: searchBarSetting } = useLocalStorage("EditorSearchBar", {
     expanded: true,
     position: "top-right" as "top-right" | "top-left",
   });

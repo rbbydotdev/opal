@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ function useSidebar() {
 }
 
 function useSidebarState(sidebarId = SIDEBAR_STORAGE_NAME) {
-  const { storedValue, setStoredValue: setValue } = useLocalStorage2(sidebarId, true);
+  const { storedValue, setStoredValue: setValue } = useLocalStorage(sidebarId, true);
   return [storedValue, setValue] as const;
 }
 

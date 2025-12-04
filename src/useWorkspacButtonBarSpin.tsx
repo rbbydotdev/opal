@@ -1,5 +1,5 @@
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useWorkspacButtonBarSpin() {
-  return useLocalStorage2("WorkspaceButtonBar/spin", false);
+  return useLocalStorage("WorkspaceButtonBar/spin", false);
 }

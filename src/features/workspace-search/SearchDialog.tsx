@@ -13,7 +13,7 @@ import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { SearchResult } from "@/features/search/SearchResults";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
 import { WorkspaceSearchItem } from "@/workspace/WorkspaceScannable";
 import { Link } from "@tanstack/react-router";
@@ -28,7 +28,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const [isOptionsOpen, setOptionsOpen] = useSingleItemExpander("SearchDialog/options/expand", true);
 
-  const { storedValue: optionsValue, setStoredValue: setOptionsValue } = useLocalStorage2(
+  const { storedValue: optionsValue, setStoredValue: setOptionsValue } = useLocalStorage(
     "SearchDialog/options/values",
     () =>
       ({ workspace: ALL_WS_KEY, type: "markdown", regexp: true }) as {

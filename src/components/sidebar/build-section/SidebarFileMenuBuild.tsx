@@ -28,7 +28,7 @@ import { FileTreeProvider } from "@/context/FileTreeProvider";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { Code2, Delete, Download, Ellipsis, FilesIcon, Hammer, UploadCloud } from "lucide-react";
@@ -61,7 +61,7 @@ export function SidebarFileMenuBuild({
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
   const [open, setOpen] = useState(false);
-  const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage2<
+  const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage<
     "builds" | "files" | "destinations" | "deployments"
   >("SidebarFileMenuBuild/activeTab", "files");
 

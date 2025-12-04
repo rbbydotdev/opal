@@ -1,7 +1,7 @@
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function useToggleHistoryImageGeneration() {
-  const { storedValue, setStoredValue } = useLocalStorage2("app/EditHistoryImageGeneration", false);
+  const { storedValue, setStoredValue } = useLocalStorage("app/EditHistoryImageGeneration", false);
   const toggle = () => setStoredValue(!storedValue);
   return { isHistoryImageGenerationEnabled: storedValue, toggleHistoryImageGeneration: toggle };
 }

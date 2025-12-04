@@ -26,7 +26,7 @@ import { useLeftCollapsed } from "@/features/live-preview/EditorSidebarLayout";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
-import useLocalStorage2 from "@/hooks/useLocalStorage2";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useZoom } from "@/hooks/useZoom";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
@@ -64,7 +64,7 @@ import { twMerge } from "tailwind-merge";
 type ButtonVariant = "lg" | "sm";
 
 function useShrink() {
-  return useLocalStorage2("BigButtonBar/shrink", false);
+  return useLocalStorage("BigButtonBar/shrink", false);
 }
 
 function BigButton({
@@ -312,7 +312,7 @@ export function WorkspaceButtonBar() {
   const { storedValue: shrink } = useShrink();
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
-  const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage2("BigButtonBar/expand", false);
+  const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage("BigButtonBar/expand", false);
   const { storedValue: spin } = useWorkspacButtonBarSpin();
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
