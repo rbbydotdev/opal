@@ -1,5 +1,5 @@
+import { SidebarTreeViewMenu } from "@/components/filetree/TreeMenu";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
-import { SidebarTreeViewMenu } from "@/components/TreeMenu";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
