@@ -43,7 +43,7 @@ export const convertDocxHandler = withRequestSignal(async (context: RequestConte
 });
 
 export const workspaceSearchHandler = withRequestSignal(async (context: RequestContext) => {
-  const { url, params, searchParams } = context;
+  const { params, searchParams } = context;
   const workspaceName = params.workspaceName;
   const searchTerm = searchParams.searchTerm as string | null;
   const regexpParam = searchParams.regexp;
