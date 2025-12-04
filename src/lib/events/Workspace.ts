@@ -8,7 +8,7 @@ import { NamespacedThumb } from "@/data/Thumb";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
 import { debounce } from "@/lib/debounce";
-import { BadRequestError } from "@/lib/errors";
+import { BadRequestError } from "@/lib/errors/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import {

@@ -8,7 +8,7 @@ import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceCont
 import { Editor, Editors } from "@/editor/Editors";
 import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import useFavicon from "@/hooks/useFavicon";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { AbsPath } from "@/lib/paths2";

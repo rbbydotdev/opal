@@ -3,7 +3,7 @@ import { GitCommitManager } from "@/components/sidebar/sync-section/GitCommitMan
 import { TooltipToast } from "@/components/ui/tooltip-toast";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRefType, RepoCommit } from "@/features/git-repo/GitRepo";
-import { useErrorToss } from "@/lib/errorToss";
+import { useErrorToss } from "@/lib/errors/errorToss";
 
 export function CommitManagerSection({
   playbook,

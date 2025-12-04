@@ -1,7 +1,7 @@
 import { ENV } from "@/lib/env"; // still using your env
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 import { Octokit } from "@octokit/core";
-import { generateCodeVerifier, generateCodeChallenge, stripTrailingSlash } from "./oauth-utils";
+import { stripTrailingSlash } from "./oauth-utils";
 
 /**
  * OAuth Types

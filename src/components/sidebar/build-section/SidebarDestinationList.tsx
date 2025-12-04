@@ -12,8 +12,8 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDestinations } from "@/hooks/useDestinations";
-import { coerceError } from "@/lib/errors";
-import { useErrorToss } from "@/lib/errorToss";
+import { coerceError } from "@/lib/errors/errors";
+import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye, Plus } from "lucide-react";
 
 export function SidebarDestinationList() {

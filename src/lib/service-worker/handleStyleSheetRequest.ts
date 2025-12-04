@@ -1,5 +1,5 @@
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { errF, isError, NotFoundError } from "@/lib/errors";
+import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath } from "@/lib/paths2";
 import { SuperUrl } from "./SuperUrl";

@@ -1,6 +1,6 @@
 import { RemoteAuthDataFor } from "@/data/RemoteAuthTypes";
 import { Channel } from "@/lib/channel";
-import { unwrapError } from "@/lib/errors";
+import { unwrapError } from "@/lib/errors/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";

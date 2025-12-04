@@ -3,7 +3,7 @@ import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { DestinationSchemaTypeMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { nanoid } from "nanoid";

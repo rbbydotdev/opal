@@ -6,7 +6,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { RemoteAuthDataFor, RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
-import { unwrapError } from "@/lib/errors";
+import { unwrapError } from "@/lib/errors/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
 import { Check, ExternalLink, Loader } from "lucide-react";
 import { useRef, useState } from "react";

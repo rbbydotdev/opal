@@ -11,8 +11,8 @@ import {
 } from "@/components/sidebar/SelectableList";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useBuilds } from "@/hooks/useBuilds";
-import { coerceError } from "@/lib/errors";
-import { useErrorToss } from "@/lib/errorToss";
+import { coerceError } from "@/lib/errors/errors";
+import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye } from "lucide-react";
 
 export function SidebarBuildsList({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {

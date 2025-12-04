@@ -1,4 +1,4 @@
-import { BadRequestError, errF } from "@/lib/errors";
+import { BadRequestError, errF } from "@/lib/errors/errors";
 import { isImageType } from "@/lib/fileType";
 import { prefix } from "@/lib/paths2";
 import mime from "mime-types";

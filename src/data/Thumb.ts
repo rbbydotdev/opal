@@ -1,7 +1,7 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { createThumbnail } from "@/lib/createThumbnail";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 
 export class Thumb {

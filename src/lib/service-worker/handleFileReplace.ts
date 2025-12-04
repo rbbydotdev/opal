@@ -1,4 +1,4 @@
-import { errF, isError, NotFoundError } from "@/lib/errors";
+import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 

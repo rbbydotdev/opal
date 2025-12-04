@@ -1,5 +1,5 @@
 import { ENV } from "@/lib/env";
-import { mapToTypedError } from "@/lib/errors";
+import { mapToTypedError } from "@/lib/errors/errors";
 import { stripTrailingSlash } from "./oauth-utils";
 
 /**

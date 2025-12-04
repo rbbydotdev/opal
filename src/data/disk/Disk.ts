@@ -15,7 +15,7 @@ import {
 } from "@/data/disk/DiskEvents";
 import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem, mkdirRecursive } from "@/data/fs/FileSystemTypes";
-import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
+import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors/errors";
 import { OmniBus } from "@/lib/events/OmniBus";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";

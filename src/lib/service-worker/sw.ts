@@ -1,5 +1,5 @@
 import { ENV } from "@/lib/env";
-import { errF } from "@/lib/errors";
+import { errF } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { defaultFetchHandler } from "@/lib/service-worker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/service-worker/router";

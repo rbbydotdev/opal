@@ -1,4 +1,4 @@
-import { errF } from "@/lib/errors";
+import { errF } from "@/lib/errors/errors";
 
 export const createThumbnail = (
   imageData: Uint8Array,

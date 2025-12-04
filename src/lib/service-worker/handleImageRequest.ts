@@ -1,6 +1,6 @@
 import { Thumb } from "@/data/Thumb";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { errF, isError, NotFoundError } from "@/lib/errors";
+import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { Workspace } from "@/lib/events/Workspace";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath } from "@/lib/paths2";
