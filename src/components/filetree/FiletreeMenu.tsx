@@ -1,8 +1,8 @@
-import { EditableDir } from "@/app/filemenu/EditableDir";
-import { EditableFile } from "@/app/filemenu/EditableFile";
-import { FileItemContextMenuComponentType } from "@/app/filemenu/FileItemContextMenuComponentType";
-import { FileTreeDragPreview } from "@/app/filemenu/FileTreeDragPreview";
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { EditableDir } from "@/components/filetree/EditableDir";
+import { EditableFile } from "@/components/filetree/EditableFile";
+import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
+import { FileTreeDragPreview } from "@/components/filetree/FileTreeDragPreview";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";

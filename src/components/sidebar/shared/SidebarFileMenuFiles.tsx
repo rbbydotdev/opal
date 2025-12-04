@@ -1,8 +1,8 @@
-import { FileTreeMenu } from "@/app/filemenu/FiletreeMenu";
+import { FileTreeMenu } from "@/components/filetree/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-import { FileItemContextMenuComponentType } from "@/app/filemenu/FileItemContextMenuComponentType";
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";

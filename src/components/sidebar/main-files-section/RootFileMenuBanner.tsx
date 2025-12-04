@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { FileTree } from "@/components/sidebar/FileTree/Filetree";
 import { MainFileTreeContextMenu } from "@/components/sidebar/FileTree/MainFileTreeContextMenu";
 import { ROOT_NODE, TreeDir, TreeFile } from "@/components/sidebar/FileTree/TreeNode";

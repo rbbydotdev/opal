@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { toast } from "@/components/ui/sonner";

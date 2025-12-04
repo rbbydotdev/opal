@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { allowedFiletreePathMove } from "@/components/sidebar/FileTree/allowedFiletreePathMove";
 import { TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";

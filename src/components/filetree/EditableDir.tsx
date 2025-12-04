@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/app/filemenu/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeDir, TreeNode } from "@/components/sidebar/FileTree/TreeNode";
 import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { useEditable } from "@/hooks/useEditable";
