@@ -10,7 +10,7 @@ import {
   SelectableListSimple,
 } from "@/components/sidebar/SelectableList";
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { useBuilds } from "@/hooks/useBuilds";
+import { useBuilds } from "@/data/dao/useBuilds";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye } from "lucide-react";

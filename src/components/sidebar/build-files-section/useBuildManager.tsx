@@ -1,4 +1,4 @@
-import { useBuilds } from "@/hooks/useBuilds";
+import { useBuilds } from "@/data/dao/useBuilds";
 import { Workspace } from "@/workspace/Workspace";
 import { useState } from "react";
 

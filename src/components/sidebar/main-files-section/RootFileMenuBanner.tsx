@@ -1,9 +1,9 @@
 import { FileTree } from "@/components/filetree/Filetree";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { ROOT_NODE, TreeDir, TreeFile } from "@/components/filetree/TreeNode";
+import { useNodeResolver } from "@/components/filetree/useNodeResolver";
 import { MainFileTreeContextMenu } from "@/components/sidebar/file-menu/MainFileTreeContextMenu";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
-import { useNodeResolver } from "@/hooks/useNodeResolver";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";

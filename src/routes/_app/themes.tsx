@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/features/theme/useTheme";
 import { getContrastRatio } from "@/lib/colorUtils";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, FileText, Home, Search, Settings, XCircle } from "lucide-react";
