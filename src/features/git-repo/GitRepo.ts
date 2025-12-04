@@ -1,4 +1,3 @@
-import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType } from "@/data/disk/DiskType";
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/features/git-repo/GitConfig";
@@ -8,6 +7,7 @@ import { debounce } from "@/lib/debounce";
 import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
+import { GithubRemoteAuthDAO, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";

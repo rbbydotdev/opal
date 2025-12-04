@@ -1,5 +1,5 @@
-import type { BasicAuthRemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import type { BasicAuthRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 
 export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
   getUsername(): string {

@@ -1,8 +1,8 @@
 import { RemoteAuthFormValues } from "@/components/remote-auth/RemoteAuthTemplate";
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { errF } from "@/lib/errors/errors";
 import { ConnectionsModalMode } from "@/types/ConnectionsModalTypes";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useState } from "react";
 
 export const useRemoteAuthSubmit = (

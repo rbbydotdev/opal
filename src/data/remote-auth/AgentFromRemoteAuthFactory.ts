@@ -1,3 +1,4 @@
+import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
@@ -9,8 +10,7 @@ import {
   isVercelAPIRemoteAuthDAO,
   isVercelOAuthRemoteAuthDAO,
   RemoteAuthDAO,
-} from "@/data/dao/RemoteAuthDAO";
-import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+} from "@/workspace/RemoteAuthDAO";
 import { RemoteAuthAWSAPIAgent } from "./RemoteAuthAWSAPIAgent";
 import { RemoteAuthBasicAuthAgent } from "./RemoteAuthBasicAuthAgent";
 import { RemoteAuthGithubAPIAgent } from "./RemoteAuthGithubAPIAgent";

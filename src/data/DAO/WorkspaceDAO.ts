@@ -1,12 +1,12 @@
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
+import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { ClientDb } from "@/data/instance";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { WorkspaceRecord } from "@/data/WorkspaceRecord";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { slugifier } from "@/lib/slugifier";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 import { DiskJType, DiskType } from "../disk/DiskType";
 import { WorkspaceStatusCode, WS_OK } from "../WorkspaceStatusCode";

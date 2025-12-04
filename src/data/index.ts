@@ -1,5 +1,6 @@
 import { BuildRecord } from "@/data/dao/BuildRecord";
 import { DestinationRecord } from "@/data/dao/DestinationRecord";
+import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DeployRecord } from "@/data/DeployRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
@@ -7,7 +8,6 @@ import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { SettingsRecord } from "@/data/SettingsRecord";
 import { default as Dexie, Table, type EntityTable } from "dexie";
 import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
-import { WorkspaceRecord } from "./WorkspaceRecord";
 
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;

@@ -20,7 +20,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRemoteAuthSubmit } from "@/components/useRemoteAuthSubmit";
-import { RemoteAuthDAO } from "@/data/dao/RemoteAuthDAO";
 import {
   isRemoteAuthJType,
   PartialRemoteAuthJType,
@@ -29,6 +28,7 @@ import {
   RemoteAuthSource,
 } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
