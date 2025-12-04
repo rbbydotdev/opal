@@ -14,7 +14,7 @@ import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuC
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { Workspace } from "@/lib/events/Workspace";
+import { Workspace } from "@/workspace/Workspace";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import {
   ClipboardCopy,

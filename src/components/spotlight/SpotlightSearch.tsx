@@ -16,11 +16,11 @@ import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/u
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useTheme } from "@/hooks/useTheme";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { Workspace } from "@/lib/events/Workspace";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import type { FileWithWorkspace } from "@/workspace/useAllWorkspaceFiles";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
+import { Workspace } from "@/workspace/Workspace";
 import { Link, useNavigate } from "@tanstack/react-router";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";

@@ -1,6 +1,6 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, prefix } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { useCallback, useEffect, useState } from "react";
 
 export function useResolvePathForPreview({

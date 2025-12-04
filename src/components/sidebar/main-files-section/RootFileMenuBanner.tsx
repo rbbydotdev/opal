@@ -4,10 +4,10 @@ import { ROOT_NODE, TreeDir, TreeFile } from "@/components/filetree/TreeNode";
 import { MainFileTreeContextMenu } from "@/components/sidebar/file-menu/MainFileTreeContextMenu";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
 import { useNodeResolver } from "@/hooks/useNodeResolver";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
+import { Workspace } from "@/workspace/Workspace";
 import { useRef, useState } from "react";
 
 export const RootFileMenuBanner = ({

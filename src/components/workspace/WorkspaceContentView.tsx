@@ -6,8 +6,8 @@ import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst
 import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolProvider";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";

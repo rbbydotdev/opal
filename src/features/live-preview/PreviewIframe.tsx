@@ -1,8 +1,8 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PreviewComponent } from "@/features/live-preview/PreviewComponent";
-import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, relPath } from "@/lib/paths2";
+import { Workspace } from "@/workspace/Workspace";
 import { RefreshCw } from "lucide-react";
 
 export function PreviewIFrame({

@@ -16,12 +16,12 @@ import { useResolvePathForPreview } from "@/features/live-preview/useResolvePath
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import useLocalStorage2 from "@/hooks/useLocalStorage2";
 import { useWatchElement } from "@/hooks/useWatchElement";
-import { Workspace } from "@/lib/events/Workspace";
 import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { mustache } from "@/source-editor/mustacheLanguage";
 import { SourceMimeType } from "@/source-editor/SourceMimeType";
+import { Workspace } from "@/workspace/Workspace";
 import { autocompletion } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
