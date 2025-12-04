@@ -3,7 +3,7 @@ import { TreeNode } from "@/components/filetree/TreeNode";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useFiletreeMenuContextMenuActions } from "@/components/useFiletreeMenuContextMenuActions";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { Workspace } from "@/workspace/Workspace";
+import { Workspace } from "@/lib/events/Workspace";
 import { Delete, Undo } from "lucide-react";
 import { useRef } from "react";
 export const TrashFileTreeContextMenu = ({

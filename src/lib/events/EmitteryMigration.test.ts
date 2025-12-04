@@ -1,4 +1,4 @@
-import { CreateSuperTypedEmitterClass, SuperEmitter } from "./TypeEmitter";
+import { CreateSuperTypedEmitterClass, SuperEmitter } from "../TypeEmitter";
 
 // Test the exact patterns we migrated from Emittery
 type TestSuite = {

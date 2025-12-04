@@ -30,10 +30,10 @@ import { useLeftWidth } from "@/features/live-preview/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useZoom } from "@/hooks/useZoom";
 import { DefaultFile } from "@/lib/DefaultFile";
+import { Workspace } from "@/lib/events/Workspace";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
-import { Workspace } from "@/workspace/Workspace";
 import {
   ClipboardCopy,
   ClipboardPasteIcon,

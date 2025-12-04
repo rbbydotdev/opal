@@ -16,10 +16,10 @@ import {
 import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem, mkdirRecursive } from "@/data/fs/FileSystemTypes";
 import { errF, errorCode, isErrorWithCode, NotFoundError, ServiceUnavailableError } from "@/lib/errors";
+import { OmniBus } from "@/lib/events/OmniBus";
 import { isServiceWorker, isWebWorker } from "@/lib/isServiceWorker";
 import { replaceFileUrlsInMarkdown } from "@/lib/markdown/replaceFileUrlsInMarkdown";
 import { replaceImageUrlsInMarkdown } from "@/lib/markdown/replaceImageUrlsInMarkdown";
-import { OmniBus } from "@/lib/OmniBus";
 import {
   AbsPath,
   absPath,

@@ -15,9 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/disk/DiskType";
 import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/data/WorkspaceTemplates";
+import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
-import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import { FolderIcon, LoaderIcon, XIcon } from "lucide-react";
 import { useMemo, useState } from "react";

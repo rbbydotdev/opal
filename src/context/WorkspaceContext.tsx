@@ -20,13 +20,13 @@ import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/Worksp
 import { useUrlParam } from "@/hooks/useUrlParam";
 import { NotFoundError } from "@/lib/errors";
 import { useErrorToss } from "@/lib/errorToss";
+import { Workspace } from "@/lib/events/Workspace";
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
 import { isSourceMimeType } from "@/source-editor/SourceMimeType";
 import { NullWorkspace } from "@/workspace/NullWorkspace";
 import { useWorkspaces } from "@/workspace/useWorkspaces";
-import { Workspace } from "@/workspace/Workspace";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";

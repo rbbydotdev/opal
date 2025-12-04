@@ -4,9 +4,9 @@ import { flatUniqNodeArgs } from "@/components/flatUniqNodeArgs";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
+import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
-import { Workspace } from "@/workspace/Workspace";
 
 export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });

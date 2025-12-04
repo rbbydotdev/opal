@@ -1,4 +1,4 @@
-import { SuperEmitter } from "@/lib/TypeEmitter";
+import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { nanoid } from "nanoid";
 
 const ChannelSet = new Map<string, Channel>();

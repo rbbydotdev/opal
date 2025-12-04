@@ -5,9 +5,9 @@ import { useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
+import { Workspace } from "@/lib/events/Workspace";
 import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
-import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 

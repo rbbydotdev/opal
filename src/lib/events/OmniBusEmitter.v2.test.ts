@@ -1,5 +1,5 @@
 import { TestSuite } from "../../tests/TestSuite";
-import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "./TypeEmitter";
+import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "../TypeEmitter";
 
 // Test event types
 type DiskEvents = {

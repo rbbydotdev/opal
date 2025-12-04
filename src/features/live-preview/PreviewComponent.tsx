@@ -3,8 +3,8 @@ import { useIframeContextProvider, useWindowContextProvider } from "@/features/l
 import { injectCssFiles, PreviewContent } from "@/features/live-preview/PreviewContent";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
+import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath, relPath } from "@/lib/paths2";
-import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 // import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";

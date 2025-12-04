@@ -3,7 +3,7 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { toast } from "@/components/ui/sonner";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
-import { Workspace } from "@/workspace/Workspace";
+import { Workspace } from "@/lib/events/Workspace";
 import { useEffect } from "react";
 import { useWatchElement } from "../../../hooks/useWatchElement";
 

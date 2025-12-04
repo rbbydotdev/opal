@@ -1,5 +1,5 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
-import { Workspace } from "@/workspace/Workspace";
+import { Workspace } from "@/lib/events/Workspace";
 
 //shared singleton for Service Worker to manage/cache workspaces
 export const SWWStore = new (class SwWorkspace {

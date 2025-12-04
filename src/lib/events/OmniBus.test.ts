@@ -1,6 +1,6 @@
 import { TestSuite } from "../../tests/TestSuite";
-import { OmniBus } from "./OmniBus";
-import { CreateSuperTypedEmitterClass } from "./TypeEmitter";
+import { OmniBus } from "../OmniBus";
+import { CreateSuperTypedEmitterClass } from "../TypeEmitter";
 
 // Test event types
 type TestEvents = {

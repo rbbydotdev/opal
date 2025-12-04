@@ -1,4 +1,4 @@
-import { OmniBusEmitter } from "./TypeEmitter";
+import { OmniBusEmitter } from "@/lib/events/TypeEmitter";
 
 let _omniBus: OmniBusEmitter | null = null;
 

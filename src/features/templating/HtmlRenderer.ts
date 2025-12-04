@@ -1,5 +1,5 @@
+import { Workspace } from "@/lib/events/Workspace";
 import { AbsPath } from "@/lib/paths2";
-import { Workspace } from "@/workspace/Workspace";
 import { BaseRenderer } from "./BaseRenderer";
 
 export interface HtmlTemplateData {

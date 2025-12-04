@@ -1,6 +1,6 @@
 import { Channel } from "@/lib/channel";
+import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
 import { AbsPath, RelPath, absPath, relPath } from "@/lib/paths2";
-import { CreateSuperTypedEmitterClass } from "@/lib/TypeEmitter";
 
 export type RemoteRenameFileType = {
   oldPath: AbsPath;
