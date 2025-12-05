@@ -2,7 +2,7 @@ import { HistoryDAO } from "@/data/dao/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import * as Comlink from "comlink";
-import "github-markdown-css/github-markdown.css";
+import "github-markdown-css/github-markdown-light.css";
 import { snapdom } from "snapdom";
 
 // Fast image loading with reduced timeout
