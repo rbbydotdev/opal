@@ -1,7 +1,7 @@
 import { VercelClient, VercelProject } from "@/api/vercel/VercelClient";
 import { RefreshAuth } from "@/data/RefreshAuth";
 import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
-import { RemoteAuthAgentDeployable, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 
@@ -13,7 +13,7 @@ export abstract class RemoteAuthVercelAgent
     RemoteAuthAgentCORS,
     RemoteAuthAgentRefreshToken,
     RemoteAuthAgentSearchType<VercelProject>,
-    RemoteAuthAgentDeployable<DeployBundle<InlinedFile>, { projectName: string }>
+    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>, { projectName: string }>
 {
   private _vercelClient!: VercelClient;
 
@@ -35,7 +35,7 @@ export abstract class RemoteAuthVercelAgent
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
     return this.vercelClient.createProject(params, { signal });
   }
-  async deploy(bundle: DeployBundle<InlinedFile>, { projectName }: { projectName: string }) {
+  async deployFiles(bundle: DeployBundle<InlinedFile>, { projectName }: { projectName: string }) {
     const files = await bundle.getFiles();
     return this.vercelClient.deploy({ projectName, files });
   }

@@ -1,4 +1,4 @@
-import { RemoteAuthAgentDeployable, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { z } from "zod";
 
 // 1. Add the new type to the union
@@ -159,6 +159,8 @@ export const isRemoteGitApiAgent = <T extends RemoteGitApiAgent>(agent: T | unkn
   return !!(agent as any)?.onAuth;
 };
 
-export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployable>(agent: T | unknown | null): agent is T => {
-  return !!(agent as any)?.deploy;
+export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployableFiles<any, any>>(
+  agent: T | unknown | null
+): agent is T => {
+  return !!(agent as any)?.deployFiles;
 };
