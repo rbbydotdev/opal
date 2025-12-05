@@ -2,11 +2,13 @@
 .CollapsibleContent {
   overflow: hidden;
 }
-.CollapsibleContent[data-state="open"] {
+.CollapsibleContent[data-state="open"].animated {
   animation: slideDown 100ms ease-out;
+}
+.CollapsibleContent[data-state="open"] {
   overflow-y: scroll;
 }
-.CollapsibleContent[data-state="closed"] {
+.CollapsibleContent[data-state="closed"].animated {
   animation: slideUp 100ms ease-out;
 }
 

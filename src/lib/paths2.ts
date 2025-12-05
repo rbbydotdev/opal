@@ -1,6 +1,7 @@
 export type AbsPath = Brand<string, "AbsolutePath">;
 export type RelPath = Brand<string, "RelativePath">;
 
+import { TreeNode } from "@/components/filetree/TreeNode";
 import { isImageType, StringMimeTypes } from "@/lib/fileType";
 import pathModule from "path";
 import { isMarkdownType } from "./fileType";
@@ -299,3 +300,33 @@ export const stripTrailingSlash = (path: string): string => {
 export const addTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path : path + "/";
 };
+export function allowedFiletreePathMove(targetPath: AbsPath, node: TreeNode) {
+  // Prevent moving node to its current directory (no-op)
+  if (dirname(node.path) === targetPath) {
+    // No-op: trying to move node to its current directory
+    return false;
+  }
+  // Prevent moving node into itself
+  if (node.path === targetPath) {
+    // Invalid move: trying to move node into itself
+    return false;
+  }
+  if (targetPath.startsWith(node.path + "/")) {
+    // Invalid move: trying to move node into its own descendant
+    return false;
+  }
+  return true;
+}
+
+export function dropPath(targetPath: AbsPath, node: TreeNode) {
+  return joinPath(targetPath, basename(node.path));
+}
+export function dropNode(targetPath: AbsPath, node: TreeNode) {
+  return TreeNode.FromPath(dropPath(targetPath, node), node.type);
+}
+
+export function dropNodes(targetPath: AbsPath, nodes: TreeNode[]) {
+  return reduceLineage(nodes)
+    .filter((node) => allowedFiletreePathMove(targetPath, node))
+    .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
+}

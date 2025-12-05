@@ -5,6 +5,7 @@ import { FileItemContextMenuComponentType } from "@/components/filetree/FileItem
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/filetree/TreeNode";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
+import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
 import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
@@ -61,7 +62,7 @@ export const SidebarFileMenuFiles = ({
   const { flatTree } = useFileTree();
   const treeExpander = useTreeExpanderContext();
   const visibleFlatTree = useVisibleFlatTree({ flatTree, treeExpander, currentWorkspace });
-
+  const { ref } = useFileTreeClipboardEventListeners({ currentWorkspace });
   const handleBlurForJump = (e: React.KeyboardEvent) => {
     console.log("handleBlurForJump", e);
     // If focus leaves the button, clear focused state
@@ -99,7 +100,8 @@ export const SidebarFileMenuFiles = ({
   return (
     <>
       <ItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
-        <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
+        <SidebarGroup ref={ref} className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
+          {/* <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}> */}
           <Collapsible
             className="group/collapsible-files flex flex-col min-h-0"
             open={groupExpanded}

@@ -16,7 +16,6 @@
   }
 }
 
-/* Sidebar focus styles */
 @layer components {
   .bg-sidebar button:focus {
     @apply ring-2 ring-ring ring-offset-2 ring-offset-background bg-accent/50;
@@ -24,20 +23,12 @@
 }
 
 @layer base {
-  * {
-    /* @apply border-border; */
-  }
   body {
-    /* @apply bg-background text-foreground; */
     overscroll-behavior: none;
   }
   ::selection {
     @apply bg-ring text-foreground;
   }
-}
-
-html {
-  /* font-size: 0.75rem; */
 }
 
 .opalSvgDark {

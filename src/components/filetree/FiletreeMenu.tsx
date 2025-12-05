@@ -98,7 +98,7 @@ export function FileTreeMenu({
                         />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
-                    <CollapsibleContent>
+                    <CollapsibleContent className={cn({ animated: fileNode.hasDirChildren() })}>
                       <FileTreeMenu
                         expand={expand}
                         expandForNode={expandForNode}

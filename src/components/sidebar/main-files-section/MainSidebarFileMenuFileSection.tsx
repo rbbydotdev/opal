@@ -3,7 +3,6 @@ import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvide
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
 import { RepoInfoProvider } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
-import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/RootFileMenuBanner";
 import { useFlashTooltip } from "@/components/sidebar/main-files-section/useFlashTooltip";
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
@@ -63,8 +62,6 @@ export function MainSidebarFileMenuFileSection({
   const { setExpandAll, expandForNode } = useTreeExpanderContext();
 
   const { fileTreeDir, fileTree } = useFileTree();
-
-  useFileTreeClipboardEventListeners({ currentWorkspace, elementSelector: "[data-sidebar-file-menu]" });
 
   const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
 
