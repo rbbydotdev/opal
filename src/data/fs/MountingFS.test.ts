@@ -1,4 +1,4 @@
-import { CommonFileSystem } from "@/data/FileSystemTypes";
+import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { MountingFS } from "@/data/fs/TranslateFs";
 import { TestSuite } from "@/lib/tests/TestSuite";
 
@@ -274,12 +274,24 @@ suite.test("should handle cross-mount rename via copy+delete", async () => {
   const tmpOps = tmpFs.getOperations();
 
   // Should have stat, readFile, and unlink operations on source
-  suite.assert(homeOps.some(op => op.method === "stat"), "Should stat source file");
-  suite.assert(homeOps.some(op => op.method === "readFile"), "Should read source file");
-  suite.assert(homeOps.some(op => op.method === "unlink"), "Should delete source file");
+  suite.assert(
+    homeOps.some((op) => op.method === "stat"),
+    "Should stat source file"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "readFile"),
+    "Should read source file"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "unlink"),
+    "Should delete source file"
+  );
 
   // Should have writeFile operation on target
-  suite.assert(tmpOps.some(op => op.method === "writeFile"), "Should write to target file");
+  suite.assert(
+    tmpOps.some((op) => op.method === "writeFile"),
+    "Should write to target file"
+  );
 });
 
 // Additional cross-mount rename tests
@@ -292,9 +304,18 @@ suite.test("should handle rename from mount to root via copy+delete", async () =
   const homeOps = homeFs.getOperations();
   const rootOps = rootFs.getOperations();
 
-  suite.assert(homeOps.some(op => op.method === "readFile"), "Should read from home mount");
-  suite.assert(homeOps.some(op => op.method === "unlink"), "Should delete from home mount");
-  suite.assert(rootOps.some(op => op.method === "writeFile"), "Should write to root filesystem");
+  suite.assert(
+    homeOps.some((op) => op.method === "readFile"),
+    "Should read from home mount"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "unlink"),
+    "Should delete from home mount"
+  );
+  suite.assert(
+    rootOps.some((op) => op.method === "writeFile"),
+    "Should write to root filesystem"
+  );
 });
 
 suite.test("should handle rename from root to mount via copy+delete", async () => {
@@ -306,9 +327,18 @@ suite.test("should handle rename from root to mount via copy+delete", async () =
   const rootOps = rootFs.getOperations();
   const homeOps = homeFs.getOperations();
 
-  suite.assert(rootOps.some(op => op.method === "readFile"), "Should read from root filesystem");
-  suite.assert(rootOps.some(op => op.method === "unlink"), "Should delete from root filesystem");
-  suite.assert(homeOps.some(op => op.method === "writeFile"), "Should write to home mount");
+  suite.assert(
+    rootOps.some((op) => op.method === "readFile"),
+    "Should read from root filesystem"
+  );
+  suite.assert(
+    rootOps.some((op) => op.method === "unlink"),
+    "Should delete from root filesystem"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "writeFile"),
+    "Should write to home mount"
+  );
 });
 
 suite.test("should handle rename between nested mounts via copy+delete", async () => {
@@ -321,9 +351,18 @@ suite.test("should handle rename between nested mounts via copy+delete", async (
   const homeOps = homeFs.getOperations();
   const tmpOps = tmpFs.getOperations();
 
-  suite.assert(homeOps.some(op => op.method === "readFile"), "Should read from home mount");
-  suite.assert(homeOps.some(op => op.method === "unlink"), "Should delete from home mount");
-  suite.assert(tmpOps.some(op => op.method === "writeFile"), "Should write to user mount");
+  suite.assert(
+    homeOps.some((op) => op.method === "readFile"),
+    "Should read from home mount"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "unlink"),
+    "Should delete from home mount"
+  );
+  suite.assert(
+    tmpOps.some((op) => op.method === "writeFile"),
+    "Should write to user mount"
+  );
 });
 
 // Error handling tests
@@ -391,31 +430,37 @@ suite.test("should clean up target file if cross-mount rename fails during delet
     throw new Error("Delete failed");
   };
 
-  await suite.assertThrowsAsync(
-    () => mountingFs.rename("/home/file.txt", "/tmp/file.txt"),
-    /Delete failed/
-  );
+  await suite.assertThrowsAsync(() => mountingFs.rename("/home/file.txt", "/tmp/file.txt"), /Delete failed/);
 
   // Verify operations happened
   const homeOps = homeFs.getOperations();
   const tmpOps = tmpFs.getOperations();
 
-  suite.assert(homeOps.some(op => op.method === "readFile"), "Should have attempted to read source");
-  suite.assert(tmpOps.some(op => op.method === "writeFile"), "Should have written target");
-  suite.assert(tmpOps.some(op => op.method === "unlink"), "Should have cleaned up target file");
+  suite.assert(
+    homeOps.some((op) => op.method === "readFile"),
+    "Should have attempted to read source"
+  );
+  suite.assert(
+    tmpOps.some((op) => op.method === "writeFile"),
+    "Should have written target"
+  );
+  suite.assert(
+    tmpOps.some((op) => op.method === "unlink"),
+    "Should have cleaned up target file"
+  );
 });
 
-// Directory rename test  
+// Directory rename test
 suite.test("should handle directory cross-mount rename", async () => {
   setup();
-  
+
   // Mock directory behavior
   const originalStat = homeFs.stat.bind(homeFs);
   homeFs.stat = async (path: string) => {
     homeFs.getOperations().push({ method: "stat", args: [path] });
-    return { 
+    return {
       isDirectory: () => path === "/mydir",
-      isFile: () => path !== "/mydir"
+      isFile: () => path !== "/mydir",
     };
   };
 
@@ -438,9 +483,18 @@ suite.test("should handle directory cross-mount rename", async () => {
   const tmpOps = tmpFs.getOperations();
 
   // Should have directory operations
-  suite.assert(homeOps.some(op => op.method === "readdir"), "Should read directory contents");
-  suite.assert(homeOps.some(op => op.method === "rmdir"), "Should remove source directory");
-  suite.assert(tmpOps.some(op => op.method === "mkdir"), "Should create target directory");
+  suite.assert(
+    homeOps.some((op) => op.method === "readdir"),
+    "Should read directory contents"
+  );
+  suite.assert(
+    homeOps.some((op) => op.method === "rmdir"),
+    "Should remove source directory"
+  );
+  suite.assert(
+    tmpOps.some((op) => op.method === "mkdir"),
+    "Should create target directory"
+  );
 });
 
 // Run tests if this file is executed directly

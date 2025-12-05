@@ -16,9 +16,9 @@ import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildLogLine } from "@/data/dao/BuildRecord";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
+import { useDestinations } from "@/data/dao/useDestinations";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { BuildLog } from "@/hooks/useBuildLogs";
-import { useDestinations } from "@/hooks/useDestinations";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import {

@@ -1,7 +1,7 @@
+import { FileTree } from "@/components/filetree/Filetree";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { NotFoundError } from "@/lib/errors";
-import { FileTree } from "@/lib/FileTree/Filetree";
+import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, addTrailingSlash, joinPath, resolveFromRoot } from "@/lib/paths2";
 import * as fflate from "fflate";
 

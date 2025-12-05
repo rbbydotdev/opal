@@ -1,81 +1,36 @@
+import { VercelClient, VercelProject } from "@/api/vercel/VercelClient";
 import { RefreshAuth } from "@/data/RefreshAuth";
 import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
-import { mapToTypedError } from "@/lib/errors/errors";
-import { Vercel } from "@vercel/sdk";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
-import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
-import { VercelError } from "@vercel/sdk/models/vercelerror.js";
 
-export type VercelProject = GetProjectsProjects;
+export type { VercelProject };
 
 export abstract class RemoteAuthVercelAgent
   implements RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken, RemoteAuthAgentSearchType<VercelProject>
 {
-  private _vercelClient!: Vercel;
+  private _vercelClient!: VercelClient;
 
-  get vercelClient(): Vercel {
+  get vercelClient(): VercelClient {
     return (
       this._vercelClient ||
       (this._vercelClient = RefreshAuth(
-        () =>
-          new Vercel({
-            bearerToken: this.getApiToken(),
-          }),
+        () => new VercelClient(this.getApiToken()),
         () => this.checkAuth(),
         () => this.reauth()
       ))
     );
   }
-  static handleError(error: any): never {
-    if (error instanceof VercelError) {
-      throw (function () {
-        try {
-          const parsed = JSON.parse(error.body) as any;
-          const message = parsed.error.message;
-          const code = parsed.error.code;
-          return mapToTypedError(null, { message, code });
-        } catch {
-          return error;
-        }
-      })();
-    }
-    throw error;
-  }
 
   async getCurrentUser({ signal }: { signal?: AbortSignal } = {}) {
-    return await this.vercelClient.user
-      .getAuthUser({ signal, mode: "cors" })
-      .then((res) => res.user)
-      .catch(RemoteAuthVercelAgent.handleError);
+    return await this.vercelClient.getCurrentUser({ signal });
   }
 
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
-    return this.vercelClient.projects
-      .createProject(
-        {
-          teamId: params.teamId,
-          requestBody: {
-            name: params.name,
-          },
-        },
-        { signal, mode: "cors" }
-      )
-      .catch(RemoteAuthVercelAgent.handleError);
+    return this.vercelClient.createProject(params, { signal });
   }
   async deploy({ projectName, files }: { projectName: string; files: InlinedFile[] }) {
-    const { id, url } = await this.vercelClient.deployments.createDeployment(
-      {
-        requestBody: {
-          name: projectName,
-          files,
-        },
-      },
-      {
-        mode: "cors",
-      }
-    );
-    return { deploymentId: id, deploymentUrl: url };
+    return this.vercelClient.deploy({ projectName, files });
   }
 
   pollProjectDeploymentStatus({
@@ -89,66 +44,20 @@ export abstract class RemoteAuthVercelAgent
     pollInterval?: number;
     signal?: AbortSignal;
   }): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const interval = setInterval(async () => {
-        try {
-          const deployment = await this.vercelClient.deployments.getDeployment(
-            {
-              idOrUrl: deploymentId,
-            },
-            {
-              signal,
-              mode: "cors",
-            }
-          );
-          onStatus(deployment.status);
-          if (deployment.status === "READY") {
-            clearInterval(interval);
-            resolve();
-          }
-          if (deployment.status === "ERROR") {
-            clearInterval(interval);
-            reject(new Error(deployment.errorMessage || "Deployment failed with unknown error"));
-          }
-        } catch (error) {
-          clearInterval(interval);
-          reject(error);
-        }
-      }, pollInterval);
-
-      if (signal) {
-        signal.addEventListener("abort", () => {
-          clearInterval(interval);
-          reject(new Error("Polling aborted"));
-        });
-      }
+    return this.vercelClient.pollDeploymentStatus({
+      deploymentId,
+      onStatus,
+      pollInterval,
+      signal,
     });
   }
 
   async getProject({ name, teamId }: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
-    return (await this.vercelClient.projects.getProjects({ teamId, slug: name }, { signal, mode: "cors" })).projects.at(
-      0
-    );
+    return this.vercelClient.getProject({ name, teamId, signal });
   }
 
   async getAllProjects({ teamId }: { teamId?: string } = {}, { signal }: { signal?: AbortSignal } = {}) {
-    let continueToken: number | null = null;
-    const results: VercelProject[] = [];
-    do {
-      const projects = await this.vercelClient.projects
-        //@ts-ignore
-        .getProjects(
-          { teamId, from: continueToken !== null ? continueToken : undefined, limit: "100" },
-          { signal, mode: "cors" }
-        )
-        .then((res) => {
-          continueToken = res.pagination.next as number;
-          return res.projects;
-        })
-        .catch(RemoteAuthVercelAgent.handleError);
-      results.push(...projects);
-    } while (continueToken);
-    return results;
+    return this.vercelClient.getProjects({ teamId, signal });
   }
 
   async fetchAll(options?: { signal?: AbortSignal }): Promise<VercelProject[]> {
@@ -169,8 +78,12 @@ export abstract class RemoteAuthVercelAgent
 
   async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
     try {
-      await this.getCurrentUser();
-      return { status: "success" };
+      const isValid = await this.vercelClient.verifyCredentials();
+      if (isValid) {
+        return { status: "success" };
+      } else {
+        return { status: "error", msg: "Invalid Vercel credentials" };
+      }
     } catch (error: any) {
       return {
         status: "error",
@@ -178,14 +91,6 @@ export abstract class RemoteAuthVercelAgent
       };
     }
   }
-
-  // checkAuth(): Promise<boolean> | boolean {
-  //   return true; // Default: assume auth is valid
-  // }
-
-  // reauth(): Promise<void> | void {
-  //   // Default: no reauth needed
-  // }
 
   abstract checkAuth(): Promise<boolean> | boolean;
   abstract reauth(): Promise<void> | void;

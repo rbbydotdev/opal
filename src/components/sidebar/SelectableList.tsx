@@ -381,7 +381,7 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
                 <div className="w-4 h-4 flex justify-center items-center #mr-0.5 shrink-0 ">
                   {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
                 </div>
-                <span className="w-full truncate flex">{otherChildren}</span>
+                <span className="w-full truncate flex items-center gap-1">{otherChildren}</span>
               </div>
             </SidebarMenuButton>
             {menuChild}

@@ -1,10 +1,10 @@
 import {
   GithubRemoteAuthDAO,
-  RemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
   isGithubOAuthRemoteAuthDAO,
-} from "@/data/RemoteAuthDAO";
+  RemoteAuthDAO,
+} from "@/workspace/RemoteAuthDAO";
 
 export function isGithubRemoteAuth(remoteAuth: RemoteAuthDAO): remoteAuth is GithubRemoteAuthDAO {
   return (
