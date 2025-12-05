@@ -20,9 +20,11 @@ export interface RemoteAuthAgentSearchType<T = unknown> {
   fetchAll(options?: { signal?: AbortSignal }): Promise<T[]>;
 }
 
-export interface RemoteAuthAgentDeployable<TBundle extends DeployBundle<unknown>, TParams = unknown>
-  extends RemoteAuthAgent {
-  deploy(bundle: TBundle, params: TParams): Promise<unknown>;
+export interface RemoteAuthAgentDeployableFiles<
+  TBundle extends DeployBundle<any>,
+  TParams = unknown,
+> extends RemoteAuthAgent {
+  deployFiles(bundle: TBundle, params: TParams): Promise<unknown>;
 }
 
 type RemoteSearchEventMap<TResult = any> = {

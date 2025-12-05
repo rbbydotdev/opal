@@ -21,7 +21,7 @@ import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 import { RemoteAuthVercelOAuthAgent } from "./RemoteAuthVercelOAuthAgent";
 
-import { RemoteAuthAgentDeployable, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useMemo } from "react";
 
 export function DeployableAgentFromAuth(remoteAuth: RemoteAuthDAO) {
@@ -44,7 +44,7 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
 
 export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   remoteAuth?: T | null
-): ((RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | RemoteAuthAgentDeployable) | null {
+): ((RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | RemoteAuthAgentDeployableFiles<any, any>) | null {
   if (!remoteAuth) return null;
 
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {

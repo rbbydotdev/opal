@@ -9,6 +9,7 @@ import { GitRepo } from "@/features/git-repo/GitRepo";
 import { ApplicationError, errF } from "@/lib/errors/errors";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
+import { GithubInlinedFile } from "@/api/github/GitHubClient";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -122,12 +123,6 @@ export abstract class DeployBundle<TFile> {
   abstract getFiles(): Promise<TFile[]>;
 }
 
-export class AnyDeployBundle extends DeployBundle<any> {
-  getFiles = async () => {
-    return this.getDeployBundleFiles();
-  };
-}
-
 export class VercelDeployBundle extends DeployBundle<InlinedFile> {
   getFiles = async () => {
     return Promise.all(
@@ -139,4 +134,20 @@ export class VercelDeployBundle extends DeployBundle<InlinedFile> {
       }))
     );
   };
+}
+
+export class GithubDeployBundle extends DeployBundle<GithubInlinedFile> {
+  getFiles = async () => {
+    const files = await this.getDeployBundleFiles();
+    return Promise.all(
+      files.map(async (file) => ({
+        path: file.path,
+        content: (await file.getContent()).toString(),
+        encoding: file.encoding,
+      }))
+    );
+  };
+}
+export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
+  getFiles = this.getDeployBundleFiles;
 }

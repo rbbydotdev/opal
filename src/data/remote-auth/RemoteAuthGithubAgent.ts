@@ -1,13 +1,11 @@
-import { GitHubClient, GitHubRepo } from "@/api/github/GitHubClient";
+import { GitHubClient, GithubInlinedFile } from "@/api/github/GitHubClient";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   private _githubClient!: GitHubClient;
   get githubClient() {
-    return (
-      this._githubClient ||
-      (this._githubClient = new GitHubClient(this.getApiToken()))
-    );
+    return this._githubClient || (this._githubClient = new GitHubClient(this.getApiToken()));
   }
 
   onAuth = () => {
@@ -23,6 +21,25 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
 
   async fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
     return this.githubClient.getRepos({ signal });
+  }
+
+  async deployFiles(
+    bundle: DeployBundle<GithubInlinedFile>,
+    {
+      branch,
+      owner,
+      repo,
+      message = "publsih deploy",
+    }: { branch: string; owner: string; repo: string; message?: string }
+  ) {
+    const files = await bundle.getFiles();
+    return this.githubClient.deploy({
+      owner,
+      repo,
+      branch,
+      files,
+      message,
+    });
   }
 
   async hasUpdates(

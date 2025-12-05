@@ -36,6 +36,7 @@ export function SidebarFileMenuUpload(props: React.ComponentProps<typeof Sidebar
               <form className="w-full flex flex-col gap-2">
                 <label
                   htmlFor="file-upload"
+                  tabIndex={0}
                   className="border-dashed border rounded px-3 py-4 text-center cursor-pointer hover:border-primary transition-colors"
                   onDrop={(event) => {
                     event.preventDefault();

@@ -19,6 +19,12 @@ export interface GitHubUser {
   bio?: string;
 }
 
+export interface GithubInlinedFile {
+  path: string;
+  content: string;
+  encoding: "utf-8" | "base64";
+}
+
 export class GitHubClient {
   private octokit: Octokit;
 
@@ -71,7 +77,9 @@ export class GitHubClient {
         // Add defensive check for response.data
         if (!Array.isArray(response.data)) {
           console.error("GitHub API returned unexpected response format:", response.data);
-          throw new Error(`GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`);
+          throw new Error(
+            `GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`
+          );
         }
 
         const result = response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
@@ -94,6 +102,82 @@ export class GitHubClient {
     } catch (e) {
       throw mapToTypedError(e);
     }
+  }
+
+  async deploy({
+    owner,
+    repo,
+    branch,
+    message,
+    files,
+  }: {
+    owner: string;
+    repo: string;
+    branch: string;
+    message: string;
+    files: GithubInlinedFile[];
+  }) {
+    const {
+      data: {
+        object: { sha: latestCommitSha },
+      },
+    } = await this.octokit.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+    });
+
+    const {
+      data: {
+        tree: { sha: baseTreeSha },
+      },
+    } = await this.octokit.request("GET /repos/{owner}/{repo}/git/commits/{commit_sha}", {
+      owner,
+      repo,
+      commit_sha: latestCommitSha,
+    });
+
+    const tree = await Promise.all(
+      files.map(async ({ path, content, encoding }) => {
+        const {
+          data: { sha },
+        } = await this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
+          owner,
+          repo,
+          content,
+          encoding,
+        });
+        return { path, mode: "100644" as "100644", type: "blob" as "blob", sha };
+      })
+    );
+
+    const {
+      data: { sha: newTreeSha },
+    } = await this.octokit.request("POST /repos/{owner}/{repo}/git/trees", {
+      owner,
+      repo,
+      base_tree: baseTreeSha,
+      tree,
+    });
+
+    const {
+      data: { sha: newCommitSha },
+    } = await this.octokit.request("POST /repos/{owner}/{repo}/git/commits", {
+      owner,
+      repo,
+      message,
+      tree: newTreeSha,
+      parents: [latestCommitSha],
+    });
+
+    await this.octokit.request("PATCH /repos/{owner}/{repo}/git/refs/{ref}", {
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommitSha,
+    });
+
+    return newCommitSha;
   }
 
   async checkForUpdates(
