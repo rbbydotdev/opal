@@ -1,9 +1,8 @@
-import { allowedFiletreePathMove } from "@/components/filetree/allowedFiletreePathMove";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 import { errF } from "@/lib/errors/errors";
-import { AbsPath, basename, joinPath, reduceLineage } from "@/lib/paths2";
+import { AbsPath, dropNodes, joinPath } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/types/FiletreeTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
@@ -99,13 +98,6 @@ export function useFileTreeDragDrop({
   onMoveMultiple?: (nodes: [oldNode: TreeNode, newNode: TreeNode][]) => Promise<unknown>;
   onDragEnter?: (path: string, data?: NodeDataJType) => void;
 }) {
-  function dropPath(targetPath: AbsPath, node: TreeNode) {
-    return joinPath(targetPath, basename(node.path));
-  }
-  function dropNode(targetPath: AbsPath, node: TreeNode) {
-    return TreeNode.FromPath(dropPath(targetPath, node), node.type);
-  }
-
   const { selectedRange, setIsDragging, focused, setDragOver, draggingNodes, setDraggingNode, setDraggingNodes } =
     useFileTreeMenuCtx();
   const handleDragStart = (event: React.DragEvent, targetNode: TreeNode) => {
@@ -166,17 +158,13 @@ export function useFileTreeDragDrop({
     setIsDragging(false);
     event.preventDefault();
     event.stopPropagation();
-    const targetPath = targetNode.isTreeDir() ? targetNode.path : targetNode.dirname;
+    const targetPath = targetNode.closestDirPath();
     try {
       if (!event.dataTransfer.getData(INTERNAL_NODE_FILE_TYPE)) {
         await handleExternalDrop(event, targetNode);
       } else {
         if (draggingNodes.length) {
-          //should reduce lineage go inside the lower level moveMultiple fn !??!
-          const moveNodes = reduceLineage(draggingNodes)
-            .filter((node) => allowedFiletreePathMove(targetPath, node))
-            .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
-
+          const moveNodes = dropNodes(targetPath, draggingNodes);
           await onMoveMultiple?.(moveNodes);
         }
       }

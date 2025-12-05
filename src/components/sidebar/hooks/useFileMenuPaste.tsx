@@ -4,12 +4,10 @@ import { MetaDataTransfer } from "@/components/MetaDataTransfer";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { TreeNodeDataTransferJType } from "@/features/filetree-copy-paste/TreeNodeDataTransferType";
 import { handleDropFilesForNode } from "@/hooks/useFileTreeDragDrop";
-import { reduceLineage } from "@/lib/paths2";
+import { dropNodes, reduceLineage } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 
 export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  // const uploadFilesToWorkspace =
-
   return async function handlePaste({
     targetNode,
     data,
@@ -39,6 +37,12 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
         await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
 
         if (action === "cut") {
+          //if its the same workspace its a move not a remove + add
+          if (sourceWorkspace.id === currentWorkspace.id) {
+            const targetPath = targetNode.closestDirPath();
+            await currentWorkspace.renameMultiple(dropNodes(targetPath, sourceNodes));
+            return sourceNodes.length;
+          }
           await sourceWorkspace.removeMultiple(sourceNodes.map((n) => n.source));
           void navigator.clipboard.writeText("");
         }

@@ -603,13 +603,9 @@ export class Workspace {
   async init({ skipListeners }: { skipListeners?: boolean } = {}) {
     try {
       const unsubs: (() => void)[] = [];
-      // Store disk initialization errors to re-throw them
       unsubs.push(
         await this.disk.init({
           skipListeners,
-          // onError: (error) => {
-          //   diskInitError = error;
-          // },
         })
       );
 
@@ -707,21 +703,6 @@ export class Workspace {
     }
     return this.newFile(dirname(filePath), relPath(file.name), new Uint8Array(await file.arrayBuffer()));
   }
-  // ConcurrentWorkers
-
-  // async _____________renameMdImagesWorker(paths: [to: string, from: string][], origin = window.location.origin) {
-  //   try {
-  //     return await ConcurrentWorkers(
-  //       () => Comlink.wrap<handleMdImageReplaceType>(new Worker("/imageReplace.ww.js")),
-  //       (worker, item) => worker.handleMdImageReplace(this, origin, item, false),
-  //       [paths],
-  //       8,
-  //       (worker) => worker.tearDown()
-  //     );
-  //   } catch (e) {
-  //     console.error("Error renaming md images", e);
-  //   }
-  // }
 
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];

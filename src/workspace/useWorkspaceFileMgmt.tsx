@@ -21,10 +21,6 @@ import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-// export function defaultFileContentFromType(type: string) {
-//   // TODO: Implement type-based default content
-//   return "";
-// }
 function defaultFileContentFromPath(path: AbsPath) {
   return DefaultFile.fromPath(path);
 }
