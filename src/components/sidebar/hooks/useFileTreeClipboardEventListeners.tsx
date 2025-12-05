@@ -4,86 +4,103 @@ import { useFileMenuPaste } from "@/components/sidebar/hooks/useFileMenuPaste";
 import { toast } from "@/components/ui/sonner";
 import { copyFileNodesToClipboard } from "@/features/filetree-copy-paste/copyFileNodesToClipboard";
 import { Workspace } from "@/workspace/Workspace";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 const files = (count: number) => (count > 1 ? "files" : "file");
 
 export function useFileTreeClipboardEventListeners({ currentWorkspace }: { currentWorkspace: Workspace }) {
-  const { focused, editing, selectedFocused, setFileTreeCtx: setFileTreeCtx } = useFileTreeMenuCtx();
+  const { editing, selectedFocused, setFileTreeCtx } = useFileTreeMenuCtx();
+
   const handlePaste = useFileMenuPaste({ currentWorkspace });
-  const sidebarRef = useRef(null);
-  const sidebarElement = sidebarRef.current as HTMLElement | null;
+  const sidebarRef = useRef<HTMLElement | null>(null);
+
+  // --- Effect Events ---
+  const handlePasteEvent = useEffectEvent(async (event: ClipboardEvent) => {
+    console.debug("paste event");
+    const sidebarElement = sidebarRef.current;
+    const target = event.target as HTMLElement | null;
+
+    if (!sidebarElement?.contains(target) || editing) return;
+
+    const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]!);
+    const dataTransfer = new MetaDataTransfer(event.clipboardData!);
+    const resultCount = await handlePaste({ targetNode, data: dataTransfer });
+
+    toast({
+      title: "Files",
+      description: `Pasted ${resultCount} ${files(resultCount)} from clipboard.`,
+      type: "info",
+      position: "top-right",
+    });
+
+    setFileTreeCtx(() => ({
+      anchorIndex: -1,
+      editing: null,
+      editType: null,
+      focused: null,
+      virtual: null,
+      selectedRange: [],
+    }));
+  });
+
+  const handleCutEvent = useEffectEvent((event: ClipboardEvent) => {
+    console.debug("cut event");
+    const sidebarElement = sidebarRef.current;
+    const target = event.target as HTMLElement | null;
+
+    if (!sidebarElement?.contains(target) || editing) return;
+
+    toast({
+      title: "Files",
+      description: `Cut ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
+      type: "info",
+      position: "top-right",
+    });
+
+    void copyFileNodesToClipboard({
+      fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
+      action: "cut",
+      workspaceId: currentWorkspace.id,
+    });
+  });
+
+  const handleCopyEvent = useEffectEvent((event: ClipboardEvent) => {
+    console.debug("copy event");
+    const sidebarElement = sidebarRef.current;
+    const target = event.target as HTMLElement | null;
+
+    if (!sidebarElement?.contains(target) || editing) return;
+
+    toast({
+      title: "Files",
+      description: `Copied ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
+      type: "info",
+      position: "top-right",
+    });
+
+    void copyFileNodesToClipboard({
+      fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
+      action: "copy",
+      workspaceId: currentWorkspace.id,
+    });
+  });
+
+  // --- Effect for event listener registration ---
   useEffect(() => {
-    const handlePasteEvent = async (event: ClipboardEvent) => {
-      console.debug("paste event");
-      const targetNode = currentWorkspace.tryNodeFromPath(selectedFocused[0]);
-
-      const target = event.target as HTMLElement | null;
-      if (sidebarElement?.contains(target) && !editing) {
-        const dataTransfer = new MetaDataTransfer(event.clipboardData!);
-        const resultCount = await handlePaste({ targetNode, data: dataTransfer });
-
-        toast({
-          title: "Files",
-          description: `Pasted ${resultCount} ${files(resultCount)} from clipboard.`,
-          type: "info",
-          position: "top-right",
-        });
-        setFileTreeCtx(() => ({
-          anchorIndex: -1,
-          editing: null,
-          editType: null,
-          focused: null,
-          virtual: null,
-          selectedRange: [],
-        }));
-      }
-    };
-    const handleCutEvent = (event: ClipboardEvent) => {
-      console.debug("cut event");
-      const target = event.target as HTMLElement | null;
-
-      toast({
-        title: "Files",
-        description: `Cut ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
-        type: "info",
-        position: "top-right",
-      });
-      if (sidebarElement?.contains(target) && !editing) {
-        return copyFileNodesToClipboard({
-          fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
-          action: "cut",
-          workspaceId: currentWorkspace.id,
-        });
-      }
-    };
-    const handleCopyEvent = (event: ClipboardEvent) => {
-      console.debug("copy event");
-      const target = event.target as HTMLElement | null;
-      if (sidebarElement?.contains(target) && !editing) {
-        toast({
-          title: "Files",
-          description: `Copied ${selectedFocused.length} ${files(selectedFocused.length)} to clipboard.`,
-          type: "info",
-          position: "top-right",
-        });
-        return copyFileNodesToClipboard({
-          fileNodes: currentWorkspace.nodesFromPaths(selectedFocused),
-          action: "copy",
-          workspaceId: currentWorkspace.id,
-        });
-      }
-    };
-    // const sidebarElement = document.querySelector(elementSelector) as HTMLElement | null;
+    const sidebarElement = sidebarRef.current;
     if (!sidebarElement) return;
+
     sidebarElement.addEventListener("paste", handlePasteEvent);
     sidebarElement.addEventListener("cut", handleCutEvent);
     sidebarElement.addEventListener("copy", handleCopyEvent);
+
     return () => {
       sidebarElement.removeEventListener("paste", handlePasteEvent);
       sidebarElement.removeEventListener("cut", handleCutEvent);
       sidebarElement.removeEventListener("copy", handleCopyEvent);
     };
-  }, [currentWorkspace, focused, selectedFocused, setFileTreeCtx, handlePaste, editing, sidebarElement]);
+  }, [handlePasteEvent, handleCutEvent, handleCopyEvent]);
+  console.log(sidebarRef.current);
+
   return { ref: sidebarRef };
 }

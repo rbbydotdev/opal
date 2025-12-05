@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import clsx from "clsx";
 import { ChevronRight, Files, GripVertical } from "lucide-react";
-import React, { ComponentProps } from "react";
+import React, { ComponentProps, RefObject } from "react";
 import { flushSync } from "react-dom";
 export const SidebarFileMenuFiles = ({
   children,
@@ -64,7 +64,6 @@ export const SidebarFileMenuFiles = ({
   const visibleFlatTree = useVisibleFlatTree({ flatTree, treeExpander, currentWorkspace });
   const { ref } = useFileTreeClipboardEventListeners({ currentWorkspace });
   const handleBlurForJump = (e: React.KeyboardEvent) => {
-    console.log("handleBlurForJump", e);
     // If focus leaves the button, clear focused state
     flushSync(() =>
       setFileTreeCtx((prev) => ({
@@ -100,7 +99,11 @@ export const SidebarFileMenuFiles = ({
   return (
     <>
       <ItemContextMenu disabled={!isEmpty} fileNode={fileTreeDir} currentWorkspace={currentWorkspace}>
-        <SidebarGroup ref={ref} className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}>
+        <SidebarGroup
+          ref={ref as RefObject<HTMLDivElement>}
+          className={clsx("pl-0 pb-12 py-0 pr-0 ", className)}
+          {...rest}
+        >
           {/* <SidebarGroup data-sidebar-file-menu className={clsx("pl-0 pb-12 py-0 pr-0 ", className)} {...rest}> */}
           <Collapsible
             className="group/collapsible-files flex flex-col min-h-0"
