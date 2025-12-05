@@ -2,13 +2,13 @@ import { Disk } from "@/data/disk/Disk";
 import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
 import { TreeNode } from "@/components/filetree/TreeNode";
-import { BuildDAO } from "@/data/dao/BuildDAO";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { ApplicationError, errF } from "@/lib/errors/errors";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -50,17 +50,13 @@ const isDeployBundleTreeDirEntry = (
 type DeployBundleTree = DeployBundleTreeEntry[];
 export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>[];
 
-export class DeployBundle {
+export abstract class DeployBundle<TFile> {
   constructor(
     readonly disk: Disk,
     readonly buildDir = absPath("/")
   ) {}
 
-  static FromBuild(build: BuildDAO) {
-    return new DeployBundle(build.getSourceDisk(), build.getBuildPath());
-  }
-
-  getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly> => {
+  protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly> => {
     await this.disk.refresh();
     return Promise.all(
       [...this.disk.fileTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
@@ -73,7 +69,7 @@ export class DeployBundle {
     );
   };
 
-  async deployWithGit({
+  protected async deployWithGit({
     ghPagesBranch = "gh-pages",
     remoteAuth,
     disk = this.disk,
@@ -88,8 +84,10 @@ export class DeployBundle {
     if (!isGithubRemoteAuth(remoteAuth)) {
       throw new ApplicationError(errF`Only GitHub remote auth is supported for deploy`);
     }
+    let repo: GitRepo | null = null;
     try {
-      const playbook = new GitPlaybook(GitRepo.GHPagesRepo(disk, this.buildDir, ghPagesBranch));
+      repo = GitRepo.GHPagesRepo(disk, this.buildDir, ghPagesBranch);
+      const playbook = new GitPlaybook(repo);
       await playbook.initialCommit("deploy bundle commit");
       await playbook.pushRemoteAuth({
         remoteAuth,
@@ -99,6 +97,8 @@ export class DeployBundle {
       });
     } catch (error) {
       throw new ApplicationError(errF`Failed to deploy bundle via git: ${error}`);
+    } finally {
+      await repo?.dispose().catch((e) => console.error("Failed to dispose git repo after deploy", e));
     }
   }
 
@@ -119,4 +119,24 @@ export class DeployBundle {
       },
     });
   }
+  abstract getFiles(): Promise<TFile[]>;
+}
+
+export class AnyDeployBundle extends DeployBundle<any> {
+  getFiles = async () => {
+    return this.getDeployBundleFiles();
+  };
+}
+
+export class VercelDeployBundle extends DeployBundle<InlinedFile> {
+  getFiles = async () => {
+    return Promise.all(
+      (await this.getDeployBundleFiles()).map(async (file) => ({
+        encoding: file.encoding,
+        type: file.type,
+        file: file.path,
+        data: (await file.getContent()).toString(),
+      }))
+    );
+  };
 }

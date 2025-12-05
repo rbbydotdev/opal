@@ -126,9 +126,9 @@ export class GitHubClient {
     }
   }
 
-  getAuthCredentials(apiToken: string) {
+  getAuthCredentials(username: string, apiToken: string) {
     return {
-      username: "token", // GitHub convention for token auth
+      username,
       password: apiToken,
     };
   }

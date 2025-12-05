@@ -1,4 +1,4 @@
-import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { isRemoteAuthDeployable, isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
@@ -21,8 +21,16 @@ import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 import { RemoteAuthVercelOAuthAgent } from "./RemoteAuthVercelOAuthAgent";
 
-import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentDeployable, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useMemo } from "react";
+
+export function DeployableAgentFromAuth(remoteAuth: RemoteAuthDAO) {
+  const agent = AgentFromRemoteAuthFactory(remoteAuth);
+  if (!isRemoteAuthDeployable(agent)) {
+    throw new TypeError("AgentFromRemoteAuth(RemoteAuthDAO) does not satisfy RemoteAuthAgentDeployable");
+  }
+  return agent;
+}
 
 export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   const agent = AgentFromRemoteAuthFactory(remoteAuth);
@@ -31,9 +39,12 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   }
   return agent;
 }
+
+// RemoteAuthAgentDeployable
+
 export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   remoteAuth?: T | null
-): (RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | null {
+): ((RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | RemoteAuthAgentDeployable) | null {
   if (!remoteAuth) return null;
 
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {

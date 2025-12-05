@@ -591,6 +591,10 @@ export class GitRepo {
   static GHPagesRepo(disk: Disk, dir: AbsPath, branch: string = "gh-pages", id = nanoid()): GitRepo {
     return GitRepo.New(disk, `GhPagesRepo/disk:${disk.guid}/${id}`, dir, branch, OPAL_AUTHOR);
   }
+  dispose() {
+    this.tearDown();
+    return this.disk.removeFile(this.gitDir);
+  }
 
   static FromDisk(
     disk: Disk,
