@@ -1,4 +1,4 @@
-import { HistoryDAO } from "@/data/DAO/HistoryDAO";
+import { HistoryDAO } from "@/data/dao/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import * as Comlink from "comlink";
