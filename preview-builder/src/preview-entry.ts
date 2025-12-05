@@ -1,9 +1,9 @@
 import { HistoryDAO } from "@/data/DAO/HistoryDAO";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { snapdom } from "snapdom";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
+import { snapdom } from "snapdom";
 
 // Fast image loading with reduced timeout
 async function loadImagesOptimized(images: HTMLImageElement[]) {
