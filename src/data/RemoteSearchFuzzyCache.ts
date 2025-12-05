@@ -1,5 +1,7 @@
+import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { isAbortError, unwrapError } from "@/lib/errors/errors";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 import fuzzysort from "fuzzysort";
 
 export const EMPTY_SEARCH_RESULT: Fuzzysort.KeyResults<any> = Object.assign([], {
@@ -16,6 +18,11 @@ export interface RemoteAuthAgentSearchType<T = unknown> {
     options?: { signal?: AbortSignal }
   ): Promise<{ updated: boolean; newEtag: string | null }>;
   fetchAll(options?: { signal?: AbortSignal }): Promise<T[]>;
+}
+
+export interface RemoteAuthAgentDeployable<TBundle extends DeployBundle<unknown>, TParams = unknown>
+  extends RemoteAuthAgent {
+  deploy(bundle: TBundle, params: TParams): Promise<unknown>;
 }
 
 type RemoteSearchEventMap<TResult = any> = {

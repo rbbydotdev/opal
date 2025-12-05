@@ -1,9 +1,10 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { RemoteAuthAgentDeployable } from "@/data/RemoteSearchFuzzyCache";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { DeployBundle } from "@/services/deploy/DeployBundle";
-import { RemoteAuthDAO, VercelRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { AnyDeployBundle, DeployBundle, VercelDeployBundle } from "@/services/deploy/DeployBundle";
+import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 
 type DeployLogType = DeployLogLine["type"];
 function logLine(message: string, type: DeployLogType = "info") {
@@ -20,11 +21,11 @@ export type DeployLogLine = {
   type: "info" | "error";
 };
 
-export abstract class DeployRunner {
+export abstract class DeployRunner<TBundle extends DeployBundle<unknown>, TParams> {
   readonly build: BuildDAO;
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
-  readonly remoteAuth: RemoteAuthDAO;
+  readonly agent: RemoteAuthAgentDeployable<TBundle, TParams>;
 
   emitter = CreateSuperTypedEmitter<{
     log: DeployLogLine;
@@ -32,17 +33,17 @@ export abstract class DeployRunner {
     update: DeployDAO;
   }>();
   constructor({
-    remoteAuth,
+    agent,
     build,
     destination,
     deploy,
   }: {
-    remoteAuth: RemoteAuthDAO;
+    agent: RemoteAuthAgentDeployable<TBundle, TParams>;
     build: BuildDAO;
     destination: DestinationDAO;
     deploy: DeployDAO;
   }) {
-    this.remoteAuth = remoteAuth;
+    this.agent = agent;
     this.build = build;
     this.destination = destination;
     this.deploy = deploy;
@@ -74,23 +75,44 @@ export abstract class DeployRunner {
     return l;
   };
 
-  abstract runDeploy(): Promise<void>;
+  abstract runDeploy(params: TParams): Promise<void>;
 }
 
-export class VercelDeployRunner extends DeployRunner {
+export interface VercelRemoteAuthAgentDeployable
+  extends RemoteAuthAgentDeployable<DeployBundle<InlinedFile>, { projectName: string }> {}
+
+export class VercelDeployRunner extends DeployRunner<DeployBundle<InlinedFile>, { projectName: string }> {
   constructor(params: {
-    remoteAuth: VercelRemoteAuthDAO;
     build: BuildDAO;
     destination: DestinationDAO;
     deploy: DeployDAO;
+    agent: RemoteAuthAgentDeployable<DeployBundle<InlinedFile>, { projectName: string }>;
   }) {
     super(params);
   }
-  async runDeploy(): Promise<void> {
+  async runDeploy(params: { projectName: string }): Promise<void> {
     this.log("Starting deployment...");
     await this.build.Disk.refresh();
-    const deployBundle = DeployBundle.FromBuild(this.build);
-    const files = await deployBundle.getDeployBundleFiles();
+    const deployBundle = new VercelDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
+    await this.agent.deploy(deployBundle, params);
+    this.log("Deployment completed successfully.");
+  }
+}
+
+export class AnyDeployRunner<T extends AnyDeployBundle, P = unknown> extends DeployRunner<T, P> {
+  constructor(params: {
+    build: BuildDAO;
+    destination: DestinationDAO;
+    deploy: DeployDAO;
+    agent: RemoteAuthAgentDeployable<T, P>;
+  }) {
+    super(params);
+  }
+  async runDeploy(params: P): Promise<void> {
+    this.log("Starting deployment...");
+    await this.build.Disk.refresh();
+    const deployBundle = new AnyDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
+    await this.agent.deploy(deployBundle, params);
     this.log("Deployment completed successfully.");
   }
 }
