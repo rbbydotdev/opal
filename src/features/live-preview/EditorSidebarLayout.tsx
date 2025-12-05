@@ -3,7 +3,6 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-// import { useWatchElement } from '@/hooks/useWatchElement';
 
 // --- Configuration Constants ---
 const MIN_RESIZABLE_WIDTH = 200;
@@ -110,8 +109,6 @@ export const EditorSidebarLayout = ({
 }) => {
   // --- Pane States (persisted) ---
   const panes = useSidebarPanes({ registerKeyboardListeners: true });
-
-  // const useWatchElement()
 
   // --- Local UI State ---
   const [isResizing, setIsResizing] = useState(false);
