@@ -13,7 +13,8 @@ import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 import { NULL_BUILD } from "../data/dao/BuildDAO";
-type BuildLogType = "info" | "error" | "warning";
+
+type BuildLogType = BuildLogLine["type"];
 function logLine(message: string, type: BuildLogType = "info") {
   return {
     timestamp: Date.now(),

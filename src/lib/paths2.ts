@@ -175,6 +175,10 @@ export function isSourceOnly(path: AbsPath | RelPath | string | { toString(): st
 export function isPreviewable(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isMarkdown(path) || isTemplateFile(path) || isHtml(path);
 }
+export function isStringish(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  const mimeType = getMimeType(relPath(String(path)));
+  return StringMimeTypes.includes(mimeType);
+}
 
 // --- Ancestor/Lineage Utilities ---
 export function isAncestor({
@@ -290,4 +294,8 @@ export const stringifyEntry = (
 // clientId: NotEnv.PublicGithubClientID,
 export const stripTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path.slice(0, -1) : path;
+};
+
+export const addTrailingSlash = (path: string): string => {
+  return path.endsWith("/") ? path : path + "/";
 };

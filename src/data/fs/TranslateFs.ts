@@ -1,5 +1,5 @@
-import { CommonFileSystem } from "@/data/FileSystemTypes";
-import { isErrorWithCode } from "@/lib/errors";
+import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
+import { isErrorWithCode } from "@/lib/errors/errors";
 import { AbsPath, absPath, joinPath, relPath, stringifyEntry } from "@/lib/paths2";
 
 function translateFs(
@@ -170,10 +170,7 @@ export class MountingFS implements CommonFileSystem {
           relativePath = "/";
         } else {
           // Remove the mount prefix and ensure it starts with /
-          relativePath = normalizedPath.slice(mount.mountPath.length);
-          if (!relativePath.startsWith("/")) {
-            relativePath = "/" + relativePath;
-          }
+          relativePath = absPath(normalizedPath.slice(mount.mountPath.length));
         }
         return { filesystem: mount.filesystem, relativePath };
       }

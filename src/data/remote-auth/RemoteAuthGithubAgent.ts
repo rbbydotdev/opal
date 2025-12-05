@@ -1,104 +1,45 @@
+import { GitHubClient, GitHubRepo } from "@/api/github/GitHubClient";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { Octokit } from "@octokit/core";
 
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
-  private _octokit!: Octokit;
-  get octokit() {
+  private _githubClient!: GitHubClient;
+  get githubClient() {
     return (
-      this._octokit ||
-      (this._octokit = new Octokit({
-        auth: this.getApiToken(),
-      }))
+      this._githubClient ||
+      (this._githubClient = new GitHubClient(this.getApiToken()))
     );
   }
 
   onAuth = () => {
-    return {
-      username: this.getUsername(),
-      password: this.getApiToken(),
-    };
+    return this.githubClient.getAuthCredentials(this.getApiToken());
   };
   async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
-    const finalRepoName = repoName.trim();
-    return this.octokit.request("POST /user/repos", {
-      name: finalRepoName,
-      private: true,
-      auto_init: false,
-      request: {
-        signal,
-      },
-    });
+    return this.githubClient.createRepo(repoName, { signal });
   }
   async getRemoteUsername(): Promise<string> {
-    const user = await this.octokit.request("GET /user");
-    return user.data.login;
+    const user = await this.githubClient.getCurrentUser();
+    return user.login;
   }
 
   async fetchAll({ signal }: { signal?: AbortSignal } = {}): Promise<Repo[]> {
-    const allRepos: Repo[] = [];
-    let page = 1;
-    const perPage = 100;
-
-    while (true) {
-      const response = await this.octokit.request("GET /user/repos", {
-        page,
-        per_page: perPage,
-        affiliation: "owner,collaborator",
-        headers: {
-          "If-None-Match": "", // Force fresh response, bypass browser cache
-        },
-        request: { signal },
-      });
-
-      // Add defensive check for response.data
-      if (!Array.isArray(response.data)) {
-        console.error("GitHub API returned unexpected response format:", response.data);
-        throw new Error(`GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`);
-      }
-
-      const result = response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
-        updated_at: new Date(updated_at ?? Date.now()),
-        id,
-        name,
-        full_name,
-        description,
-        html_url,
-      }));
-      allRepos.push(...result);
-
-      page++;
-      const linkHeader = response.headers.link;
-      if (!linkHeader || !linkHeader.includes('rel="next"')) {
-        break; // No more pages
-      }
-    }
-    return allRepos;
+    return this.githubClient.getRepos({ signal });
   }
 
   async hasUpdates(
     etag: string | null,
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<{ updated: boolean; newEtag: string | null }> {
-    try {
-      const response = await this.octokit.request("GET /user/repos", {
-        per_page: 1,
-        headers: { "If-None-Match": etag ?? undefined },
-        request: { signal },
-      });
-
-      return { updated: true, newEtag: response.headers.etag || null };
-    } catch (error: any) {
-      if (error.status === 304) {
-        return { updated: false, newEtag: etag };
-      }
-      throw error;
-    }
+    return this.githubClient.checkForUpdates(etag, { signal });
   }
 
   async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
     try {
-      await this.octokit.request("GET /user");
-      return { status: "success" };
+      const isValid = await this.githubClient.verifyCredentials();
+      if (isValid) {
+        return { status: "success" };
+      } else {
+        return { status: "error", msg: "Invalid GitHub credentials" };
+      }
     } catch (error: any) {
       return {
         status: "error",

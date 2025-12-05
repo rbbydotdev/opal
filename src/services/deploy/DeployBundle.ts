@@ -1,13 +1,14 @@
 import { Disk } from "@/data/disk/Disk";
-import { TreeNode } from "@/lib/FileTree/TreeNode";
 import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
+import { TreeNode } from "@/components/filetree/TreeNode";
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { archiveTree } from "@/data/disk/archiveTree";
-import { RemoteAuthDAO } from "@/data/RemoteAuthDAO";
+import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
-import { ApplicationError, errF } from "@/lib/errors";
-import { isGithubRemoteAuth } from "../../data/isGithubRemoteAuth";
+import { ApplicationError, errF } from "@/lib/errors/errors";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -54,6 +55,10 @@ export class DeployBundle {
     readonly disk: Disk,
     readonly buildDir = absPath("/")
   ) {}
+
+  static FromBuild(build: BuildDAO) {
+    return new DeployBundle(build.getSourceDisk(), build.getBuildPath());
+  }
 
   getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly> => {
     await this.disk.refresh();

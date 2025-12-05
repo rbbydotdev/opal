@@ -227,3 +227,5 @@ export function isAWSAPIRemoteAuthDAO(record: RemoteAuthDAO): record is AWSAPIRe
 
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
+export type VercelRemoteAuthDAO = VercelAPIRemoteAuthDAO | VercelOAuthRemoteAuthDAO;
+export type NetlifyRemoteAuthDAO = NetlifyAPIRemoteAuthDAO | NetlifyOAuthRemoteAuthDAO;
