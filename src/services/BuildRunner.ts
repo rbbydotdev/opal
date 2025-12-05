@@ -5,9 +5,9 @@ import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editor/prettifyMime";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { absPath, AbsPath, basename, dirname, extname, joinPath, relPath, RelPath } from "@/lib/paths2";
+import { getMimeType } from "@/lib/mimeType";
+import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/builder-types";
-import { getMimeType } from "@zip.js/zip.js";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
@@ -323,15 +323,15 @@ export class BuildRunner {
   }
 
   isTemplateFile(node: TreeNode): boolean {
-    return this.getTemplateType(node.path) !== null;
+    return isTemplateFile(node.path);
   }
 
-  getTemplateType(filePath: string): "mustache" | "ejs" | null {
-    const mime = getMimeType(filePath);
-    if (mime === "text/x-mustache") return "mustache";
-    if (mime === "text/x-ejs") return "ejs";
-    return null;
-  }
+  // getTemplateType(filePath: string): "mustache" | "ejs" | null {
+  //   const mime = getMimeType(filePath);
+  //   if (mime === "text/x-mustache") return "mustache";
+  //   if (mime === "text/x-ejs") return "ejs";
+  //   return null;
+  // }
 
   isMarkdownFile(node: TreeNode): boolean {
     return extname(node.path) === ".md";
@@ -452,16 +452,17 @@ export class BuildRunner {
     this.log("Blog index generated");
   }
 
-  async processLayout(post: PageData): Promise<{ layout: string; type: "mustache" | "ejs" }> {
-    if (post.frontMatter.layout && !this.getTemplateType(post.frontMatter.layout)) {
+  async processLayout(post: PageData): Promise<{ layout: string; type: "text/x-mustache" | "text/x-ejs" }> {
+    if (post.frontMatter.layout && !isTemplateFile(post.frontMatter.layout)) {
       throw new Error(`Unknown template type for layout: ${post.frontMatter.layout}`);
     }
+    const type = getMimeType(post.frontMatter.layout!);
     return post.frontMatter.layout
       ? {
           layout: await this.loadTemplate(relPath(`_layouts/${post.frontMatter.layout}`)),
-          type: this.getTemplateType(post.frontMatter.layout)!,
+          type,
         }
-      : { layout: DefaultPageLayout, type: "mustache" };
+      : { layout: DefaultPageLayout, type: "text/x-mustache" };
   }
   async generateBlogPosts(posts: PageData[]): Promise<void> {
     const postsOutputPath = joinPath(this.outputPath, relPath("posts"));

@@ -130,6 +130,7 @@
     "snapdom": "^0.1.2",
     "sonner": "^2.0.6",
     "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
     "unified": "^11.0.5",
     "unist": "^0.0.1",
     "unist-util-visit": "^5.0.0",

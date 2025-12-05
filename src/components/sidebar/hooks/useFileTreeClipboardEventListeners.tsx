@@ -100,7 +100,6 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
       sidebarElement.removeEventListener("copy", handleCopyEvent);
     };
   }, [handlePasteEvent, handleCutEvent, handleCopyEvent]);
-  console.log(sidebarRef.current);
 
   return { ref: sidebarRef };
 }

@@ -180,7 +180,7 @@ export function SidebarFileMenuBuild({
               </div>
             </div>
             <div className="pr-1 pl-4 pt-2 pb-2 flex flex-col">
-              <div className="flex">
+              <div className="flex gap-1">
                 <MiniTab onClick={() => setActiveTab("files")} active={activeTab === "files"}>
                   Files
                 </MiniTab>
