@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";

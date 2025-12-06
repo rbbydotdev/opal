@@ -8,8 +8,8 @@ import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/filet
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { AbsPath } from "@/lib/paths2";

@@ -4,7 +4,7 @@ import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import { ReactNode, useContext, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -26,14 +26,6 @@ export function TreeExpanderProvider({
 
   const value = useTreeExpander({ nodePaths: flatTree, activePath: workspaceRoute.path, expanderId });
   return <TreeExpanderContext.Provider value={{ ...value, defaultExpanded }}>{children}</TreeExpanderContext.Provider>;
-}
-
-export function useTreeExpanderContext() {
-  const context = useContext(TreeExpanderContext);
-  if (!context) {
-    throw new Error("useTreeExpanderContext must be used within a TreeExpanderProvider");
-  }
-  return context;
 }
 
 function useTreeExpander({

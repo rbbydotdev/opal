@@ -1,4 +1,4 @@
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useMemo } from "react";
