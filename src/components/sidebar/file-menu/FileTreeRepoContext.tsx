@@ -1,13 +1,13 @@
 import { RepoDefaultInfo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { Workspace } from "@/workspace/Workspace";
-import React from "react";
+import React, { createContext, useContext } from "react";
 const defaultRepoInfoContext = RepoDefaultInfo;
 
-const RepoInfoContext = React.createContext<typeof defaultRepoInfoContext>(defaultRepoInfoContext);
+const RepoInfoContext = createContext<typeof defaultRepoInfoContext>(defaultRepoInfoContext);
 
 export const useRepoInfoContext = () => {
-  return React.useContext(RepoInfoContext);
+  return useContext(RepoInfoContext);
 };
 
 export const RepoInfoProvider = ({
