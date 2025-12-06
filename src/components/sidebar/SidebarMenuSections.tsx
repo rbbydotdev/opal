@@ -13,7 +13,6 @@ import { SidebarDndList } from "@/components/sidebar/SidebarDndList";
 import { SidebarGitSection } from "@/components/sidebar/sync-section/SidebarGitSection";
 import { TrashSidebarFileMenuFileSection } from "@/components/sidebar/trash-section/TrashSidebarFileMenuFileSection";
 import { SidebarMenuTreeSection } from "@/components/sidebar/tree-view-section/SidebarMenuTreeSection";
-import { DisplayTreeProvider } from "@/components/sidebar/tree-view-section/useEditorDisplayTree";
 import { SidebarFileMenuUpload } from "@/components/sidebar/upload-section/SidebarFileMenuUpload";
 import {
   DropdownMenu,
@@ -38,6 +37,7 @@ import { List, ListXIcon } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { useWorkspaceContext } from "../../workspace/WorkspaceContext";
+import { DisplayTreeProvider } from "./tree-view-section/DisplayTreeContext";
 
 function DndSlot({ children, dndId, ...rest }: { children: React.ReactNode; dndId: DndSectionType }) {
   return (
