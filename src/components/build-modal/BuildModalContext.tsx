@@ -1,7 +1,8 @@
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { createContext, useContext } from "react";
 
 type BuildCreationContextType = {
-  openNew: () => Promise<void>;
+  openNew: () => BuildDAO;
   openEdit: (options: { buildId: string }) => void;
   close: () => void;
 };

@@ -17,7 +17,7 @@ export function useBuildRunner(currentWorkspace: Workspace): {
   isBuilding: boolean;
   runBuild: () => Promise<RunBuildResult>;
   cancelBuild: () => void;
-  openNew: (strategy: BuildStrategy) => Promise<void>;
+  openNew: (strategy: BuildStrategy) => BuildDAO;
   openEdit: (buildId: string) => Promise<void>;
   clearError: () => void;
   buildError: string | null;
@@ -39,7 +39,7 @@ export function useBuildRunner(currentWorkspace: Workspace): {
   const isBuilding = buildRunner.isBuilding;
 
   const openNew = useCallback(
-    async (strategy: BuildStrategy) => {
+    (strategy: BuildStrategy) => {
       const build = BuildDAO.CreateNew({
         label: `Build ${new Date().toLocaleString()}`,
         workspaceId: currentWorkspace.guid,
@@ -54,6 +54,7 @@ export function useBuildRunner(currentWorkspace: Workspace): {
           workspace: currentWorkspace,
         })
       );
+      return build;
     },
     [currentWorkspace]
   );
