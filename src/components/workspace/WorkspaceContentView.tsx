@@ -3,7 +3,7 @@ import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
-import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolProvider";
+import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolContext";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";

@@ -1,4 +1,4 @@
-import { CreatePoolContext } from "@/components/PoolContextValue";
+import { CreatePoolContext } from "@/components/CreatePoolContext";
 import { PoolWorker, Resource } from "@/components/PoolWorker";
 import { PreviewWorkerApiType } from "@/types/PreviewWorkerTypes";
 
