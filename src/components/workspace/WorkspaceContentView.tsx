@@ -1,5 +1,5 @@
 import { useFileContents } from "@/context/useFileContents";
-import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
+import { HistorySnapDBProvider } from "@/data/dao/HistorySnapDBContext";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
 import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolContext";

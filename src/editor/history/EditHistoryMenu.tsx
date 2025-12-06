@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
-import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/dao/HistoryDAO";
+import { useSnapHistoryPendingSave } from "@/data/dao/HistoryDAO";
+import { useSnapHistoryDB } from "@/data/dao/HistorySnapDBContext";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { EditViewImage } from "@/editor/history/EditViewImage";
 import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";

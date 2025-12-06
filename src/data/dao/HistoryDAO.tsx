@@ -1,47 +1,10 @@
-import { NullHistoryDAO } from "@/data/dao/NullHistoryDAO";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { ClientDb } from "@/data/instance";
-import { useIframeImagePooledImperitiveWorker } from "@/editor/history/EditViewImage";
-import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
-import { useResource } from "@/hooks/useResource";
 
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-
-// --- Context and Provider for HistorySnapDB ---
-
-type HistorySnapDBContextType = HistoryStorageInterface | null;
-
-const NULL_HISTORY_DAO = new NullHistoryDAO();
-const HistorySnapDBContext = createContext<HistorySnapDBContextType>(NULL_HISTORY_DAO);
-
-interface HistorySnapDBProviderProps {
-  documentId: string | null;
-  workspaceId: string;
-  children: ReactNode;
-}
-
-export function HistorySnapDBProvider({ documentId, workspaceId, children }: HistorySnapDBProviderProps) {
-  const historyDB = useResource<HistoryStorageInterface>(() => new HistoryDAO(), [], NULL_HISTORY_DAO);
-  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
-
-  const handleEditPreview = useIframeImagePooledImperitiveWorker({
-    workspaceId,
-  });
-  useEffect(() => {
-    if (documentId && historyDB && isHistoryImageGenerationEnabled) {
-      return historyDB.onNewEdit(documentId, (edit) => {
-        handleEditPreview(edit);
-      });
-    }
-  }, [documentId, handleEditPreview, historyDB, isHistoryImageGenerationEnabled]);
-
-  return (
-    <HistorySnapDBContext.Provider value={historyDB || NULL_HISTORY_DAO}>{children}</HistorySnapDBContext.Provider>
-  );
-}
+import { useEffect, useState } from "react";
 
 export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryStorageInterface }): boolean {
   const [pendingSave, setPendingSave] = useState(false);
@@ -60,13 +23,6 @@ export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistorySto
     };
   }, [historyDB]);
   return pendingSave;
-}
-export function useSnapHistoryDB(): HistoryStorageInterface {
-  const ctx = useContext(HistorySnapDBContext);
-  if (!ctx) {
-    throw new Error("useSnapHistoryDB must be used within a HistorySnapDBProvider");
-  }
-  return ctx;
 }
 
 export class HistoryDAO implements HistoryStorageInterface {
