@@ -3,15 +3,14 @@ import { useIframeContextProvider, useWindowContextProvider } from "@/features/l
 import { injectCssFiles, PreviewContent } from "@/features/live-preview/PreviewContent";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
+import { BrowserDetection } from "@/lib/BrowserDetection";
 import { AbsPath, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 function getScrollElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | null {
-  const isFirefox = navigator.userAgent.includes("Firefox");
-
-  if (isFirefox) {
+  if (BrowserDetection.isFirefox()) {
     return context.document?.documentElement || context.document?.body || null;
   }
 
@@ -19,9 +18,7 @@ function getScrollElement(context: any, renderBodyElement: HTMLElement | null): 
 }
 
 function getListenElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | Window | null {
-  const isFirefox = navigator.userAgent.includes("Firefox");
-
-  if (isFirefox) {
+  if (BrowserDetection.isFirefox()) {
     return context.window as any;
   }
 

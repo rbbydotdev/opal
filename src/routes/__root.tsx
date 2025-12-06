@@ -7,7 +7,6 @@ function RootComponent() {
       <div className="font-sans antialiased w-full h-full">
         <Outlet />
       </div>
-      {/* <TanStackRouterDevtools /> */}
     </>
   );
 }
