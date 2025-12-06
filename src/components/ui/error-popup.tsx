@@ -87,7 +87,7 @@ function ErrorPopupProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Hook to use the error popup
-const useErrorPopup = () => {
+export const useErrorPopup = () => {
   const context = React.useContext(ErrorPopupContext);
 
   if (!context) {

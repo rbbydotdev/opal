@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useErrorPopup } from "@/components/ui/error-popup";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,7 +55,7 @@ export function PublicationModalDestinationContent({
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const [menuHelperOpen, setMenuHelperOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
-
+  const errorPopup = useErrorPopup();
   const remoteAuthId = editDestination
     ? editDestination.toJSON().remoteAuth.guid
     : isRemoteAuthJType(defaultRemoteAuth)
@@ -87,13 +88,19 @@ export function PublicationModalDestinationContent({
   const formValues = useWatch({ control: form.control });
 
   const currentRemoteAuthId = formValues.remoteAuthId;
-  const remoteAuth = useMemo(
-    () =>
-      currentRemoteAuthId
-        ? RemoteAuthDAO.FromJSON(remoteAuths.find((remoteAuth) => remoteAuth.guid === currentRemoteAuthId)!)
-        : null,
-    [currentRemoteAuthId, remoteAuths]
-  );
+
+  const remoteAuth = useMemo(() => {
+    const remoteAuth = remoteAuths.find((remoteAuth) => remoteAuth.guid === currentRemoteAuthId);
+    if (!remoteAuth) {
+      errorPopup.show({
+        title: "Connection not found",
+        description: "The selected connection could not be found. Please select a different connection.",
+      });
+      close();
+      return null;
+    }
+    return currentRemoteAuthId ? RemoteAuthDAO.FromJSON(remoteAuth) : null;
+  }, [close, currentRemoteAuthId, errorPopup, remoteAuths]);
 
   const isCompleteOkay = currentSchema.safeParse(formValues).success;
 

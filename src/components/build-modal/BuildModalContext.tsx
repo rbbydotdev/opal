@@ -9,6 +9,8 @@ export const BuildCreationContext = createContext<BuildCreationContextType | und
 
 export function useBuildCreation() {
   const ctx = useContext(BuildCreationContext);
-  if (!ctx) throw new Error("useBuildCreation must be used within a BuildCreationProvider");
+  if (!ctx) {
+    throw new Error("useBuildCreation must be used within a BuildCreationProvider");
+  }
   return ctx;
 }

@@ -4,20 +4,24 @@ import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/BuildRunner";
 import { Workspace } from "@/workspace/Workspace";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
-interface UseBuildRunnerReturn {
+type RunBuildResult =
+  | { status: "success"; build: BuildDAO }
+  | { status: "failed"; build: null }
+  | { status: "cancelled"; build: null }
+  | { status: "unknown"; build: null };
+
+export function useBuildRunner(currentWorkspace: Workspace): {
   buildRunner: BuildRunner;
   logs: BuildLogLine[];
   buildCompleted: boolean;
   isBuilding: boolean;
-  runBuild: () => Promise<void>;
+  runBuild: () => Promise<RunBuildResult>;
   cancelBuild: () => void;
   openNew: (strategy: BuildStrategy) => Promise<void>;
   openEdit: (buildId: string) => Promise<void>;
   clearError: () => void;
   buildError: string | null;
-}
-
-export function useBuildRunner(currentWorkspace: Workspace): UseBuildRunnerReturn {
+} {
   const [buildRunner, setBuildRunner] = useState<BuildRunner>(NULL_BUILD_RUNNER);
   const [buildError, setBuildError] = useState<string | null>(null);
 
@@ -54,25 +58,32 @@ export function useBuildRunner(currentWorkspace: Workspace): UseBuildRunnerRetur
     [currentWorkspace]
   );
 
-  const openEdit = useCallback(async (buildId: string) => {
-    setBuildRunner(
-      await BuildRunner.recall({
-        buildId,
-        workspace: currentWorkspace,
-      })
-    );
-  }, [currentWorkspace]);
+  const openEdit = useCallback(
+    async (buildId: string) => {
+      setBuildRunner(
+        await BuildRunner.recall({
+          buildId,
+          workspace: currentWorkspace,
+        })
+      );
+    },
+    [currentWorkspace]
+  );
 
-  const handleBuild = useCallback(async () => {
-    if (!buildRunner || buildRunner === NULL_BUILD_RUNNER) return;
+  const handleBuild = useCallback(async (): Promise<RunBuildResult> => {
+    if (!buildRunner || buildRunner === NULL_BUILD_RUNNER) return { status: "unknown", build: null };
     await buildRunner.execute();
     if (buildRunner.isSuccessful) {
       setBuildError(null);
+      return { status: "success", build: buildRunner.build };
     } else if (buildRunner.isFailed) {
       setBuildError("Build failed. Please check the logs for more details.");
+      return { status: "failed", build: null };
     } else if (buildRunner.isCancelled) {
       setBuildError("Build was cancelled.");
+      return { status: "cancelled", build: null };
     }
+    return { status: "unknown", build: null };
   }, [buildRunner]);
 
   const handleCancel = useCallback(() => {
