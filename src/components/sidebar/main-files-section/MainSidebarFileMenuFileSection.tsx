@@ -3,7 +3,7 @@ import { useFileTreeContext } from "@/components/filetree/FileTreeContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
-import { RepoInfoProvider } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
+import { RepoInfoProvider } from "@/components/sidebar/file-menu/FileTreeRepoContext";
 import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/RootFileMenuBanner";
 import { useFlashTooltip } from "@/components/sidebar/main-files-section/useFlashTooltip";
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";

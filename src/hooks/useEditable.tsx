@@ -1,7 +1,7 @@
 import { useFileTreeContext } from "@/components/filetree/FileTreeContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeFile, TreeNode } from "@/components/filetree/TreeNode";
-import { useRepoInfoContext } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
+import { useRepoInfoContext } from "@/components/sidebar/file-menu/FileTreeRepoContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
 import { basename, newFileName, prefix, RelPath, relPath } from "@/lib/paths2";
