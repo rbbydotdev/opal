@@ -47,6 +47,7 @@ export function useBuildRunner(currentWorkspace: Workspace): UseBuildRunnerRetur
       setBuildRunner(
         BuildRunner.create({
           build,
+          workspace: currentWorkspace,
         })
       );
     },
@@ -57,9 +58,10 @@ export function useBuildRunner(currentWorkspace: Workspace): UseBuildRunnerRetur
     setBuildRunner(
       await BuildRunner.recall({
         buildId,
+        workspace: currentWorkspace,
       })
     );
-  }, []);
+  }, [currentWorkspace]);
 
   const handleBuild = useCallback(async () => {
     if (!buildRunner || buildRunner === NULL_BUILD_RUNNER) return;
