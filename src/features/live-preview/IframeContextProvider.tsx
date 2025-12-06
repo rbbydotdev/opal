@@ -1,4 +1,4 @@
-import { isFirefox } from "@/features/live-preview/isFirefox";
+import { BrowserDetection } from "@/lib/BrowserDetection";
 import { WindowContext } from "@/features/live-preview/WindowContext";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { useContext, useEffect, useMemo, useSyncExternalStore } from "react";
@@ -108,7 +108,7 @@ abstract class BaseContextProvider implements PreviewContextProvider {
       throw new Error("Document not available");
     }
 
-    if (isFirefox()) {
+    if (BrowserDetection.isFirefox()) {
       this.doc.open();
       this.doc.write(FIREFOX_PREVIEW_HTML);
       this.doc.close();
