@@ -12,7 +12,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { Workspace } from "@/workspace/Workspace";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";

@@ -1,6 +1,6 @@
 import { SidebarTreeView, SidebarTreeViewActions } from "@/components/sidebar/tree-view-section/SidebarTreeView";
 import { SidebarGroupContent } from "@/components/ui/sidebar";
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 
 export function SidebarMenuTreeSection() {
   const { setExpandAll } = useTreeExpanderContext();

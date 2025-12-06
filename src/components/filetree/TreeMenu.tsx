@@ -12,7 +12,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { MainEditorRealmId } from "@/editor/EditorConst";
 import { highlightMdxElement } from "@/editor/highlightMdxElement";
 import { scrollToEditorElement } from "@/editor/scrollToEditorElement";
-import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";

@@ -1,5 +1,5 @@
 import { TreeExpanderValue } from "@/features/tree-expander/TreeExpanderTypes";
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 const defaultExpander: TreeExpanderValue = {
   expandSingle: (_path: string, _expanded: boolean) => {},
@@ -12,3 +12,10 @@ const defaultExpander: TreeExpanderValue = {
 };
 
 export const TreeExpanderContext = createContext<TreeExpanderValue>(defaultExpander);
+export function useTreeExpanderContext() {
+  const context = useContext(TreeExpanderContext);
+  if (!context) {
+    throw new Error("useTreeExpanderContext must be used within a TreeExpanderProvider");
+  }
+  return context;
+}
