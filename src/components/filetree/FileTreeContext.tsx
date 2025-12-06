@@ -18,7 +18,9 @@ const FileTreeContext = createContext<typeof defaultFileTreeContext | null>(null
 
 export const useFileTreeContext = () => {
   const ctx = useContext(FileTreeContext);
-  if (!ctx) throw new Error("useFileTree must be used within a FileTreeProvider");
+  if (!ctx) {
+    throw new Error("useFileTree must be used within a FileTreeProvider");
+  }
   return ctx;
 };
 

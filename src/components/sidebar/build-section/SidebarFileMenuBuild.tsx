@@ -104,7 +104,13 @@ export function SidebarFileMenuBuild({
   };
   return (
     <>
-      <BuildModal currentWorkspace={currentWorkspace} cmdRef={cmdRef} />
+      <BuildModal
+        onBuild={({ build }) => {
+          setBuildId(build.guid);
+        }}
+        currentWorkspace={currentWorkspace}
+        cmdRef={cmdRef}
+      />
       <SidebarGroup {...props}>
         <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>
@@ -129,17 +135,6 @@ export function SidebarFileMenuBuild({
                   <span className="flex-grow">Build to HTML</span>
                 </Button>
               </SidebarGroup>
-              <div className="min-w-0 flex items-center w-full">
-                <BuildManager
-                  selectMode={selectMode}
-                  setSelectMode={setSelectMode}
-                  builds={builds}
-                  setBuildId={setBuildId}
-                  build={build}
-                  handleDeleteBuild={handleDeleteBuild}
-                  openNewPub={openNewPub}
-                />
-              </div>
               <div className="min-w-0 flex items-center w-full flex-col">
                 <Button
                   disabled={!build}
@@ -151,6 +146,17 @@ export function SidebarFileMenuBuild({
                   <UploadCloud className="mr-1" />
                   <span className="flex-grow">Publish Build</span>
                 </Button>
+              </div>
+              <div className="min-w-0 flex items-center w-full">
+                <BuildManager
+                  selectMode={selectMode}
+                  setSelectMode={setSelectMode}
+                  builds={builds}
+                  setBuildId={setBuildId}
+                  build={build}
+                  handleDeleteBuild={handleDeleteBuild}
+                  openNewPub={openNewPub}
+                />
               </div>
             </div>
             <div className="pr-1 pl-4 pt-2 pb-2 flex flex-col">

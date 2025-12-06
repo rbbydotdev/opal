@@ -9,7 +9,7 @@ export function BuildCreationProvider({ children }: { children: React.ReactNode 
   return (
     <BuildCreationContext.Provider value={{ ...cmdRef.current }}>
       {children}
-      <BuildModal cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
+      <BuildModal onBuild={() => {}} cmdRef={cmdRef} currentWorkspace={currentWorkspace} />
     </BuildCreationContext.Provider>
   );
 }
