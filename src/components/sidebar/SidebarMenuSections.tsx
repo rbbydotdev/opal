@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
-import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
 // import { BuildSidebarFileMenuFileSection } from "@/components/SidebarFileMenu/build-files-section/BuildSidebarFileMenuFileSection";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { SidebarFileMenuBuild } from "@/components/sidebar/build-section/SidebarFileMenuBuild";

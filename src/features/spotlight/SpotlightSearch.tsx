@@ -1,5 +1,5 @@
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { useFileTree } from "@/context/FileTreeProvider";

@@ -2,7 +2,7 @@ import { EditableDir } from "@/components/filetree/EditableDir";
 import { EditableFile } from "@/components/filetree/EditableFile";
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { FileTreeDragPreview } from "@/components/filetree/FileTreeDragPreview";
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";

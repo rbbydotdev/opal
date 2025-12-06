@@ -2,7 +2,7 @@ import { FileTreeMenu } from "@/components/filetree/FiletreeMenu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/filetree/TreeNode";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";

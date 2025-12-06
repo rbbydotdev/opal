@@ -3,7 +3,7 @@ import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useLocation } from "@tanstack/react-router";
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 
 const FileTreeMenuCtx = React.createContext<{
   anchorIndex: number;
@@ -37,7 +37,7 @@ const FileTreeMenuCtx = React.createContext<{
 } | null>(null);
 
 export function useFileTreeMenuCtx() {
-  const ctx = React.useContext(FileTreeMenuCtx);
+  const ctx = useContext(FileTreeMenuCtx);
   if (!ctx) {
     throw new Error("useFileTreeMenuContext must be used within a FileTreeMenuContextProvider");
   }

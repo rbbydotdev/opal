@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { ROOT_NODE, TreeNode } from "@/components/filetree/TreeNode";
 import { Button } from "@/components/ui/button";
 import {

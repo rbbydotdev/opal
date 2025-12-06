@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { createContext, useContext, useMemo } from "react";
 
 export interface Resource<T = unknown> {
   api: T;
   terminate: () => void;
 }
 
-interface IPoolWorker<TResource extends Resource> {
+export interface IPoolWorker<TResource extends Resource> {
   workId: string;
   exec: (res: TResource) => Promise<unknown>;
   setupResource: () => Promise<TResource> | TResource;
@@ -33,7 +32,7 @@ interface QueuedWork<TResource extends Resource> {
   promise: ReturnType<typeof Promise.withResolvers<unknown>>;
 }
 
-class PoolManager<TResource extends Resource> {
+export class PoolManager<TResource extends Resource> {
   private readonly pool: (IPoolWorker<TResource> | null)[];
   private readonly queue: QueuedWork<TResource>[] = [];
   private readonly resourcePool: (TResource | null)[] = [];
@@ -107,29 +106,4 @@ class PoolManager<TResource extends Resource> {
       this.resourcePool[slotIndex] = null;
     }
   }
-}
-
-type PoolContextValue<TWorker extends IPoolWorker<Resource<any>>> = {
-  work: (pw: TWorker) => Promise<any>;
-  flush: () => void;
-};
-
-export function CreatePoolContext<TWorker extends IPoolWorker<Resource<any>>>() {
-  const Context = createContext<PoolContextValue<TWorker> | null>(null);
-  Context.displayName = "PoolContext";
-
-  const PoolProvider = ({ children, max }: { children: React.ReactNode; max: number }) => {
-    const contextValue: PoolContextValue<TWorker> = useMemo(() => new PoolManager(max), [max]);
-    return <Context.Provider value={contextValue}>{children}</Context.Provider>;
-  };
-
-  const usePool = () => {
-    const context = useContext(Context);
-    if (!context) {
-      throw new Error("usePool must be used within its corresponding PoolProvider");
-    }
-    return context;
-  };
-
-  return { PoolProvider, usePool, Context };
 }

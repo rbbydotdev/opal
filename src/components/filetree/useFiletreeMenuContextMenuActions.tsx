@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { flatUniqNodeArgs } from "@/components/filetree/flatUniqNodeArgs";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { MetaDataTransfer } from "@/components/MetaDataTransfer";

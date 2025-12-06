@@ -1,4 +1,4 @@
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuCtxProvider";
+import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { useRepoInfoContext } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
 import { useFileTree } from "@/context/FileTreeProvider";
