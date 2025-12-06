@@ -1,4 +1,4 @@
-import { SelectableItem } from "@/components/sidebar/selectable-list/SelectableList";
+import { SelectableItem } from "@/components/selectable-list/SelectableList";
 import React, { createContext, useContext } from "react";
 
 export type SelectableListContextValue<T = any> = {
