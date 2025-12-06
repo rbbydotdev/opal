@@ -14,7 +14,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
-import { WindowContextProviderComponent } from "@/features/live-preview/IframeContextProvider";
+import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { ThemeProvider, useThemeSettings } from "@/layouts/ThemeProvider";
