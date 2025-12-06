@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader } from "lucide-react";
-import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { createContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 type GitStatusContextType = {
   open: (options?: { onCancel?: () => void }) => Promise<"cancelled" | "completed">;
