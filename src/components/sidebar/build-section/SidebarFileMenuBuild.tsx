@@ -2,6 +2,7 @@ import { BuildModal } from "@/components/build-modal/BuildModal";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextProvider";
 import { useConfirm } from "@/components/ConfirmContext";
+import { FileTreeProvider } from "@/components/filetree/FileTreeContext";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { SelectableListItemAction } from "@/components/selectable-list/SelectableList";
@@ -24,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { FileTreeProvider } from "@/context/FileTreeContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";

@@ -10,11 +10,11 @@ import { useEditorDisplayTreeCtx } from "@/components/sidebar/tree-view-section/
 import { useGetNodeFromEditor } from "@/components/sidebar/tree-view-section/useGetNodeFromEditor";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useCurrentFilepath, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { MainEditorRealmId } from "@/editor/EditorConst";
 import { highlightMdxElement } from "@/editor/highlightMdxElement";
 import { scrollToEditorElement } from "@/editor/scrollToEditorElement";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
+import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import { Slot } from "@radix-ui/react-slot";

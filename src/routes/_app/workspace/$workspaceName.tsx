@@ -1,7 +1,6 @@
 import { EditorSidebar } from "@/components/EditorSidebar";
+import { FileTreeProvider } from "@/components/filetree/FileTreeContext";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
-import { FileTreeProvider } from "@/context/FileTreeContext";
-import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/live-preview/EditorSidebarLayout";
 import { PreviewIFrame } from "@/features/live-preview/PreviewIframe";
@@ -9,6 +8,7 @@ import { usePreviewPaneProps } from "@/features/live-preview/usePreviewPaneProps
 import { ScrollSyncProvider } from "@/features/live-preview/useScrollSync";
 import { WorkspaceSpotlightSearch } from "@/features/spotlight/SpotlightSearch";
 import useFavicon from "@/hooks/useFavicon";
+import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 

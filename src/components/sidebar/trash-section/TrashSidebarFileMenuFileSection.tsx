@@ -1,12 +1,12 @@
+import { FileTreeProvider } from "@/components/filetree/FileTreeContext";
 import { TrashFileTreeContextMenu } from "@/components/sidebar/file-menu/TrashFileTreeContextMenu";
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/sidebar/trash-section/TinyNotice";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { FileTreeProvider } from "@/context/FileTreeContext";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Delete, Trash2 } from "lucide-react";
 import { useSyncExternalStore } from "react";
 export function TrashSidebarFileMenuFileSection({ className }: { className?: string }) {

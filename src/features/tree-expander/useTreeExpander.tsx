@@ -1,9 +1,9 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { TreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, isAncestor } from "@/lib/paths2";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { ReactNode, useContext, useEffect, useState } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: ExpandMap) {

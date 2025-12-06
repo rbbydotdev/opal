@@ -2,9 +2,9 @@ import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Loader, UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 

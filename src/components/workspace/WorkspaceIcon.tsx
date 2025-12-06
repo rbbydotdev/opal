@@ -1,5 +1,5 @@
 import { Identicon } from "@/components/Identicon";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { twMerge } from "tailwind-merge";
 
 export function CurrentWorkspaceIcon(

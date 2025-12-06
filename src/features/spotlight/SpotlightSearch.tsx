@@ -1,9 +1,8 @@
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
+import { useFileTreeContext } from "@/components/filetree/FileTreeContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { useFileTreeContext } from "@/context/FileTreeContext";
-import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
 import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
@@ -21,6 +20,7 @@ import { cn } from "@/lib/utils";
 import type { FileWithWorkspace } from "@/workspace/useAllWorkspaceFiles";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
+import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Link, useNavigate } from "@tanstack/react-router";
 import fuzzysort from "fuzzysort";
 import { CommandIcon, FileTextIcon } from "lucide-react";

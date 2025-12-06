@@ -16,7 +16,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
@@ -37,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useWorkspacButtonBarSpin } from "@/useWorkspacButtonBarSpin";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { Workspace } from "@/workspace/Workspace";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,

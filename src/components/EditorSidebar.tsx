@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { CurrentWorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Link } from "@tanstack/react-router";
 import React, { useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";

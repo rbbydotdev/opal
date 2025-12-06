@@ -1,10 +1,10 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeNode } from "@/components/filetree/TreeNode";
-import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { useEditable } from "@/hooks/useEditable";
 import { AbsPath, basename, RelPath, relPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
+import { WorkspaceRouteType } from "@/workspace/WorkspaceContext";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { useEffect } from "react";
 export const EditableDir = ({

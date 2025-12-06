@@ -11,7 +11,6 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
@@ -22,6 +21,7 @@ import { ThemeProvider, useThemeSettings } from "@/layouts/ThemeProvider";
 import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { cn } from "@/lib/utils";
+import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import { Toaster } from "sonner";
 

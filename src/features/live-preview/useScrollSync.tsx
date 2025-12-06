@@ -1,5 +1,5 @@
-import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
+import { useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { nanoid } from "nanoid";
 import { createContext, RefObject, useContext, useEffect, useMemo, useRef } from "react";
 

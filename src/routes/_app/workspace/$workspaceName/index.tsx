@@ -2,7 +2,6 @@ import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { OpalCard } from "@/components/OpalCard";
 // import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { ROOT_NODE, TreeNode } from "@/components/filetree/TreeNode";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import {
   handleDropFilesEventForNode,
   isExternalFileDrop,
@@ -10,6 +9,7 @@ import {
 } from "@/hooks/useFileTreeDragDrop";
 import { useThemeSettings } from "@/layouts/ThemeProvider";
 import { absPath } from "@/lib/paths2";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/")({

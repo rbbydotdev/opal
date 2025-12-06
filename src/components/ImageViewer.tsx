@@ -1,5 +1,5 @@
 import { TrashBanner } from "@/components/TrashBanner";
-import { useCurrentFilepath } from "@/context/WorkspaceContext";
+import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { useEffect, useRef } from "react";
 
 export function ImageViewer({ alt = "image", origSrc = "" }: { alt?: string; origSrc?: string }) {
