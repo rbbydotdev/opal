@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import { Toaster } from "sonner";
-import { useThemeContext } from "./ThemeContextValue";
+import { useThemeContext } from "./ThemeContext";
 
 interface MainAppLayoutProps {
   children: React.ReactNode;

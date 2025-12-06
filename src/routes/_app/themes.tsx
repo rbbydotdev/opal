@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useThemeContext } from "@/layouts/ThemeContextValue";
+import { useThemeContext } from "@/layouts/ThemeContext";
 // import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
 import { getContrastRatio } from "@/lib/colorUtils";
 import { createFileRoute } from "@tanstack/react-router";
