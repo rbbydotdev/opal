@@ -58,8 +58,8 @@ export function CompatibilityAlert() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex flex-col sm:max-w-md">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             {BrowserDetection.isMobile() && <Smartphone className="h-5 w-5" />}
             Browser Compatibility Check
@@ -69,7 +69,7 @@ export function CompatibilityAlert() {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
           {compatibilityChecks.map((check, index) => (
             <div key={index} className="flex items-start gap-3 p-2 rounded border">
               {getStatusIcon(check)}
@@ -86,7 +86,7 @@ export function CompatibilityAlert() {
           ))}
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 pt-4">
           <Button
             variant="outline"
             onClick={() => window.open('#', '_blank')}
