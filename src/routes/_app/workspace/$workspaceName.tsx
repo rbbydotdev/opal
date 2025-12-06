@@ -1,6 +1,6 @@
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeContext";
 import { FileOnlyFilter, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { EditorSidebarLayout } from "@/features/live-preview/EditorSidebarLayout";

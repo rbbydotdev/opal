@@ -7,7 +7,7 @@ import { NULL_TREE_ROOT, ROOT_NODE, TreeDir, TreeNode } from "@/components/filet
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { useFileTreeClipboardEventListeners } from "@/components/sidebar/hooks/useFileTreeClipboardEventListeners";
 import { SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { NoopContextMenu, useFileTree } from "@/context/FileTreeProvider";
+import { NoopContextMenu, useFileTreeContext } from "@/context/FileTreeContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
@@ -47,7 +47,7 @@ export const SidebarFileMenuFiles = ({
   const { expandSingle, expanded, expandForNode } = useTreeExpanderContext();
   const { setFileTreeCtx } = useFileTreeMenuCtx();
   const { currentWorkspace } = useWorkspaceContext();
-  const { fileTreeDir } = useFileTree();
+  const { fileTreeDir } = useFileTreeContext();
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);
 
   const treeNode = scope ? (currentWorkspace.nodeFromPath(scope ?? null) ?? NULL_TREE_ROOT) : fileTreeDir;
@@ -59,7 +59,7 @@ export const SidebarFileMenuFiles = ({
   const [groupExpanded, groupSetExpand] = useSingleItemExpander("SidebarFileMenuFiles/" + expanderId, defaultExpanded);
 
   const isEmpty = !Object.keys(treeNode.filterOutChildren(filter) ?? {}).length;
-  const { flatTree } = useFileTree();
+  const { flatTree } = useFileTreeContext();
   const treeExpander = useTreeExpanderContext();
   const visibleFlatTree = useVisibleFlatTree({ flatTree, treeExpander, currentWorkspace });
   const { ref } = useFileTreeClipboardEventListeners({ currentWorkspace });

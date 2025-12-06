@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
-import { useFileTree } from "@/context/FileTreeProvider";
+import { useFileTreeContext } from "@/context/FileTreeContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
@@ -61,7 +61,7 @@ export function MainSidebarFileMenuFileSection({
   const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandForNode } = useTreeExpanderContext();
 
-  const { fileTreeDir, fileTree } = useFileTree();
+  const { fileTreeDir, fileTree } = useFileTreeContext();
 
   const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
 

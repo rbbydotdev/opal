@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeContext";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";

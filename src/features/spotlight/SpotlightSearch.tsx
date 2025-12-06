@@ -2,7 +2,7 @@ import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { useFileTree } from "@/context/FileTreeProvider";
+import { useFileTreeContext } from "@/context/FileTreeContext";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
@@ -107,7 +107,7 @@ SpotlightSearchItemCmd.displayName = "SpotlightSearchItemCmd";
 // Workspace-specific spotlight search that uses workspace context
 export function WorkspaceSpotlightSearch() {
   const { currentWorkspace } = useWorkspaceContext();
-  const { flatTree } = useFileTree();
+  const { flatTree } = useFileTreeContext();
   const { cmdMap, commands } = useSpotlightCommandPalette({
     currentWorkspace,
   });
