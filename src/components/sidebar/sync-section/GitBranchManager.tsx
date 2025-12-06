@@ -24,7 +24,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useConfirm } from "@/components/Confirm";
+import { useConfirm } from "@/components/ConfirmContext";
 import { gitBranchSchema } from "@/components/sidebar/sync-section/gitBranchSchema";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Input } from "@/components/ui/input";

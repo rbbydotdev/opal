@@ -1,4 +1,3 @@
-import { useConfirm } from "@/components/Confirm";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import { IS_MAC } from "@/lib/isMac";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, Delete, Ellipsis, MoreHorizontal, SquareDashed } from "lucide-react";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useConfirm } from "../ConfirmContext";
 
 type SelectableItem = {
   id: string;

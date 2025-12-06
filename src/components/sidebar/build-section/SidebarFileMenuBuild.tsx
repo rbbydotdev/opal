@@ -1,7 +1,7 @@
 import { BuildModal } from "@/components/build-modal/BuildModal";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
 import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextProvider";
-import { useConfirm } from "@/components/Confirm";
+import { useConfirm } from "@/components/ConfirmContext";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuCtxProvider";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
