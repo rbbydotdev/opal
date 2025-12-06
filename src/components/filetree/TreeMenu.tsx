@@ -6,7 +6,6 @@ import {
   LexicalTreeViewNode,
 } from "@/components/sidebar/tree-view-section/treeViewDisplayNodesLexical";
 import { useCellValueForRealm } from "@/components/sidebar/tree-view-section/useCellValueForRealm";
-import { useEditorDisplayTreeCtx } from "@/components/sidebar/tree-view-section/useEditorDisplayTree";
 import { useGetNodeFromEditor } from "@/components/sidebar/tree-view-section/useGetNodeFromEditor";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -21,6 +20,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
+import { useEditorDisplayTreeCtx } from "../sidebar/tree-view-section/DisplayTreeContext";
 const { $createParagraphNode } = lexical;
 
 export function SidebarTreeViewMenu() {
