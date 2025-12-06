@@ -60,7 +60,6 @@ export function SidebarFileMenuBuild({
   const { open: openNewPub } = useBuildPublisher();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const [open, setOpen] = useState(false);
   const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage<
     "builds" | "files" | "destinations" | "deployments"
   >("SidebarFileMenuBuild/activeTab", "files");
@@ -131,40 +130,15 @@ export function SidebarFileMenuBuild({
                 </Button>
               </SidebarGroup>
               <div className="min-w-0 flex items-center w-full">
-                {selectMode === "delete" ? (
-                  <SelectHighlight
-                    placeholder="Select Build to Delete"
-                    className="h-12"
-                    itemClassName="focus:bg-destructive focus:text-primary-foreground"
-                    items={builds.map((build) => ({
-                      value: build.guid,
-                      label: <BuildItem build={build} />,
-                    }))}
-                    onCancel={() => setSelectMode("select")}
-                    onSelect={(buildGuid: string) => handleDeleteBuild(buildGuid)}
-                  />
-                ) : (
-                  <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
-                    <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (!build) return;
-                          openNewPub({ build });
-                        }}
-                        disabled={!build}
-                      >
-                        <UploadCloud /> Publish Build
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-                        <Download /> Download Build
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
-                        <Delete className="text-destructive" /> Delete Build
-                      </DropdownMenuItem>
-                    </BuildMenuDropDown>
-                  </BuildSelector>
-                )}
+                <BuildManager
+                  selectMode={selectMode}
+                  setSelectMode={setSelectMode}
+                  builds={builds}
+                  setBuildId={setBuildId}
+                  build={build}
+                  handleDeleteBuild={handleDeleteBuild}
+                  openNewPub={openNewPub}
+                />
               </div>
               <div className="min-w-0 flex items-center w-full flex-col">
                 <Button
@@ -236,6 +210,60 @@ function BuildSidebarFileExplorer({ build }: { build: BuildDAO | null }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function BuildManager({
+  selectMode,
+  builds,
+  setSelectMode,
+  setBuildId,
+  build,
+  handleDeleteBuild,
+  openNewPub,
+}: {
+  selectMode: "select" | "delete";
+  builds: BuildDAO[];
+  setSelectMode: (mode: "select" | "delete") => void;
+  setBuildId: (id: string | null) => void;
+  build: BuildDAO | null;
+  openNewPub: (params: { build: BuildDAO }) => void;
+  handleDeleteBuild: (buildGuid: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return selectMode === "delete" ? (
+    <SelectHighlight
+      placeholder="Select Build to Delete"
+      className="h-12"
+      itemClassName="focus:bg-destructive focus:text-primary-foreground"
+      items={builds.map((build) => ({
+        value: build.guid,
+        label: <BuildItem build={build} />,
+      }))}
+      onCancel={() => setSelectMode("select")}
+      onSelect={(buildGuid: string) => handleDeleteBuild(buildGuid)}
+    />
+  ) : (
+    <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
+      <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
+        <DropdownMenuItem
+          onClick={() => {
+            if (!build) return;
+            openNewPub({ build });
+          }}
+          disabled={!build}
+        >
+          <UploadCloud /> Publish Build
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
+          <Download /> Download Build
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
+          <Delete className="text-destructive" /> Delete Build
+        </DropdownMenuItem>
+      </BuildMenuDropDown>
+    </BuildSelector>
   );
 }
 

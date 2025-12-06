@@ -4,10 +4,12 @@ import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editor/prettifyMime";
+import { TemplateManager } from "@/features/templating/TemplateManager";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/builder-types";
+import { Workspace } from "@/workspace/Workspace";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
@@ -25,6 +27,9 @@ function logLine(message: string, type: BuildLogType = "info") {
 
 export class BuildRunner {
   build: BuildDAO;
+  private workspace?: Workspace;
+  private templateManager?: TemplateManager;
+
   get completed() {
     return this.build.completed;
   }
@@ -85,17 +90,19 @@ export class BuildRunner {
     return l;
   };
 
-  static async recall({ buildId }: { buildId: string }): Promise<BuildRunner> {
+  static async recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
     if (!build) throw new Error(`Build with ID ${buildId} not found`);
     return new BuildRunner({
       build,
+      workspace,
     });
   }
 
-  static create({ build }: { build: BuildDAO }): BuildRunner {
+  static create({ build, workspace }: { build: BuildDAO; workspace?: Workspace }): BuildRunner {
     return new BuildRunner({
       build,
+      workspace,
     });
   }
 
@@ -107,8 +114,12 @@ export class BuildRunner {
     return this.build.guid;
   }
 
-  constructor({ build }: { build: BuildDAO }) {
+  constructor({ build, workspace }: { build: BuildDAO; workspace?: Workspace }) {
     this.build = build;
+    this.workspace = workspace;
+    if (workspace) {
+      this.templateManager = new TemplateManager(workspace);
+    }
   }
 
   onLog = (callback: (log: BuildLogLine) => void) => {
@@ -358,7 +369,26 @@ export class BuildRunner {
     await this.ensureDirectoryExists(dirname(outputPath));
 
     const globalCssPath = await this.getGlobalCssPath();
-    const html = mustache.render(content, { globalCssPath });
+
+    let html: string;
+    if (this.templateManager) {
+      // Use TemplateManager which provides proper template data context
+      const templateData = {
+        globalCssPath,
+        // Add template-specific data that contains the date
+        it: {
+          date: new Date().toISOString(),
+        },
+        // Add the date directly at the root level too for compatibility
+        date: new Date().toISOString(),
+        // The helpers will be added by the template manager automatically
+      };
+
+      html = await this.templateManager.renderTemplate(node.path, templateData);
+    } else {
+      // Fallback to direct mustache rendering (legacy behavior)
+      html = mustache.render(content, { globalCssPath });
+    }
 
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
     this.log(`Template processed: ${relativePath}`);
@@ -456,7 +486,8 @@ export class BuildRunner {
     if (post.frontMatter.layout && !isTemplateFile(post.frontMatter.layout)) {
       throw new Error(`Unknown template type for layout: ${post.frontMatter.layout}`);
     }
-    const type = getMimeType(post.frontMatter.layout!);
+    const mimeType = getMimeType(post.frontMatter.layout!);
+    const type = mimeType === "text/x-mustache" || mimeType === "text/x-ejs" ? mimeType : "text/x-mustache"; // fallback to mustache
     return post.frontMatter.layout
       ? {
           layout: await this.loadTemplate(relPath(`_layouts/${post.frontMatter.layout}`)),
