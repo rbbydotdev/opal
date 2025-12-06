@@ -1,5 +1,4 @@
 import { useFileContents } from "@/context/useFileContents";
-import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { HistorySnapDBProvider } from "@/data/dao/HistoryDAO";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
@@ -8,6 +7,7 @@ import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
+import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";

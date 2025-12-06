@@ -1,6 +1,6 @@
 import { BuildPublisherCmd, BuildPublisherContext } from "@/components/publish-modal/PubicationModalCmdContext";
 import { PublishModalStack } from "@/components/publish-modal/PublishModalStack";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { ReactNode, useRef } from "react";
 
 export const PublicationModalProvider = ({ children }: { children: ReactNode }) => {

@@ -1,12 +1,12 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
-import { WorkspaceRouteType } from "@/context/WorkspaceContext";
 import { Thumb } from "@/data/Thumb";
 import { useEditable } from "@/hooks/useEditable";
 import { AbsPath, equals, isImage, prefix, relPath, RelPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
+import { WorkspaceRouteType } from "@/workspace/WorkspaceContext";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { FileCode2, FileText, Globe } from "lucide-react";

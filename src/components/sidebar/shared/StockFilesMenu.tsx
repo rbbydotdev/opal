@@ -8,12 +8,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { FileCode2Icon, FileTextIcon, Globe, Package } from "lucide-react";
 import { ComponentProps, ReactNode, useRef } from "react";
 

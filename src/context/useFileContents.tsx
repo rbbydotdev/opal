@@ -1,9 +1,9 @@
-import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
+import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

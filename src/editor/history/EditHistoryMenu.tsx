@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useSnapHistoryDB, useSnapHistoryPendingSave } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { EditViewImage } from "@/editor/history/EditViewImage";
@@ -16,6 +15,7 @@ import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
 import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Cell, markdown$, markdownSourceEditorValue$ } from "@mdxeditor/editor";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History, X } from "lucide-react";
 import { Fragment, useState } from "react";

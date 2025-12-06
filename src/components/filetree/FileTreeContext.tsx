@@ -1,9 +1,9 @@
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
 import { FileTree, NULL_FILE_TREE } from "@/components/filetree/Filetree";
 import { NULL_TREE_ROOT, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
-import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/context/WorkspaceContext";
 import { Disk } from "@/data/disk/Disk";
 import { AbsPath } from "@/lib/paths2";
+import { useWatchWorkspaceFileTree, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { createContext, useContext } from "react";
 
 export const NoopContextMenu: FileItemContextMenuComponentType = ({ children }) => <>{children}</>;

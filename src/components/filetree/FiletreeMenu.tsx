@@ -1,17 +1,17 @@
 import { EditableDir } from "@/components/filetree/EditableDir";
 import { EditableFile } from "@/components/filetree/EditableFile";
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
+import { NoopContextMenu } from "@/components/filetree/FileTreeContext";
 import { FileTreeDragPreview } from "@/components/filetree/FileTreeDragPreview";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { NoopContextMenu } from "@/context/FileTreeContext";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
 import { AbsPath } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType, NodeDataType } from "@/types/FiletreeTypes";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import cn from "clsx";
 import React from "react";
 

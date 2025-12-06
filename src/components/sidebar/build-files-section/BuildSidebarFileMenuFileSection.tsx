@@ -1,13 +1,13 @@
+import { FileTreeProvider, useFileTreeContext } from "@/components/filetree/FileTreeContext";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/RootFileMenuBanner";
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/sidebar/trash-section/TinyNotice";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { FileTreeProvider, useFileTreeContext } from "@/context/FileTreeContext";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useMemo } from "react";
 
 const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }) => {

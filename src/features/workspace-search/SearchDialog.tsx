@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useWorkspaceSearchResults } from "@/data/dao/useWorkspaceSearchResults";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { SearchResult } from "@/features/search/SearchResults";
@@ -15,6 +14,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, absPath, joinPath } from "@/lib/paths2";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { WorkspaceSearchItem } from "@/workspace/WorkspaceScannable";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, FileTextIcon, Loader, Search, SearchXIcon, X } from "lucide-react";

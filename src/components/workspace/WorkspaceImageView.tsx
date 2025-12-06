@@ -1,9 +1,9 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
-import { useCurrentFilepath } from "@/context/WorkspaceContext";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
 import { Workspace } from "@/workspace/Workspace";
+import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { useNavigate } from "@tanstack/react-router";
 
 export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Workspace }) {

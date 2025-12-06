@@ -1,4 +1,5 @@
 import { FileItemContextMenuComponentType } from "@/components/filetree/FileItemContextMenuComponentType";
+import { useFileTreeContext } from "@/components/filetree/FileTreeContext";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useFiletreeMenuContextMenuActions } from "@/components/filetree/useFiletreeMenuContextMenuActions";
@@ -21,8 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
-import { useFileTreeContext } from "@/context/FileTreeContext";
-import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { useLeftWidth } from "@/features/live-preview/EditorSidebarLayout";
@@ -33,6 +32,7 @@ import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
 import { Workspace } from "@/workspace/Workspace";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import {
   ClipboardCopy,
   ClipboardPasteIcon,
