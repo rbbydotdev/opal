@@ -1,5 +1,5 @@
 import { useFileContents } from "@/context/useFileContents";
-import { useSnapHistoryDB } from "@/data/dao/HistoryDAO";
+import { useSnapHistoryDB } from "@/data/dao/HistorySnapDBContext";
 import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
 import { EditHistoryMenu } from "@/editor/history/EditHistoryMenu";
 import { useEditorHistoryPlugin2WithRealm } from "@/editor/history/useEditorHistoryPlugin2WithRealm";
