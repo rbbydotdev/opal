@@ -1,6 +1,4 @@
 import { useConfirm } from "@/components/ConfirmContext";
-import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
-import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import {
   SelectableListContext,
   SelectableListContextValue,
@@ -8,7 +6,9 @@ import {
   SelectableListItemContextValue,
   useSelectableListContext,
   useSelectableListItemContext,
-} from "@/components/sidebar/selectable-list/SelectableItemContext";
+} from "@/components/selectable-list/SelectableItemContext";
+import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
+import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";

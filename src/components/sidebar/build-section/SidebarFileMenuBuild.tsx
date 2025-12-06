@@ -4,6 +4,7 @@ import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextP
 import { useConfirm } from "@/components/ConfirmContext";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
+import { SelectableListItemAction } from "@/components/selectable-list/SelectableList";
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/sidebar/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/sidebar/build-files-section/useBuildManager";
@@ -12,7 +13,6 @@ import { SidebarBuildsList } from "@/components/sidebar/build-section/SidebarBui
 import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
 import { SidebarDestinationList } from "@/components/sidebar/build-section/SidebarDestinationList";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
-import { SelectableListItemAction } from "@/components/sidebar/selectable-list/SelectableList";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";

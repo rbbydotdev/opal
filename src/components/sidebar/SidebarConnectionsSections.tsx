@@ -12,7 +12,7 @@ import {
   SelectableListItemMenu,
   SelectableListItemSubLabel,
   SelectableListRoot,
-} from "@/components/sidebar/selectable-list/SelectableList";
+} from "@/components/selectable-list/SelectableList";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";

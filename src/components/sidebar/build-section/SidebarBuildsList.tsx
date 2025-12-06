@@ -1,6 +1,4 @@
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
-import { BuildLabel } from "@/components/sidebar/build-files-section/BuildLabel";
-import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -8,7 +6,9 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/sidebar/selectable-list/SelectableList";
+} from "@/components/selectable-list/SelectableList";
+import { BuildLabel } from "@/components/sidebar/build-files-section/BuildLabel";
+import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { coerceError } from "@/lib/errors/errors";

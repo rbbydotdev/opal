@@ -1,6 +1,4 @@
 import { useDestinationManager } from "@/components/DestinationManagerContext";
-import { DeployLabel } from "@/components/sidebar/build-files-section/DeployLabel";
-import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -8,7 +6,9 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/sidebar/selectable-list/SelectableList";
+} from "@/components/selectable-list/SelectableList";
+import { DeployLabel } from "@/components/sidebar/build-files-section/DeployLabel";
+import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";
