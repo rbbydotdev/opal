@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
-import { useThemeContext } from "./ThemeContextValue";
+import { useThemeContext } from "./ThemeContext";
 
 type ButtonVariant = "lg" | "sm";
 

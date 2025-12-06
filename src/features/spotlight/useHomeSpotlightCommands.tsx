@@ -2,7 +2,7 @@ import { toast } from "@/components/ui/sonner";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import type { CmdMap } from "@/features/spotlight/SpotlightSearch";
 import { ThemePreview } from "@/features/theme/ThemePreview";
-import { useThemeContext } from "@/layouts/ThemeContextValue";
+import { useThemeContext } from "@/layouts/ThemeContext";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 

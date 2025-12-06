@@ -13,7 +13,7 @@ import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { useThemeContext } from "@/layouts/ThemeContextValue";
+import { useThemeContext } from "@/layouts/ThemeContext";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { cn } from "@/lib/utils";

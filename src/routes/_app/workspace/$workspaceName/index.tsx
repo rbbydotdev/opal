@@ -7,7 +7,7 @@ import {
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/hooks/useFileTreeDragDrop";
-import { useThemeContext } from "@/layouts/ThemeContextValue";
+import { useThemeContext } from "@/layouts/ThemeContext";
 import { absPath } from "@/lib/paths2";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { createFileRoute } from "@tanstack/react-router";
