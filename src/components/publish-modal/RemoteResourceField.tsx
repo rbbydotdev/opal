@@ -1,33 +1,17 @@
+import {
+  RemoteResourceContext,
+  RemoteResourceContextValue,
+  RemoteResourceMode,
+  useRemoteResourceContext,
+} from "@/components/publish-modal/RemoteResourceMode";
 import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/RemoteConnectionItem";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { Check, Plus, Search, X } from "lucide-react";
-import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
-
-type RemoteResourceMode = "search" | "input" | "create" | "input/success";
-
-type RemoteResourceContextValue<T extends FieldValues, K extends FieldPath<T>> = {
-  mode: RemoteResourceMode;
-  setMode: (mode: RemoteResourceMode) => void;
-  control: Control<T>;
-  fieldName: K;
-  onValueChange: (value: string) => void;
-  getValue: () => string | undefined;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-};
-
-const RemoteResourceContext = createContext<RemoteResourceContextValue<any, any> | null>(null);
-
-function useRemoteResourceContext<T extends FieldValues, K extends FieldPath<T>>() {
-  const context = useContext(RemoteResourceContext);
-  if (!context) {
-    throw new Error("RemoteResource compound components must be used within RemoteResourceRoot");
-  }
-  return context as RemoteResourceContextValue<T, K>;
-}
 
 interface RemoteResourceRootProps<T extends FieldValues, K extends FieldPath<T>> {
   children: ReactNode;
