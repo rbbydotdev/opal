@@ -10,10 +10,10 @@ import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { ThemePreview } from "@/features/theme/ThemePreview";
-import { useTheme } from "@/features/theme/useTheme";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { useThemeContext } from "@/layouts/ThemeContextValue";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath, AbsPath, absPathname, basename, joinPath, prefix, strictPrefix } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
@@ -814,7 +814,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
   const navigate = useNavigate();
 
   const { open: openPreview } = useWindowContextProvider();
-  const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
+  const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useThemeContext();
   const { openNew } = useBuildCreation();
 
   const cmdMap = useMemo(

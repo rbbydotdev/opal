@@ -27,7 +27,6 @@ import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useZoom } from "@/hooks/useZoom";
-import { useTheme } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
@@ -60,6 +59,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { useThemeContext } from "./ThemeContextValue";
 
 type ButtonVariant = "lg" | "sm";
 
@@ -138,7 +138,7 @@ function BigButton({
 
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { storedValue: spin, setStoredValue: setSpin } = useWorkspacButtonBarSpin();
-  const { mode, value, themeName, setPreference, setTheme } = useTheme();
+  const { mode, value, themeName, setPreference, setTheme } = useThemeContext();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const { setZoom, isCurrentZoom, availableZooms } = useZoom();
 

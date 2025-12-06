@@ -2,7 +2,7 @@ import { toast } from "@/components/ui/sonner";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import type { CmdMap } from "@/features/spotlight/SpotlightSearch";
 import { ThemePreview } from "@/features/theme/ThemePreview";
-import { useTheme } from "@/features/theme/useTheme";
+import { useThemeContext } from "@/layouts/ThemeContextValue";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 
@@ -32,7 +32,7 @@ const NewCmdSelect = (
 
 export function useHomeSpotlightCommands() {
   const navigate = useNavigate();
-  const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useTheme();
+  const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useThemeContext();
   const cmdMap = useMemo(
     () => ({
       "New Workspace": [
