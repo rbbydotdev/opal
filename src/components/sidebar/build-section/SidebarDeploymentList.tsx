@@ -8,7 +8,7 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/sidebar/SelectableList";
+} from "@/components/sidebar/selectable-list/SelectableList";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";

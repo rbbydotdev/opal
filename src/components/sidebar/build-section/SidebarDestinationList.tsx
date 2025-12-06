@@ -8,7 +8,7 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/sidebar/SelectableList";
+} from "@/components/sidebar/selectable-list/SelectableList";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useDestinations } from "@/data/dao/useDestinations";

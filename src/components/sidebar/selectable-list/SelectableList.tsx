@@ -1,5 +1,14 @@
+import { useConfirm } from "@/components/ConfirmContext";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
+import {
+  SelectableListContext,
+  SelectableListContextValue,
+  SelectableListItemContext,
+  SelectableListItemContextValue,
+  useSelectableListContext,
+  useSelectableListItemContext,
+} from "@/components/sidebar/selectable-list/SelectableItemContext";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -23,56 +32,7 @@ import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExp
 import { IS_MAC } from "@/lib/isMac";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, Delete, Ellipsis, MoreHorizontal, SquareDashed } from "lucide-react";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useConfirm } from "../ConfirmContext";
-
-type SelectableItem = {
-  id: string;
-  ItemComponent: React.ComponentType<{ id: string; isSelected: boolean }>;
-};
-
-type SelectableListContextValue<T = any> = {
-  items: SelectableItem[];
-  data?: T[];
-  getItemId?: (item: T) => string;
-  selected: string[];
-  isSelected: (id: string) => boolean;
-  toggleSelected: (id: string) => void;
-  setSelected: React.Dispatch<React.SetStateAction<string[]>>;
-  handleSelect: (sectionRef: React.RefObject<HTMLDivElement | null>, event: React.MouseEvent, id: string) => void;
-  onClick?: (id: string) => void;
-  onDelete: (id: string) => void;
-  emptyLabel?: string;
-  showGrip?: boolean;
-  allItemIds: string[];
-  setChildItemIds: (ids: string[]) => void;
-};
-
-const SelectableListContext = createContext<SelectableListContextValue | null>(null);
-
-// Context for the current item being rendered
-type SelectableListItemContextValue<T = any> = {
-  itemId: string;
-  itemData?: T;
-};
-
-const SelectableListItemContext = createContext<SelectableListItemContextValue | null>(null);
-
-const useSelectableListContext = () => {
-  const context = useContext(SelectableListContext);
-  if (!context) {
-    throw new Error("SelectableList compound components must be used within SelectableListRoot");
-  }
-  return context;
-};
-
-const useSelectableListItemContext = () => {
-  const context = useContext(SelectableListItemContext);
-  if (!context) {
-    throw new Error("SelectableListItemAction must be used within SelectableListItem");
-  }
-  return context;
-};
+import { default as React, useEffect, useRef, useState } from "react";
 
 type SelectableListRootProps<T = any> = {
   children: React.ReactNode;
@@ -462,3 +422,7 @@ export function SelectableListItemAction({ children, onClick, icon, destructive 
     </DropdownMenuItem>
   );
 }
+export type SelectableItem = {
+  id: string;
+  ItemComponent: React.ComponentType<{ id: string; isSelected: boolean }>;
+};
