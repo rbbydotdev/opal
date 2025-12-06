@@ -17,20 +17,21 @@ import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeUR
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
-import { ThemeProvider, useTheme } from "@/layouts/ThemeProvider";
+import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { cn } from "@/lib/utils";
 import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import { Toaster } from "sonner";
+import { useThemeContext } from "./ThemeContextValue";
 
 interface MainAppLayoutProps {
   children: React.ReactNode;
 }
 
 const Background = ({ children }: { children: React.ReactNode }) => {
-  const { theme } = useTheme();
+  const { theme } = useThemeContext();
   return (
     <>
       <div

@@ -1,25 +1,8 @@
 import { DEFAULT_THEME_STATE, ResolvedTheme, ThemePreference, ThemeState } from "@/features/theme/theme-constants";
 import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/features/theme/theme-lib";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
-
-interface ThemeContextValue {
-  // Theme mode (light/dark) settings
-  value: ThemePreference;
-  theme: ResolvedTheme;
-  preference: ThemePreference;
-  setPreference: (pref: ThemePreference) => void;
-  toggleTheme: () => void;
-
-  // Theme selection
-  themeName: string;
-  mode: ResolvedTheme;
-  setMode: (mode: ThemePreference) => void;
-  setTheme: (themeName: string) => void;
-  availableThemes: string[];
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+import { ThemeContext, ThemeContextValue } from "@/layouts/ThemeContextValue";
+import React, { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 // Helper to get the system theme
 const getSystemTheme = (): ResolvedTheme => {
@@ -29,11 +12,9 @@ const getSystemTheme = (): ResolvedTheme => {
   return "light";
 };
 
-interface ThemeProviderProps {
+export const ThemeProvider: React.FC<{
   children: ReactNode;
-}
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+}> = ({ children }) => {
   // Light/dark mode preference
   const { storedValue: modePreference, setStoredValue: setModePreference } = useLocalStorage<ThemePreference>(
     "theme/lightdark",
@@ -120,12 +101,4 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-};
-
-export const useTheme = (): ThemeContextValue => {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return ctx;
 };

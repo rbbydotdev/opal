@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useThemeContext } from "@/layouts/ThemeContextValue";
 // import { CodeMirrorEditor } from "@/app/editor/CodeMirror";
-import { useTheme } from "@/features/theme/useTheme";
 import { getContrastRatio } from "@/lib/colorUtils";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, FileText, Home, Search, Settings, XCircle } from "lucide-react";
@@ -447,7 +447,7 @@ function ThemeTestComponent() {
 }
 
 function ThemesPage() {
-  const { themeName, mode, setTheme, availableThemes } = useTheme();
+  const { themeName, mode, setTheme, availableThemes } = useThemeContext();
 
   // Apply the modern-minimal theme on mount for testing
   useEffect(() => {
