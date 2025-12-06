@@ -68,16 +68,26 @@ export abstract class DeployRunner<TBundle extends DeployBundle<unknown>, TParam
   }
 
   protected readonly log = (message: string, type?: DeployLogType) => {
-    const l = logLine(message, type);
-    this.deploy.logs = [...this.deploy.logs, l];
-    this.emitter.emit("log", l);
-    return l;
+    const line = logLine(message, type);
+    this.deploy.logs = [...this.deploy.logs, line];
+    this.emitter.emit("log", line);
+    return line;
   };
 
   abstract runDeploy(params: TParams): Promise<void>;
 }
 
-export class MyDeployRunner<TBundle extends DeployBundle<any>, TParams> extends DeployRunner<TBundle, TParams> {
+// export class GithubDeployRunner extends DeployRunner<DeployBundle<any>, { owner: string; repo: string; branch: string; message?: string }> {
+//   private bundle: TBundle;
+//   async runDeploy(params: { owner: string; repo: string; branch: string; message?: string }): Promise<void> {
+//     this.log("Starting deployment...");
+//     await this.build.Disk.refresh();
+//     await this.agent.deployFiles(this.bundle, params);
+//     this.log("Deployment completed successfully.");
+//   }
+// }
+
+export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams> extends DeployRunner<TBundle, TParams> {
   private bundle: TBundle;
 
   constructor(params: {

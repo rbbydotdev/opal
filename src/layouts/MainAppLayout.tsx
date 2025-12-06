@@ -40,7 +40,7 @@ const Background = ({ children }: { children: React.ReactNode }) => {
           backgroundImage: theme === "dark" ? "url('/opal-blank.svg')" : "url('/opal.svg')",
           backgroundRepeat: "repeat",
           backgroundSize: "600px 600px",
-          left: "100px",
+          left: "0px",
           opacity: theme === "dark" ? 0.3 : 0.2,
         }}
         className="h-full flex items-center justify-center absolute inset-0 bg-background -z-[1]"
