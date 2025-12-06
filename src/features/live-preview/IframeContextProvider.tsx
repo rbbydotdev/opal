@@ -21,13 +21,11 @@ interface PreviewContextProvider {
 export type ExtCtxReadyContext = {
   document: Document;
   window: Window;
-  // rootElement: HTMLElement;
   ready: true;
 };
 export type ExtCtxNotReadyContext = {
   document: null;
   window: null;
-  // rootElement: null;
   ready: false;
 };
 
@@ -42,7 +40,6 @@ type ExtCtxEventMap = {
 const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   document: null,
   window: null,
-  // rootElement: null,
   ready: false,
 };
 
@@ -151,16 +148,6 @@ export function useWindowContextProvider() {
   if (!context) {
     throw new Error("useWindowContextProvider must be used within a WindowContextProviderComponent");
   }
-  return context;
-}
-
-export function useContextProvider<T extends PreviewContextProvider>(managerFactoryFn: () => T) {
-  const provider = useMemo(() => managerFactoryFn(), [managerFactoryFn]);
-  const context = useSyncExternalStore(provider.onReady, provider.getContext);
-  useEffect(() => {
-    return () => provider.teardown();
-  }, [provider]);
-
   return context;
 }
 
