@@ -52,7 +52,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { Link } from "@tanstack/react-router";
 // import { RepoInfoType } from "../../../features/git-repo/GitRepo";
 // import { useConfirm } from "../../Confirm";
-import { useConfirm } from "@/components/Confirm";
+import { useConfirm } from "@/components/ConfirmContext";
 import { RepoInfoType } from "@/features/git-repo/GitRepo";
 import { CommitManagerSection } from "./CommitManagerSection";
 import { RemoteManagerSection } from "./GitRemoteManager";

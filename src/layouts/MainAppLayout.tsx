@@ -1,5 +1,5 @@
 import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
-import { ConfirmProvider } from "@/components/Confirm";
+import { ConfirmProvider } from "@/components/ConfirmContext";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";

@@ -1,4 +1,4 @@
-import { useConfirm } from "@/components/Confirm";
+import { useConfirm } from "@/components/ConfirmContext";
 import { GitCommitManager } from "@/components/sidebar/sync-section/GitCommitManager";
 import { TooltipToast } from "@/components/ui/tooltip-toast";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";

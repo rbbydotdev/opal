@@ -9,36 +9,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import React, { createContext, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 
-type ConfirmContextType = {
-  open: <U extends () => unknown>(
-    cb: U,
-    title: React.ReactNode,
-    description: React.ReactNode
-  ) => Promise<ReturnType<U>>;
-};
-
-const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
-
-export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-  const { open, cmdRef } = useConfirmCmd();
-
-  return (
-    <ConfirmContext.Provider value={{ open }}>
-      {children}
-      <Confirm cmdRef={cmdRef} />
-    </ConfirmContext.Provider>
-  );
-}
-
-export function useConfirm() {
-  const ctx = useContext(ConfirmContext);
-  if (!ctx) throw new Error("useConfirm must be used within a ConfirmProvider");
-  return ctx;
-}
-
-function useConfirmCmd() {
+export function useConfirmCmd() {
   const cmdRef = useRef<{
     open: <U extends () => unknown>(
       cb: U,
@@ -55,7 +28,7 @@ function useConfirmCmd() {
   };
 }
 
-function Confirm({
+export function Confirm({
   cmdRef,
 }: {
   cmdRef: React.ForwardedRef<{

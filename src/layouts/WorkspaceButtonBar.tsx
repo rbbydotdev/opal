@@ -1,4 +1,4 @@
-import { useConfirm } from "@/components/Confirm";
+import { useConfirm } from "@/components/ConfirmContext";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
