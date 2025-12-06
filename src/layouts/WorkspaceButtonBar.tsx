@@ -27,7 +27,7 @@ import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useZoom } from "@/hooks/useZoom";
-import { useThemeSettings } from "@/layouts/ThemeProvider";
+import { useTheme } from "@/layouts/ThemeProvider";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
@@ -138,7 +138,7 @@ function BigButton({
 
 function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { storedValue: spin, setStoredValue: setSpin } = useWorkspacButtonBarSpin();
-  const { mode, value, themeName, setPreference, setTheme } = useThemeSettings();
+  const { mode, value, themeName, setPreference, setTheme } = useTheme();
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const { setZoom, isCurrentZoom, availableZooms } = useZoom();
 
