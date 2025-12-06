@@ -8,7 +8,7 @@ import {
   SelectableListItemMenu,
   SelectableListItems,
   SelectableListSimple,
-} from "@/components/sidebar/SelectableList";
+} from "@/components/sidebar/selectable-list/SelectableList";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { coerceError } from "@/lib/errors/errors";

@@ -12,7 +12,7 @@ import { SidebarBuildsList } from "@/components/sidebar/build-section/SidebarBui
 import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
 import { SidebarDestinationList } from "@/components/sidebar/build-section/SidebarDestinationList";
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
-import { SelectableListItemAction } from "@/components/sidebar/SelectableList";
+import { SelectableListItemAction } from "@/components/sidebar/selectable-list/SelectableList";
 import { SelectHighlight } from "@/components/sidebar/sync-section/SelectHighlight";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
