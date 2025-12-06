@@ -1,7 +1,7 @@
 import { isFirefox } from "@/features/live-preview/isFirefox";
+import { WindowContext } from "@/features/live-preview/WindowContext";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
-import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 
 export interface PreviewContext {
   document: Document | null;
@@ -24,7 +24,7 @@ export type ExtCtxReadyContext = {
   // rootElement: HTMLElement;
   ready: true;
 };
-type ExtCtxNotReadyContext = {
+export type ExtCtxNotReadyContext = {
   document: null;
   window: null;
   // rootElement: null;
@@ -201,7 +201,7 @@ class IframeManager extends BaseContextProvider {
   }
 }
 
-class WindowManager extends BaseContextProvider {
+export class WindowManager extends BaseContextProvider {
   private windowRef: { current: Window | null } = { current: null };
   private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
   private pollInterval: number | null = null;
@@ -276,39 +276,4 @@ class WindowManager extends BaseContextProvider {
     super.teardown();
     this.close();
   }
-}
-
-// React Context for shared WindowManager
-type WindowContextValue = (ExtCtxReadyContext | ExtCtxNotReadyContext) & {
-  isOpen: boolean;
-  open: () => void;
-  close: () => void;
-};
-
-const WindowContext = createContext<WindowContextValue | null>(null);
-
-export function WindowContextProviderComponent({ children }: { children: React.ReactNode }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const contextProvider = useMemo(
-    () => new WindowManager({ workspaceName: currentWorkspace.name }),
-    [currentWorkspace.name]
-  );
-  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
-  const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
-
-  useEffect(() => {
-    return () => contextProvider.teardown();
-  }, [contextProvider]);
-
-  const value: WindowContextValue = useMemo(
-    () => ({
-      ...context,
-      isOpen,
-      open: () => contextProvider.open(),
-      close: () => contextProvider.close(),
-    }),
-    [context, isOpen, contextProvider]
-  );
-
-  return <WindowContext.Provider value={value}>{children}</WindowContext.Provider>;
 }

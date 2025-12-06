@@ -1,18 +1,13 @@
+import { ScrollEventsConts } from "@/features/live-preview/ScrollEventsConts";
+import {
+  ScrollEventPayload,
+  ScrollSyncContext,
+  useScrollSyncContext,
+} from "@/features/live-preview/useScrollSyncContext";
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { nanoid } from "nanoid";
-import { createContext, RefObject, useContext, useEffect, useMemo, useRef } from "react";
-
-const ScrollEvents = {
-  SCROLL: "scroll" as const,
-};
-type ScrollEventPayload = {
-  [ScrollEvents.SCROLL]: { x: number; y: number; scrollId: string; originId: string };
-};
-
-const ScrollSyncCtx = createContext<{
-  emitter: SuperEmitter<ScrollEventPayload>;
-} | null>(null);
+import { RefObject, useEffect, useMemo, useRef } from "react";
 
 function clamp(value: number, min = 0, max = 1) {
   return Math.min(Math.max(value, min), max);
@@ -30,7 +25,7 @@ function useScrollSync({
   workspaceName?: string;
 }) {
   listenRef = listenRef || elementRef;
-  const context = useContext(ScrollSyncCtx);
+  const context = useScrollSyncContext();
   const workspaceRoute = useWorkspaceRoute();
   const path = currentPath || workspaceRoute.path;
   const name = workspaceName || workspaceRoute.name;
@@ -57,7 +52,7 @@ function useScrollSync({
       const relX = clamp(maxX > 0 ? el.scrollLeft / maxX : 0);
       const relY = clamp(maxY > 0 ? el.scrollTop / maxY : 0);
 
-      emitter.emit(ScrollEvents.SCROLL, { x: relX, y: relY, scrollId, originId });
+      emitter.emit(ScrollEventsConts.SCROLL, { x: relX, y: relY, scrollId, originId });
     };
 
     const handleScrollEvent = async ({
@@ -65,7 +60,7 @@ function useScrollSync({
       y,
       scrollId: incomingScrollId,
       originId: incomingOriginId,
-    }: ScrollEventPayload[typeof ScrollEvents.SCROLL]) => {
+    }: ScrollEventPayload[typeof ScrollEventsConts.SCROLL]) => {
       if (incomingScrollId !== scrollId || incomingOriginId === originId) return;
 
       scrollPause.current = true;
@@ -87,7 +82,7 @@ function useScrollSync({
     };
 
     listenEl.addEventListener("scroll", handleScroll, { passive: true });
-    const unsubscribe = emitter.on(ScrollEvents.SCROLL, handleScrollEvent);
+    const unsubscribe = emitter.on(ScrollEventsConts.SCROLL, handleScrollEvent);
 
     return () => {
       el.removeEventListener("scroll", handleScroll);
@@ -100,7 +95,7 @@ function useScrollSync({
 
 export function ScrollSyncProvider({ children }: { children: React.ReactNode }) {
   const emitter = useMemo(() => new SuperEmitter<ScrollEventPayload>(), []);
-  return <ScrollSyncCtx.Provider value={{ emitter }}>{children}</ScrollSyncCtx.Provider>;
+  return <ScrollSyncContext.Provider value={{ emitter }}>{children}</ScrollSyncContext.Provider>;
 }
 
 export function ScrollSync({
