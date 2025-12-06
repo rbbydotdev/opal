@@ -6,8 +6,10 @@ import { getMimeType } from "@/lib/mimeType";
 import {
   AbsPath,
   absPath,
+  allowedFiletreePathMove,
   basename,
   dirname,
+  dropPath,
   depth as getDepth,
   incPath,
   isCss,
@@ -21,6 +23,7 @@ import {
   isText,
   joinPath,
   prefix,
+  reduceLineage,
   RelPath,
   relPath,
   strictPrefix,
@@ -780,3 +783,13 @@ export class SourceDirTreeNode extends TreeDir {
 export const ROOT_NODE = TreeNode.FromPath(absPath("/"), "dir");
 
 export const NULL_TREE_ROOT = new TreeDirRoot();
+
+export function dropNode(targetPath: AbsPath, node: TreeNode) {
+  return TreeNode.FromPath(dropPath(targetPath, node), node.type);
+}
+
+export function dropNodes(targetPath: AbsPath, nodes: TreeNode[]) {
+  return reduceLineage(nodes)
+    .filter((node) => allowedFiletreePathMove(targetPath, node))
+    .map((node) => [node, dropNode(targetPath, node)]) as [TreeNode, TreeNode][];
+}

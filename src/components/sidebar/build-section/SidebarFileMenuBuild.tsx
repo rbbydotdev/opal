@@ -1,6 +1,4 @@
-import { BuildModal } from "@/components/build-modal/BuildModal";
 import { useBuildCreation } from "@/components/build-modal/BuildModalContext";
-import { useBuildCreationCmd } from "@/components/build-modal/BuildModalContextProvider";
 import { useConfirm } from "@/components/ConfirmContext";
 import { FileTreeProvider } from "@/components/filetree/FileTreeContext";
 import { FileTreeMenuCtxProvider } from "@/components/filetree/FileTreeMenuContext";
@@ -55,7 +53,6 @@ export function SidebarFileMenuBuild({
   currentWorkspace: Workspace;
 }) {
   const [expanded, setExpand] = useSingleItemExpander("build");
-  const { cmdRef } = useBuildCreationCmd();
   const { openNew } = useBuildCreation();
   const { open: openNewPub } = useBuildPublisher();
   const { open: openConfirm } = useConfirm();
@@ -104,13 +101,6 @@ export function SidebarFileMenuBuild({
   };
   return (
     <>
-      <BuildModal
-        onBuild={({ build }) => {
-          setBuildId(build.guid);
-        }}
-        currentWorkspace={currentWorkspace}
-        cmdRef={cmdRef}
-      />
       <SidebarGroup {...props}>
         <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
           <CollapsibleTrigger asChild>
