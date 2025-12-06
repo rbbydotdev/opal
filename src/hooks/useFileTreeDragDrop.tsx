@@ -1,8 +1,8 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
-import { TreeNode } from "@/components/filetree/TreeNode";
+import { dropNodes, TreeNode } from "@/components/filetree/TreeNode";
 import { prepareNodeDataTransfer } from "@/features/filetree-copy-paste/prepareNodeDataTransfer";
 import { errF } from "@/lib/errors/errors";
-import { AbsPath, dropNodes, joinPath } from "@/lib/paths2";
+import { AbsPath, joinPath } from "@/lib/paths2";
 import { INTERNAL_NODE_FILE_TYPE, NodeDataJType } from "@/types/FiletreeTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
