@@ -3,7 +3,7 @@ import { RootFileMenuBanner } from "@/components/sidebar/main-files-section/Root
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/sidebar/trash-section/TinyNotice";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { FileTreeProvider, useFileTree } from "@/context/FileTreeProvider";
+import { FileTreeProvider, useFileTreeContext } from "@/context/FileTreeContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { SpecialDirs } from "@/data/SpecialDirs";
@@ -23,7 +23,7 @@ const BuildSideBarLabel = ({ title, id }: { title: React.ReactNode; id: string }
 
 function BuildSidebarFileMenuFileSectionInternal({ className, build }: { className?: string; build: BuildDAO | null }) {
   const { currentWorkspace } = useWorkspaceContext();
-  const { fileTree } = useFileTree();
+  const { fileTree } = useFileTreeContext();
   const isEmpty = !build?.buildPath
     ? true
     : Object.keys(fileTree.nodeFromPath(build?.buildPath)?.children ?? {}).length === 0;

@@ -2,7 +2,7 @@ import { TrashFileTreeContextMenu } from "@/components/sidebar/file-menu/TrashFi
 import { SidebarFileMenuFiles } from "@/components/sidebar/shared/SidebarFileMenuFiles";
 import { TinyNotice } from "@/components/sidebar/trash-section/TinyNotice";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";

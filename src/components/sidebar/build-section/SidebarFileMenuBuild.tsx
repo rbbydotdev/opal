@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components/ui/sidebar";
-import { FileTreeProvider } from "@/context/FileTreeProvider";
+import { FileTreeProvider } from "@/context/FileTreeContext";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";

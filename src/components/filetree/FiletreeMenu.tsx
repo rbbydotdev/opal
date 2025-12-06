@@ -6,7 +6,7 @@ import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeDirRoot, TreeNode } from "@/components/filetree/TreeNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { NoopContextMenu } from "@/context/FileTreeProvider";
+import { NoopContextMenu } from "@/context/FileTreeContext";
 import { useWorkspaceContext } from "@/context/WorkspaceContext";
 import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";

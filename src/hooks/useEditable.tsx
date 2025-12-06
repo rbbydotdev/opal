@@ -1,7 +1,7 @@
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
 import { TreeDir, TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { useRepoInfoContext } from "@/components/sidebar/file-menu/FileTreeRepoProvider";
-import { useFileTree } from "@/context/FileTreeProvider";
+import { useFileTreeContext } from "@/context/FileTreeContext";
 import { useWorkspaceRoute } from "@/context/WorkspaceContext";
 import { useTreeExpanderContext } from "@/features/tree-expander/useTreeExpander";
 import { useVisibleFlatTree } from "@/hooks/useVisibleFlatTree";
@@ -28,7 +28,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const currentFile = useWorkspaceRoute().path;
 
-  const { flatTree } = useFileTree();
+  const { flatTree } = useFileTreeContext();
   const { commitChange, trashSelectedFiles } = useWorkspaceFileMgmt(currentWorkspace);
   const { editing, editType, anchorIndex, setFileTreeCtx, focused, virtual, selectedRange } = useFileTreeMenuCtx();
 
