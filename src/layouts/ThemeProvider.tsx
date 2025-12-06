@@ -129,6 +129,3 @@ export const useTheme = (): ThemeContextValue => {
   }
   return ctx;
 };
-
-// Backward compatibility alias
-export const useThemeSettings = useTheme;

@@ -7,7 +7,7 @@ import {
   isExternalFileDrop,
   useHandleDropFilesEventForNodeRedirect,
 } from "@/hooks/useFileTreeDragDrop";
-import { useThemeSettings } from "@/layouts/ThemeProvider";
+import { useTheme } from "@/layouts/ThemeProvider";
 import { absPath } from "@/lib/paths2";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { createFileRoute } from "@tanstack/react-router";
@@ -20,7 +20,7 @@ function WorkspaceIndexPage() {
   const { currentWorkspace } = useWorkspaceContext();
 
   const handleExternalDrop = useHandleDropFilesEventForNodeRedirect({ currentWorkspace });
-  const { theme } = useThemeSettings();
+  const { theme } = useTheme();
 
   return (
     <>
