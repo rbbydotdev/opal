@@ -3,7 +3,8 @@ import { ExtCtxReadyContext, PreviewContext } from "@/features/live-preview/Ifra
 import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
-import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, prefix, relPath } from "@/lib/paths2";
+import { getMimeType } from "@/lib/mimeType";
+import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, isTemplateType, prefix, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useEffect, useRef, useState } from "react";
 
@@ -199,7 +200,10 @@ function TemplateRenderer({
     const renderTemplate = async () => {
       try {
         const templateManager = new TemplateManager(currentWorkspace);
-        const templateType = isMustache(path) ? "mustache" : isEjs(path) ? "ejs" : "html";
+        const templateType = getMimeType(path);
+        if (!isTemplateType(templateType)) {
+          throw new Error(`Unsupported template type: ${templateType}`);
+        }
 
         const rendered = await templateManager.renderStringWithMarkdown(
           content || "",

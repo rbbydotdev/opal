@@ -23,7 +23,7 @@ export function MiniTab({
         data-active-tab={active}
         className={cn(
           "relative",
-          "flex-shrink w-full min-w-0 truncate rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-105 transition-transform border-t border-l border-r text-xs p-2 font-mono",
+          "flex-shrink  outline-none w-full min-w-0 truncate rounded-t border-muted active:scale-95 active:translate-y-0.5 text-muted-foreground bg-muted/50 hover:text-primary hover:scale-100 transition-transform border-t border-l border-r text-xs p-2 font-mono",
           {
             "bg-muted border-b border-b-ring": active,
             "bg-transparent": !active,

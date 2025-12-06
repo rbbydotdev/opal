@@ -1,12 +1,11 @@
 import { DefaultFile } from "@/lib/DefaultFile";
-import { AbsPath, isEjs, isMustache } from "@/lib/paths2";
+import { getMimeType } from "@/lib/mimeType";
+import { AbsPath, isEjs, isMustache, isTemplateType, TemplateType } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { BaseRenderer } from "./BaseRenderer";
 import { EtaRenderer, TemplateData } from "./EtaRenderer";
 import { HtmlRenderer, HtmlTemplateData } from "./HtmlRenderer";
 import { MustacheRenderer, MustacheTemplateData } from "./MustacheRenderer";
-
-type TemplateType = "ejs" | "mustache" | "html";
 
 export class TemplateManager {
   static canHandleFile(path: AbsPath): boolean {
@@ -19,35 +18,20 @@ export class TemplateManager {
   constructor(workspace: Workspace) {
     this.workspace = workspace;
     this.renderers = {
-      ejs: new EtaRenderer(workspace), // EJS and .eta files both use ETA renderer internally
-      mustache: new MustacheRenderer(workspace),
-      html: new HtmlRenderer(workspace), // HTML stub renderer (no templating)
+      "text/x-ejs": new EtaRenderer(workspace), // EJS and .eta files both use ETA renderer internally
+      "text/x-mustache": new MustacheRenderer(workspace),
+      "text/html": new HtmlRenderer(workspace), // HTML stub renderer (no templating)
     };
   }
 
-  /**
-   * Gets the template type from file path
-   */
-  private getTemplateType(templatePath: AbsPath): TemplateType {
-    if (templatePath.endsWith(".mustache")) return "mustache";
-    if (templatePath.endsWith(".ejs") || templatePath.endsWith(".eta")) return "ejs";
-    if (templatePath.endsWith(".html")) return "html";
-
-    // Default fallback
-    return "html";
-  }
-
-  /**
-   * Gets the appropriate renderer for a template path
-   */
   private getRenderer(templatePath: AbsPath): BaseRenderer {
-    const templateType = this.getTemplateType(templatePath);
+    const templateType = getMimeType(templatePath);
+    if (!isTemplateType(templateType)) {
+      throw new Error(`Unsupported template type: ${templateType}`);
+    }
     return this.renderers[templateType];
   }
 
-  /**
-   * Renders a template file with live data from workspace
-   */
   async renderTemplate(
     templatePath: AbsPath,
     customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {}
@@ -62,21 +46,15 @@ export class TemplateManager {
     }
   }
 
-  /**
-   * Renders a template string directly
-   */
   renderString(
     templateContent: string,
     customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {},
-    templateType: TemplateType = "html"
+    templateType: TemplateType = "text/html"
   ): string {
     const renderer = this.renderers[templateType];
     return renderer.renderString(templateContent, customData);
   }
 
-  /**
-   * Renders a template with markdown import support (EJS only)
-   */
   async renderTemplateWithMarkdown(
     templatePath: AbsPath,
     customData: TemplateData = {},
@@ -84,9 +62,9 @@ export class TemplateManager {
   ): Promise<string> {
     try {
       const renderer = this.getRenderer(templatePath);
-      const templateType = this.getTemplateType(templatePath);
+      const templateType = getMimeType(templatePath);
 
-      if (templateType === "mustache" || templateType === "html") {
+      if (templateType === "text/x-mustache" || templateType === "text/html") {
         // Mustache and HTML don't support markdown imports, fallback to regular rendering
         return await renderer.renderTemplate(templatePath, customData);
       } else {
@@ -102,19 +80,16 @@ export class TemplateManager {
     }
   }
 
-  /**
-   * Renders a template string with markdown import support (EJS only)
-   */
   async renderStringWithMarkdown(
     templateContent: string,
     customData: TemplateData = {},
     markdownPaths: string[] = [],
-    templateType: TemplateType = "html"
+    templateType: TemplateType = "text/html"
   ): Promise<string> {
     try {
       const renderer = this.renderers[templateType];
 
-      if (templateType === "mustache" || templateType === "html") {
+      if (templateType === "text/x-mustache" || templateType === "text/html") {
         // Mustache and HTML don't support markdown imports, fallback to regular rendering
         return renderer.renderString(templateContent, customData);
       } else {
@@ -127,9 +102,6 @@ export class TemplateManager {
     }
   }
 
-  /**
-   * Gets all template files in the workspace
-   */
   getTemplateFiles(): AbsPath[] {
     const allNodes = this.workspace.getFileTree().all();
     return allNodes
@@ -144,9 +116,6 @@ export class TemplateManager {
       .map((node) => node.path);
   }
 
-  /**
-   * Creates a new template file with default content
-   */
   async createTemplate(templatePath: AbsPath, content?: string): Promise<AbsPath> {
     const defaultContent = content || DefaultFile.fromPath(templatePath);
     return await this.workspace.newFile(
@@ -156,9 +125,6 @@ export class TemplateManager {
     );
   }
 
-  /**
-   * Updates the workspace reference
-   */
   updateWorkspace(workspace: Workspace): void {
     this.workspace = workspace;
     Object.values(this.renderers).forEach((renderer) => renderer.updateWorkspace(workspace));

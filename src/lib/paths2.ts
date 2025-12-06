@@ -155,6 +155,14 @@ export function isText(path: AbsPath | RelPath | string | { toString(): string }
 export function isEjs(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
+
+export const templateMimeTypes = ["text/x-ejs", "text/x-mustache", "text/html"] as const;
+
+export type TemplateType = (typeof templateMimeTypes)[number];
+
+export const isTemplateType = (type: string): type is TemplateType => {
+  return templateMimeTypes.includes(type);
+};
 export function isTemplateFile(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return isEjs(path) || isMustache(path);
 }
