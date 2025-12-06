@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
-import { BuildDAO } from "@/data/dao/BuildDAO";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useBuildRunner } from "@/services/useBuildRunner";
 import { Workspace } from "@/workspace/Workspace";
@@ -15,7 +14,6 @@ import { timeAgo } from "short-time-ago";
 export function BuildModal({
   cmdRef,
   currentWorkspace,
-  onBuild,
 }: {
   currentWorkspace: Workspace;
   cmdRef: React.ForwardedRef<{
@@ -23,7 +21,6 @@ export function BuildModal({
     openEdit: (options: { buildId: string }) => void;
     close: () => void;
   }>;
-  onBuild: ({ build }: { build: BuildDAO }) => void;
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +42,7 @@ export function BuildModal({
   const handleOkay = () => setIsOpen(false);
 
   const handleOpenNew = useCallback(async () => {
-    await openNew(strategy);
+    openNew(strategy);
     setIsOpen(true);
   }, [strategy, openNew]);
 

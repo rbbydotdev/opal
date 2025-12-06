@@ -65,15 +65,13 @@ export function SidebarFileMenuBuild({
 
   const handleBuildToHTML = async () => {
     try {
-      await openNew();
+      await openNew().then(({ guid }) => setBuildId(guid));
     } catch (error) {
       console.error("Build modal error:", error);
     }
   };
   const handlePublishModal = async () => {
-    if (!build) {
-      return;
-    }
+    if (!build) return;
     void openNewPub({ build });
   };
 
@@ -242,13 +240,7 @@ function BuildManager({
   ) : (
     <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
       <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
-        <DropdownMenuItem
-          onClick={() => {
-            if (!build) return;
-            openNewPub({ build });
-          }}
-          disabled={!build}
-        >
+        <DropdownMenuItem onClick={() => build && openNewPub({ build })} disabled={!build}>
           <UploadCloud /> Publish Build
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
