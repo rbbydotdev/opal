@@ -302,7 +302,6 @@ export class TreeNode {
     this.parent = parent;
     this.source = source;
     this.virtualContent = virtualContent;
-    // this._fs = new WeakRef(fs);
   }
 
   remove() {

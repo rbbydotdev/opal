@@ -308,18 +308,21 @@ export const stripTrailingSlash = (path: string): string => {
 export const addTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path : path + "/";
 };
-export function allowedFiletreePathMove(targetPath: AbsPath, node: { path: AbsPath }): boolean {
+export function allowedFiletreePathMove(
+  targetPath: AbsPath,
+  node: { path: AbsPath; toString(): string } | AbsPath
+): boolean {
   // Prevent moving node to its current directory (no-op)
-  if (dirname(node.path) === targetPath) {
+  if (dirname(node) === targetPath) {
     // No-op: trying to move node to its current directory
     return false;
   }
   // Prevent moving node into itself
-  if (node.path === targetPath) {
+  if (node.toString() === targetPath) {
     // Invalid move: trying to move node into itself
     return false;
   }
-  if (targetPath.startsWith(node.path + "/")) {
+  if (targetPath.startsWith(node + "/")) {
     // Invalid move: trying to move node into its own descendant
     return false;
   }

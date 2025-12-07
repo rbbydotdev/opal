@@ -11,7 +11,7 @@ import * as fflate from "fflate";
 import z from "zod";
 import { SWWStore } from "./SWWStore";
 
-const downloadZipSchema = z.discriminatedUnion("type", [
+export const downloadZipSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("workspace"),
   }),
@@ -23,10 +23,11 @@ const downloadZipSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-export async function handleDownloadRequest(workspaceName: string, params?: Record<string, string>): Promise<Response> {
+export async function handleDownloadRequest(
+  workspaceName: string,
+  paramsPayload: z.infer<typeof downloadZipSchema>
+): Promise<Response> {
   try {
-    const paramsPayload = downloadZipSchema.parse(params || { type: "workspace" });
-
     const disk =
       paramsPayload.type === "workspace"
         ? (await SWWStore.tryWorkspace(workspaceName)).getDisk()

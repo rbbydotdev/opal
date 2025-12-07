@@ -3,25 +3,21 @@ import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { isError, NotFoundError } from "@/lib/errors/errors";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
-import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
 import { signalRequest } from "@/lib/service-worker/utils";
 import { BlobWriter, Uint8ArrayReader, ZipWriter, ZipWriterConstructorOptions } from "@zip.js/zip.js";
 import { normalize } from "path";
 import { SWWStore } from "./SWWStore";
 
-export interface DownloadOptions {
-  password: string;
-  encryption: "aes" | "zipcrypto";
-}
-export async function handleDownloadRequestEncrypted(workspaceName: string, event: FetchEvent): Promise<Response> {
-  const workspaceDirName = absPath(strictPathname(workspaceName));
-  const options: DownloadOptions = {
-    password: event.request.headers.get(PassHeader)!,
-    encryption: event.request.headers.get(EncHeader)! as "aes" | "zipcrypto",
-  };
-
+export async function handleDownloadRequestEncrypted(
+  workspaceName: string,
+  options: {
+    password: string;
+    encryption: "aes" | "zipcrypto";
+  }
+): Promise<Response> {
   try {
+    const workspaceDirName = absPath(strictPathname(workspaceName));
     const { password, encryption } = options;
     const zipWriterOptions: ZipWriterConstructorOptions = {
       bufferedWrite: true, // Recommended for better performance with large files

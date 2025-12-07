@@ -1,7 +1,8 @@
 import { isImageType } from "@/lib/fileType";
 import { absPath } from "@/lib/paths2";
+import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/service-worker/handleDocxConvertRequest";
-import { handleDownloadRequest } from "@/lib/service-worker/handleDownloadRequest";
+import { downloadZipSchema, handleDownloadRequest } from "@/lib/service-worker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/service-worker/handleDownloadRequestEncrypted";
 import { handleFaviconRequest } from "@/lib/service-worker/handleFaviconRequest";
 import { handleFileReplace } from "@/lib/service-worker/handleFileReplace";
@@ -12,6 +13,7 @@ import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRe
 import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
 import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearch";
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
+import z from "zod";
 import { withRequestSignal } from "./utils"; // Assuming utils are in the same dir
 
 // --- Handler Context ---
@@ -78,14 +80,10 @@ export const workspaceFilenameSearchHandler = withRequestSignal(async (context: 
   return handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
 });
 
-export const downloadEncryptedHandler = (context: RequestContext) => {
-  console.log(`Handling encrypted download for: ${context.url.href}`);
-  return handleDownloadRequestEncrypted(context.workspaceName, context.event);
-};
-
 export const downloadHandler = (context: RequestContext) => {
   console.log(`Handling download for: ${context.url.href}`);
-  return handleDownloadRequest(context.workspaceName, context.params);
+  const paramsPayload = downloadZipSchema.parse(context.params || { type: "workspace" });
+  return handleDownloadRequest(context.workspaceName, paramsPayload);
 };
 
 export const faviconHandler = withRequestSignal((context: RequestContext) => {
@@ -103,7 +101,7 @@ export const imageHandler = withRequestSignal((context: RequestContext) => {
 
   if (event.request.destination === "image" || isImageType(url.decodedPathname)) {
     console.log(`Handling image request for: ${url.pathname}`);
-    return handleImageRequest(event, url, workspaceName);
+    return handleImageRequest(event.request, url, workspaceName);
   }
   // Fallback to network if it's not a match we handle
   return fetch(event.request);
@@ -141,4 +139,18 @@ export const replaceFileHandler = withRequestSignal(async (context: RequestConte
   console.log(`Replacing files with: ${findReplace.length} pairs`);
 
   return handleFileReplace(url, workspaceName, findReplace);
+});
+
+export const downloadEncryptedHandler = (context: RequestContext) => {
+  console.log(`Handling encrypted download for: ${context.url.href}`);
+  const options = downloadEncSchema.parse({
+    password: context.event.request.headers.get(PassHeader),
+    encryption: context.event.request.headers.get(EncHeader),
+  });
+  return handleDownloadRequestEncrypted(context.workspaceName, options);
+};
+
+const downloadEncSchema = z.object({
+  password: z.string(),
+  encryption: z.union([z.literal("aes"), z.literal("zipcrypto")]),
 });

@@ -29,24 +29,37 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
           );
 
     if (action && fileNodes) {
+      void navigator.clipboard.writeText("");
       try {
-        const sourceNodes = reduceLineage(fileNodes.map((path) => sourceWorkspace.nodeFromPath(path)!)).map((node) =>
-          node.splice(targetNode.closestDir()!)
-        );
+        const sameWorkspace = sourceWorkspace.id === currentWorkspace.id;
+        const targetDir = targetNode.closestDir();
+        const targetPath = targetNode.closestDirPath();
 
-        await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
+        const getSourceNodes = () =>
+          reduceLineage(sourceWorkspace.nodesFromPaths(fileNodes)).map((node) => node.splice(targetDir!));
 
-        if (action === "cut") {
-          //if its the same workspace its a move not a remove + add
-          if (sourceWorkspace.id === currentWorkspace.id) {
-            const targetPath = targetNode.closestDirPath();
-            await currentWorkspace.renameMultiple(dropNodes(targetPath, sourceNodes));
-            return sourceNodes.length;
+        if (action === "cut" || action === "move") {
+          if (sameWorkspace) {
+            // Move within the same workspace — rename only
+            await currentWorkspace.renameMultiple(dropNodes(targetPath, sourceWorkspace.nodesFromPaths(fileNodes)));
+            return fileNodes.length;
           }
+
+          // Transfer between different workspaces
+          const sourceNodes = getSourceNodes();
+          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
           await sourceWorkspace.removeMultiple(sourceNodes.map((n) => n.source));
-          void navigator.clipboard.writeText("");
+          return sourceNodes.length;
         }
-        return sourceNodes.length;
+
+        if (action === "copy") {
+          const sourceNodes = getSourceNodes();
+          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
+          return sourceNodes.length;
+        }
+
+        console.error("Unknown clipboard action:", action);
+        return 0;
       } catch (error) {
         console.error("Failed to parse internal node data:", error);
         return 0;
