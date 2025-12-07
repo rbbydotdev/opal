@@ -137,10 +137,10 @@ export function EnableRemoteLogger() {
     warn: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn"),
   };
 
-  console.log = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log");
-  console.debug = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug");
-  console.error = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error");
-  console.warn = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn");
+  logger.log = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log");
+  logger.debug = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug");
+  logger.error = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error");
+  logger.warn = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn");
   return logger;
 }
 

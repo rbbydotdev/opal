@@ -149,7 +149,7 @@ export class GitPlaybook {
     parent?: string[];
   }) {
     if (!allowEmpty && !(await this.repo.hasChanges())) {
-      console.log("No changes to commit, skipping commit.");
+      logger.log("No changes to commit, skipping commit.");
       return null;
     }
     const statusMatrix = await this.repo.statusMatrix();
@@ -189,7 +189,7 @@ export class GitPlaybook {
         if (error instanceof git.Errors.NotFoundError) {
           void this.repo.checkoutDefaultBranch();
         } else {
-          console.error("Error switching to previous branch:", error);
+          logger.error("Error switching to previous branch:", error);
         }
       }
     }
@@ -235,8 +235,8 @@ export class GitPlaybook {
         message: "Initial commit",
         ref: defaultBranchRef,
       });
-      console.log("Created initial commit on branch", defaultBranch);
-      console.log(await this.repo.currentBranch());
+      logger.log("Created initial commit on branch", defaultBranch);
+      logger.log(await this.repo.currentBranch());
 
       await this.repo.merge({
         from: `refs/remotes/${remote.name}/${gitAbbreviateRef(defaultBranch)}`,

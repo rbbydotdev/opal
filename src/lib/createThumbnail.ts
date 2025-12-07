@@ -57,7 +57,7 @@ export const createThumbnail = (
           });
       })
       .catch((e) => {
-        console.error(e);
+        logger.error(e);
         reject(errF`Failed to create image bitmap ${e}`);
       });
   });

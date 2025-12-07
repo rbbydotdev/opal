@@ -187,7 +187,7 @@ export class BuildDAO implements BuildRecord {
     try {
       await this.Disk.removeMultipleFiles([this.buildPath]);
     } catch (error) {
-      console.error(`Failed to remove build files at ${this.buildPath}:`, error);
+      logger.error(`Failed to remove build files at ${this.buildPath}:`, error);
     }
     return BuildDAO.delete(this.guid);
   }

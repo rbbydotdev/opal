@@ -40,7 +40,7 @@ export class TemplateManager {
       const renderer = this.getRenderer(templatePath);
       return await renderer.renderTemplate(templatePath, customData);
     } catch (error) {
-      console.error("Template rendering error:", error);
+      logger.error("Template rendering error:", error);
       const renderer = this.getRenderer(templatePath);
       return renderer.formatError(error);
     }
@@ -74,7 +74,7 @@ export class TemplateManager {
         return await (renderer as EtaRenderer).renderWithMarkdown(content, customData, markdownPaths);
       }
     } catch (error) {
-      console.error("Template rendering error:", error);
+      logger.error("Template rendering error:", error);
       const renderer = this.getRenderer(templatePath);
       return renderer.formatError(error);
     }
@@ -96,7 +96,7 @@ export class TemplateManager {
         return await (renderer as EtaRenderer).renderWithMarkdown(templateContent, customData, markdownPaths);
       }
     } catch (error) {
-      console.error("Template rendering error:", error);
+      logger.error("Template rendering error:", error);
       const renderer = this.renderers[templateType];
       return renderer.formatError(error);
     }

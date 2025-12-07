@@ -8,7 +8,7 @@ export async function handleFileReplace(
   findReplace: [string, string][]
 ): Promise<Response> {
   try {
-    console.log(`Intercepted WORKSPACE FILE REPLACE request for:
+    logger.log(`Intercepted WORKSPACE FILE REPLACE request for:
     url.pathname: ${url.pathname}
     href: ${url.href}
     workspace: ${workspaceName}
@@ -20,7 +20,7 @@ export async function handleFileReplace(
       : await workspace.getDisk().findReplaceFileBatch(findReplace, url.origin);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     return new Response(JSON.stringify(resultPaths), {
       status: 200,
@@ -32,7 +32,7 @@ export async function handleFileReplace(
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`.toString());
+    logger.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

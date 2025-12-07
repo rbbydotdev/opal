@@ -80,7 +80,7 @@ export class WorkspaceDAO {
   };
   async recoverStatus() {
     if (this.code !== WS_OK) {
-      console.log(`Recovering workspace status for ${this.name} from code ${this.code} to OK`);
+      logger.log(`Recovering workspace status for ${this.name} from code ${this.code} to OK`);
       await this.setStatusCode(WS_OK);
     }
   }

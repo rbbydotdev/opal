@@ -76,7 +76,7 @@ export class GitHubClient {
 
         // Add defensive check for response.data
         if (!Array.isArray(response.data)) {
-          console.error("GitHub API returned unexpected response format:", response.data);
+          logger.error("GitHub API returned unexpected response format:", response.data);
           throw new Error(
             `GitHub API returned unexpected response format. Expected array, got: ${typeof response.data}`
           );
@@ -205,7 +205,7 @@ export class GitHubClient {
       await this.getCurrentUser();
       return true;
     } catch (error) {
-      console.error("Error verifying GitHub credentials:", error);
+      logger.error("Error verifying GitHub credentials:", error);
       return false;
     }
   }

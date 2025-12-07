@@ -20,10 +20,8 @@ export interface RemoteAuthAgentSearchType<T = unknown> {
   fetchAll(options?: { signal?: AbortSignal }): Promise<T[]>;
 }
 
-export interface RemoteAuthAgentDeployableFiles<
-  TBundle extends DeployBundle<any>,
-  TParams = unknown,
-> extends RemoteAuthAgent {
+export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundle<any>, TParams = unknown>
+  extends RemoteAuthAgent {
   deployFiles(bundle: TBundle, params: TParams): Promise<unknown>;
 }
 
@@ -188,7 +186,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
     this.controller = new AbortController();
 
     try {
-      // console.debug("Starting search, setting loading to true");
+      // logger.debug("Starting search, setting loading to true");
       this.setLoading(true);
       this.setError(null);
 
@@ -228,7 +226,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
         const message = unwrapError(e);
         this.setError(message);
         this.setResults(EMPTY_SEARCH_RESULT);
-        console.error("Failed to search:", e);
+        logger.error("Failed to search:", e);
       }
     } finally {
       this.setLoading(false);

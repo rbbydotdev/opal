@@ -12,7 +12,7 @@ export async function handleImageRequest(request: Request, url: SuperUrl, worksp
   try {
     const decodedPathname = url.decodedPathname;
     const isThumbnail = Thumb.isThumbURL(url);
-    console.log(`Intercepted request for: 
+    logger.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}
     href: ${url.href}
@@ -23,15 +23,15 @@ export async function handleImageRequest(request: Request, url: SuperUrl, worksp
       cache = await Workspace.newCache(workspaceName).getCache();
       const cachedResponse = await cache.match(request);
       if (cachedResponse) {
-        console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
+        logger.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
         return cachedResponse;
       }
     }
-    console.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace name ${workspaceName}`);
+    logger.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace name ${workspaceName}`);
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents = await (isThumbnail && !decodedPathname.startsWith("/.thumb/")
       ? workspace.readOrMakeThumb(absPath(decodedPathname))
@@ -52,7 +52,7 @@ export async function handleImageRequest(request: Request, url: SuperUrl, worksp
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`.toString());
+    logger.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

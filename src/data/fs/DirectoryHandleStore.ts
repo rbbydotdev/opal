@@ -17,7 +17,7 @@ export class DirectoryHandleStore {
     try {
       await DirectoryHandleIDB.storeHandle(diskId, handle);
     } catch (error) {
-      console.warn("DirectoryHandleStore: Failed to store directory handle:", error);
+      logger.warn("DirectoryHandleStore: Failed to store directory handle:", error);
     }
   }
 
@@ -37,9 +37,9 @@ export class DirectoryHandleStore {
         return handle;
       }
     } catch (error) {
-      console.warn("DirectoryHandleStore: Failed to get handle from IndexedDB:", error);
+      logger.warn("DirectoryHandleStore: Failed to get handle from IndexedDB:", error);
       // Only re-throw if this is NOT a "not found" error
-      if (error instanceof Error && !error.message.includes('not found')) {
+      if (error instanceof Error && !error.message.includes("not found")) {
         throw error;
       }
     }
@@ -52,7 +52,7 @@ export class DirectoryHandleStore {
     try {
       await DirectoryHandleIDB.removeHandle(diskId);
     } catch (error) {
-      console.warn("DirectoryHandleStore: Failed to remove directory handle:", error);
+      logger.warn("DirectoryHandleStore: Failed to remove directory handle:", error);
     }
   }
 
@@ -67,7 +67,7 @@ export class DirectoryHandleStore {
           }
         : undefined;
     } catch (error) {
-      console.warn("DirectoryHandleStore: Failed to get directory handle metadata:", error);
+      logger.warn("DirectoryHandleStore: Failed to get directory handle metadata:", error);
       return undefined;
     }
   }

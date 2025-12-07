@@ -136,7 +136,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
 
     try {
       await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
-      console.debug("Indexing file tree");
+      logger.debug("Indexing file tree");
       for await (const node of this.recurseTree(indexTree)) {
         yield node;
       }
@@ -144,7 +144,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
       this.root = indexTree;
       return;
     } catch (e) {
-      console.error("Error during file tree indexing:", e);
+      logger.error("Error during file tree indexing:", e);
       throw e;
     } finally {
       await Promise.all([this.fsMutex.release(), this.indexMutex.release()]);
@@ -171,7 +171,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
           }
         } catch (e) {
           if (isErrorWithCode(e, "ENOENT")) {
-            console.error(`stat error for file ${fullPath} in ${dir}`);
+            logger.error(`stat error for file ${fullPath} in ${dir}`);
             throw new NotFoundError(`File not found: ${fullPath} in ${dir}`, fullPath);
           }
           throw e;
@@ -179,7 +179,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
       }
     } catch (e) {
       if (!haltOnError && e instanceof NotFoundError) {
-        console.error(e);
+        logger.error(e);
         // yield* await this.recurseTree(parent, depth, haltOnError);
         // Don't recurse infinitely - just return early when a directory is not found
         return;

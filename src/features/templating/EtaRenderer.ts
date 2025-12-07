@@ -147,7 +147,7 @@ export class EtaRenderer extends BaseRenderer {
         const content = await this.workspace.readFile(path);
         this.templateCache.set(path, String(content));
       } catch (error) {
-        console.warn(`Could not preload template: ${path}`, error);
+        logger.warn(`Could not preload template: ${path}`, error);
       }
     });
 
@@ -338,7 +338,7 @@ export class EtaRenderer extends BaseRenderer {
       try {
         await this.importMarkdownFile(path);
       } catch (error) {
-        console.warn(`Could not preload markdown: ${path}`, error);
+        logger.warn(`Could not preload markdown: ${path}`, error);
       }
     });
 
@@ -373,13 +373,13 @@ export class EtaRenderer extends BaseRenderer {
 
     // Check if template contains await and use appropriate renderer
     const hasAwait = templateContent.includes("await");
-    // console.log("renderWithMarkdown - hasAwait:", hasAwait, "template preview:", templateContent.substring(0, 200));
+    // logger.log("renderWithMarkdown - hasAwait:", hasAwait, "template preview:", templateContent.substring(0, 200));
 
     if (hasAwait) {
-      // console.log("Using async renderer for template with await");
+      // logger.log("Using async renderer for template with await");
       return await this.renderStringAsync(templateContent, data);
     } else {
-      // console.log("Using sync renderer for template without await");
+      // logger.log("Using sync renderer for template without await");
       return this.renderString(templateContent, data);
     }
   }

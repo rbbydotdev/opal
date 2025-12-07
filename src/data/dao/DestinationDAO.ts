@@ -105,7 +105,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   async save() {
-    // console.log({
+    // logger.log({
     //   remoteAuth: this.RemoteAuth.toJSON(),
     //   guid: this.guid,
     //   meta: this.meta,

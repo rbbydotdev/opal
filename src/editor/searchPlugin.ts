@@ -38,7 +38,7 @@ function* searchText(allText: string, searchQuery: string): Generator<[start: nu
   try {
     regex = new RegExp(searchQuery, "gi");
   } catch (e) {
-    console.error("Invalid search pattern:", e);
+    logger.error("Invalid search pattern:", e);
     return;
   }
 
@@ -145,7 +145,7 @@ function replaceTextInRange(range: Range, str: string, onUpdate?: () => void) {
 
   const editor = getNearestEditorFromDOMNode(startDomNode);
   if (!editor) {
-    console.warn("No editor found for the provided DOM node.");
+    logger.warn("No editor found for the provided DOM node.");
     return;
   }
   editor.update(
@@ -169,7 +169,7 @@ function replaceTextInRange(range: Range, str: string, onUpdate?: () => void) {
         // and inserts the new string.
         selection.insertText(str);
       } catch (e) {
-        console.warn("Error replacing text in the editor:", e);
+        logger.warn("Error replacing text in the editor:", e);
         if (onUpdate) {
           onUpdate();
         }
@@ -354,7 +354,7 @@ export const searchPlugin = realmPlugin({
         }
       });
     } else {
-      console.debug("No active editor found when initializing search plugin");
+      logger.debug("No active editor found when initializing search plugin");
     }
   },
 });

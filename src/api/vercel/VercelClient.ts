@@ -145,7 +145,7 @@ export class VercelClient {
       await this.getCurrentUser();
       return true;
     } catch (error) {
-      console.error("Error verifying Vercel credentials:", error);
+      logger.error("Error verifying Vercel credentials:", error);
       return false;
     }
   }
