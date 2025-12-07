@@ -31,9 +31,9 @@ export function GitHubDestinationForm({
     clearCache,
     searchResults,
     error,
-    setEnabled,
   } = useRemoteGitRepoSearch({
     agent,
+    cacheKey: String(remoteAuth?.guid),
   });
   const { ident, msg, request } = useRemoteGitRepo({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
@@ -55,7 +55,6 @@ export function GitHubDestinationForm({
         <RemoteResourceSearch
           label="Repository"
           isLoading={isLoading}
-          onActive={() => setEnabled(true)}
           searchValue={searchValue}
           onSearchChange={updateSearch}
           searchResults={searchResults}

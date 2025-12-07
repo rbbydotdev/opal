@@ -104,7 +104,8 @@ export class GithubDeployRunner extends DeployRunner<
     this.log("Starting deployment...");
     await this.build.Disk.refresh();
     const deployBundle = new AnyDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
-    await this.agent.deployFiles(deployBundle, params);
+    await this.agent.deployFiles(deployBundle as any, params);
+    throw new Error("Method not implemented.^^^^^^^^ any fix ");
     this.log("Deployment completed successfully.");
   }
 }

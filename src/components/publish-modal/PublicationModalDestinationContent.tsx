@@ -49,17 +49,14 @@ export function PublicationModalDestinationContent({
   pushView: (view: PublishViewType) => void;
   setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType | null) => void;
 }) {
-  const defaultRemoteAuth = preferredConnection || remoteAuths[0];
+  const defaultRemoteAuth =
+    preferredConnection ||
+    (editDestination ? editDestination.toJSON().remoteAuth : preferredConnection || remoteAuths[0]);
   const defaultDestinationType: DestinationType = defaultRemoteAuth?.source || "custom";
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const [menuHelperOpen, setMenuHelperOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
-  const remoteAuthId = editDestination
-    ? editDestination.toJSON().remoteAuth.guid
-    : isRemoteAuthJType(defaultRemoteAuth)
-      ? defaultRemoteAuth.guid
-      : "";
-
+  const remoteAuthId = isRemoteAuthJType(defaultRemoteAuth) ? defaultRemoteAuth.guid : "";
   const currentSchema = DestinationSchemaMap[destinationType];
   const defaultValues = useMemo(
     () => ({

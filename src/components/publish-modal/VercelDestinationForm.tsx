@@ -30,8 +30,8 @@ export function VercelDestinationForm({
     reset: resetSearch,
     searchResults,
     error,
-    setEnabled,
   } = useRemoteVercelProjectSearch({
+    cacheKey: String(remoteAuth?.guid),
     agent,
   });
 
@@ -55,7 +55,6 @@ export function VercelDestinationForm({
         <RemoteResourceSearch
           label="Project"
           isLoading={isLoading}
-          onActive={() => setEnabled(true)}
           searchValue={searchValue}
           onSearchChange={updateSearch}
           searchResults={searchResults}

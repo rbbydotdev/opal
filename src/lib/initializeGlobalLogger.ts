@@ -26,10 +26,10 @@ export function initializeGlobalLogger(
 
   (globalThis as any).logger = __ENABLE_LOG__
     ? {
-        log: (...msg: unknown[]) => (shouldLog("log") ? logger.log(...msg) : undefined),
-        debug: (...msg: unknown[]) => (shouldLog("debug") ? logger.debug(...msg) : undefined),
-        error: (...msg: unknown[]) => (shouldLog("error") ? logger.error(...msg) : undefined),
-        warn: (...msg: unknown[]) => (shouldLog("warn") ? logger.warn(...msg) : undefined),
+        log: shouldLog("log") ? logger.log.bind(logger) : NOOPS.log,
+        debug: shouldLog("debug") ? logger.debug.bind(logger) : NOOPS.debug,
+        error: shouldLog("error") ? logger.error.bind(logger) : NOOPS.error,
+        warn: shouldLog("warn") ? logger.warn.bind(logger) : NOOPS.warn,
       }
     : NOOPS;
 

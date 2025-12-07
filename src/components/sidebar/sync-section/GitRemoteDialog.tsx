@@ -272,8 +272,8 @@ function GitRemoteDialogInternal({
     updateSearch,
     searchResults,
     error: searchError,
-    setEnabled,
   } = useRemoteGitRepoSearch({
+    cacheKey: String(remoteAuth?.guid),
     agent: searchAgent,
     defaultValue: TryPathname(form.getValues("url"))
       .replace(/^\//, "")
@@ -349,7 +349,6 @@ function GitRemoteDialogInternal({
                     label="Repository"
                     isLoading={searchLoading}
                     searchValue={searchValue}
-                    onActive={() => setEnabled(true)}
                     onSearchChange={updateSearch}
                     searchResults={searchResults}
                     error={searchError}
@@ -392,11 +391,7 @@ function GitRemoteDialogInternal({
                         createReset={() => request.reset()}
                       />
                     </div>
-                    <RemoteResource.SearchButton
-                      title="Search Repositories"
-                      onSearchChange={updateSearch}
-                      searchReset={() => setEnabled(false)}
-                    />
+                    <RemoteResource.SearchButton title="Search Repositories" onSearchChange={updateSearch} />
                   </>
                 )}
               </RemoteResource.InputField>

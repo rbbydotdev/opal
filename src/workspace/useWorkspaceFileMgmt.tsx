@@ -233,7 +233,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
 
   const duplicateDirFile = useCallback(
     (type: TreeNode["type"], from: AbsPath | TreeNode) => {
-      const fromNode = currentWorkspace.nodeFromPath(String(from));
+      const fromNode = currentWorkspace.nodeFromPath(absPath(from));
       if (!fromNode) {
         throw new Error("Parent node not found");
       }
@@ -263,7 +263,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
   function addDirFile(type: "file", parent: TreeDir | AbsPath, fileName?: string, content?: string): TreeFile;
   function addDirFile(type: "dir", parent: TreeDir | AbsPath, dirName?: string): TreeDir;
   function addDirFile(type: TreeNode["type"], parent: TreeDir | AbsPath, name?: string, content?: string): TreeNode {
-    let parentNode = currentWorkspace.nodeFromPath(String(parent)) ?? null;
+    let parentNode = currentWorkspace.nodeFromPath(absPath(parent)) ?? null;
 
     if (!parentNode) {
       console.warn("Parent node not found for adding new file or directory");

@@ -55,17 +55,20 @@ export function RemoteResourceSearch({
   isLoading,
   searchValue,
   onActive,
+  onClose,
   onSearchChange,
+
   searchResults,
   error,
 }: {
   label: string;
   isLoading: boolean;
   searchValue: string;
-  onActive: () => void;
+  onActive?: () => void;
+  onClose?: () => void;
   onSearchChange: (value: string) => void;
   searchResults: Array<{ element: ReactNode; label: string; value: string }>;
-  error: string | null;
+  error: string | Error | null;
 }) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
 
@@ -83,6 +86,7 @@ export function RemoteResourceSearch({
           onSearchChange={onSearchChange}
           onClose={(val?: string) => {
             setMode("input");
+            onClose?.();
             if (val) onValueChange(val);
           }}
           onSelect={(item: { element: ReactNode; label: string; value: string }) => {

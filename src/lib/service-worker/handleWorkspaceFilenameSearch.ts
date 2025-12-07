@@ -93,7 +93,7 @@ function createWorkspaceFilenameSearchStream({
     },
     cancel(reason) {
       logger.log("Filename search stream canceled by client:", reason);
-      searchController.abort("The client closed the connection.");
+      searchController.abort();
     },
   });
 }
@@ -108,10 +108,10 @@ export async function handleWorkspaceFilenameSearch({
   const all = workspaceName === ALL_WS_KEY;
 
   if (activeFilenameSearches.has(searchKey)) {
-    activeFilenameSearches.get(searchKey)?.abort("A new filename search was started.");
+    activeFilenameSearches.get(searchKey)?.abort();
   }
   if (all) {
-    activeFilenameSearches.forEach((ctrl) => ctrl.abort("A new global filename search was started."));
+    activeFilenameSearches.forEach((ctrl) => ctrl.abort());
     activeFilenameSearches.clear();
   }
   activeFilenameSearches.set(searchKey, searchController);

@@ -1,4 +1,4 @@
-import { mapToTypedError } from "@/lib/errors/errors";
+import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
 import { Octokit } from "@octokit/core";
 
 export interface GitHubRepo {
@@ -29,7 +29,12 @@ export class GitHubClient {
   private octokit: Octokit;
 
   constructor(auth: string) {
-    this.octokit = new Octokit({ auth });
+    this.octokit = new Octokit({
+      auth,
+      request: {
+        fetch: globalThis.fetch,
+      },
+    });
   }
 
   async getCurrentUser() {
@@ -100,6 +105,7 @@ export class GitHubClient {
       }
       return allRepos;
     } catch (e) {
+      if (isAbortError(e)) throw e;
       throw mapToTypedError(e);
     }
   }
@@ -196,6 +202,7 @@ export class GitHubClient {
       if (error.status === 304) {
         return { updated: false, newEtag: etag };
       }
+      if (isAbortError(error)) throw error;
       throw mapToTypedError(error);
     }
   }
@@ -205,6 +212,7 @@ export class GitHubClient {
       await this.getCurrentUser();
       return true;
     } catch (error) {
+      if (isAbortError(error)) throw error;
       logger.error("Error verifying GitHub credentials:", error);
       return false;
     }
