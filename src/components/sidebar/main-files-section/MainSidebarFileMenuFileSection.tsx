@@ -24,9 +24,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { getDiskTypeLabel } from "@/data/disk/DiskType";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { useLeftWidth } from "@/features/live-preview/EditorSidebarLayout";
 import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useZoom } from "@/hooks/useZoom";
+import { useLeftWidth } from "@/layouts/EditorSidebarLayout";
 import { DefaultFile } from "@/lib/DefaultFile";
 import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";

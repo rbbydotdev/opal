@@ -63,16 +63,11 @@ export function SidebarFileMenuBuild({
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 
-  const handleBuildToHTML = async () => {
-    try {
-      await openNew().then(({ guid }) => setBuildId(guid));
-    } catch (error) {
-      console.error("Build modal error:", error);
-    }
-  };
+  const handleBuildToHTML = () => setBuildId(openNew().guid);
+
   const handlePublishModal = async () => {
     if (!build) return;
-    void openNewPub({ build });
+    openNewPub({ build });
   };
 
   const handleDeleteBuild = async (buildGuid: string) => {

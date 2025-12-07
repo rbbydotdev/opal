@@ -46,8 +46,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   protected _context?: TContext;
   private unsubs: (() => void)[] = [];
   abstract type: DiskType;
-  // undoStack = new UndoStack();
-
   get dirName(): string | null {
     return null;
   }
@@ -144,7 +142,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     if (writeIndexCache) {
       /*await*/ void this.connector.save();
     }
-    // newIndex.walk((node) => {});
     return newIndex;
   };
 
@@ -193,7 +190,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 
   async setupRemoteListeners() {
     const handleRename = async (data: RemoteRenameFileType[]) => {
-      // void this.local.emit(DiskEvents.RENAME, data.map(RenameFileType.New));
       await this.fileTreeIndex();
       void this.local.emit(DiskEvents.INDEX, {
         type: "rename",

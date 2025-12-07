@@ -1,6 +1,7 @@
 import { Disk } from "@/data/disk/Disk";
 import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
+import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
@@ -9,7 +10,6 @@ import { GitRepo } from "@/features/git-repo/GitRepo";
 import { ApplicationError, errF } from "@/lib/errors/errors";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
-import { GithubInlinedFile } from "@/api/github/GitHubClient";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;

@@ -11,6 +11,8 @@ import { nanoid } from "nanoid";
 
 type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 
+export const BuildPath = (buildId: string) => joinPath(SpecialDirs.Build, relPath(buildId));
+
 export class BuildDAO implements BuildRecord {
   guid: string;
   disk: Disk | DiskJType;
@@ -97,7 +99,7 @@ export class BuildDAO implements BuildRecord {
     fileCount?: number;
     logs: BuildLogLine[];
   }) {
-    const buildPath = joinPath(SpecialDirs.Build, relPath(guid));
+    const buildPath = BuildPath(guid);
     return new BuildDAO({
       guid,
       label,
