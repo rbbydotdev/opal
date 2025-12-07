@@ -211,7 +211,7 @@ export class BuildRunner {
       infoLog("Build completed successfully!");
 
       // Re-index output disk and calculate file count before final update
-      await this.outputDisk.triggerIndex().catch((e) => console.warn("Failed to re-index output disk after build:", e));
+      await this.outputDisk.triggerIndex().catch((e) => logger.warn("Failed to re-index output disk after build:", e));
       infoLog(`Build saved with ID: ${this.build.guid}`);
       const count =
         this.outputDisk.fileTree.nodeFromPath(this.outputPath)?.countChildren({

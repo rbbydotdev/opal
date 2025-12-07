@@ -16,7 +16,7 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
     };
   }
   async fetchAll(): Promise<Repo[]> {
-    console.warn("RemoteAuthBasicAuthAgent.fetchAll() is not implemented");
+    logger.warn("RemoteAuthBasicAuthAgent.fetchAll() is not implemented");
     return [];
   }
 
@@ -24,7 +24,7 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
     etag: string | null,
     options?: { signal?: AbortSignal }
   ): Promise<{ updated: boolean; newEtag: string | null }> {
-    console.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
+    logger.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
     return Promise.resolve({ updated: false, newEtag: etag });
   }
 

@@ -59,8 +59,8 @@ export async function exchangeCodeForToken({
     params.append("code_verifier", codeVerifier);
     if (redirectUri) params.append("redirect_uri", redirectUri);
 
-    // console.log("Token exchange URL:", tokenUrl);
-    // console.log("Token request params:", Object.fromEntries(params));
+    // logger.log("Token exchange URL:", tokenUrl);
+    // logger.log("Token request params:", Object.fromEntries(params));
 
     const tokenResponse = await fetch(tokenUrl, {
       method: "POST",
@@ -70,7 +70,7 @@ export async function exchangeCodeForToken({
       body: params,
     });
 
-    // console.log("Fetch completed. Response status:", tokenResponse.status, tokenResponse.statusText);
+    // logger.log("Fetch completed. Response status:", tokenResponse.status, tokenResponse.statusText);
 
     const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
@@ -97,7 +97,7 @@ export async function exchangeCodeForToken({
     });
 
     const { data: user } = await octokit.request("GET /user");
-    // console.log("User data received:", { login: user.login, id: user.id });
+    // logger.log("User data received:", { login: user.login, id: user.id });
 
     return {
       login: user.login,
@@ -105,7 +105,7 @@ export async function exchangeCodeForToken({
       obtainedAt: Date.now(),
     };
   } catch (e) {
-    // console.error("=== OAuth token exchange failed ===", e);
+    // logger.error("=== OAuth token exchange failed ===", e);
     throw mapToTypedError(e);
   }
 }

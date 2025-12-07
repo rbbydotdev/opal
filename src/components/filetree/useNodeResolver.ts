@@ -11,8 +11,8 @@ export const useNodeResolver = (
     const rn = fileTree.nodeFromPath(nodeOrPath);
     if (!rn) {
       if (defaultNode) return defaultNode;
-      console.error(new Error("Invalid path provided to useNodeResolver " + nodeOrPath));
-      // console.log(currentWorkspace.getFileTree().root.map)
+      logger.error(new Error("Invalid path provided to useNodeResolver " + nodeOrPath));
+      // logger.log(currentWorkspace.getFileTree().root.map)
       return ROOT_NODE;
     }
     return rn;

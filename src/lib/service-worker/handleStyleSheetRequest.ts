@@ -8,7 +8,7 @@ import { SWWStore } from "./SWWStore";
 export async function handleStyleSheetRequest(url: SuperUrl, workspaceName: string): Promise<Response> {
   try {
     const decodedPathname = url.decodedPathname;
-    console.log(`Intercepted request for: 
+    logger.log(`Intercepted request for: 
     decodedPathname: ${decodedPathname}
     url.pathname: ${url.pathname}
     href: ${url.href}
@@ -16,7 +16,7 @@ export async function handleStyleSheetRequest(url: SuperUrl, workspaceName: stri
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     const contents = await workspace.readFile(absPath(decodedPathname));
 
@@ -34,7 +34,7 @@ export async function handleStyleSheetRequest(url: SuperUrl, workspaceName: stri
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`.toString());
+    logger.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

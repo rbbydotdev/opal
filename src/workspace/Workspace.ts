@@ -293,7 +293,7 @@ export class Workspace {
         this.NewThumb(absPath(imagePath))
           .remove()
           .catch((e) => {
-            console.error(e);
+            logger.error(e);
           }),
         this.imageCache.getCache().then((c) => c.delete(String(imagePath))),
       ])
@@ -306,7 +306,7 @@ export class Workspace {
         this.NewThumb(filePath)
           .remove()
           .catch((e) => {
-            console.error(e);
+            logger.error(e);
           }),
         this.imageCache.getCache().then((c) => c.delete(filePath)),
       ]);
@@ -326,7 +326,7 @@ export class Workspace {
       const oldThumb = this.NewThumb(oldNode.path);
       const newThumb = this.NewThumb(newPath);
       await oldThumb.move(oldThumb.path, newThumb.path).catch(async (_e) => {
-        console.warn(`error moving thumb from ${oldThumb.path} to ${newThumb.path}`);
+        logger.warn(`error moving thumb from ${oldThumb.path} to ${newThumb.path}`);
       });
     }
   }
@@ -628,7 +628,7 @@ export class Workspace {
       }
       return this;
     } catch (e) {
-      console.error("Error initializing workspace", e);
+      logger.error("Error initializing workspace", e);
       await this.connector.setStatusCode(WS_ERR_NONRECOVERABLE);
       throw e;
     }
@@ -715,12 +715,12 @@ export class Workspace {
       try {
         res = (await response.clone().json()) as AbsPath[];
       } catch (e) {
-        console.error(`Error parsing JSON from /replace-files\n\n${await response.clone().text()}`, e);
+        logger.error(`Error parsing JSON from /replace-files\n\n${await response.clone().text()}`, e);
         res = [];
       }
     } else {
       const bodyText = await response.text();
-      console.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
+      logger.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
       res = [];
     }
     if (res.length) {

@@ -53,7 +53,7 @@ export async function GithubDeviceAuthFlow({
     onAuthentication?.(payload);
     return payload;
   } catch (e) {
-    console.error("Failed to fetch user info:", e);
+    logger.error("Failed to fetch user info:", e);
     throw mapToTypedError(e);
   }
 }
@@ -72,4 +72,4 @@ export async function GithubDeviceAuthFlow({
 // }
 
 // const user = await response.json();
-// console.log(user.login); // This is the username
+// logger.log(user.login); // This is the username

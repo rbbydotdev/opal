@@ -60,12 +60,9 @@ export class CloudflareClient {
       if (!accountId) {
         return [];
       }
-      
-      const res = await this.cloudflare.pages.projects.list(
-        { account_id: accountId },
-        { signal }
-      );
-      
+
+      const res = await this.cloudflare.pages.projects.list({ account_id: accountId }, { signal });
+
       for await (const page of res.iterPages()) {
         //@ts-ignore
         projects.push(...page.result);
@@ -79,8 +76,8 @@ export class CloudflareClient {
   }
 
   async createProject(
-    accountId: string, 
-    { name, productionBranch = "main" }: { name: string; productionBranch?: string }, 
+    accountId: string,
+    { name, productionBranch = "main" }: { name: string; productionBranch?: string },
     { signal }: { signal?: AbortSignal } = {}
   ) {
     try {
@@ -102,7 +99,7 @@ export class CloudflareClient {
       await this.getAccounts();
       return true;
     } catch (error) {
-      console.error("Error verifying Cloudflare credentials:", error);
+      logger.error("Error verifying Cloudflare credentials:", error);
       return false;
     }
   }

@@ -1,5 +1,5 @@
 /* beware: vibe coded */
-import { getCSSVariableColor, hexToRgb, rgbToHex, oklchStringToRgb } from "@/lib/colorUtils";
+import { getCSSVariableColor, hexToRgb, oklchStringToRgb, rgbToHex } from "@/lib/colorUtils";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { yamlFrontmatter } from "@codemirror/lang-yaml";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -132,8 +132,10 @@ export const getContrastSafeColor = (
     const primaryColor = getCSSVariableColor(primaryVar);
 
     // Check if we have valid colors that we can adjust (hex or oklch)
-    if ((primaryColor.startsWith("#") || primaryColor.startsWith("oklch(")) && 
-        (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))) {
+    if (
+      (primaryColor.startsWith("#") || primaryColor.startsWith("oklch(")) &&
+      (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))
+    ) {
       // Detect dark themes and use higher contrast requirements
       const bgRgb = hexToRgb(cmBackgroundColor) || oklchStringToRgb(cmBackgroundColor);
       const isDarkTheme = bgRgb ? getLuminance(...bgRgb) < 0.2 : false;
@@ -157,8 +159,10 @@ export const getContrastSafeColor = (
 
     // If we can't process the primary color, try the fallback
     const fallbackColor = getCSSVariableColor(fallbackVar);
-    if ((fallbackColor.startsWith("#") || fallbackColor.startsWith("oklch(")) && 
-        (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))) {
+    if (
+      (fallbackColor.startsWith("#") || fallbackColor.startsWith("oklch(")) &&
+      (cmBackgroundColor.startsWith("#") || cmBackgroundColor.startsWith("oklch("))
+    ) {
       const bgRgb = hexToRgb(cmBackgroundColor) || oklchStringToRgb(cmBackgroundColor);
       const isDarkTheme = bgRgb ? getLuminance(...bgRgb) < 0.2 : false;
       const targetContrast = isDarkTheme ? 3.5 : 2.8;
@@ -599,7 +603,7 @@ export const enhancedMarkdownExtension = (
 // Debug utility to check color contrast for a given theme
 const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
   if (typeof window === "undefined") {
-    console.log("Contrast debugging only available in browser");
+    logger.log("Contrast debugging only available in browser");
     return;
   }
 
@@ -617,13 +621,15 @@ const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
     { name: "border", var: "--border" },
   ];
 
-  console.log(`\n🎨 CodeMirror Contrast Analysis (Background: ${bgColor})`);
-  console.log("=".repeat(60));
+  logger.log(`\n🎨 CodeMirror Contrast Analysis (Background: ${bgColor})`);
+  logger.log("=".repeat(60));
 
   colors.forEach(({ name, var: cssVar }) => {
     const color = getCSSVariableColor(cssVar);
-    if ((color.startsWith("#") || color.startsWith("oklch(")) && 
-        (bgColor.startsWith("#") || bgColor.startsWith("oklch("))) {
+    if (
+      (color.startsWith("#") || color.startsWith("oklch(")) &&
+      (bgColor.startsWith("#") || bgColor.startsWith("oklch("))
+    ) {
       const contrast = getContrastRatio(color, bgColor);
       const adjustedColor = adjustColorForContrast(color, bgColor, 2.8);
       const adjustedContrast = getContrastRatio(adjustedColor, bgColor);
@@ -631,14 +637,14 @@ const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
       const status = contrast >= 2.8 ? "✅ OK" : "⚠️  Low";
       const adjustment = adjustedColor !== color ? ` → ${adjustedColor} (${adjustedContrast.toFixed(2)}:1)` : "";
 
-      console.log(`${name.padEnd(16)} ${color} ${contrast.toFixed(2)}:1 ${status}${adjustment}`);
+      logger.log(`${name.padEnd(16)} ${color} ${contrast.toFixed(2)}:1 ${status}${adjustment}`);
     } else {
-      console.log(`${name.padEnd(16)} ${color} → Non-hex color (assumed OK)`);
+      logger.log(`${name.padEnd(16)} ${color} → Non-hex color (assumed OK)`);
     }
   });
 
-  console.log("\n📝 Legend:");
-  console.log("✅ OK     = 2.8:1+ (good contrast for syntax highlighting)");
-  console.log("⚠️  Low    = <2.8:1 (will be automatically adjusted)");
-  console.log("Adjusted colors are shown with → new_color (new_ratio)");
+  logger.log("\n📝 Legend:");
+  logger.log("✅ OK     = 2.8:1+ (good contrast for syntax highlighting)");
+  logger.log("⚠️  Low    = <2.8:1 (will be automatically adjusted)");
+  logger.log("Adjusted colors are shown with → new_color (new_ratio)");
 };

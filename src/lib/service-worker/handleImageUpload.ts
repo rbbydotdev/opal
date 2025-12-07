@@ -11,7 +11,7 @@ export async function handleImageUpload(
 ): Promise<Response> {
   try {
     const { request } = event;
-    console.log(`Intercepted UPLOAD request for: 
+    logger.log(`Intercepted UPLOAD request for: 
     url.pathname: ${url.pathname}
     href: ${url.href}
     filePath: ${filePath}
@@ -19,7 +19,7 @@ export async function handleImageUpload(
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    console.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
     // Clear image and thumbnail cache before uploading
     try {
@@ -46,7 +46,7 @@ export async function handleImageUpload(
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`.toString());
+    logger.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

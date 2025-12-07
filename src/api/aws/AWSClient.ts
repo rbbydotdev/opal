@@ -90,7 +90,7 @@ export class AWSS3Client {
         })) || []
       );
     } catch (error) {
-      console.error(errF`Error listing buckets: ${error}`);
+      logger.error(errF`Error listing buckets: ${error}`);
       throw error;
     }
   }
@@ -116,7 +116,7 @@ export class AWSS3Client {
         location: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${key}`,
       };
     } catch (error) {
-      console.error(`Error uploading object ${key} to bucket ${bucketName}:`, error);
+      logger.error(`Error uploading object ${key} to bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -130,7 +130,7 @@ export class AWSS3Client {
 
       await this.s3Client.send(command);
     } catch (error) {
-      console.error(`Error deleting object ${key} from bucket ${bucketName}:`, error);
+      logger.error(`Error deleting object ${key} from bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -153,7 +153,7 @@ export class AWSS3Client {
         })) || []
       );
     } catch (error) {
-      console.error(`Error listing objects in bucket ${bucketName}:`, error);
+      logger.error(`Error listing objects in bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -179,7 +179,7 @@ export class AWSS3Client {
         creationDate: new Date(),
       };
     } catch (error) {
-      console.error(`Error creating bucket ${bucketName}:`, error);
+      logger.error(`Error creating bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -189,7 +189,7 @@ export class AWSS3Client {
       await this.listBuckets();
       return true;
     } catch (error) {
-      console.error("Error verifying AWS credentials:", error);
+      logger.error("Error verifying AWS credentials:", error);
       return false;
     }
   }

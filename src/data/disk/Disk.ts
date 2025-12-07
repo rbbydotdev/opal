@@ -179,7 +179,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     this.initialIndexFromCache(indexCache ?? new TreeDirRoot()); //load first from cache
     await this.hydrateIndexFromDisk();
     if (isServiceWorker() || isWebWorker() || skipListeners) {
-      console.debug(
+      logger.debug(
         `skipping remote listeners (reason ${isServiceWorker() ? "service worker" : isWebWorker() ? "web worker" : "skipListeners"})`
       );
       return () => {};
@@ -195,7 +195,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
         type: "rename",
         details: data,
       });
-      console.debug("remote rename", JSON.stringify(data, null, 4));
+      logger.debug("remote rename", JSON.stringify(data, null, 4));
     };
     const handleIndex = async (data: IndexTrigger | undefined) => {
       await this.fileTreeIndex();
@@ -611,7 +611,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
           await this.copyFileQuiet(oldEntryPath, newEntryPath, overWrite);
         }
       } else {
-        console.warn(`Skipping non-string entry: ${stringifyEntry(entry)}`);
+        logger.warn(`Skipping non-string entry: ${stringifyEntry(entry)}`);
       }
     }
     await this.fileTreeIndex();
@@ -687,7 +687,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
         if (n.isTreeDir()) result.push((await this.mkdirRecursive(n.path)) as AbsPath);
         else {
           if (!n.source) {
-            console.error("Source node missing source property", n);
+            logger.error("Source node missing source property", n);
             continue;
           }
           await this.writeFile(n.path, await fromDisk.readFile(n.source));
@@ -757,7 +757,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
-    // console.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);
+    // logger.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);
     await this.mkdirRecursive(dirname(filePath));
     try {
       let data: string | Uint8Array;
@@ -766,11 +766,11 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
       } else {
         data = content;
       }
-      // console.log(`writeFileRecursive: Writing file ${filePath}`);
+      // logger.log(`writeFileRecursive: Writing file ${filePath}`);
       return this.fs.writeFile(filePath, data, { encoding: "utf8", mode: 0o777 });
     } catch (err) {
       if (errorCode(err).code !== "EEXIST") {
-        console.error(`Error writing file ${filePath}:`, err);
+        logger.error(`Error writing file ${filePath}:`, err);
       }
     }
   }

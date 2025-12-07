@@ -15,10 +15,10 @@ export const scrollToEditorElement = (
   const [first] = element.getClientRects();
 
   if (!scrollContentElement) {
-    return console.warn("No content-editable element found for scrolling.");
+    return logger.warn("No content-editable element found for scrolling.");
   }
   if (!first) {
-    return console.warn("No client rect found for the element, cannot scroll.");
+    return logger.warn("No client rect found for the element, cannot scroll.");
   }
 
   // Get bounding rects relative to the scroll container

@@ -31,7 +31,7 @@ export interface RequestContext {
 export const uploadImageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
   const filePath = absPath(url.decodedPathname.replace("/upload-image", ""));
-  console.log(`Handling image upload for: ${url.pathname}`);
+  logger.log(`Handling image upload for: ${url.pathname}`);
 
   return handleImageUpload(event, url, filePath, workspaceName);
 });
@@ -40,7 +40,7 @@ export const convertDocxHandler = withRequestSignal(async (context: RequestConte
   const { event, url, workspaceName } = context;
 
   const fullPathname = absPath(url.decodedPathname.replace("/upload-docx", ""));
-  console.log(`Handling DOCX upload for: ${fullPathname}`);
+  logger.log(`Handling DOCX upload for: ${fullPathname}`);
 
   return handleDocxUploadRequest(workspaceName, fullPathname, await event.request.arrayBuffer());
 });
@@ -61,7 +61,7 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
     return new Response("Search term is required.", { status: 400 });
   }
 
-  console.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
+  logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
   return handleWorkspaceSearch({ workspaceName, searchTerm, regexp });
 });
 
@@ -77,33 +77,33 @@ export const workspaceFilenameSearchHandler = withRequestSignal(async (context: 
     return new Response("Search term is required.", { status: 400 });
   }
 
-  console.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
+  logger.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
   return handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
 });
 
 export const downloadHandler = (context: RequestContext) => {
-  console.log(`Handling download for: ${context.url.href}`);
+  logger.log(`Handling download for: ${context.url.href}`);
   const urlPayload = context.searchParams || { type: "workspace" };
-  console.log(`Download payload: ${JSON.stringify(urlPayload)}`);
+  logger.log(`Download payload: ${JSON.stringify(urlPayload)}`);
   const paramsPayload = downloadZipSchema.parse(urlPayload);
   return handleDownloadRequest(context.workspaceName, paramsPayload);
 };
 
 export const faviconHandler = withRequestSignal((context: RequestContext) => {
-  console.log(`Handling favicon request for: ${context.url.href}`);
+  logger.log(`Handling favicon request for: ${context.url.href}`);
   return handleFaviconRequest(context.workspaceName);
 });
 
 export const styleSheetHandler = withRequestSignal((context: RequestContext) => {
   const { url, workspaceName } = context;
-  console.log(`Handling stylesheet request for: ${url.href}`);
+  logger.log(`Handling stylesheet request for: ${url.href}`);
   return handleStyleSheetRequest(url, workspaceName);
 });
 export const imageHandler = withRequestSignal((context: RequestContext) => {
   const { event, url, workspaceName } = context;
 
   if (event.request.destination === "image" || isImageType(url.decodedPathname)) {
-    console.log(`Handling image request for: ${url.pathname}`);
+    logger.log(`Handling image request for: ${url.pathname}`);
     return handleImageRequest(event.request, url, workspaceName);
   }
   // Fallback to network if it's not a match we handle
@@ -116,7 +116,7 @@ export const defaultFetchHandler = withRequestSignal((event: FetchEvent) => {
 
 export const replaceMdImageHandler = withRequestSignal(async (context: RequestContext) => {
   const { url, workspaceName } = context;
-  console.log(`Handling MD image replacement for: ${workspaceName}`);
+  logger.log(`Handling MD image replacement for: ${workspaceName}`);
   //parse json bod
   const body = await context.event.request.json();
   if (!Array.isArray(body)) {
@@ -124,14 +124,14 @@ export const replaceMdImageHandler = withRequestSignal(async (context: RequestCo
   }
 
   const findReplace: [string, string][] = body as [string, string][];
-  console.log(`Replacing images in MD with: ${findReplace.length} pairs`);
+  logger.log(`Replacing images in MD with: ${findReplace.length} pairs`);
 
   return handleMdImageReplace(url, workspaceName, findReplace);
 });
 
 export const replaceFileHandler = withRequestSignal(async (context: RequestContext) => {
   const { url, workspaceName } = context;
-  console.log(`Handling file replacement for: ${workspaceName}`);
+  logger.log(`Handling file replacement for: ${workspaceName}`);
   //parse json body
   const body = await context.event.request.json();
   if (!Array.isArray(body)) {
@@ -139,13 +139,13 @@ export const replaceFileHandler = withRequestSignal(async (context: RequestConte
   }
 
   const findReplace: [string, string][] = body as [string, string][];
-  console.log(`Replacing files with: ${findReplace.length} pairs`);
+  logger.log(`Replacing files with: ${findReplace.length} pairs`);
 
   return handleFileReplace(url, workspaceName, findReplace);
 });
 
 export const downloadEncryptedHandler = (context: RequestContext) => {
-  console.log(`Handling encrypted download for: ${context.url.href}`);
+  logger.log(`Handling encrypted download for: ${context.url.href}`);
   const options = downloadEncSchema.parse({
     password: context.event.request.headers.get(PassHeader),
     encryption: context.event.request.headers.get(EncHeader),
