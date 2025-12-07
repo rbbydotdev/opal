@@ -274,11 +274,6 @@ export class TreeNode {
     const childNode = this.children?.[segment!];
     return childNode?.nodeFromPath(absPath(joinPath(this.path, ...rest))) ?? null;
   }
-  scope(newRootPath: AbsPath) {
-    this.path = newRootPath;
-    this.parent = null;
-    return this;
-  }
 
   constructor({
     type,

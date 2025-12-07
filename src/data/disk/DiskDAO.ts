@@ -3,6 +3,7 @@ import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
 import { ClientDb } from "@/data/instance";
+import { NotFoundError } from "@/lib/errors/errors";
 import { nanoid } from "nanoid";
 
 export class DiskDAO {
@@ -42,6 +43,11 @@ export class DiskDAO {
 
   static FetchFromGuid(guid: string) {
     return ClientDb.disks.where("guid").equals(guid).first();
+  }
+  static async FetchFromGuidOrThrow(guid: string) {
+    const disk = await ClientDb.disks.where("guid").equals(guid).first();
+    if (!disk) throw new NotFoundError("Disk not found for guid " + guid);
+    return disk;
   }
 
   async hydrate() {

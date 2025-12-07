@@ -1,15 +1,37 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
+import { DiskDAO } from "@/data/disk/DiskDAO";
+import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { isError, NotFoundError } from "@/lib/errors/errors";
+import { errF, isError, NotFoundError, unwrapError } from "@/lib/errors/errors";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
 import { signalRequest } from "@/lib/service-worker/utils";
 import * as fflate from "fflate";
+import z from "zod";
 import { SWWStore } from "./SWWStore";
 
-export async function handleDownloadRequest(workspaceName: string): Promise<Response> {
+const downloadZipSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("workspace"),
+  }),
+  z.object({
+    type: z.literal("build"),
+    diskId: z.string(),
+    buildDir: z.string(),
+    buildId: z.string(),
+  }),
+]);
+
+export async function handleDownloadRequest(workspaceName: string, params?: Record<string, string>): Promise<Response> {
   try {
+    const paramsPayload = downloadZipSchema.parse(params || { type: "workspace" });
+
+    const disk =
+      paramsPayload.type === "workspace"
+        ? (await SWWStore.tryWorkspace(workspaceName)).getDisk()
+        : DiskFromJSON(await DiskDAO.FetchFromGuidOrThrow(paramsPayload.diskId));
+
     const workspaceDirName = absPath(strictPathname(workspaceName));
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
@@ -24,11 +46,7 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
       if (final) await writer.close();
     });
 
-    const workspace = await SWWStore.tryWorkspace(workspaceName);
-
-    await workspace.getDisk().fileTree.index();
-
-    const fileNodes = [...workspace.getDisk().fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
+    const fileNodes = [...disk.fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");
@@ -45,8 +63,7 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
-            void workspace
-              .getDisk()
+            void disk
               .readFile(node.path)
               .then((data) => {
                 fileStream.push(coerceUint8Array(data), true);
@@ -54,7 +71,7 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
               .finally(() => {
                 fileCount--;
                 if (fileCount === 0) {
-                  console.log(`All files processed for workspace: ${workspace.name}`);
+                  console.log(`All files processed for workspace: ${workspaceName}`);
                   signalRequest({ type: REQ_SIGNAL.END });
                 }
               }); // true = last chunk
@@ -68,22 +85,22 @@ export async function handleDownloadRequest(workspaceName: string): Promise<Resp
         }
       })
     );
-    console.log(`All files added to zip for workspace: ${workspace.name}`);
+    console.log(`All files added to zip for workspace: ${workspaceName}`);
 
     zip.end();
-    console.log(`ZIP stream ended for workspace: ${workspace.name}`);
+    console.log(`ZIP stream ended for workspace: ${workspaceName}`);
 
     return new Response(readable, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${workspace.name}.zip"`,
+        "Content-Disposition": `attachment; filename="${workspaceName}.zip"`,
       },
     });
   } catch (e) {
     if (isError(e, NotFoundError)) {
-      return new Response("Error", { status: 404 });
+      return new Response(unwrapError(e), { status: 404 });
     }
-    console.error(`Error in service worker: ${e}`);
-    return new Response("Error", { status: 500 });
+    console.error(errF`Error in service worker: ${e}`);
+    return new Response(unwrapError(e), { status: 500 });
   }
 }

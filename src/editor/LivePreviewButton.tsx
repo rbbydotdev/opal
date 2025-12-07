@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useSidebarPanes } from "@/features/live-preview/EditorSidebarLayout.jsx";
 import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview.js";
+import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, X, Zap } from "lucide-react";
 import { useRef } from "react";

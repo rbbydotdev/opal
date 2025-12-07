@@ -85,7 +85,7 @@ export const downloadEncryptedHandler = (context: RequestContext) => {
 
 export const downloadHandler = (context: RequestContext) => {
   console.log(`Handling download for: ${context.url.href}`);
-  return handleDownloadRequest(context.workspaceName);
+  return handleDownloadRequest(context.workspaceName, context.params);
 };
 
 export const faviconHandler = withRequestSignal((context: RequestContext) => {
