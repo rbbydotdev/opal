@@ -37,7 +37,9 @@ export async function handleDownloadRequest(
     });
 
     const fileNodes = [
-      ...disk.fileTree.toSourceTree(absPath(paramsPayload.dir)).iterator(FilterOutSpecialDirs),
+      ...disk.fileTree
+        .toSourceTree(absPath(paramsPayload.dir))
+        .iterator(paramsPayload.type === "workspace" ? FilterOutSpecialDirs : undefined),
     ] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
@@ -55,8 +57,8 @@ export async function handleDownloadRequest(
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
-            void disk
-              .readFile(node.path)
+            void node
+              .read()
               .then((data) => {
                 fileStream.push(coerceUint8Array(data), true);
               })

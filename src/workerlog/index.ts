@@ -25,9 +25,9 @@ const server = http.createServer((req: http.IncomingMessage, res: http.ServerRes
       try {
         const data = JSON.parse(body);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        logger.log((data as any).msg);
+        console.log((data as any).msg);
       } catch (error) {
-        logger.error("Error parsing JSON:", error);
+        console.error("Error parsing JSON:", error);
       }
 
       // Respond to the client
@@ -41,5 +41,5 @@ const server = http.createServer((req: http.IncomingMessage, res: http.ServerRes
 });
 
 server.listen(PORT, () => {
-  logger.log(`Server is listening on port ${PORT}`);
+  console.log(`Server is listening on port ${PORT}`);
 });

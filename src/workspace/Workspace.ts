@@ -430,7 +430,7 @@ export class Workspace {
     return this.disk.copyMultiple(copyNodes);
   }
   copyFile(source: AbsPath | TreeNode, targetPath: AbsPath, overWrite = false) {
-    const sourceNode = this.nodeFromPath(String(source));
+    const sourceNode = this.nodeFromPath(absPath(source));
     if (sourceNode === null) {
       throw new BadRequestError(`Source file does not exist: ${source}`);
     }
@@ -549,15 +549,15 @@ export class Workspace {
     return this.disk.getFlatTree({ filterIn, filterOut });
   }
 
-  nodeFromPath = (path?: AbsPath | string | null) => {
+  nodeFromPath = (path?: AbsPath | null) => {
     if (path === null || path === undefined) return null;
     return this.disk.fileTree.nodeFromPath(path);
   };
-  nodesFromPaths(paths: (AbsPath | string | null)[]) {
+  nodesFromPaths(paths: (AbsPath | null)[]) {
     return paths.map((path) => this.nodeFromPath(path)).filter(Boolean);
   }
   //defaults to path "/" if not found
-  tryNodeFromPath(path?: AbsPath | string | null) {
+  tryNodeFromPath(path?: AbsPath | null) {
     return this.nodeFromPath(path) ?? this.nodeFromPath(absPath("/"))!;
   }
 

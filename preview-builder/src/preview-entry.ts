@@ -1,9 +1,12 @@
 import { HistoryDAO } from "@/data/dao/HistoryDAO";
+import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
 import { snapdom } from "snapdom";
+
+initializeGlobalLogger(console);
 
 // Fast image loading with reduced timeout
 async function loadImagesOptimized(images: HTMLImageElement[]) {
@@ -44,14 +47,14 @@ async function processCanvasChunked(sourceCanvas: HTMLCanvasElement, scale: numb
 
 async function snapshot(target: HTMLElement) {
   const perfStart = performance.now();
-  console.debug("[iframe] Starting snapshot process");
+  logger.debug("[iframe] Starting snapshot process");
 
   // Optimized image loading
   const images = Array.from(target.querySelectorAll("img"));
   if (images.length > 0) {
     const imageStart = performance.now();
     await loadImagesOptimized(images);
-    console.debug(`[iframe] Images loaded in ${performance.now() - imageStart}ms`);
+    logger.debug(`[iframe] Images loaded in ${performance.now() - imageStart}ms`);
   }
 
   // Snapdom capture with fast mode
@@ -60,28 +63,28 @@ async function snapshot(target: HTMLElement) {
     fast: false, //disabled to allow from request idle callback
     scale: 1, // Avoid internal scaling
   });
-  console.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);
+  logger.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);
 
   // Canvas processing
   const canvasStart = performance.now();
   const sourceCanvas = await capture.toCanvas();
-  console.debug(`[iframe] Canvas creation took ${performance.now() - canvasStart}ms`);
+  logger.debug(`[iframe] Canvas creation took ${performance.now() - canvasStart}ms`);
 
   // Chunked scaling
   const scaleStart = performance.now();
   const scale = parseFloat((1 / 1).toFixed(4));
   const scaledCanvas = await processCanvasChunked(sourceCanvas, scale);
-  console.debug(`[iframe] Canvas scaling took ${performance.now() - scaleStart}ms`);
+  logger.debug(`[iframe] Canvas scaling took ${performance.now() - scaleStart}ms`);
 
   // Blob creation
   const blobStart = performance.now();
   const blob: Blob = await new Promise((resolve) => {
     scaledCanvas.toBlob((b) => resolve(b as Blob), "image/webp", 0.8);
   });
-  console.debug(`[iframe] Blob creation took ${performance.now() - blobStart}ms`);
+  logger.debug(`[iframe] Blob creation took ${performance.now() - blobStart}ms`);
 
   const totalTime = performance.now() - perfStart;
-  console.debug(`[iframe] Total snapshot time: ${totalTime}ms, blob size: ${blob.size} bytes`);
+  logger.debug(`[iframe] Total snapshot time: ${totalTime}ms, blob size: ${blob.size} bytes`);
 
   return blob;
 }

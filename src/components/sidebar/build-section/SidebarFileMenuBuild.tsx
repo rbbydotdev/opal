@@ -241,7 +241,7 @@ function BuildManager({
           <UploadCloud /> Publish Build
         </DropdownMenuItem>
         <DropdownMenuItem disabled={builds.length === 0} asChild>
-          <a href={downloadBuildURL} className="w-full flex" download>
+          <a href={downloadBuildURL} className="w-full flex">
             <Download /> Download Build
           </a>
         </DropdownMenuItem>
