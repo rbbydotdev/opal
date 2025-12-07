@@ -12,7 +12,14 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return this.githubClient.getAuthCredentials(this.getUsername(), this.getApiToken());
   };
   async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
-    return this.githubClient.createRepo(repoName, { signal });
+    const resolvedRepoName = (() => {
+      try {
+        const url = new URL(repoName);
+        return url.pathname.replace(/\.git$/, "");
+      } catch {}
+      return repoName;
+    })();
+    return this.githubClient.createRepo(resolvedRepoName, { signal });
   }
   async getRemoteUsername(): Promise<string> {
     const user = await this.githubClient.getCurrentUser();

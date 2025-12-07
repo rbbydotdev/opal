@@ -136,7 +136,7 @@ export class BuildRunner {
   }
 
   cancel() {
-    this.abortController.abort();
+    this.abortController.abort("build cancelled by user");
     this.log("Build cancelled by user", "error");
   }
   async execute({
