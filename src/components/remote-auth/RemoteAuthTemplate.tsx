@@ -1,7 +1,6 @@
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthDataFor, RemoteAuthSource, RemoteAuthType } from "@/data/RemoteAuthTypes";
 import { ENV } from "@/lib/env";
-import { Globe, KeyIcon } from "lucide-react";
 
 // Use distributive conditional type to create proper union
 type RemoteAuthTemplate<T extends RemoteAuthType = RemoteAuthType> = T extends any
@@ -122,28 +121,28 @@ export const RemoteAuthTemplates: readonly RemoteAuthTemplate[] = [
       corsProxy: ENV.NETLIFY_CORS_PROXY,
     },
   }),
-  template({
-    name: "Basic Auth",
-    description: "Connect using Basic Auth",
-    source: "custom",
-    type: "basic-auth",
-    icon: <KeyIcon className="h-5 w-5" />,
-    data: {
-      corsProxy: ENV.PRIVATE_CORS_PROXY,
-    },
-  }),
+  // template({
+  //   name: "Basic Auth",
+  //   description: "Connect using Basic Auth",
+  //   source: "custom",
+  //   type: "basic-auth",
+  //   icon: <KeyIcon className="h-5 w-5" />,
+  //   data: {
+  //     corsProxy: ENV.PRIVATE_CORS_PROXY,
+  //   },
+  // }),
 
-  template({
-    name: "No Auth",
-    description: "Connect without authentication",
-    source: "custom",
-    type: "no-auth",
-    icon: <Globe className="h-5 w-5" />,
-    data: {
-      corsProxy: ENV.PRIVATE_CORS_PROXY,
-      endpoint: "",
-    },
-  }),
+  // template({
+  //   name: "No Auth",
+  //   description: "Connect without authentication",
+  //   source: "custom",
+  //   type: "no-auth",
+  //   icon: <Globe className="h-5 w-5" />,
+  //   data: {
+  //     corsProxy: ENV.PRIVATE_CORS_PROXY,
+  //     endpoint: "",
+  //   },
+  // }),
 ];
 
 // Use distributive conditional types to properly narrow the form values

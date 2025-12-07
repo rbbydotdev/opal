@@ -142,7 +142,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   }
 
   reset(): this {
-    this.controller?.abort();
+    this.controller?.abort("reset");
     this.controller = null;
     this.setError(null);
     this.setLoading(false);
@@ -182,7 +182,7 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
       return;
     }
 
-    this.controller?.abort();
+    this.controller?.abort("new search");
     this.controller = new AbortController();
 
     try {
@@ -242,12 +242,12 @@ export class RemoteSearchFuzzyCache<TResult extends Record<string, any> = Record
   };
 
   cancel = (): void => {
-    this.controller?.abort();
+    this.controller?.abort("cancel");
     this.controller = null;
   };
 
   teardown(): void {
-    this.controller?.abort();
+    this.controller?.abort("teardown");
     this.controller = null;
     fuzzysort.cleanup();
     this.events.removeAllListeners();

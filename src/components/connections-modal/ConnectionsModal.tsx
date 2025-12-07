@@ -28,12 +28,12 @@ import {
   RemoteAuthSource,
 } from "@/data/RemoteAuthTypes";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
+import { removeFalsy } from "@/lib/removeFalsy";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { useMemo } from "react";
 import z from "zod";
-
 export function ConnectionsModal({
   children,
   mode = "add",
@@ -156,11 +156,11 @@ export function ConnectionsModalContent({
       form.reset({
         ...selectedTemplate,
         guid: connection.guid,
-        name: form.getValues("name") || connection.name,
+        name: selectedTemplate.name,
         // Merge existing data with new template data, prioritizing existing values
         data: {
           ...selectedTemplate.data,
-          ...form.getValues("data"),
+          ...removeFalsy(form.getValues("data")),
         },
       });
     } else {
@@ -186,7 +186,7 @@ export function ConnectionsModalContent({
             name="templateType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Connection Type</FormLabel>
+                <FormLabel>Connection Types</FormLabel>
                 <Select value={field.value} onValueChange={handleSelectChange} disabled={mode === "edit"}>
                   <SelectTrigger id="connection-type">
                     <SelectValue placeholder="Select a connection type" />
@@ -430,7 +430,6 @@ function NoAuth({
           Cancel
         </Button>
         <Button type="submit" className="w-full">
-          {/* <RemoteAuthSourceIconComponent size={12} source={source} /> */}
           <Zap size={12} />
           Connect
         </Button>

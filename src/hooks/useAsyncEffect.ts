@@ -28,7 +28,7 @@ export function useAsyncEffect(
     })();
 
     return () => {
-      controller.abort();
+      controller.abort("useEffect unmount cleanup");
       if (typeof unsubRef.current === "function") {
         unsubRef.current();
         unsubRef.current = undefined;

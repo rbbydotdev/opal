@@ -98,7 +98,7 @@ export function useWorkspaceFilenameSearchResults(debounceMs = SEARCH_DEBOUNCE_M
         reset();
         return;
       }
-      abortControllerRef.current?.abort();
+      abortControllerRef.current?.abort("new query");
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
@@ -161,7 +161,7 @@ export function useWorkspaceFilenameSearchResults(debounceMs = SEARCH_DEBOUNCE_M
   // Cleanup on unmount
   const tearDown = useCallback(() => {
     reset();
-    abortControllerRef.current?.abort();
+    abortControllerRef.current?.abort("teardown");
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
