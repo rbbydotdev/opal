@@ -57,7 +57,6 @@ export class FileTree {
 
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
-  // asyncWalkIterator = (...args: Parameters<TreeDirRoot["asyncWalkIterator"]>) => this.root.asyncWalkIterator(...args);
 
   iterator(...args: Parameters<TreeDirRoot["iterator"]>) {
     return this.root.iterator(...args);
@@ -121,6 +120,7 @@ export class FileTree {
 
   async index(tree?: TreeDirRoot) {
     for await (const _ of this.indexIter(tree)) {
+      /* no-op, just indexing */
     }
     return this.root;
   }

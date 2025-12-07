@@ -7,7 +7,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
-export async function handleImageRequest(event: FetchEvent, url: SuperUrl, workspaceName: string): Promise<Response> {
+export async function handleImageRequest(request: Request, url: SuperUrl, workspaceName: string): Promise<Response> {
   // TODO hoist controller logic up to the top level
   try {
     const decodedPathname = url.decodedPathname;
@@ -21,7 +21,7 @@ export async function handleImageRequest(event: FetchEvent, url: SuperUrl, works
     let cache: Cache;
     if (!decodedPathname.endsWith(".svg")) {
       cache = await Workspace.newCache(workspaceName).getCache();
-      const cachedResponse = await cache.match(event.request);
+      const cachedResponse = await cache.match(request);
       if (cachedResponse) {
         console.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
         return cachedResponse;
@@ -45,7 +45,7 @@ export async function handleImageRequest(event: FetchEvent, url: SuperUrl, works
     });
 
     if (!decodedPathname.endsWith(".svg")) {
-      await cache!.put(event.request, response.clone());
+      await cache!.put(request, response.clone());
     }
     return response;
   } catch (e) {
