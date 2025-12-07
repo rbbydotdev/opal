@@ -8,7 +8,7 @@ import { isMarkdownType } from "./fileType";
 import { getMimeType } from "./mimeType";
 
 // --- Constructors ---
-export function absPath(path: string | { toString(): string }): AbsPath {
+export function absPath(path: string | { toString(): string; type: "dir" | "file"; path: AbsPath }): AbsPath {
   let pathStr = String(path);
   if (isAbsPath(pathStr)) return pathModule.normalize(pathStr) as AbsPath;
   if (!pathStr.startsWith("/")) pathStr = "/" + pathStr;
@@ -16,7 +16,7 @@ export function absPath(path: string | { toString(): string }): AbsPath {
   return pathModule.normalize(pathStr) as AbsPath;
 }
 
-export function relPath(path: string | { toString(): string }): RelPath {
+export function relPath(path: string | { toString(): string; type: "dir" | "file"; path: AbsPath }): RelPath {
   let pathStr = String(path);
   if (pathStr.startsWith("/")) pathStr = pathModule.normalize(pathStr).slice(1);
   if (pathStr !== "" && pathStr.endsWith("/")) pathStr = pathStr.slice(0, -1);

@@ -5,23 +5,12 @@ import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError, unwrapError } from "@/lib/errors/errors";
 import { absPath, joinPath, strictPathname } from "@/lib/paths2";
+import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
 import { signalRequest } from "@/lib/service-worker/utils";
 import * as fflate from "fflate";
 import z from "zod";
 import { SWWStore } from "./SWWStore";
-
-export const downloadZipSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("workspace"),
-  }),
-  z.object({
-    type: z.literal("build"),
-    diskId: z.string(),
-    buildDir: z.string(),
-    buildId: z.string(),
-  }),
-]);
 
 export async function handleDownloadRequest(
   workspaceName: string,
@@ -47,7 +36,9 @@ export async function handleDownloadRequest(
       if (final) await writer.close();
     });
 
-    const fileNodes = [...disk.fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
+    const fileNodes = [
+      ...disk.fileTree.toSourceTree(absPath(paramsPayload.dir)).iterator(FilterOutSpecialDirs),
+    ] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
       console.warn("No files found in the workspace to download.");

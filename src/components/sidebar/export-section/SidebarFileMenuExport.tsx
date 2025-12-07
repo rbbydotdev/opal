@@ -6,14 +6,17 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { downloadEncryptedZipHelper } from "@/lib/service-worker/downloadEncryptedZipHelper";
+import { downloadWorkspaceZipURL } from "@/lib/service-worker/downloadZipURL";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import { Lock } from "lucide-react";
-
-import { Download, Info } from "lucide-react";
+import { Download, Info, Lock } from "lucide-react";
 import React from "react";
+
+const downloadZipURL = downloadWorkspaceZipURL();
+
 export function SidebarFileMenuExport(props: React.ComponentProps<typeof SidebarGroup>) {
   const [expanded, setExpand] = useSingleItemExpander("export");
   const { currentWorkspace } = useWorkspaceContext();
+
   return (
     <SidebarGroup {...props}>
       <Collapsible className="group/collapsible" open={expanded} onOpenChange={setExpand}>
@@ -34,7 +37,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
             <Button className="w-full text-xs" size="sm" variant="outline" asChild>
-              <a href="/download.zip" className="flex">
+              <a href={downloadZipURL} className="flex">
                 <Download className="mr-1 !w-4 !h-4 stroke-1" />
                 <span className="w-full flex justify-center">Download Zip</span>
               </a>

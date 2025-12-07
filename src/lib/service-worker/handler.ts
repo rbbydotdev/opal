@@ -1,8 +1,9 @@
 import { isImageType } from "@/lib/fileType";
 import { absPath } from "@/lib/paths2";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
+import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
 import { handleDocxConvertRequest as handleDocxUploadRequest } from "@/lib/service-worker/handleDocxConvertRequest";
-import { downloadZipSchema, handleDownloadRequest } from "@/lib/service-worker/handleDownloadRequest";
+import { handleDownloadRequest } from "@/lib/service-worker/handleDownloadRequest";
 import { handleDownloadRequestEncrypted } from "@/lib/service-worker/handleDownloadRequestEncrypted";
 import { handleFaviconRequest } from "@/lib/service-worker/handleFaviconRequest";
 import { handleFileReplace } from "@/lib/service-worker/handleFileReplace";
@@ -82,7 +83,9 @@ export const workspaceFilenameSearchHandler = withRequestSignal(async (context: 
 
 export const downloadHandler = (context: RequestContext) => {
   console.log(`Handling download for: ${context.url.href}`);
-  const paramsPayload = downloadZipSchema.parse(context.params || { type: "workspace" });
+  const urlPayload = context.searchParams || { type: "workspace" };
+  console.log(`Download payload: ${JSON.stringify(urlPayload)}`);
+  const paramsPayload = downloadZipSchema.parse(urlPayload);
   return handleDownloadRequest(context.workspaceName, paramsPayload);
 };
 

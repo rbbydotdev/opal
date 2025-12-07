@@ -27,6 +27,7 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { Code2, Delete, Download, Ellipsis, FilesIcon, Hammer, UploadCloud } from "lucide-react";
@@ -220,6 +221,7 @@ function BuildManager({
   handleDeleteBuild: (buildGuid: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const downloadBuildURL = build ? downloadBuildZipURL(build.disk.guid!, build.buildPath) : "#";
   return selectMode === "delete" ? (
     <SelectHighlight
       placeholder="Select Build to Delete"
@@ -238,8 +240,10 @@ function BuildManager({
         <DropdownMenuItem onClick={() => build && openNewPub({ build })} disabled={!build}>
           <UploadCloud /> Publish Build
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {}} disabled={builds.length === 0}>
-          <Download /> Download Build
+        <DropdownMenuItem disabled={builds.length === 0} asChild>
+          <a href={downloadBuildURL} className="w-full flex" download>
+            <Download /> Download Build
+          </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>

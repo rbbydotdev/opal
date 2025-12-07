@@ -1,4 +1,6 @@
 import {
+  SourceTreeDirRoot,
+  SourceTreeNode,
   TreeDir,
   TreeDirRoot,
   TreeDirRootJType,
@@ -14,17 +16,18 @@ import { isErrorWithCode, NotFoundError } from "@/lib/errors/errors";
 import { AbsPath, absPath, basename, dirname, joinPath, RelPath, relPath, stringifyEntry } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 
-export class FileTree {
+export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
   initialIndex = false;
   guid: string;
   cacheId: string;
   private map = new Map<string, TreeNode>();
-  private _root: TreeDirRoot = new TreeDirRoot();
-  set root(root: TreeDirRoot) {
+  protected abstract _root: TRoot;
+
+  set root(root: TRoot) {
     this._root = root;
     this.updateMap();
   }
-  get root() {
+  get root(): TRoot {
     if (!this.initialIndex) this.initialIndex = true;
     return this._root;
   }
@@ -41,19 +44,17 @@ export class FileTree {
   */
 
   constructor(
-    private fs: CommonFileSystem,
+    protected fs: CommonFileSystem,
     guid: string,
-    private fsMutex: Mutex
+    protected fsMutex: Mutex
   ) {
     this.guid = `${guid}/FileTree`;
     this.cacheId = `${this.guid}/cache`;
   }
 
-  clone(mutex: Mutex) {
-    const newTree = new FileTree(this.fs, this.guid, mutex);
-    newTree.root = this.root;
-    return newTree;
-  }
+  abstract forceIndex(tree: TRoot | TreeDirRootJType): void;
+  protected abstract createNewRoot(): TRoot;
+  abstract clone(mutex?: Mutex): this;
 
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
@@ -118,33 +119,29 @@ export class FileTree {
     this.map = new Map([...this.iterator()].map((node) => [node.path, node]));
   }
 
-  async index(tree?: TreeDirRoot) {
+  async index(tree?: TRoot) {
     for await (const _ of this.indexIter(tree)) {
       /* no-op, just indexing */
     }
     return this.root;
   }
   //forces the index, for the case of loading from cache
-  forceIndex(tree: TreeDirRoot | TreeDirRootJType) {
-    if (tree instanceof TreeDirRoot) {
-      this.root = tree;
-    } else {
-      this.root = TreeDirRoot.FromJSON(tree);
-    }
-  }
-  async *indexIter(tree = new TreeDirRoot()): AsyncGenerator<TreeNode, unknown, unknown> {
+  async *indexIter(tree?: TRoot): AsyncGenerator<TreeNode, unknown, unknown> {
     if (this.indexMutex.isLocked()) {
       await this.indexMutex.waitForUnlock();
       return this.root.iterator();
     }
+
+    const indexTree = tree ?? this.createNewRoot();
+
     try {
       await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
       console.debug("Indexing file tree");
-      for await (const node of this.recurseTree(tree)) {
+      for await (const node of this.recurseTree(indexTree)) {
         yield node;
       }
       //happens already in the setter() this.initialIndex = true;
-      this.root = tree;
+      this.root = indexTree;
       return;
     } catch (e) {
       console.error("Error during file tree indexing:", e);
@@ -159,11 +156,7 @@ export class FileTree {
     await this.index();
   }
 
-  private async *recurseTree(
-    parent: TreeDir = this.root,
-    depth = 0,
-    haltOnError = false
-  ): AsyncGenerator<TreeNode, void, unknown> {
+  private async *recurseTree(parent: TreeDir, depth = 0, haltOnError = false): AsyncGenerator<TreeNode, void, unknown> {
     const dir = parent.path;
     try {
       const entries = (await this.fs.readdir(dir)).map((e) => relPath(stringifyEntry(e)));
@@ -241,6 +234,66 @@ export class FileTree {
   nodeFromPath(path?: AbsPath | string | null): TreeNode | null {
     if (!path) return null;
     return this.map.get(path + "") ?? null;
+  }
+}
+
+export class FileTree extends BaseFileTree<TreeDirRoot> {
+  protected _root: TreeDirRoot = new TreeDirRoot();
+
+  protected createNewRoot(): TreeDirRoot {
+    return new TreeDirRoot();
+  }
+
+  clone(mutex: Mutex = this.fsMutex): this {
+    const newTree = new FileTree(this.fs, this.guid, mutex) as this;
+    newTree.root = this.root.clone() as TreeDirRoot;
+    return newTree;
+  }
+
+  forceIndex(tree: TreeDirRoot | TreeDirRootJType): void {
+    if (tree instanceof TreeDirRoot) {
+      this.root = tree;
+    } else {
+      this.root = TreeDirRoot.FromJSON(tree);
+    }
+  }
+
+  toSourceTree(scope = absPath("/")): SourceFileTree {
+    if (this.initialIndex === false) {
+      throw new Error("FileTree must be indexed before creating a scoped tree");
+    }
+    const subTree = this.root.nodeFromPath(scope)?.deepCopy();
+    if (!subTree || !subTree.isTreeDir()) {
+      throw new Error(`Scope path ${scope} not found in file tree`);
+    }
+    if (subTree.path !== scope) subTree.path = scope;
+    const scopedFileTree = new SourceFileTree(this.fs, this.guid, this.fsMutex);
+    const sourceTreeRoot = SourceTreeNode.New(subTree, this.root.path);
+    scopedFileTree.root = sourceTreeRoot as SourceTreeDirRoot;
+    return scopedFileTree;
+  }
+}
+
+export class SourceFileTree extends BaseFileTree<SourceTreeDirRoot> {
+  protected _root: SourceTreeDirRoot = new SourceTreeDirRoot();
+
+  protected createNewRoot(): SourceTreeDirRoot {
+    return new SourceTreeDirRoot();
+  }
+
+  clone(mutex: Mutex = this.fsMutex): this {
+    const newTree = new SourceFileTree(this.fs, this.guid, mutex) as this;
+    newTree.root = this.root.clone() as SourceTreeDirRoot;
+    return newTree;
+  }
+
+  forceIndex(tree: SourceTreeDirRoot | TreeDirRootJType): void {
+    if (tree instanceof SourceTreeDirRoot) {
+      this.root = tree;
+    } else {
+      const treeRoot = TreeDirRoot.FromJSON(tree);
+      this.root = SourceTreeNode.New(treeRoot, treeRoot.path) as SourceTreeDirRoot;
+    }
   }
 }
 
