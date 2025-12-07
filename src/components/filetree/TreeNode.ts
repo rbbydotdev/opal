@@ -595,6 +595,11 @@ export class TreeDirRoot extends TreeDir {
       parent: null,
     });
   }
+  clone() {
+    return new TreeDirRoot({
+      children: this.deepCopy().children as Record<string, TreeFile | TreeDir>,
+    });
+  }
   hasDepth() {
     return Object.values(this.children).filter((n) => n.isTreeDir()).length > 0;
   }
@@ -668,7 +673,7 @@ export class TreeFile extends TreeNode {
 
   async read(): Promise<string | Uint8Array> {
     try {
-      return await this.fs.readFile(this.path);
+      return await this.fs.readFile(this.source ?? this.path);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
         throw new NotFoundError(`File not found: ${this.path}`);
@@ -677,9 +682,9 @@ export class TreeFile extends TreeNode {
     }
   }
 
-  async write<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
+  async write<T extends string | Uint8Array>(contents: T | Promise<T>) {
     const awaitedContents = contents instanceof Promise ? await contents : contents;
-    await this.fs.writeFile(filePath, awaitedContents, { encoding: "utf8", mode: 0o777 });
+    await this.fs.writeFile(this.source ?? this.path, awaitedContents, { encoding: "utf8", mode: 0o777 });
     return;
   }
 
@@ -712,13 +717,13 @@ export class VirtualDirTreeNode extends TreeDir {
   isVirtual = true;
   tagSource = tagSource<VirtualTreeNode>;
 }
-class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
-  virtualContent!: string;
-  constructor(props: ConstructorParameters<typeof VirtualFileTreeNode>[0] & { virtualContent: string }) {
-    super(props);
-    this.virtualContent = props.virtualContent;
-  }
-}
+// class VirtualFileTreeNodeWithContent extends VirtualFileTreeNode {
+//   virtualContent!: string;
+//   constructor(props: ConstructorParameters<typeof VirtualFileTreeNode>[0] & { virtualContent: string }) {
+//     super(props);
+//     this.virtualContent = props.virtualContent;
+//   }
+// }
 
 function isVirtualNode(node: TreeNode): node is VirtualTreeNode {
   return typeof node.isVirtual === "boolean" && node.isVirtual !== false;
@@ -730,6 +735,10 @@ class VirtualDupTreeNode extends VirtualTreeNode {
 
 function isVirtualDupNode(node: TreeNode): node is VirtualDupTreeNode {
   return isVirtualNode(node) && typeof node.source !== "undefined";
+}
+
+export class SourceTreeDirRoot extends TreeDirRoot {
+  source!: AbsPath;
 }
 
 export class SourceTreeNode extends TreeNode {

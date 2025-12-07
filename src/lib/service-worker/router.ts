@@ -86,13 +86,21 @@ export async function routeRequest(
   const url = new SuperUrl(request.url);
   const requestMethod = methodOverride || request.method;
 
+  logger.log(`RouteRequest START: ${requestMethod} ${url.pathname}`);
+  logger.log(`   - Workspace param: ${workspaceParam || 'null'}`);
+  logger.log(`   - Method override: ${methodOverride || 'none'}`);
+  logger.log(`   - Search params: ${url.search || 'none'}`);
+
   for (const route of routes) {
     if (route.method !== "ANY" && route.method !== requestMethod) {
+      logger.debug(`   Skipping route (method mismatch): ${route.method} ${route.pattern.source}`);
       continue;
     }
 
     const match = url.pathname.match(route.pattern);
     if (match) {
+      logger.log(`   ROUTE MATCHED: ${route.method} ${route.pattern.source}`);
+      
       const params = route.paramNames.reduce(
         (acc, name, index) => {
           acc[name] = decodeURIComponent(match[index + 1]!);
@@ -100,6 +108,7 @@ export async function routeRequest(
         },
         {} as Record<string, string>
       );
+      
       const searchParams = Object.fromEntries(
         Array.from(url.searchParams.entries()).map(([key, value]) => {
           try {
@@ -109,13 +118,31 @@ export async function routeRequest(
           }
         })
       );
+      
       //if workspaceParam is null try to get it from params
-      if (!workspaceParam && params.workspaceName) workspaceParam = params.workspaceName;
+      if (!workspaceParam && params.workspaceName) {
+        workspaceParam = params.workspaceName;
+        logger.log(`   Workspace from params: ${workspaceParam}`);
+      }
+      
+      logger.log(`   Route params: ${Object.keys(params).length ? JSON.stringify(params) : 'none'}`);
+      logger.log(`   Search params: ${Object.keys(searchParams).length ? JSON.stringify(searchParams) : 'none'}`);
+      logger.log(`   Final workspace: ${workspaceParam || 'unknown'}`);
+      logger.log(`   Calling handler: ${route.handler.name || 'anonymous'}`);
+      
       const context: RequestContext = { event, url, workspaceName: workspaceParam || "unknown", params, searchParams };
-      return route.handler(context);
+      const response = await route.handler(context);
+      
+      logger.log(`   Handler completed with status: ${response.status}`);
+      return response;
+    } else {
+      logger.debug(`   Route pattern didn't match: ${route.pattern.source}`);
     }
   }
 
   // If no specific route is matched, fall back to the default fetch handler
-  return defaultFetchHandler(event);
+  logger.log(`   No route matched, using default fetch handler`);
+  const response = await defaultFetchHandler(event);
+  logger.log(`   Default handler completed with status: ${response.status}`);
+  return response;
 }

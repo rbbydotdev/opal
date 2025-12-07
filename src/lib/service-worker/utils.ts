@@ -118,14 +118,30 @@ function formatConsoleMsg(msg: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return String(msg);
 }
+export function ServiceWorkerLogger() {
+  const RL = RemoteLogger("ServiceWorker");
+  return {
+    log: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log"),
+    debug: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug"),
+    error: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error"),
+    warn: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn"),
+  };
+}
 
 export function EnableRemoteLogger() {
   const RL = RemoteLogger("ServiceWorker");
+  const logger = {
+    log: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log"),
+    debug: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug"),
+    error: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error"),
+    warn: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn"),
+  };
 
   console.log = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log");
   console.debug = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug");
   console.error = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error");
   console.warn = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn");
+  return logger;
 }
 
 // --- Request Signaling ---

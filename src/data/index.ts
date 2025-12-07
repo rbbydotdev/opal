@@ -62,11 +62,13 @@ export class ClientIndexedDb extends Dexie {
     });
 
     // === BUILDS ===
-    this.builds.hook("deleting", (_primaryKey, build, tx) => {
+    this.builds.hook("deleting", (primaryKey, build, tx) => {
       // Delete related deployments when build is deleted
-      const buildId = build.guid;
       tx.on("complete", async () => {
-        await this.deployments.where("buildId").equals(buildId).delete();
+        await this.deployments
+          .where("buildId")
+          .equals(build?.guid ?? primaryKey)
+          .delete();
       });
     });
 
@@ -75,11 +77,11 @@ export class ClientIndexedDb extends Dexie {
       // Avoid nested transaction error — wait until after the workspace delete finishes.
       tx.on("complete", async () => {
         await Promise.all([
-          this.disks.where("guid").equals(workspace.disk.guid).delete(),
-          this.disks.where("guid").equals(workspace.thumbs.guid).delete(),
-          this.builds.where("workspaceId").equals(workspace.guid).delete(),
-          this.deployments.where("workspaceId").equals(workspace.guid).delete(),
-          this.historyDocs.where("workspaceId").equals(workspace.guid).delete(),
+          this.disks.where("guid").equals(workspace?.disk.guid).delete(),
+          this.disks.where("guid").equals(workspace?.thumbs.guid).delete(),
+          this.builds.where("workspaceId").equals(workspace?.guid).delete(),
+          this.deployments.where("workspaceId").equals(workspace?.guid).delete(),
+          this.historyDocs.where("workspaceId").equals(workspace?.guid).delete(),
         ]);
       });
     });

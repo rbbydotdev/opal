@@ -1,13 +1,14 @@
 import { ENV } from "@/lib/env";
 import { errF } from "@/lib/errors/errors";
+import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { defaultFetchHandler } from "@/lib/service-worker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/service-worker/router";
-import { WHITELIST } from "@/lib/service-worker/utils";
+import { ServiceWorkerLogger, WHITELIST } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 declare const self: ServiceWorkerGlobalScope;
 
-// --- Service Worker Lifecycle ---
+initializeGlobalLogger(ServiceWorkerLogger());
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
@@ -17,13 +18,14 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   event.waitUntil(self.skipWaiting());
 });
 
-// --- Main Fetch Controller ---
-
 self.addEventListener("fetch", (event: FetchEvent) => {
+  // const { log, error: errorLog } = !DEBUG_CONSOLE ? console : EnableRemoteLogger();
   const { request } = event;
   const url = new URL(request.url);
 
+  logger.log(`Fetch event for: ${request.url} | Mode: ${request.mode} | Destination: ${request.destination}`);
   if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
+    logger.log(`Bypassing fetch for non-host URL: ${request.url}`);
     return;
   }
 
@@ -31,6 +33,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   // If there's no referrer, it's likely a direct navigation or non-app request.
   // Let the browser handle it directly.
   if ((request.mode === "navigate" || !request.referrer) && hasRouteMatch(event, "NAV")) {
+    logger.log(`Handling navigation request for: ${request.url}`);
     return event.respondWith(routeRequest(event, null, "NAV"));
   }
   if (!request.referrer || whiteListMatch || event.request.destination === "script") {
@@ -86,12 +89,15 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
     // Only handle requests originating from within our app and for a valid workspace
     if (workspaceName && url.origin === self.location.origin) {
+      logger.log(`Routing request for workspace '${workspaceName}': ${request.url}`);
       event.respondWith(routeRequest(event, workspaceName));
     } else {
+      logger.log(`Passing through request (no workspace match): ${request.url}`);
+      //
       event.respondWith(defaultFetchHandler(event));
     }
   } catch (e) {
-    console.error(
+    logger.error(
       errF`Error in fetch controller: ${request.url}. Referrer: ${request.referrer}. Error: ${e}`.toString()
     );
     // If we can't parse the workspace or another error occurs, fallback to network.
