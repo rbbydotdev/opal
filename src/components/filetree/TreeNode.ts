@@ -685,6 +685,7 @@ export class TreeFile extends TreeNode {
 
   async read(): Promise<string | Uint8Array> {
     try {
+      logger.log("Reading file from path:", this.source ?? this.path);
       return await this.fs.readFile(this.source ?? this.path);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {

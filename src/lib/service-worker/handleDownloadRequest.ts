@@ -22,6 +22,9 @@ export async function handleDownloadRequest(
         ? (await SWWStore.tryWorkspace(workspaceName)).getDisk()
         : DiskFromJSON(await DiskDAO.FetchFromGuidOrThrow(paramsPayload.diskId));
 
+    await disk.init({ skipListeners: true });
+    await disk.refresh();
+
     const workspaceDirName = absPath(strictPathname(workspaceName));
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
@@ -57,9 +60,12 @@ export async function handleDownloadRequest(
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
-            void node
+
+            logger.log(">>>>>???", await node.read());
+            await node
               .read()
               .then((data) => {
+                logger.log(">>>", data);
                 fileStream.push(coerceUint8Array(data), true);
               })
               .finally(() => {
