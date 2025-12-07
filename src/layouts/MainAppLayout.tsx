@@ -1,5 +1,6 @@
 import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/ConfirmContext";
+import { CustomQueryClientProvider } from "@/components/CustomQueryClientProvider";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
@@ -54,58 +55,59 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
   useZoom();
   return (
-    <ThemeProvider>
-      <Background>
-        <ServiceWorker>
-          <Toaster />
-          <CompatibilityAlert />
+    <CustomQueryClientProvider>
+      <ThemeProvider>
+        <Background>
+          <ServiceWorker>
+            <Toaster />
+            <CompatibilityAlert />
 
-          <AsyncWindowErrorBoundary>
-            <ErrorPopper>
-              <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
-                <WorkspaceProvider>
-                  <TooltipProvider delayDuration={1000}>
-                    <WindowContextProviderComponent>
-                      <GitStatusProvider>
-                        <PublicationModalProvider>
-                          <SidebarProvider>
-                            <DestinationManagerProvider>
-                              <BuildCreationProvider>
-                                <PromptProvider>
-                                  <ConfirmProvider>
-                                    <RemoteMDXEditorRealmProvider>
-                                      <div className="w-full flex">
-                                        <ErrorBoundary fallback={ErrorPlaque}>
-                                          <div
-                                            id={WS_BUTTON_BAR_ID}
-                                            className={cn(
-                                              "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                            )}
-                                          >
-                                            <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                              <WorkspaceButtonBar />
-                                            </ErrorBoundary>
-                                          </div>
-                                          <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                        </ErrorBoundary>
-                                      </div>
-                                    </RemoteMDXEditorRealmProvider>
-                                  </ConfirmProvider>
-                                </PromptProvider>
-                              </BuildCreationProvider>
-                            </DestinationManagerProvider>
-                          </SidebarProvider>
-                        </PublicationModalProvider>
-                      </GitStatusProvider>
-                    </WindowContextProviderComponent>
-                  </TooltipProvider>
-                </WorkspaceProvider>
-              </ErrorBoundary>
-            </ErrorPopper>
-          </AsyncWindowErrorBoundary>
-        </ServiceWorker>
-      </Background>
-      <style>{`
+            <AsyncWindowErrorBoundary>
+              <ErrorPopper>
+                <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
+                  <WorkspaceProvider>
+                    <TooltipProvider delayDuration={1000}>
+                      <WindowContextProviderComponent>
+                        <GitStatusProvider>
+                          <PublicationModalProvider>
+                            <SidebarProvider>
+                              <DestinationManagerProvider>
+                                <BuildCreationProvider>
+                                  <PromptProvider>
+                                    <ConfirmProvider>
+                                      <RemoteMDXEditorRealmProvider>
+                                        <div className="w-full flex">
+                                          <ErrorBoundary fallback={ErrorPlaque}>
+                                            <div
+                                              id={WS_BUTTON_BAR_ID}
+                                              className={cn(
+                                                "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
+                                              )}
+                                            >
+                                              <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                <WorkspaceButtonBar />
+                                              </ErrorBoundary>
+                                            </div>
+                                            <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                          </ErrorBoundary>
+                                        </div>
+                                      </RemoteMDXEditorRealmProvider>
+                                    </ConfirmProvider>
+                                  </PromptProvider>
+                                </BuildCreationProvider>
+                              </DestinationManagerProvider>
+                            </SidebarProvider>
+                          </PublicationModalProvider>
+                        </GitStatusProvider>
+                      </WindowContextProviderComponent>
+                    </TooltipProvider>
+                  </WorkspaceProvider>
+                </ErrorBoundary>
+              </ErrorPopper>
+            </AsyncWindowErrorBoundary>
+          </ServiceWorker>
+        </Background>
+        <style>{`
         ::highlight(${MDX_SEARCH_NAME}) {
           background-color: oklch(var(--highlight));
           color: oklch(var(--highlight-foreground));
@@ -119,6 +121,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
           color: oklch(var(--highlight-focus-foreground));
         }
       `}</style>
-    </ThemeProvider>
+      </ThemeProvider>
+    </CustomQueryClientProvider>
   );
 }

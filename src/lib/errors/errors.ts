@@ -284,7 +284,7 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
   const err = toErrorWithMessage(error);
   const code = options.code ?? (typeof (error as any)?.code === "number" ? (error as any).code : undefined);
   const name = options.name ?? (typeof (error as any)?.name === "string" ? (error as any).name : undefined);
-  const message = options.message ?? err.message;
+  const message = options.message ?? err.message ?? name;
 
   // Map by code (number) if present
   switch (code) {
@@ -336,6 +336,6 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
       return new AggregateApplicationError(options.errors ?? [], message, typeof code === "number" ? code : 400);
   }
 
-  // Fallback: wrap as ApplicationError
+  //if plain Error or unknown, return generic ApplicationError
   return new ApplicationError(message, typeof code === "number" ? code : 500);
 }

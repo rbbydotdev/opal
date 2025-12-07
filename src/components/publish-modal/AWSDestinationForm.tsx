@@ -181,9 +181,9 @@ export function AWSDestinationForm({
     reset: resetSearch,
     searchResults,
     error,
-    setEnabled,
   } = useRemoteAWSSearch({
     agent,
+    cacheKey: region + remoteAuth?.guid,
   });
   const { ident, msg, request } = useRemoteAWSBucket({
     createRequest: agent.createBucket,
@@ -202,7 +202,6 @@ export function AWSDestinationForm({
           label="Bucket Name"
           isLoading={isLoading}
           searchValue={searchValue}
-          onActive={() => setEnabled(true)}
           onSearchChange={updateSearch}
           searchResults={searchResults}
           error={error}

@@ -28,9 +28,9 @@ export function NetlifyDestinationForm({
     reset: searchReset,
     searchResults,
     error,
-    setEnabled,
   } = useRemoteNetlifySearch({
     agent,
+    cacheKey: String(remoteAuth?.guid),
   });
   const { ident, msg, request } = useRemoteNetlifySite({
     createRequest: agent.createSite,
@@ -48,7 +48,6 @@ export function NetlifyDestinationForm({
         label="Site Name"
         isLoading={isLoading}
         searchValue={searchValue}
-        onActive={() => setEnabled(true)}
         onSearchChange={updateSearch}
         searchResults={searchResults}
         error={error}

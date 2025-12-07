@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { VercelProject } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, isFuzzyResult } from "@/data/RemoteSearchFuzzyCache";
-import { useAnySearch } from "@/data/useAnySearch";
+import { useFuzzySearchQuery } from "@/data/useFuzzySearchQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { cn } from "@/lib/utils";
@@ -125,11 +125,11 @@ export function RemoteItemSearchDropDown({
   isLoading: boolean;
   searchValue: string;
   className?: string;
-  onFocus: (e: React.FocusEvent) => void;
+  onFocus?: (e: React.FocusEvent) => void;
   onSearchChange: (value: string) => void;
   onClose: (inputVal?: string) => void;
   onSelect: (item: RemoteItem) => void;
-  error?: string | null;
+  error?: string | Error | null;
   allItems: RemoteItem[];
 }) {
   const { resetActiveIndex, containerRef, handleKeyDown, getInputProps, getMenuProps, getItemProps } =
@@ -174,7 +174,7 @@ export function RemoteItemSearchDropDown({
             data-no-escape
             autoFocus
             onFocus={(e) => {
-              onFocus(e);
+              onFocus?.(e);
               e.target.select();
             }}
             value={searchValue}
@@ -205,8 +205,8 @@ export function RemoteItemSearchDropDown({
               <div className="flex w-full flex-col rounded p-1">
                 <div className="group flex h-8 min-w-0 items-center rounded-md justify-start border-destructive border px-2 py-5">
                   <Ban className="flex-shrink-0 text-destructive h-4 w-4 mr-2" />
-                  <span className="text-md font-mono truncate min-w-0" title={error}>
-                    Error {error}
+                  <span className="text-md font-mono truncate min-w-0" title={error.toString()}>
+                    Error {error.toString()}
                   </span>
                 </div>
               </div>
@@ -259,6 +259,7 @@ interface RemoteSearchConfig<T extends Record<string, any>> {
 export function useRemoteSearchFn<T = any>(
   fetchAll: RemoteAuthAgentSearchType<T>["fetchAll"],
   hasUpdates: RemoteAuthAgentSearchType<T>["hasUpdates"],
+  cacheKey: string,
   {
     config,
     defaultValue = "",
@@ -274,6 +275,7 @@ export function useRemoteSearchFn<T = any>(
     },
     config,
     defaultValue,
+    cacheKey,
   });
 }
 // Core generic search hook
@@ -281,23 +283,24 @@ export function useRemoteSearch<T extends Record<string, any>>({
   agent,
   config,
   defaultValue = "",
+  cacheKey,
 }: {
   agent: RemoteAuthAgentSearchType<T> | null;
   config: RemoteSearchConfig<T>;
   defaultValue?: string;
+  cacheKey: string;
 }) {
-  const [enabled, setEnabled] = useState(false);
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const { loading, results, error, clearError, clearCache, reset } = useAnySearch<T>({
+  const { loading, results, error, clearError, clearCache, reset } = useFuzzySearchQuery<T>(
     agent,
-    enabled,
-    searchTerm: debouncedSearchValue,
-    searchKey: config.searchKey,
-  });
+    config.searchKey,
+    debouncedSearchValue,
+    cacheKey
+  );
 
   const searchResults = useMemo(() => {
-    return results.map((result) => {
+    return results?.map((result) => {
       const item = extractResult<T>(result);
       const keyValue = String(item[config.searchKey]);
 
@@ -321,7 +324,8 @@ export function useRemoteSearch<T extends Record<string, any>>({
         element: highlightedElement,
       };
     });
-  }, [results, config]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, config, cacheKey]);
 
   return {
     isLoading: loading || (debouncedSearchValue !== searchValue && Boolean(searchValue)),
@@ -330,19 +334,19 @@ export function useRemoteSearch<T extends Record<string, any>>({
     clearError,
     clearCache,
     reset,
-    searchResults,
+    searchResults: searchResults || [],
     error,
-    enabled,
-    setEnabled,
   };
 }
 
 export function useRemoteNetlifySearch({
   agent,
   defaultValue = "",
+  cacheKey,
 }: {
   agent: RemoteAuthAgentSearchType<NetlifySite> | null;
   defaultValue?: string;
+  cacheKey: string;
 }) {
   return useRemoteSearch<NetlifySite>({
     agent,
@@ -350,6 +354,7 @@ export function useRemoteNetlifySearch({
       searchKey: "name",
     },
     defaultValue,
+    cacheKey,
   });
 }
 
@@ -381,9 +386,11 @@ export function useRemoteNetlifySite<T = any>({
 export function useRemoteVercelProjectSearch({
   agent,
   defaultValue = "",
+  cacheKey,
 }: {
   agent: RemoteAuthAgentSearchType<VercelProject> | null;
   defaultValue?: string;
+  cacheKey: string;
 }) {
   return useRemoteSearch<VercelProject>({
     agent,
@@ -395,6 +402,7 @@ export function useRemoteVercelProjectSearch({
         element: highlightedElement || project.name,
       }),
     },
+    cacheKey,
     defaultValue,
   });
 }
@@ -402,9 +410,11 @@ export function useRemoteVercelProjectSearch({
 export function useRemoteGitRepoSearch({
   agent,
   defaultValue = "",
+  cacheKey,
 }: {
   agent: RemoteAuthAgentSearchType<Repo> | null;
   defaultValue?: string;
+  cacheKey: string;
 }) {
   return useRemoteSearch<Repo>({
     agent,
@@ -416,6 +426,7 @@ export function useRemoteGitRepoSearch({
         element: highlightedElement || repo.full_name,
       }),
     },
+    cacheKey,
     defaultValue,
   });
 }
@@ -517,15 +528,18 @@ export function useRemoteVercelProject({
 export function useRemoteAWSSearch({
   agent,
   defaultValue = "",
+  cacheKey,
 }: {
   agent: RemoteAuthAgentSearchType<AWSS3Bucket> | null;
   defaultValue?: string;
+  cacheKey: string;
 }) {
   return useRemoteSearch<AWSS3Bucket>({
     agent,
     config: {
       searchKey: "name",
     },
+    cacheKey,
     defaultValue,
   });
 }

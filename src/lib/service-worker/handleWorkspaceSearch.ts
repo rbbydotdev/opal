@@ -100,7 +100,7 @@ function createWorkspaceSearchStream({
     },
     cancel(reason) {
       logger.log("Stream canceled by client:", reason);
-      searchController.abort("The client closed the connection.");
+      searchController.abort();
     },
   });
 }
@@ -117,10 +117,10 @@ export async function handleWorkspaceSearch({
   const all = workspaceName === ALL_WS_KEY;
 
   if (activeSearches.has(searchKey)) {
-    activeSearches.get(searchKey)?.abort("A new search was started.");
+    activeSearches.get(searchKey)?.abort();
   }
   if (all) {
-    activeSearches.forEach((cntrl) => cntrl.abort("A new global search was started."));
+    activeSearches.forEach((cntrl) => cntrl.abort());
     activeSearches.clear();
   }
   activeSearches.set(searchKey, searchController);

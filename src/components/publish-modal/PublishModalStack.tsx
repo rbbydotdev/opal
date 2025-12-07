@@ -269,7 +269,6 @@ export function PublishModalStack({
             onOpenChange={setIsOpen}
             setBuild={setBuild}
             build={build}
-            // builds={builds}
             onClose={handleClose}
           />
         )}

@@ -28,7 +28,7 @@ export function useLiveCssFiles({
       (isMarkdown(path!) || isTemplateFile(path!) || isHtml(path!))
     ) {
       const css = Object.values(
-        currentWorkspace.nodeFromPath(path)?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
+        currentWorkspace.nodeFromPath(absPath(path))?.parent?.filterOutChildren((child) => child.isCssFile()) || {}
       ).map((node) => cached(node.path));
 
       if (!css.find((href) => href.startsWith("/global.css")) && currentWorkspace.nodeFromPath(absPath("global.css"))) {

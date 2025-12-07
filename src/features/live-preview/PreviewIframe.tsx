@@ -1,7 +1,7 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PreviewComponent } from "@/features/live-preview/PreviewComponent";
-import { AbsPath, relPath } from "@/lib/paths2";
+import { absPath, AbsPath, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { RefreshCw } from "lucide-react";
 
@@ -33,7 +33,7 @@ export function PreviewIFrame({
           {" / "}
           <Select
             key={previewPath}
-            onValueChange={(value) => setPreviewNode(currentWorkspace.nodeFromPath(value))}
+            onValueChange={(value) => setPreviewNode(currentWorkspace.nodeFromPath(absPath(value)))}
             defaultValue={node.path}
           >
             <SelectTrigger className="w-auto min-w-[100px] font-mono !border-0 !outline-0 truncate">
