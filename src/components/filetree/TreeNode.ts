@@ -29,7 +29,6 @@ import {
   strictPrefix,
 } from "@/lib/paths2";
 import { extname } from "path";
-import { resolveFromRoot } from "../../lib/paths2";
 
 export type TreeFileJType = ReturnType<TreeNode["toJSON"]> & {
   type: "file";
@@ -268,11 +267,24 @@ export class TreeNode {
   }
 
   nodeFromPath(path: AbsPath): TreeNode | null {
-    if (this.path === path) return this;
-    if (!this.isTreeDir()) return null;
-    const [segment, ...rest] = resolveFromRoot(this.path, path).split("/").filter(Boolean);
-    const childNode = this.children?.[segment!];
-    return childNode?.nodeFromPath(absPath(joinPath(this.path, ...rest))) ?? null;
+    let currentNode: TreeNode = this;
+    if (path === this.path) {
+      return currentNode;
+    }
+    const parts = relPath(path)
+      .split("/")
+      .filter((p) => p.length > 0);
+    for (const part of parts) {
+      if (!currentNode.isTreeDir()) {
+        return null;
+      }
+      const childNode = currentNode.children[part];
+      if (!childNode) {
+        return null;
+      }
+      currentNode = childNode;
+    }
+    return currentNode;
   }
 
   constructor({

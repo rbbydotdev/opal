@@ -231,10 +231,15 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
     return this.insertNode(parent, newNode);
   }
 
-  nodeFromPath(path?: AbsPath | string | null): TreeNode | null {
+  nodeFromPath(path?: AbsPath | null): TreeNode | null {
     if (!path) return null;
-    return this.map.get(path + "") ?? null;
+    return this.root.nodeFromPath(path);
   }
+
+  // nodeFromPath(path?: AbsPath | null): TreeNode | null {
+  //   if (!path) return null;
+  //   return this.root.nodeFromPath(path);
+  // }
 }
 
 export class FileTree extends BaseFileTree<TreeDirRoot> {
@@ -264,9 +269,10 @@ export class FileTree extends BaseFileTree<TreeDirRoot> {
     }
     const subTree = this.root.nodeFromPath(scope)?.deepCopy();
     if (!subTree || !subTree.isTreeDir()) {
+      logger.error(`Scope path ${scope} not found in file tree`);
       throw new Error(`Scope path ${scope} not found in file tree`);
     }
-    if (subTree.path !== scope) subTree.path = scope;
+    subTree.path = absPath("/");
     const scopedFileTree = new SourceFileTree(this.fs, this.guid, this.fsMutex);
     const sourceTreeRoot = SourceTreeNode.New(subTree, this.root.path);
     scopedFileTree.root = sourceTreeRoot as SourceTreeDirRoot;

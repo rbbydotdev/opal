@@ -128,22 +128,6 @@ export function ServiceWorkerLogger() {
   };
 }
 
-export function EnableRemoteLogger() {
-  const RL = RemoteLogger("ServiceWorker");
-  const logger = {
-    log: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log"),
-    debug: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug"),
-    error: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error"),
-    warn: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn"),
-  };
-
-  logger.log = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log");
-  logger.debug = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug");
-  logger.error = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "error");
-  logger.warn = (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "warn");
-  return logger;
-}
-
 // --- Request Signaling ---
 export function signalRequest(detail: RequestEventDetail) {
   void self.clients.matchAll().then((clients) => {

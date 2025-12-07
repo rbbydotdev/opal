@@ -22,10 +22,12 @@ export default defineConfig(({ mode }) => {
         },
       }),
     },
-    esbuild: isProd ? {
-      drop: ["console"],
-      pure: ["console.log", "console.debug", "console.info"],
-    } : undefined,
+    esbuild: isProd
+      ? {
+          drop: ["console"],
+          pure: ["console.log", "console.debug", "console.info"],
+        }
+      : undefined,
     // Disable Hot Module Replacement
     plugins: [
       react({
@@ -35,15 +37,6 @@ export default defineConfig(({ mode }) => {
         // Exclude service worker and web worker files from React plugin
         exclude: [/\.ww\.(ts|js)$/, /sw\.(ts|js)$/],
       }),
-      // Only apply the removeConsole plugin in production
-      // ...(isProd
-      //   ? [
-      //       removeConsolePlugin.default({
-      //         includes: ["log", "debug", "info"], // Keep warn/error visible in PROD if you want
-      //       }),
-      //     ]
-      //   : []),
-      // TanStackRouterVite(),
       tanstackRouter({
         routeToken: "layout",
       }),
@@ -84,7 +77,8 @@ export default defineConfig(({ mode }) => {
     define: {
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
       "process.version": JSON.stringify("v18.18.0"),
-      // "process.env.PUBLIC_GITHUB_CLIENT_ID": JSON.stringify(process.env.PUBLIC_GITHUB_CLIENT_ID || "unknown"),
+      __ENABLE_LOG__: JSON.stringify(true),
+      __LOG_LEVEL__: JSON.stringify(isProd ? "warn" : "debug"),
     },
   };
 });
