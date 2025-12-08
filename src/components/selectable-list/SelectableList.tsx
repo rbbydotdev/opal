@@ -406,9 +406,16 @@ type SelectableListItemActionProps = {
   onClick: (event: React.MouseEvent, item?: any) => void;
   icon?: React.ReactNode;
   destructive?: boolean;
+  asChild?: boolean;
 };
 
-export function SelectableListItemAction({ children, onClick, icon, destructive }: SelectableListItemActionProps) {
+export function SelectableListItemAction({
+  children,
+  onClick,
+  icon,
+  destructive,
+  asChild,
+}: SelectableListItemActionProps) {
   const { itemData } = useSelectableListItemContext();
 
   const handleClick = (event: React.MouseEvent) => {
@@ -416,7 +423,7 @@ export function SelectableListItemAction({ children, onClick, icon, destructive 
   };
 
   return (
-    <DropdownMenuItem onClick={handleClick} className={destructive ? "text-destructive" : ""}>
+    <DropdownMenuItem onClick={handleClick} className={destructive ? "text-destructive" : ""} asChild={asChild}>
       {icon && <div className="w-4 h-4 mr-2">{icon}</div>}
       {children}
     </DropdownMenuItem>

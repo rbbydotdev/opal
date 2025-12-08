@@ -7,7 +7,7 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useBuildRunner } from "@/services/useBuildRunner";
 import { Workspace } from "@/workspace/Workspace";
-import { AlertTriangle, Loader, UploadCloud, X } from "lucide-react";
+import { AlertTriangle, Download, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
@@ -173,14 +173,24 @@ export function BuildModal({
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
                   <WorkspaceIcon input={buildRunner.build.guid} variant="round" />
-                  <span className="font-semibold uppercase">build completed successfully</span>
+                  <span className="font-semibold uppercase text-sm">build completed successfully</span>
                 </div>
                 <div className="flex gap-4 justify-center items-center">
-                  <Button onClick={handleOkay} className="flex items-center gap-2">
+                  <Button onClick={handleOkay} className="flex items-center gap-2" size="sm">
                     Okay
                   </Button>
-                  <Button onClick={handleOpenPubModal} className="flex items-center gap-2" variant="secondary">
+                  <Button
+                    onClick={handleOpenPubModal}
+                    className="flex items-center gap-2"
+                    variant="secondary"
+                    size="sm"
+                  >
                     <UploadCloud /> Publish
+                  </Button>
+                  <Button className="flex items-center gap-2" variant="secondary" size="sm" asChild>
+                    <a href={buildRunner.build.getDownloadBuildZipURL()}>
+                      <Download /> Download
+                    </a>
                   </Button>
                 </div>
               </div>
