@@ -1,5 +1,5 @@
-import { TestSuite } from "../../tests/TestSuite";
-import { SuperEmitter } from "../TypeEmitter";
+import { TestSuite } from "../tests/TestSuite";
+import { SuperEmitter } from "./TypeEmitter";
 
 // Test event types
 type TestEvents = {

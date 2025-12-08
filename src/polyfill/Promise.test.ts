@@ -1,4 +1,4 @@
-import { TestSuite } from "../../tests/TestSuite";
+import { TestSuite } from "../lib/tests/TestSuite";
 import "./Promise";
 
 // Simple test framework

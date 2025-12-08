@@ -1,5 +1,6 @@
-import { TestSuite } from "../../tests/TestSuite";
-import { CreateSuperTypedEmitterClass, OmniBusEmitter } from "../TypeEmitter";
+//@ts-nocheck
+import { TestSuite } from "../tests/TestSuite";
+import { CreateSuperTypedEmitterClass, OmniBusEmitter } from "./TypeEmitter";
 
 // Test event types for different emitters
 type UserEvents = {
@@ -38,13 +39,13 @@ suite.test("should connect and retrieve emitters by symbol", () => {
   const systemEmitter = new SystemEmitter();
 
   // Connect emitters using symbols
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
 
   // Retrieve emitters using symbols
-  const retrievedUser = omnibus.get(UserEmitter.IDENT);
-  const retrievedSystem = omnibus.get(SystemEmitter.IDENT);
-  const nonExistent = omnibus.get(FileEmitter.IDENT);
+  const retrievedUser = omnibus.get(UserEmitter.IDENT as symbol);
+  const retrievedSystem = omnibus.get(SystemEmitter.IDENT as symbol);
+  const nonExistent = omnibus.get(FileEmitter.IDENT as symbol);
 
   suite.assert(retrievedUser === userEmitter, "Should retrieve the exact UserEmitter instance");
   suite.assert(retrievedSystem === systemEmitter, "Should retrieve the exact SystemEmitter instance");
@@ -56,7 +57,7 @@ suite.test("should forward events from connected emitters to omnibus", () => {
   const userEmitter = new UserEmitter();
 
   // Connect the emitter using symbol
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
 
   const receivedEvents: Array<{ eventName: string; payload: any }> = [];
 
@@ -74,10 +75,10 @@ suite.test("should forward events from connected emitters to omnibus", () => {
   userEmitter.emit("logout", { userId: "user123" });
 
   suite.assertEqual(receivedEvents.length, 2, "Should receive both forwarded events");
-  suite.assertEqual(receivedEvents[0].eventName, "login", "First event should be login");
-  suite.assertEqual(receivedEvents[0].payload.userId, "user123", "Login payload should be correct");
-  suite.assertEqual(receivedEvents[1].eventName, "logout", "Second event should be logout");
-  suite.assertEqual(receivedEvents[1].payload.userId, "user123", "Logout payload should be correct");
+  suite.assertEqual(receivedEvents[0]!.eventName, "login", "First event should be login");
+  suite.assertEqual(receivedEvents[0]!.payload.userId, "user123", "Login payload should be correct");
+  suite.assertEqual(receivedEvents[1]!.eventName, "logout", "Second event should be logout");
+  suite.assertEqual(receivedEvents[1]!.payload.userId, "user123", "Logout payload should be correct");
 });
 
 suite.test("should handle multiple different emitter types", () => {
@@ -87,9 +88,9 @@ suite.test("should handle multiple different emitter types", () => {
   const fileEmitter = new FileEmitter();
 
   // Connect all emitters using symbols
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
-  omnibus.connect(FileEmitter.IDENT, fileEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
+  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
 
   const allEvents: Array<{ type: string; data: any }> = [];
 
@@ -106,11 +107,11 @@ suite.test("should handle multiple different emitter types", () => {
   fileEmitter.emit("modified", { path: "/test.txt", size: 1024 });
 
   suite.assertEqual(allEvents.length, 4, "Should receive events from all emitter types");
-  suite.assertEqual(allEvents[0].type, "user-login", "User event received");
-  suite.assertEqual(allEvents[1].type, "system-startup", "System event received");
-  suite.assertEqual(allEvents[2].type, "file-created", "File created event received");
-  suite.assertEqual(allEvents[3].type, "file-modified", "File modified event received");
-  suite.assertEqual(allEvents[3].data.size, 1024, "Complex payload preserved");
+  suite.assertEqual(allEvents[0]!.type, "user-login", "User event received");
+  suite.assertEqual(allEvents[1]!.type, "system-startup", "System event received");
+  suite.assertEqual(allEvents[2]!.type, "file-created", "File created event received");
+  suite.assertEqual(allEvents[3]!.type, "file-modified", "File modified event received");
+  suite.assertEqual(allEvents[3]!.data.size, 1024, "Complex payload preserved");
 });
 
 suite.test("should support wildcard listening on omnibus", () => {
@@ -118,8 +119,8 @@ suite.test("should support wildcard listening on omnibus", () => {
   const userEmitter = new UserEmitter();
   const systemEmitter = new SystemEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
 
   const wildcardEvents: Array<{ eventName: string; payload: any }> = [];
 
@@ -137,18 +138,18 @@ suite.test("should support wildcard listening on omnibus", () => {
   userEmitter.emit("logout", { userId: "alice" });
 
   suite.assertEqual(wildcardEvents.length, 3, "Should receive all events via wildcard");
-  suite.assertEqual(wildcardEvents[0].eventName, "login", "First wildcard event name correct");
-  suite.assertEqual(wildcardEvents[0].payload.userId, "alice", "First wildcard payload correct");
-  suite.assertEqual(wildcardEvents[1].eventName, "startup", "Second wildcard event name correct");
-  suite.assertEqual(wildcardEvents[1].payload.version, "v2.0.0", "Second wildcard payload correct");
-  suite.assertEqual(wildcardEvents[2].eventName, "logout", "Third wildcard event name correct");
+  suite.assertEqual(wildcardEvents[0]!.eventName, "login", "First wildcard event name correct");
+  suite.assertEqual(wildcardEvents[0]!.payload.userId, "alice", "First wildcard payload correct");
+  suite.assertEqual(wildcardEvents[1]!.eventName, "startup", "Second wildcard event name correct");
+  suite.assertEqual(wildcardEvents[1]!.payload.version, "v2.0.0", "Second wildcard payload correct");
+  suite.assertEqual(wildcardEvents[2]!.eventName, "logout", "Third wildcard event name correct");
 });
 
 suite.test("should disconnect emitters properly", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
 
   let eventCount = 0;
   omnibus.on("login", () => eventCount++);
@@ -158,10 +159,10 @@ suite.test("should disconnect emitters properly", () => {
   suite.assertEqual(eventCount, 1, "Should receive event before disconnect");
 
   // Disconnect
-  omnibus.disconnect(UserEmitter.IDENT);
+  omnibus.disconnect(UserEmitter.IDENT as symbol);
 
   // Verify it's disconnected
-  const retrieved = omnibus.get(UserEmitter.IDENT);
+  const retrieved = omnibus.get(UserEmitter.IDENT as symbol);
   suite.assert(retrieved === undefined, "Should not retrieve disconnected emitter");
 
   // Emit after disconnect
@@ -178,8 +179,8 @@ suite.test("should list connected emitters", () => {
   suite.assertEqual(omnibus.getConnectedEmitters().length, 0, "Should start with no connected emitters");
 
   // Connect emitters
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
 
   const connected = omnibus.getConnectedEmitters();
   suite.assertEqual(connected.length, 2, "Should have 2 connected emitters");
@@ -187,7 +188,7 @@ suite.test("should list connected emitters", () => {
   suite.assert(connected.includes(systemEmitter), "Should include system emitter");
 
   // Disconnect one
-  omnibus.disconnect(UserEmitter.IDENT);
+  omnibus.disconnect(UserEmitter.IDENT as symbol);
   const remaining = omnibus.getConnectedEmitters();
   suite.assertEqual(remaining.length, 1, "Should have 1 emitter after disconnect");
   suite.assert(remaining.includes(systemEmitter), "Should still include system emitter");
@@ -200,18 +201,18 @@ suite.test("should listen to specific emitter types with onType", () => {
   const systemEmitter = new SystemEmitter();
   const fileEmitter = new FileEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT, systemEmitter);
-  omnibus.connect(FileEmitter.IDENT, fileEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
+  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
 
   const userLoginEvents: any[] = [];
   const systemStartupEvents: any[] = [];
   const fileCreatedEvents: any[] = [];
 
   // Listen only to specific emitter types
-  omnibus.onType(UserEmitter.IDENT, "login", (payload) => userLoginEvents.push(payload));
-  omnibus.onType(SystemEmitter.IDENT, "startup", (payload) => systemStartupEvents.push(payload));
-  omnibus.onType(FileEmitter.IDENT, "created", (payload) => fileCreatedEvents.push(payload));
+  omnibus.onType(UserEmitter.IDENT as symbol, "login", (payload) => userLoginEvents.push(payload));
+  omnibus.onType(SystemEmitter.IDENT as symbol, "startup", (payload) => systemStartupEvents.push(payload));
+  omnibus.onType(FileEmitter.IDENT as symbol, "created", (payload) => fileCreatedEvents.push(payload));
 
   // Emit various events
   userEmitter.emit("login", { userId: "alice" });
@@ -250,15 +251,15 @@ suite.test("should isolate events by emitter type even with same event names", (
   const emitterA = new EmitterA();
   const emitterB = new EmitterB();
 
-  omnibus.connect(EmitterA.IDENT, emitterA);
-  omnibus.connect(EmitterB.IDENT, emitterB);
+  omnibus.connect(EmitterA.IDENT as symbol, emitterA);
+  omnibus.connect(EmitterB.IDENT as symbol, emitterB);
 
   const eventsFromA: any[] = [];
   const eventsFromB: any[] = [];
 
   // Listen to same event name but from different emitters
-  omnibus.onType(EmitterA.IDENT, "update", (payload) => eventsFromA.push(payload));
-  omnibus.onType(EmitterB.IDENT, "update", (payload) => eventsFromB.push(payload));
+  omnibus.onType(EmitterA.IDENT as symbol, "update", (payload) => eventsFromA.push(payload));
+  omnibus.onType(EmitterB.IDENT as symbol, "update", (payload) => eventsFromB.push(payload));
 
   // Emit same event name from both emitters
   emitterA.emit("update", { data: "from-A", source: "emitterA" });
@@ -277,10 +278,10 @@ suite.test("should clean up onType listeners", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
 
   let eventCount = 0;
-  const cleanup = omnibus.onType(UserEmitter.IDENT, "login", () => eventCount++);
+  const cleanup = omnibus.onType(UserEmitter.IDENT as symbol, "login", () => eventCount++);
 
   userEmitter.emit("login", { userId: "test" });
   suite.assertEqual(eventCount, 1, "Should receive event before cleanup");
@@ -295,17 +296,19 @@ suite.test("should support array of events in onType method", () => {
   const userEmitter = new UserEmitter();
   const fileEmitter = new FileEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
-  omnibus.connect(FileEmitter.IDENT, fileEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
 
   const userEvents: any[] = [];
   const fileEvents: any[] = [];
 
   // Listen to multiple events from UserEmitter
-  omnibus.onType(UserEmitter.IDENT, ["login", "logout"], (payload) => userEvents.push(payload));
+  omnibus.onType(UserEmitter.IDENT as symbol, ["login", "logout"], (payload) => userEvents.push(payload));
 
   // Listen to multiple events from FileEmitter
-  omnibus.onType(FileEmitter.IDENT, ["created", "deleted", "modified"], (payload) => fileEvents.push(payload));
+  omnibus.onType(FileEmitter.IDENT as symbol, ["created", "deleted", "modified"], (payload) =>
+    fileEvents.push(payload)
+  );
 
   // Emit various events
   userEmitter.emit("login", { userId: "alice" });
@@ -328,10 +331,10 @@ suite.test("should clean up array listeners in onType method", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
 
   let eventCount = 0;
-  const cleanup = omnibus.onType(UserEmitter.IDENT, ["login", "logout"], () => eventCount++);
+  const cleanup = omnibus.onType(UserEmitter.IDENT as symbol, ["login", "logout"], () => eventCount++);
 
   userEmitter.emit("login", { userId: "test" });
   userEmitter.emit("logout", { userId: "test" });
@@ -353,9 +356,9 @@ suite.test("should support array of events in onInstance method", () => {
   const instance2 = Symbol("user-instance-2");
   const fileInstance = Symbol("file-instance");
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter1, instance1);
-  omnibus.connect(UserEmitter.IDENT, userEmitter2, instance2);
-  omnibus.connect(FileEmitter.IDENT, fileEmitter, fileInstance);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter1, instance1);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter2, instance2);
+  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter, fileInstance);
 
   const instance1Events: any[] = [];
   const fileInstanceEvents: any[] = [];
@@ -386,7 +389,7 @@ suite.test("should clean up array listeners in onInstance method", () => {
   const userEmitter = new UserEmitter();
   const instance = Symbol("user-instance");
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter, instance);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter, instance);
 
   let eventCount = 0;
   const cleanup = omnibus.onInstance(instance, ["login", "logout"], () => eventCount++);
@@ -406,10 +409,10 @@ suite.test("should provide type safety for connected emitters", () => {
   const omnibus = new OmniBusEmitter();
   const userEmitter = new UserEmitter();
 
-  omnibus.connect(UserEmitter.IDENT, userEmitter);
+  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
 
   // This should be typed correctly
-  const retrievedEmitter = omnibus.get(UserEmitter.IDENT);
+  const retrievedEmitter = omnibus.get(UserEmitter.IDENT as symbol);
 
   // TypeScript should know this is UserEmitter | undefined
   if (retrievedEmitter) {

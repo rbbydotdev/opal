@@ -2,7 +2,7 @@ import { IterableWeakSet } from "@/lib/IterableWeakSet";
 import { EventEmitter } from "events";
 
 // Helper function to create symbol-like objects for emitter identification
-function EmitterSymbol(description?: string): object {
+export function EmitterSymbol(description?: string): object {
   return Object.freeze({
     description: description || "",
     [Symbol.toStringTag]: "EmitterSymbol",

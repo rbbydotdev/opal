@@ -1,12 +1,12 @@
-import { CreateSuperTypedEmitterClass, SuperEmitter } from "../TypeEmitter";
+import { CreateSuperTypedEmitterClass, SuperEmitter } from "./TypeEmitter";
 
 // Test the exact patterns we migrated from Emittery
-type TestSuite = {
+type TestCase = {
   name: string;
   run: () => Promise<void>;
 };
 
-const tests: TestSuite[] = [];
+const tests: TestCase[] = [];
 
 function test(name: string, fn: () => Promise<void> | void) {
   tests.push({
@@ -25,11 +25,11 @@ test("HistoryDAO pattern: new SuperEmitter<EventType>()", async () => {
   const emitter = new SuperEmitter<HistoryEvents>();
   const received: string[] = [];
 
-  const unsub1 = emitter.on("edits", (edits) => {
+  const unsub1 = emitter.on("edits", (edits: Array<{ id: string }>) => {
     received.push(`edits-${edits.length}`);
   });
 
-  const unsub2 = emitter.on("new_edit", (edit) => {
+  const unsub2 = emitter.on("new_edit", (edit: { id: string }) => {
     received.push(`new-${edit.id}`);
   });
 
@@ -59,7 +59,7 @@ test("DiskEventsLocal pattern: extend CreateSuperTypedEmitterClass", async () =>
   const received: string[] = [];
 
   // Test multiple event listening (key Emittery feature)
-  const unsub = diskEvents.on(["inside-write", "outside-write", "index"], (payload) => {
+  const unsub = diskEvents.on(["inside-write", "outside-write", "index"], (payload: any) => {
     if (payload && "filePaths" in payload) {
       received.push(`write-${payload.filePaths.length}`);
     } else {
@@ -109,7 +109,7 @@ test("Channel pattern: composition with delegate methods", async () => {
   const channel = new TestChannel();
   const received: string[] = [];
 
-  const unsub = channel.on("message", (msg) => {
+  const unsub = channel.on("message", (msg: string) => {
     received.push(msg);
   });
 
@@ -148,8 +148,8 @@ test("WatchPromiseMembers pattern: member property", async () => {
   const watcher = new TestWatcher();
   const received: string[] = [];
 
-  watcher.events.on("method:start", (msg) => received.push(msg));
-  watcher.events.on("method:end", (msg) => received.push(msg));
+  watcher.events.on("method:start", (msg: string) => received.push(msg));
+  watcher.events.on("method:end", (msg: string) => received.push(msg));
 
   await watcher.simulateAsyncMethod();
 
@@ -165,7 +165,7 @@ test("Synchronous behavior: no async/await needed", () => {
   const emitter = new SuperEmitter<{ test: string }>();
   let received: string | null = null;
 
-  emitter.on("test", (payload) => {
+  emitter.on("test", (payload: string) => {
     received = payload;
   });
 
