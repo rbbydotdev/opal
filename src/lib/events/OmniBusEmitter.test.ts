@@ -1,430 +1,312 @@
-//@ts-nocheck
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import { TestSuite } from "../tests/TestSuite";
-import { CreateSuperTypedEmitterClass, OmniBusEmitter } from "./TypeEmitter";
+import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "./TypeEmitter";
 
-// Test event types for different emitters
-type UserEvents = {
-  login: { userId: string };
-  logout: { userId: string };
+// Test event types
+type DiskEvents = {
+  write: { path: string; size: number };
+  read: { path: string };
+  error: { message: string };
 };
 
-type SystemEvents = {
-  startup: { version: string };
-  shutdown: { reason: string };
+type NetworkEvents = {
+  connect: { host: string };
+  disconnect: { reason: string };
 };
 
-type FileEvents = {
-  created: { path: string };
-  deleted: { path: string };
-  modified: { path: string; size: number };
-};
+// Create emitter classes with both class and instance identifiers
+class Disk extends CreateSuperTypedEmitterClass<DiskEvents>() {
+  static readonly IDENT = Symbol("Disk");
+  readonly IIDENT = EmitterSymbol("DiskInstance"); // Symbol-like object for WeakMap/WeakSet compatibility
+}
 
-// Create custom emitter classes with IDENT symbols
-class UserEmitter extends CreateSuperTypedEmitterClass<UserEvents>() {
-  static readonly IDENT = Symbol("UserEmitter");
+class Network extends CreateSuperTypedEmitterClass<NetworkEvents>() {
+  static readonly IDENT = Symbol("Network");
+  readonly IIDENT = EmitterSymbol("NetworkInstance"); // Symbol-like object for WeakMap/WeakSet compatibility
 }
-class SystemEmitter extends CreateSuperTypedEmitterClass<SystemEvents>() {
-  static readonly IDENT = Symbol("SystemEmitter");
-}
-class FileEmitter extends CreateSuperTypedEmitterClass<FileEvents>() {
-  static readonly IDENT = Symbol("FileEmitter");
-}
+
+// Simple test framework
 
 // Test suite
 const suite = new TestSuite();
 
-suite.test("should connect and retrieve emitters by symbol", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const systemEmitter = new SystemEmitter();
+suite.test("should create descriptive EmitterSymbol objects", () => {
+  const diskSymbol = EmitterSymbol("DiskInstance");
+  const networkSymbol = EmitterSymbol("NetworkInstance");
+  const unnamed = EmitterSymbol();
 
-  // Connect emitters using symbols
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
+  suite.assert(typeof diskSymbol === "object", "Should return an object");
+  suite.assert(Object.isFrozen(diskSymbol), "Should be frozen/immutable");
+  suite.assertEqual(diskSymbol.toString(), "EmitterSymbol(DiskInstance)", "Should have descriptive toString");
+  suite.assertEqual(networkSymbol.toString(), "EmitterSymbol(NetworkInstance)", "Should have descriptive toString");
+  suite.assertEqual(unnamed.toString(), "EmitterSymbol()", "Should handle unnamed symbols");
 
-  // Retrieve emitters using symbols
-  const retrievedUser = omnibus.get(UserEmitter.IDENT as symbol);
-  const retrievedSystem = omnibus.get(SystemEmitter.IDENT as symbol);
-  const nonExistent = omnibus.get(FileEmitter.IDENT as symbol);
-
-  suite.assert(retrievedUser === userEmitter, "Should retrieve the exact UserEmitter instance");
-  suite.assert(retrievedSystem === systemEmitter, "Should retrieve the exact SystemEmitter instance");
-  suite.assert(nonExistent === undefined, "Should return undefined for non-connected emitter");
+  // Each call should return a unique object
+  const another = EmitterSymbol("DiskInstance");
+  suite.assert(diskSymbol !== another, "Should create unique objects even with same description");
 });
 
-suite.test("should forward events from connected emitters to omnibus", () => {
+suite.test("should support flexible connection patterns", () => {
   const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
 
-  // Connect the emitter using symbol
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  // Test 1: Connect with IIDENT (existing pattern)
+  const disk1 = new Disk();
+  const cleanup1 = omnibus.connect(Disk.IDENT, disk1);
 
-  const receivedEvents: Array<{ eventName: string; payload: any }> = [];
+  // Test 2: Connect with explicit instance identifier
+  const disk2 = new Disk();
+  const customInstanceId = EmitterSymbol("CustomDiskInstance");
+  const cleanup2 = omnibus.connect(Disk.IDENT, disk2, customInstanceId);
 
-  // Listen for specific events on omnibus
-  omnibus.on("login", (payload) => {
-    receivedEvents.push({ eventName: "login", payload });
+  // Test 3: Connect without IIDENT (should auto-generate)
+  class SimpleDisk extends CreateSuperTypedEmitterClass<DiskEvents>() {
+    static readonly IDENT = Symbol("SimpleDisk");
+    // No IIDENT property
+  }
+  const disk3 = new SimpleDisk();
+  const cleanup3 = omnibus.connect(SimpleDisk.IDENT, disk3);
+
+  // All should be connected and retrievable
+  suite.assert(omnibus.get(disk1.IIDENT) === disk1, "Should retrieve disk1 with its IIDENT");
+  suite.assert(omnibus.get(customInstanceId) === disk2, "Should retrieve disk2 with custom instance ID");
+  // Note: disk3's auto-generated ID is internal, so we can't easily test retrieval
+
+  // Test class-level listening works for all patterns
+  let eventCount = 0;
+  omnibus.onType(Disk.IDENT, "write", () => eventCount++);
+
+  disk1.emit("write", { path: "/test1.txt", size: 100 });
+  disk2.emit("write", { path: "/test2.txt", size: 200 });
+
+  suite.assertEqual(eventCount, 2, "Should receive events from both disk instances");
+
+  // Test individual disconnection
+  cleanup1(); // Should only disconnect disk1
+  eventCount = 0;
+
+  disk1.emit("write", { path: "/test1-again.txt", size: 100 }); // Should not trigger
+  disk2.emit("write", { path: "/test2-again.txt", size: 200 }); // Should trigger
+
+  suite.assertEqual(eventCount, 1, "Should only receive event from disk2 after disk1 disconnect");
+
+  // Cleanup
+  cleanup2();
+  cleanup3();
+});
+
+suite.test("should handle instance-specific listening with custom instance IDs", () => {
+  const omnibus = new OmniBusEmitter();
+
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+
+  const customId1 = EmitterSymbol("SpecialDisk1");
+  const customId2 = EmitterSymbol("SpecialDisk2");
+
+  omnibus.connect(Disk.IDENT, disk1, customId1);
+  omnibus.connect(Disk.IDENT, disk2, customId2);
+
+  const disk1Events: any[] = [];
+  const disk2Events: any[] = [];
+
+  // Listen to specific instances using custom IDs
+  omnibus.onInstance(customId1, "write", (payload) => disk1Events.push(payload));
+  omnibus.onInstance(customId2, "write", (payload) => disk2Events.push(payload));
+
+  // Emit from both
+  disk1.emit("write", { path: "/disk1-file.txt", size: 100 });
+  disk2.emit("write", { path: "/disk2-file.txt", size: 200 });
+  disk1.emit("write", { path: "/disk1-file2.txt", size: 150 });
+
+  suite.assertEqual(disk1Events.length, 2, "Should receive 2 events from disk1");
+  suite.assertEqual(disk2Events.length, 1, "Should receive 1 event from disk2");
+  suite.assertEqual(disk1Events[0].path, "/disk1-file.txt", "First disk1 event correct");
+  suite.assertEqual(disk2Events[0].path, "/disk2-file.txt", "Disk2 event correct");
+});
+
+suite.test("should connect multiple instances and return cleanup functions", () => {
+  const omnibus = new OmniBusEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+  const network1 = new Network();
+
+  // Connect instances and get cleanup functions
+  const cleanupDisk1 = omnibus.connect(Disk.IDENT, disk1);
+  const cleanupDisk2 = omnibus.connect(Disk.IDENT, disk2);
+  const cleanupNetwork1 = omnibus.connect(Network.IDENT, network1);
+
+  suite.assert(typeof cleanupDisk1 === "function", "Should return cleanup function for disk1");
+  suite.assert(typeof cleanupDisk2 === "function", "Should return cleanup function for disk2");
+  suite.assert(typeof cleanupNetwork1 === "function", "Should return cleanup function for network1");
+
+  // Verify instances are connected
+  suite.assert(omnibus.get(disk1.IIDENT) === disk1, "Should retrieve disk1 by instance");
+  suite.assert(omnibus.get(disk2.IIDENT) === disk2, "Should retrieve disk2 by instance");
+  suite.assert(omnibus.get(network1.IIDENT) === network1, "Should retrieve network1 by instance");
+
+  // Test cleanup functions
+  cleanupDisk1();
+  suite.assert(omnibus.get(disk1.IIDENT) === undefined, "Should disconnect disk1 via cleanup function");
+  suite.assert(omnibus.get(disk2.IIDENT) === disk2, "Should still have disk2 connected");
+});
+
+suite.test("should listen to events by class type (all instances)", () => {
+  const omnibus = new OmniBusEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+  const disk3 = new Disk();
+
+  omnibus.connect(Disk.IDENT, disk1);
+  omnibus.connect(Disk.IDENT, disk2);
+  omnibus.connect(Disk.IDENT, disk3);
+
+  const writeEvents: Array<{ path: string; size: number }> = [];
+
+  // Listen to ALL disk write events
+  omnibus.onType(Disk.IDENT, "write", (payload) => {
+    writeEvents.push(payload);
   });
 
-  omnibus.on("logout", (payload) => {
-    receivedEvents.push({ eventName: "logout", payload });
-  });
+  // Emit from different disk instances
+  disk1.emit("write", { path: "/file1.txt", size: 100 });
+  disk2.emit("write", { path: "/file2.txt", size: 200 });
+  disk3.emit("write", { path: "/file3.txt", size: 300 });
 
-  // Emit events from the connected emitter
-  userEmitter.emit("login", { userId: "user123" });
-  userEmitter.emit("logout", { userId: "user123" });
-
-  suite.assertEqual(receivedEvents.length, 2, "Should receive both forwarded events");
-  suite.assertEqual(receivedEvents[0]!.eventName, "login", "First event should be login");
-  suite.assertEqual(receivedEvents[0]!.payload.userId, "user123", "Login payload should be correct");
-  suite.assertEqual(receivedEvents[1]!.eventName, "logout", "Second event should be logout");
-  suite.assertEqual(receivedEvents[1]!.payload.userId, "user123", "Logout payload should be correct");
+  suite.assertEqual(writeEvents.length, 3, "Should receive write events from all disk instances");
+  suite.assertEqual(writeEvents[0]!.path, "/file1.txt", "First event from disk1");
+  suite.assertEqual(writeEvents[1]!.path, "/file2.txt", "Second event from disk2");
+  suite.assertEqual(writeEvents[2]!.path, "/file3.txt", "Third event from disk3");
 });
 
-suite.test("should handle multiple different emitter types", () => {
+suite.test("should listen to events by specific instance", () => {
   const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const systemEmitter = new SystemEmitter();
-  const fileEmitter = new FileEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
 
-  // Connect all emitters using symbols
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
-  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
+  omnibus.connect(Disk.IDENT, disk1);
+  omnibus.connect(Disk.IDENT, disk2);
 
-  const allEvents: Array<{ type: string; data: any }> = [];
+  const disk1Events: any[] = [];
+  const disk2Events: any[] = [];
 
-  // Listen to different event types on omnibus
-  omnibus.on("login", (payload) => allEvents.push({ type: "user-login", data: payload }));
-  omnibus.on("startup", (payload) => allEvents.push({ type: "system-startup", data: payload }));
-  omnibus.on("created", (payload) => allEvents.push({ type: "file-created", data: payload }));
-  omnibus.on("modified", (payload) => allEvents.push({ type: "file-modified", data: payload }));
+  // Listen to specific instances
+  omnibus.onInstance(disk1.IIDENT, "write", (payload) => disk1Events.push(payload));
+  omnibus.onInstance(disk2.IIDENT, "write", (payload) => disk2Events.push(payload));
 
-  // Emit from each emitter
-  userEmitter.emit("login", { userId: "bob" });
-  systemEmitter.emit("startup", { version: "v1.0.0" });
-  fileEmitter.emit("created", { path: "/test.txt" });
-  fileEmitter.emit("modified", { path: "/test.txt", size: 1024 });
+  // Emit from both disks
+  disk1.emit("write", { path: "/disk1-file.txt", size: 100 });
+  disk2.emit("write", { path: "/disk2-file.txt", size: 200 });
+  disk1.emit("write", { path: "/disk1-file2.txt", size: 150 });
 
-  suite.assertEqual(allEvents.length, 4, "Should receive events from all emitter types");
-  suite.assertEqual(allEvents[0]!.type, "user-login", "User event received");
-  suite.assertEqual(allEvents[1]!.type, "system-startup", "System event received");
-  suite.assertEqual(allEvents[2]!.type, "file-created", "File created event received");
-  suite.assertEqual(allEvents[3]!.type, "file-modified", "File modified event received");
-  suite.assertEqual(allEvents[3]!.data.size, 1024, "Complex payload preserved");
+  suite.assertEqual(disk1Events.length, 2, "Should receive 2 events from disk1 only");
+  suite.assertEqual(disk2Events.length, 1, "Should receive 1 event from disk2 only");
+  suite.assertEqual(disk1Events[0].path, "/disk1-file.txt", "First disk1 event correct");
+  suite.assertEqual(disk2Events[0].path, "/disk2-file.txt", "Disk2 event correct");
 });
 
-suite.test("should support wildcard listening on omnibus", () => {
+suite.test("should handle granular disconnection", () => {
   const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const systemEmitter = new SystemEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+  const disk3 = new Disk();
 
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
-
-  const wildcardEvents: Array<{ eventName: string; payload: any }> = [];
-
-  // Listen to all events using wildcard
-  omnibus.on("*", (payload) => {
-    wildcardEvents.push({
-      eventName: payload.eventName as string,
-      payload: { ...payload, eventName: undefined }, // Remove eventName for comparison
-    });
-  });
-
-  // Emit various events
-  userEmitter.emit("login", { userId: "alice" });
-  systemEmitter.emit("startup", { version: "v2.0.0" });
-  userEmitter.emit("logout", { userId: "alice" });
-
-  suite.assertEqual(wildcardEvents.length, 3, "Should receive all events via wildcard");
-  suite.assertEqual(wildcardEvents[0]!.eventName, "login", "First wildcard event name correct");
-  suite.assertEqual(wildcardEvents[0]!.payload.userId, "alice", "First wildcard payload correct");
-  suite.assertEqual(wildcardEvents[1]!.eventName, "startup", "Second wildcard event name correct");
-  suite.assertEqual(wildcardEvents[1]!.payload.version, "v2.0.0", "Second wildcard payload correct");
-  suite.assertEqual(wildcardEvents[2]!.eventName, "logout", "Third wildcard event name correct");
-});
-
-suite.test("should disconnect emitters properly", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
+  omnibus.connect(Disk.IDENT, disk1);
+  omnibus.connect(Disk.IDENT, disk2);
+  omnibus.connect(Disk.IDENT, disk3);
 
   let eventCount = 0;
-  omnibus.on("login", () => eventCount++);
+  omnibus.onType(Disk.IDENT, "write", () => eventCount++);
 
-  // Emit before disconnect
-  userEmitter.emit("login", { userId: "test" });
-  suite.assertEqual(eventCount, 1, "Should receive event before disconnect");
+  // All disks should trigger events
+  disk1.emit("write", { path: "/test1.txt", size: 100 });
+  disk2.emit("write", { path: "/test2.txt", size: 100 });
+  disk3.emit("write", { path: "/test3.txt", size: 100 });
 
-  // Disconnect
-  omnibus.disconnect(UserEmitter.IDENT as symbol);
+  suite.assertEqual(eventCount, 3, "Should receive events from all 3 disks");
 
-  // Verify it's disconnected
-  const retrieved = omnibus.get(UserEmitter.IDENT as symbol);
-  suite.assert(retrieved === undefined, "Should not retrieve disconnected emitter");
+  // Disconnect only disk2
+  omnibus.disconnect(disk2.IIDENT);
 
-  // Emit after disconnect
-  userEmitter.emit("login", { userId: "test2" });
-  suite.assertEqual(eventCount, 1, "Should not receive events after disconnect");
+  // Reset counter
+  eventCount = 0;
+
+  // Emit again
+  disk1.emit("write", { path: "/test1-again.txt", size: 100 });
+  disk2.emit("write", { path: "/test2-again.txt", size: 100 }); // Should not trigger
+  disk3.emit("write", { path: "/test3-again.txt", size: 100 });
+
+  suite.assertEqual(eventCount, 2, "Should only receive events from disk1 and disk3 after disk2 disconnect");
 });
 
-suite.test("should list connected emitters", () => {
+suite.test("should disconnect entire class", () => {
   const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const systemEmitter = new SystemEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+  const network1 = new Network();
 
-  // Initially empty
-  suite.assertEqual(omnibus.getConnectedEmitters().length, 0, "Should start with no connected emitters");
+  omnibus.connect(Disk.IDENT, disk1);
+  omnibus.connect(Disk.IDENT, disk2);
+  omnibus.connect(Network.IDENT, network1);
 
-  // Connect emitters
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
+  let diskEventCount = 0;
+  let networkEventCount = 0;
 
-  const connected = omnibus.getConnectedEmitters();
-  suite.assertEqual(connected.length, 2, "Should have 2 connected emitters");
-  suite.assert(connected.includes(userEmitter), "Should include user emitter");
-  suite.assert(connected.includes(systemEmitter), "Should include system emitter");
+  omnibus.onType(Disk.IDENT, "write", () => diskEventCount++);
+  omnibus.onType(Network.IDENT, "connect", () => networkEventCount++);
 
-  // Disconnect one
-  omnibus.disconnect(UserEmitter.IDENT as symbol);
-  const remaining = omnibus.getConnectedEmitters();
-  suite.assertEqual(remaining.length, 1, "Should have 1 emitter after disconnect");
-  suite.assert(remaining.includes(systemEmitter), "Should still include system emitter");
-  suite.assert(!remaining.includes(userEmitter), "Should not include disconnected user emitter");
+  // Test before disconnect
+  disk1.emit("write", { path: "/test.txt", size: 100 });
+  disk2.emit("write", { path: "/test.txt", size: 100 });
+  network1.emit("connect", { host: "localhost" });
+
+  suite.assertEqual(diskEventCount, 2, "Should receive events from both disks");
+  suite.assertEqual(networkEventCount, 1, "Should receive network event");
+
+  // Disconnect all disk instances
+  omnibus.disconnectClass(Disk.IDENT);
+
+  // Reset counters
+  diskEventCount = 0;
+  networkEventCount = 0;
+
+  // Test after class disconnect
+  disk1.emit("write", { path: "/test.txt", size: 100 }); // Should not trigger
+  disk2.emit("write", { path: "/test.txt", size: 100 }); // Should not trigger
+  network1.emit("connect", { host: "localhost" }); // Should still trigger
+
+  suite.assertEqual(diskEventCount, 0, "Should not receive disk events after class disconnect");
+  suite.assertEqual(networkEventCount, 1, "Should still receive network events");
 });
 
-suite.test("should listen to specific emitter types with onType", () => {
+suite.test("should provide class-level queries", () => {
   const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const systemEmitter = new SystemEmitter();
-  const fileEmitter = new FileEmitter();
+  const disk1 = new Disk();
+  const disk2 = new Disk();
+  const disk3 = new Disk();
+  const network1 = new Network();
 
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(SystemEmitter.IDENT as symbol, systemEmitter);
-  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
+  omnibus.connect(Disk.IDENT, disk1);
+  omnibus.connect(Disk.IDENT, disk2);
+  omnibus.connect(Disk.IDENT, disk3);
+  omnibus.connect(Network.IDENT, network1);
 
-  const userLoginEvents: any[] = [];
-  const systemStartupEvents: any[] = [];
-  const fileCreatedEvents: any[] = [];
+  // Get all disk instances
+  const diskInstances = omnibus.getByClass<Disk>(Disk.IDENT);
+  const networkInstances = omnibus.getByClass<Network>(Network.IDENT);
 
-  // Listen only to specific emitter types
-  omnibus.onType(UserEmitter.IDENT as symbol, "login", (payload) => userLoginEvents.push(payload));
-  omnibus.onType(SystemEmitter.IDENT as symbol, "startup", (payload) => systemStartupEvents.push(payload));
-  omnibus.onType(FileEmitter.IDENT as symbol, "created", (payload) => fileCreatedEvents.push(payload));
+  suite.assertEqual(diskInstances.length, 3, "Should return 3 disk instances");
+  suite.assertEqual(networkInstances.length, 1, "Should return 1 network instance");
 
-  // Emit various events
-  userEmitter.emit("login", { userId: "alice" });
-  systemEmitter.emit("startup", { version: "v1.0.0" });
-  fileEmitter.emit("created", { path: "/test.txt" });
+  suite.assert(diskInstances.includes(disk1), "Should include disk1");
+  suite.assert(diskInstances.includes(disk2), "Should include disk2");
+  suite.assert(diskInstances.includes(disk3), "Should include disk3");
+  suite.assert(networkInstances.includes(network1), "Should include network1");
 
-  // Also emit events with same names from different emitters
-  userEmitter.emit("logout", { userId: "alice" }); // Different event, same emitter
-  fileEmitter.emit("deleted", { path: "/test.txt" }); // Different event, different emitter
-
-  // Should only receive events from the specific emitter types
-  suite.assertEqual(userLoginEvents.length, 1, "Should receive only user login events");
-  suite.assertEqual(systemStartupEvents.length, 1, "Should receive only system startup events");
-  suite.assertEqual(fileCreatedEvents.length, 1, "Should receive only file created events");
-
-  suite.assertEqual(userLoginEvents[0].userId, "alice", "User login payload correct");
-  suite.assertEqual(systemStartupEvents[0].version, "v1.0.0", "System startup payload correct");
-  suite.assertEqual(fileCreatedEvents[0].path, "/test.txt", "File created payload correct");
-});
-
-suite.test("should isolate events by emitter type even with same event names", () => {
-  const omnibus = new OmniBusEmitter();
-
-  // Create events with potential name conflicts
-  type ConflictEvents = {
-    update: { data: string; source: string };
-  };
-
-  class EmitterA extends CreateSuperTypedEmitterClass<ConflictEvents>() {
-    static readonly IDENT = Symbol("EmitterA");
-  }
-  class EmitterB extends CreateSuperTypedEmitterClass<ConflictEvents>() {
-    static readonly IDENT = Symbol("EmitterB");
-  }
-
-  const emitterA = new EmitterA();
-  const emitterB = new EmitterB();
-
-  omnibus.connect(EmitterA.IDENT as symbol, emitterA);
-  omnibus.connect(EmitterB.IDENT as symbol, emitterB);
-
-  const eventsFromA: any[] = [];
-  const eventsFromB: any[] = [];
-
-  // Listen to same event name but from different emitters
-  omnibus.onType(EmitterA.IDENT as symbol, "update", (payload) => eventsFromA.push(payload));
-  omnibus.onType(EmitterB.IDENT as symbol, "update", (payload) => eventsFromB.push(payload));
-
-  // Emit same event name from both emitters
-  emitterA.emit("update", { data: "from-A", source: "emitterA" });
-  emitterB.emit("update", { data: "from-B", source: "emitterB" });
-  emitterA.emit("update", { data: "from-A-again", source: "emitterA" });
-
-  suite.assertEqual(eventsFromA.length, 2, "Should receive 2 events from EmitterA");
-  suite.assertEqual(eventsFromB.length, 1, "Should receive 1 event from EmitterB");
-
-  suite.assertEqual(eventsFromA[0].source, "emitterA", "First A event correct");
-  suite.assertEqual(eventsFromA[1].source, "emitterA", "Second A event correct");
-  suite.assertEqual(eventsFromB[0].source, "emitterB", "B event correct");
-});
-
-suite.test("should clean up onType listeners", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-
-  let eventCount = 0;
-  const cleanup = omnibus.onType(UserEmitter.IDENT as symbol, "login", () => eventCount++);
-
-  userEmitter.emit("login", { userId: "test" });
-  suite.assertEqual(eventCount, 1, "Should receive event before cleanup");
-
-  cleanup();
-  userEmitter.emit("login", { userId: "test2" });
-  suite.assertEqual(eventCount, 1, "Should not receive event after cleanup");
-});
-
-suite.test("should support array of events in onType method", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const fileEmitter = new FileEmitter();
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter);
-
-  const userEvents: any[] = [];
-  const fileEvents: any[] = [];
-
-  // Listen to multiple events from UserEmitter
-  omnibus.onType(UserEmitter.IDENT as symbol, ["login", "logout"], (payload) => userEvents.push(payload));
-
-  // Listen to multiple events from FileEmitter
-  omnibus.onType(FileEmitter.IDENT as symbol, ["created", "deleted", "modified"], (payload) =>
-    fileEvents.push(payload)
-  );
-
-  // Emit various events
-  userEmitter.emit("login", { userId: "alice" });
-  userEmitter.emit("logout", { userId: "alice" });
-  fileEmitter.emit("created", { path: "/test.txt" });
-  fileEmitter.emit("modified", { path: "/test.txt", size: 1024 });
-  fileEmitter.emit("deleted", { path: "/test.txt" });
-
-  suite.assertEqual(userEvents.length, 2, "Should receive both user events");
-  suite.assertEqual(fileEvents.length, 3, "Should receive all three file events");
-
-  suite.assertEqual(userEvents[0].userId, "alice", "Login event payload correct");
-  suite.assertEqual(userEvents[1].userId, "alice", "Logout event payload correct");
-  suite.assertEqual(fileEvents[0].path, "/test.txt", "Created event payload correct");
-  suite.assertEqual(fileEvents[1].size, 1024, "Modified event payload correct");
-  suite.assertEqual(fileEvents[2].path, "/test.txt", "Deleted event payload correct");
-});
-
-suite.test("should clean up array listeners in onType method", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-
-  let eventCount = 0;
-  const cleanup = omnibus.onType(UserEmitter.IDENT as symbol, ["login", "logout"], () => eventCount++);
-
-  userEmitter.emit("login", { userId: "test" });
-  userEmitter.emit("logout", { userId: "test" });
-  suite.assertEqual(eventCount, 2, "Should receive both events before cleanup");
-
-  cleanup();
-  userEmitter.emit("login", { userId: "test2" });
-  userEmitter.emit("logout", { userId: "test2" });
-  suite.assertEqual(eventCount, 2, "Should not receive events after cleanup");
-});
-
-suite.test("should support array of events in onInstance method", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter1 = new UserEmitter();
-  const userEmitter2 = new UserEmitter();
-  const fileEmitter = new FileEmitter();
-
-  const instance1 = Symbol("user-instance-1");
-  const instance2 = Symbol("user-instance-2");
-  const fileInstance = Symbol("file-instance");
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter1, instance1);
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter2, instance2);
-  omnibus.connect(FileEmitter.IDENT as symbol, fileEmitter, fileInstance);
-
-  const instance1Events: any[] = [];
-  const fileInstanceEvents: any[] = [];
-
-  // Listen to multiple events from specific instances
-  omnibus.onInstance(instance1, ["login", "logout"], (payload) => instance1Events.push(payload));
-  omnibus.onInstance(fileInstance, ["created", "deleted"], (payload) => fileInstanceEvents.push(payload));
-
-  // Emit events from different instances
-  userEmitter1.emit("login", { userId: "alice" });
-  userEmitter1.emit("logout", { userId: "alice" });
-  userEmitter2.emit("login", { userId: "bob" }); // Different instance, shouldn't be captured
-  fileEmitter.emit("created", { path: "/test.txt" });
-  fileEmitter.emit("modified", { path: "/test.txt", size: 1024 }); // Not in array, shouldn't be captured
-  fileEmitter.emit("deleted", { path: "/test.txt" });
-
-  suite.assertEqual(instance1Events.length, 2, "Should receive both events from instance1");
-  suite.assertEqual(fileInstanceEvents.length, 2, "Should receive both file events from fileInstance");
-
-  suite.assertEqual(instance1Events[0].userId, "alice", "Instance1 login event correct");
-  suite.assertEqual(instance1Events[1].userId, "alice", "Instance1 logout event correct");
-  suite.assertEqual(fileInstanceEvents[0].path, "/test.txt", "File created event correct");
-  suite.assertEqual(fileInstanceEvents[1].path, "/test.txt", "File deleted event correct");
-});
-
-suite.test("should clean up array listeners in onInstance method", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-  const instance = Symbol("user-instance");
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter, instance);
-
-  let eventCount = 0;
-  const cleanup = omnibus.onInstance(instance, ["login", "logout"], () => eventCount++);
-
-  userEmitter.emit("login", { userId: "test" });
-  userEmitter.emit("logout", { userId: "test" });
-  suite.assertEqual(eventCount, 2, "Should receive both events before cleanup");
-
-  cleanup();
-  userEmitter.emit("login", { userId: "test2" });
-  userEmitter.emit("logout", { userId: "test2" });
-  suite.assertEqual(eventCount, 2, "Should not receive events after cleanup");
-});
-
-// Test type safety at compile time
-suite.test("should provide type safety for connected emitters", () => {
-  const omnibus = new OmniBusEmitter();
-  const userEmitter = new UserEmitter();
-
-  omnibus.connect(UserEmitter.IDENT as symbol, userEmitter);
-
-  // This should be typed correctly
-  const retrievedEmitter = omnibus.get(UserEmitter.IDENT as symbol);
-
-  // TypeScript should know this is UserEmitter | undefined
-  if (retrievedEmitter) {
-    // This should be type-safe - TypeScript knows about emit method and event types
-    retrievedEmitter.emit("login", { userId: "typed-test" });
-
-    // This would be a TypeScript error if uncommented:
-    // retrievedEmitter.emit("invalidEvent", { data: "test" });
-  }
-
-  // The test passes if it compiles without TypeScript errors
-  suite.assert(true, "Type safety test passed (compile-time check)");
+  // Get connected classes
+  const connectedClasses = omnibus.getConnectedClasses();
+  suite.assertEqual(connectedClasses.length, 2, "Should have 2 connected classes");
+  suite.assert(connectedClasses.includes(Disk.IDENT), "Should include Disk class");
+  suite.assert(connectedClasses.includes(Network.IDENT), "Should include Network class");
 });
 
 // Run the tests
@@ -432,4 +314,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   suite.run().catch(console.error);
 }
 
-export { suite as OmniBusEmitterTestSuite };
+export { suite as OmniBusEmitterV2TestSuite };

@@ -33,8 +33,8 @@ suite.test("should work as a normal OmniBusEmitter", () => {
   OmniBus.connect(TestEmitter.IDENT as any, testEmitter);
 
   // Verify it was connected
-  const retrieved = OmniBus.get(TestEmitter.IDENT as any);
-  suite.assert(retrieved === testEmitter, "Should retrieve the connected emitter");
+  const retrievedArray = OmniBus.getByClass(TestEmitter.IDENT as any);
+  suite.assert(retrievedArray[0] === testEmitter, "Should retrieve the connected emitter");
 });
 
 suite.test("should maintain state across multiple accesses", () => {
@@ -47,9 +47,9 @@ suite.test("should maintain state across multiple accesses", () => {
 
   // Emit from a different "session" (simulating different modules)
   const anotherAccessToOmniBus = OmniBus;
-  const retrievedEmitter = anotherAccessToOmniBus.get(TestEmitter.IDENT as any);
+  const retrievedEmitterArray = anotherAccessToOmniBus.getByClass(TestEmitter.IDENT as any);
 
-  suite.assert(retrievedEmitter === testEmitter, "Should maintain connected emitters");
+  suite.assert(retrievedEmitterArray[0] === testEmitter, "Should maintain connected emitters");
 
   // Emit event
   testEmitter.emit("message", "test");
