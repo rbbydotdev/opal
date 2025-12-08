@@ -3,12 +3,12 @@ import { errF } from "@/lib/errors/errors";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { defaultFetchHandler } from "@/lib/service-worker/handler";
 import { hasRouteMatch, routeRequest } from "@/lib/service-worker/router";
-import { ServiceWorkerLogger, WHITELIST } from "@/lib/service-worker/utils";
+import { RemoteLoggerLogger, WHITELIST } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 declare const self: ServiceWorkerGlobalScope;
 
-initializeGlobalLogger(ServiceWorkerLogger());
+initializeGlobalLogger(RemoteLoggerLogger("ServiceWorker"));
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());

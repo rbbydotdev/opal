@@ -1,8 +1,8 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
-import { ServiceWorkerLogger } from "@/lib/service-worker/utils";
+import { RemoteLoggerLogger } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
-initializeGlobalLogger(ServiceWorkerLogger());
+initializeGlobalLogger(RemoteLoggerLogger());
 
 //shared singleton for Service Worker to manage/cache workspaces
 export const SWWStore = new (class SwWorkspace {

@@ -38,10 +38,20 @@ export async function createApiResource({
 }
 export function NewComlinkSnapshotPoolWorker(
   { editId, workspaceId, id }: { editId: number; workspaceId: string; id?: string },
-  cb?: ({ editId, blob }: { editId: number; blob: Blob }) => void
+  cb?: ({ editId, blob }: { editId: number; blob: Blob }) => void | Promise<void>
 ) {
   return new ApiPoolWorker(
-    ({ api }) => api.renderAndSnapshot(editId).then((blob) => cb?.({ editId, blob })),
+    async ({ api }) => {
+      try {
+        const blob = await api.renderAndSnapshot(editId);
+        if (cb) {
+          await cb({ editId, blob });
+        }
+      } catch (error) {
+        console.error("[SnapApiPool] Worker execution failed for editId:", editId, "error:", error);
+        throw error;
+      }
+    },
     () => createApiResource({ editId, workspaceId }),
     id
   );

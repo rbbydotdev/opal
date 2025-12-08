@@ -33,9 +33,9 @@ export class HistoryDAO implements HistoryStorageInterface {
   // Weight for the time-based score component
   private readonly TIME_WEIGHT = 0.4;
   // Weight for the change-based score component
-  private readonly CHANGE_WEIGHT = 0.6;
+  private readonly CHANGE_WEIGHT = 0.8;
   // Bonus added to the score if the change includes structural elements (newlines)
-  private readonly STRUCTURAL_CHANGE_BONUS = 0.2;
+  private readonly STRUCTURAL_CHANGE_BONUS = 0.5;
 
   unsubs = new Array<() => void>();
 
@@ -94,6 +94,12 @@ export class HistoryDAO implements HistoryStorageInterface {
   async getSaveThreshold(documentId: string, newText: string): Promise<number> {
     const latestEdit = await this.getLatestEdit(documentId);
 
+    //dont save whitespace
+
+    if (newText.trim().length === 0) {
+      return 0.0;
+    }
+
     // If this is the first edit ever, it's always important.
     if (!latestEdit) {
       return 1.0;
@@ -141,20 +147,6 @@ export class HistoryDAO implements HistoryStorageInterface {
     newText: string,
     abortForNewlines = false
   ): Promise<HistoryDocRecord | null> {
-    /*
-    --- HOW TO USE THE THRESHOLD ---
-    You can now call the threshold method at the beginning of saveEdit.
-    If the score is too low, you can abort the save.
-
-    const score = await this._getSaveThreshold(id, newText);
-    const SAVE_THRESHOLD = 0.3; // Example: Only save if score is > 0.3
-
-    if (score < SAVE_THRESHOLD) {
-      console.log(`Save aborted. Score ${score} is below threshold ${SAVE_THRESHOLD}`);
-      return 0;
-    }
-    */
-
     console.debug("save edit");
     const latestEdit = await this.getLatestEdit(id);
     const parentText = latestEdit ? await this.reconstructDocument(latestEdit.edit_id!) : "";

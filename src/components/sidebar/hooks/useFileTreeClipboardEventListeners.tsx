@@ -16,7 +16,6 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
 
   // --- Effect Events ---
   const handlePasteEvent = useEffectEvent(async (event: ClipboardEvent) => {
-    console.debug("paste event");
     const sidebarElement = sidebarRef.current;
     const target = event.target as HTMLElement | null;
 
@@ -44,7 +43,6 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
   });
 
   const handleCutEvent = useEffectEvent((event: ClipboardEvent) => {
-    console.debug("cut event");
     const sidebarElement = sidebarRef.current;
     const target = window.document.activeElement || (event.target as HTMLElement | null);
 
@@ -65,7 +63,6 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
   });
 
   const handleCopyEvent = useEffectEvent((event: ClipboardEvent) => {
-    console.debug("copy event");
     const sidebarElement = sidebarRef.current;
     const target = window.document.activeElement || (event.target as HTMLElement | null);
 
