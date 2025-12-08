@@ -95,8 +95,6 @@ export function EditHistoryMenu({
             >
               <div className=" mr-2 flex items-center space-x-2">
                 <span className="whitespace-nowrap flex justify-start items-center gap-2 pl-2">
-                  {/* <X className="w-4 h-4" /> */}
-                  {/* Edit history */}
                   <Clock size={16} />
                 </span>
               </div>
@@ -195,12 +193,12 @@ export function EditHistoryMenu({
               {isHistoryImageGenerationEnabled ? (
                 <>
                   <X className="w-3 h-3" strokeWidth={4} />
-                  disable images
+                  disable preview
                 </>
               ) : (
                 <>
                   <Check className="w-3 h-3" strokeWidth={4} />
-                  enable images
+                  enable preview
                 </>
               )}
             </Button>

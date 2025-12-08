@@ -6,6 +6,9 @@ export class HistoryDocRecord {
   edit_id!: number;
   preview: Blob | null;
   workspaceId: string;
+  filePath?: string;
+  crc32?: number;
+  parentCrc32?: number;
 
   constructor(
     workspaceId: string,
@@ -13,7 +16,10 @@ export class HistoryDocRecord {
     change: string,
     timestamp: number,
     parent: number | null,
-    preview: Blob | null = null
+    preview: Blob | null = null,
+    filePath?: string,
+    crc32?: number,
+    parentCrc32?: number
   ) {
     this.workspaceId = workspaceId;
     this.id = id;
@@ -21,6 +27,9 @@ export class HistoryDocRecord {
     this.timestamp = timestamp;
     this.parent = parent;
     this.preview = preview;
+    this.filePath = filePath;
+    this.crc32 = crc32;
+    this.parentCrc32 = parentCrc32;
   }
   static FromJSON(json: {
     workspaceId: string;
@@ -30,6 +39,9 @@ export class HistoryDocRecord {
     timestamp: number;
     parent: number | null;
     preview?: Blob | null;
+    filePath?: string;
+    crc32?: number;
+    parentCrc32?: number;
   }) {
     const hdr = new HistoryDocRecord(
       json.workspaceId,
@@ -37,7 +49,10 @@ export class HistoryDocRecord {
       json.change,
       json.timestamp,
       json.parent,
-      json.preview ?? null
+      json.preview ?? null,
+      json.filePath,
+      json.crc32,
+      json.parentCrc32
     );
     hdr.edit_id = json.edit_id;
     return hdr;
@@ -46,7 +61,7 @@ export class HistoryDocRecord {
 
 export interface HistoryStorageInterface {
   clear(docId: string): void;
-  saveEdit(workspaceId: string, id: string, newText: string): Promise<HistoryDocRecord | null>;
+  saveEdit(workspaceId: string, id: string, newText: string, filePath?: string): Promise<HistoryDocRecord | null>;
   reconstructDocument(edit_id: number): Promise<string | null>;
   clearAllEdits(id: string): void;
   reconstructDocumentFromEdit(edit: HistoryDocRecord): Promise<string | null>;

@@ -5,6 +5,7 @@ import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import { useEffect, useState } from "react";
+import * as CRC32 from "crc-32";
 
 export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryStorageInterface }): boolean {
   const [pendingSave, setPendingSave] = useState(false);
@@ -145,6 +146,7 @@ export class HistoryDAO implements HistoryStorageInterface {
     workspaceId: string,
     id: string,
     newText: string,
+    filePath?: string,
     abortForNewlines = false
   ): Promise<HistoryDocRecord | null> {
     console.debug("save edit");
@@ -165,7 +167,7 @@ export class HistoryDAO implements HistoryStorageInterface {
     this.dmp.diff_cleanupEfficiency(diffs);
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
-    const newDoc = new HistoryDocRecord(workspaceId, id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null);
+    const newDoc = new HistoryDocRecord(workspaceId, id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null, null, filePath);
     const resultId = await ClientDb.historyDocs.add(newDoc);
     void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: Number(resultId!) }));
     return newDoc;
