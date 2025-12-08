@@ -615,12 +615,22 @@ function SpotlightSearchInternal({
     }
   }, [inputRef, open]);
 
-  if (!open) return null;
+  useEffect(() => {
+    //because onBlur is not enough
+    const handleFocusIn = (e: FocusEvent) => {
+      if (open && containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        handleClose();
+      }
+    };
+    window.addEventListener("focusin", handleFocusIn, { passive: true });
+    return () => window.removeEventListener("focusin", handleFocusIn);
+  }, [containerRef, handleClose, open]);
 
+  if (!open) return null;
   // MARK: Render
   return (
     <>
-      {createPortal(<div className="inset-0 absolute backdrop-blur-sm"></div>, document.body)}
+      {createPortal(<div className="inset-0 absolute backdrop-blur-sm" onClick={handleClose}></div>, document.body)}
       <div
         ref={containerRef}
         className={cn(
