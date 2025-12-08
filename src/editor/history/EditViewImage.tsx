@@ -16,11 +16,11 @@ async function generateHtmlPreview(edit: HistoryDocRecord, workspaceId: string):
   try {
     const reconstructedContent = (await historyDAO.reconstructDocumentFromEdit(edit)) ?? "";
 
-    // Add back the document ID and workspace info as frontmatter
-    const frontMatter = {
-      documentId: edit.id,
-      workspaceId: edit.workspaceId,
-    };
+    // // Add back the document ID and workspace info as frontmatter
+    // const frontMatter = {
+    //   documentId: edit.id,
+    //   workspaceId: edit.workspaceId,
+    // };
 
     // Combine frontmatter with content, then strip for HTML rendering
     const markdownWithFrontMatter = `---\ndocumentId: ${edit.id}\nworkspaceId: ${edit.workspaceId}\n---\n\n${reconstructedContent}`;
@@ -162,7 +162,7 @@ export const EditViewImage = ({
       </HoverCardTrigger>
       <HoverCardContent
         side="right"
-        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden no-scrollbar"
         style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
       >
         <div style={{ transform: "scale(0.9)", transformOrigin: "top left", width: "400px" }}>
