@@ -2,10 +2,10 @@ import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
 import { ClientDb } from "@/data/instance";
 
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
+import * as CRC32 from "crc-32";
 import { liveQuery } from "dexie";
 import diff_match_patch, { Diff } from "diff-match-patch";
 import { useEffect, useState } from "react";
-import * as CRC32 from "crc-32";
 
 export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistoryStorageInterface }): boolean {
   const [pendingSave, setPendingSave] = useState(false);
@@ -30,9 +30,9 @@ export class HistoryDAO implements HistoryStorageInterface {
   // --- Constants for Threshold Calculation ---
   private readonly TIME_NORMALIZATION_MS = 30 * 1000;
   // Number of characters changed after which a save is highly encouraged
-  private readonly CHANGE_NORMALIZATION_CHARS = 100;
+  private readonly CHANGE_NORMALIZATION_CHARS = 10;
   // Weight for the time-based score component
-  private readonly TIME_WEIGHT = 0.4;
+  private readonly TIME_WEIGHT = 0.6;
   // Weight for the change-based score component
   private readonly CHANGE_WEIGHT = 0.8;
   // Bonus added to the score if the change includes structural elements (newlines)
@@ -166,18 +166,18 @@ export class HistoryDAO implements HistoryStorageInterface {
 
     this.dmp.diff_cleanupEfficiency(diffs);
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
-    
+
     // Calculate CRC32 for the new content and get parent's CRC32
     const newContentCrc32 = CRC32.str(newText);
     const parentCrc32 = latestEdit?.crc32 ?? undefined;
 
     const newDoc = new HistoryDocRecord(
-      workspaceId, 
-      id, 
-      patch, 
-      Date.now(), 
-      latestEdit ? latestEdit.edit_id! : null, 
-      null, 
+      workspaceId,
+      id,
+      patch,
+      Date.now(),
+      latestEdit ? latestEdit.edit_id! : null,
+      null,
       filePath,
       newContentCrc32,
       parentCrc32

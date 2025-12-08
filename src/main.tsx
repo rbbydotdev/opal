@@ -14,7 +14,7 @@ declare module "@tanstack/react-router" {
   }
 }
 
-initializeGlobalLogger(console);
+(globalThis.console as any) = initializeGlobalLogger(console);
 
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {

@@ -1,7 +1,7 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryDAO } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
-import { setFrontmatter, stripFrontmatter } from "@/lib/markdown/frontMatter";
+import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -15,13 +15,13 @@ async function generateHtmlPreview(edit: HistoryDocRecord, workspaceId: string):
   const historyDAO = new HistoryDAO();
   try {
     const reconstructedContent = (await historyDAO.reconstructDocumentFromEdit(edit)) ?? "";
-    
+
     // Add back the document ID and workspace info as frontmatter
     const frontMatter = {
       documentId: edit.id,
       workspaceId: edit.workspaceId,
     };
-    
+
     // Combine frontmatter with content, then strip for HTML rendering
     const markdownWithFrontMatter = `---\ndocumentId: ${edit.id}\nworkspaceId: ${edit.workspaceId}\n---\n\n${reconstructedContent}`;
     const htmlContent = stripFrontmatter(markdownWithFrontMatter);
@@ -133,7 +133,7 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
     <div
       key={htmlContent} // Force remount on content change
       ref={setShadowHost}
-      className={cn("w-full h-full border border-border bg-white", className)}
+      className={cn("w-full h-full bg-white", className)}
     />
   );
 }
