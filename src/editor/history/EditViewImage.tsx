@@ -104,11 +104,12 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
         transform-origin: top left;
         transform: scale(1);
       }
-      * {
+      *, *::before, *::after {
         max-width: none;
         word-wrap: break-word;
         font-size: 14px;
         line-height: 1.6;
+        color: #000 !important;
       }
       img {
         max-width: 100%;
