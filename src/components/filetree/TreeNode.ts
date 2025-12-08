@@ -50,6 +50,7 @@ export class TreeNode {
   parent: TreeDir | null;
   depth: number;
   children?: Record<string, TreeNode>;
+  fs: CommonFileSystem;
 
   private _dirname: AbsPath;
   private _basename: RelPath;
@@ -157,7 +158,12 @@ export class TreeNode {
     return this.toString();
   }
 
-  static FromPath(path: AbsPath, type: "dir" | "file", parent: TreeDir | null = null) {
+  static FromPath(
+    path: AbsPath,
+    type: "dir" | "file",
+    parent: TreeDir | null = null,
+    fs: CommonFileSystem = NullFileSystem
+  ): TreeNode {
     const pathDirname = absPath(dirname(path));
     const pathBasename = relPath(basename(path));
     const pathDepth = getDepth(path);
@@ -169,8 +175,9 @@ export class TreeNode {
           depth: pathDepth,
           parent,
           children: {},
+          fs,
         })
-      : new TreeFile({ dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent });
+      : new TreeFile({ dirname: pathDirname, basename: pathBasename, path, depth: pathDepth, parent, fs });
   }
 
   replaceWith(newNode: TreeNode) {
@@ -199,7 +206,6 @@ export class TreeNode {
   }
 
   iterator(filterIn?: (n: TreeNode) => boolean | null): IterableIterator<TreeNode> {
-    // iterator(filterIn?: (n: TreeNode) => boolean): IterableIterator<this> {
     function* gen(node: TreeNode): IterableIterator<unknown> {
       if (!filterIn || filterIn(node)) yield node;
       for (const childNode of Object.values((node as TreeDir).children ?? {})) {
@@ -296,6 +302,7 @@ export class TreeNode {
     depth,
     source,
     virtualContent,
+    fs = NullFileSystem,
   }: {
     type: "dir" | "file";
     dirname: AbsPath | string;
@@ -305,6 +312,7 @@ export class TreeNode {
     depth?: number;
     source?: AbsPath;
     virtualContent?: string;
+    fs?: CommonFileSystem;
   }) {
     this.type = type;
     this._dirname = typeof dirname === "string" ? absPath(dirname) : dirname;
@@ -314,6 +322,7 @@ export class TreeNode {
     this.parent = parent;
     this.source = source;
     this.virtualContent = virtualContent;
+    this.fs = fs;
   }
 
   remove() {
@@ -358,6 +367,7 @@ export class TreeNode {
         depth: this.depth,
         source: this.source,
         virtualContent: this.virtualContent,
+        fs: this.fs,
         children: Object.fromEntries(
           Object.entries(this.children ?? {}).map(([key, child]) => [key, child.deepCopy()])
         ),
@@ -370,6 +380,7 @@ export class TreeNode {
       path: this.path,
       depth: this.depth,
       source: this.source,
+      fs: this.fs,
       virtualContent: this.virtualContent,
     });
   }
@@ -395,6 +406,7 @@ export class TreeNode {
         depth: this.depth,
         children: this.children ?? {},
         source: this.source,
+        fs: this.fs,
       });
     }
     return new TreeFile({
@@ -404,6 +416,7 @@ export class TreeNode {
       path: this.path,
       depth: this.depth,
       source: this.source,
+      fs: this.fs,
     });
   }
   static FromJSON(json: TreeFileJType | TreeNodeDirJType, parent: TreeDir | null = null): TreeFile | TreeDir {
@@ -502,6 +515,7 @@ export class TreeDir extends TreeNode {
     parent,
     source,
     virtualContent,
+    fs = NullFileSystem,
   }: {
     dirname: AbsPath;
     basename: RelPath;
@@ -511,8 +525,9 @@ export class TreeDir extends TreeNode {
     source?: AbsPath;
     virtualContent?: string;
     children: TreeDir["children"];
+    fs?: CommonFileSystem;
   }) {
-    super({ type: "dir", dirname, parent, basename, path, depth, source, virtualContent });
+    super({ type: "dir", dirname, parent, basename, path, depth, source, virtualContent, fs });
     this.children = children;
   }
 
@@ -553,6 +568,7 @@ export class TreeDir extends TreeNode {
       source: this.source,
       virtualContent: this.virtualContent,
       children: newChildren,
+      fs: this.fs,
     });
   }
   filterOutChildren(filter?: ((node: TreeNode) => boolean) | AbsPath[]): Record<string, TreeFile | TreeDir> {
@@ -577,7 +593,7 @@ export class TreeDir extends TreeNode {
     };
   }
 
-  static FromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null): TreeDir {
+  static FromJSON(json: TreeNodeDirJType, parent: TreeDir | null = null, fs = NullFileSystem): TreeDir {
     const parentNode = new TreeDir({
       dirname: absPath(json.dirname),
       basename: relPath(json.basename),
@@ -585,6 +601,7 @@ export class TreeDir extends TreeNode {
       depth: json.depth,
       parent,
       children: {},
+      fs,
     });
     parentNode.children = Object.fromEntries(
       Object.entries(json.children).map(([key, child]) => [key, TreeNode.FromJSON(child, parentNode)])
@@ -658,7 +675,7 @@ export class TreeFile extends TreeNode {
     parent,
     source,
     virtualContent,
-    fs = NullFileSystem,
+    fs,
   }: {
     dirname: AbsPath;
     basename: RelPath;
@@ -669,45 +686,36 @@ export class TreeFile extends TreeNode {
     virtualContent?: string;
     fs?: CommonFileSystem;
   }) {
-    super({ type: "file", parent, dirname, basename, path, depth, source, virtualContent });
-    this._fs = new WeakRef(fs);
-  }
-
-  private _fs: WeakRef<CommonFileSystem>;
-
-  get fs(): CommonFileSystem {
-    const fs = this._fs?.deref();
-    if (!fs) {
-      throw new ReferenceError(`File system reference has been garbage collected for node: ${this.path}`);
-    }
-    return fs;
+    super({ type: "file", parent, dirname, basename, path, depth, source, virtualContent, fs });
   }
 
   async read(): Promise<string | Uint8Array> {
+    const resolvedPath = this.source || this.path;
     try {
-      logger.log("Reading file from path:", this.source ?? this.path);
-      return await this.fs.readFile(this.source ?? this.path);
+      return await this.fs.readFile(resolvedPath);
     } catch (e) {
       if (errorCode(e).code === "ENOENT") {
-        throw new NotFoundError(`File not found: ${this.path}`);
+        throw new NotFoundError(`File not found: ${resolvedPath}`);
       }
       throw e;
     }
   }
 
   async write<T extends string | Uint8Array>(contents: T | Promise<T>) {
+    const resolvedPath = this.source || this.path;
     const awaitedContents = contents instanceof Promise ? await contents : contents;
-    await this.fs.writeFile(this.source ?? this.path, awaitedContents, { encoding: "utf8", mode: 0o777 });
+    await this.fs.writeFile(resolvedPath, awaitedContents, { encoding: "utf8", mode: 0o777 });
     return;
   }
 
-  static FromJSON(json: TreeFileJType, parent: TreeDir | null = null): TreeFile {
+  static FromJSON(json: TreeFileJType, parent: TreeDir | null = null, fs = NullFileSystem): TreeFile {
     return new TreeFile({
       dirname: absPath(json.dirname),
       basename: relPath(json.basename),
       path: absPath(json.path),
       depth: json.depth,
       parent: parent,
+      fs,
     });
   }
 }
@@ -791,7 +799,10 @@ export class SourceDirTreeNode extends TreeDir {
   ) {
     super(props);
     this.children = Object.fromEntries(
-      Object.entries(props.children).map(([key, child]) => [key, SourceTreeNode.New(child, child.path)])
+      Object.entries(props.children).map(([key, child]) => [
+        key,
+        SourceTreeNode.New(child, joinPath(this.source, child.basename)),
+      ])
     );
   }
 }

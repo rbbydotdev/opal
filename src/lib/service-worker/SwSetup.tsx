@@ -6,8 +6,8 @@ export const ServiceWorker = ({ children }: { children: React.ReactNode }) => {
   useLayoutEffect(() => {
     void setupServiceWorker().then(() => setReady(true));
   }, []);
-  if (ready) return children;
-  return null;
+  if (!ready) return null;
+  return <>{children}</>;
 };
 
 export async function setupServiceWorker(): Promise<void> {

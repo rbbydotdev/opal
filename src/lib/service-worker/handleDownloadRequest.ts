@@ -60,14 +60,9 @@ export async function handleDownloadRequest(
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
-
-            logger.log(">>>>>???", await node.read());
-            await node
+            void node
               .read()
-              .then((data) => {
-                logger.log(">>>", data);
-                fileStream.push(coerceUint8Array(data), true);
-              })
+              .then((data) => fileStream.push(coerceUint8Array(data), true))
               .finally(() => {
                 fileCount--;
                 if (fileCount === 0) {
