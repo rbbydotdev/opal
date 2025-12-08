@@ -46,7 +46,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
   const handleCutEvent = useEffectEvent((event: ClipboardEvent) => {
     console.debug("cut event");
     const sidebarElement = sidebarRef.current;
-    const target = event.target as HTMLElement | null;
+    const target = window.document.activeElement || (event.target as HTMLElement | null);
 
     if (!sidebarElement?.contains(target) || editing) return;
 
@@ -67,7 +67,7 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
   const handleCopyEvent = useEffectEvent((event: ClipboardEvent) => {
     console.debug("copy event");
     const sidebarElement = sidebarRef.current;
-    const target = event.target as HTMLElement | null;
+    const target = window.document.activeElement || (event.target as HTMLElement | null);
 
     if (!sidebarElement?.contains(target) || editing) return;
 
@@ -87,17 +87,13 @@ export function useFileTreeClipboardEventListeners({ currentWorkspace }: { curre
 
   // --- Effect for event listener registration ---
   useEffect(() => {
-    const sidebarElement = sidebarRef.current;
-    if (!sidebarElement) return;
-
-    sidebarElement.addEventListener("paste", handlePasteEvent);
-    sidebarElement.addEventListener("cut", handleCutEvent);
-    sidebarElement.addEventListener("copy", handleCopyEvent);
-
+    window.addEventListener("paste", handlePasteEvent);
+    window.addEventListener("cut", handleCutEvent);
+    window.addEventListener("copy", handleCopyEvent);
     return () => {
-      sidebarElement.removeEventListener("paste", handlePasteEvent);
-      sidebarElement.removeEventListener("cut", handleCutEvent);
-      sidebarElement.removeEventListener("copy", handleCopyEvent);
+      window.removeEventListener("paste", handlePasteEvent);
+      window.removeEventListener("cut", handleCutEvent);
+      window.removeEventListener("copy", handleCopyEvent);
     };
   }, [handlePasteEvent, handleCutEvent, handleCopyEvent]);
 
