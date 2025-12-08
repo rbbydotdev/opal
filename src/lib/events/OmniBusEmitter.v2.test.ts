@@ -1,5 +1,5 @@
-import { TestSuite } from "../../tests/TestSuite";
-import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "../TypeEmitter";
+import { TestSuite } from "../tests/TestSuite";
+import { CreateSuperTypedEmitterClass, EmitterSymbol, OmniBusEmitter } from "./TypeEmitter";
 
 // Test event types
 type DiskEvents = {
@@ -172,9 +172,9 @@ suite.test("should listen to events by class type (all instances)", () => {
   disk3.emit("write", { path: "/file3.txt", size: 300 });
 
   suite.assertEqual(writeEvents.length, 3, "Should receive write events from all disk instances");
-  suite.assertEqual(writeEvents[0].path, "/file1.txt", "First event from disk1");
-  suite.assertEqual(writeEvents[1].path, "/file2.txt", "Second event from disk2");
-  suite.assertEqual(writeEvents[2].path, "/file3.txt", "Third event from disk3");
+  suite.assertEqual(writeEvents[0]!.path, "/file1.txt", "First event from disk1");
+  suite.assertEqual(writeEvents[1]!.path, "/file2.txt", "Second event from disk2");
+  suite.assertEqual(writeEvents[2]!.path, "/file3.txt", "Third event from disk3");
 });
 
 suite.test("should listen to events by specific instance", () => {

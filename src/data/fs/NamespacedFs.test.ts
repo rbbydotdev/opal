@@ -1,10 +1,7 @@
-import { CommonFileSystem } from "@/data/FileSystemTypes";
-import { NamespacedFs2 } from "@/data/fs/TranslateFs";
-// import { NamespacedFs } from "@/data/fs/NamespacedFs";
+import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
+import { NamespacedFs } from "@/data/fs/TranslateFs";
 import { absPath } from "@/lib/paths2";
 import { TestSuite } from "@/lib/tests/TestSuite";
-
-const NamespacedFs = NamespacedFs2;
 
 class MockFileSystem implements CommonFileSystem {
   private operations: Array<{ method: string; args: any[] }> = [];
@@ -62,8 +59,9 @@ class MockFileSystem implements CommonFileSystem {
     throw new Error("Symlinks are not supported in MockFileSystem");
   }
 
-  async readlink(path: string) {
-    throw new Error("Symlinks are not supported in MockFileSystem");
+  async readlink(path: string): Promise<string | Buffer | null> {
+    this.operations.push({ method: "readlink", args: [path] });
+    return "link-target";
   }
 }
 
@@ -106,14 +104,13 @@ suite.test("should create namespace directory", async () => {
 
 suite.test("should ignore EEXIST error when namespace directory already exists", async () => {
   setup();
-  const errorFs = {
-    ...mockFs,
+  const errorFs: CommonFileSystem = Object.assign({}, mockFs, {
     mkdir: async (path: string) => {
       const error = new Error("Directory exists") as any;
       error.code = "EEXIST";
       throw error;
     },
-  };
+  });
 
   const fs = new NamespacedFs(errorFs, "existing-namespace");
 
@@ -123,18 +120,19 @@ suite.test("should ignore EEXIST error when namespace directory already exists",
 
 suite.test("should throw non-EEXIST errors", async () => {
   setup();
-  const errorFs = {
-    ...mockFs,
+  const errorFs: CommonFileSystem = Object.assign({}, mockFs, {
     mkdir: async (path: string) => {
       const error = new Error("Permission denied") as any;
       error.code = "EACCES";
       throw error;
     },
-  };
+  });
 
   const fs = new NamespacedFs(errorFs, "test-namespace");
 
-  await suite.assertThrowsAsync(() => fs.init(), /Permission denied/);
+  await suite.assertThrowsAsync(async () => {
+    await fs.init();
+  }, /Permission denied/);
 });
 
 // Readdir tests

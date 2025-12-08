@@ -96,8 +96,8 @@ suite.test("should mount filesystem at path", () => {
 
   const mounts = mountingFs.getMounts();
   suite.assertEqual(mounts.length, 1);
-  suite.assertEqual(mounts[0].mountPath, "/home");
-  suite.assertEqual(mounts[0].filesystem, homeFs);
+  suite.assertEqual(mounts[0]!.mountPath, "/home");
+  suite.assertEqual(mounts[0]!.filesystem, homeFs);
 });
 
 suite.test("should support multiple mounts", () => {
@@ -121,7 +121,7 @@ suite.test("should unmount filesystem", () => {
 
   const mounts = mountingFs.getMounts();
   suite.assertEqual(mounts.length, 1);
-  suite.assertEqual(mounts[0].mountPath, "/tmp");
+  suite.assertEqual(mounts[0]!.mountPath, "/tmp");
 });
 
 // Path resolution tests
@@ -369,7 +369,9 @@ suite.test("should handle rename between nested mounts via copy+delete", async (
 suite.test("should throw error for unmounted paths without root filesystem", async () => {
   const mountingFsNoRoot = new MountingFS(); // No root filesystem
 
-  await suite.assertThrowsAsync(() => mountingFsNoRoot.readdir("/etc"), /No filesystem mounted for path: \/etc/);
+  await suite.assertThrowsAsync(async () => {
+    await mountingFsNoRoot.readdir("/etc");
+  }, /No filesystem mounted for path: \/etc/);
 });
 
 // Utility methods tests
@@ -388,7 +390,7 @@ suite.test("should replace mount at same path", () => {
 
   const mounts = mountingFs.getMounts();
   suite.assertEqual(mounts.length, 1);
-  suite.assertEqual(mounts[0].filesystem, tmpFs);
+  suite.assertEqual(mounts[0]!.filesystem, tmpFs);
 });
 
 // Edge cases

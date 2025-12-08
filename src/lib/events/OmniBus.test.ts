@@ -1,6 +1,6 @@
-import { TestSuite } from "../../tests/TestSuite";
-import { OmniBus } from "../OmniBus";
-import { CreateSuperTypedEmitterClass } from "../TypeEmitter";
+import { TestSuite } from "../tests/TestSuite";
+import { OmniBus } from "./OmniBus";
+import { CreateSuperTypedEmitterClass } from "./TypeEmitter";
 
 // Test event types
 type TestEvents = {
@@ -30,10 +30,10 @@ suite.test("should work as a normal OmniBusEmitter", () => {
   const testEmitter = new TestEmitter();
 
   // Connect emitter
-  OmniBus.connect(TestEmitter.IDENT, testEmitter);
+  OmniBus.connect(TestEmitter.IDENT as any, testEmitter);
 
   // Verify it was connected
-  const retrieved = OmniBus.get(TestEmitter.IDENT);
+  const retrieved = OmniBus.get(TestEmitter.IDENT as any);
   suite.assert(retrieved === testEmitter, "Should retrieve the connected emitter");
 });
 
@@ -42,12 +42,12 @@ suite.test("should maintain state across multiple accesses", () => {
   let eventCount = 0;
 
   // Connect and listen in one "session"
-  OmniBus.connect(TestEmitter.IDENT, testEmitter);
+  OmniBus.connect(TestEmitter.IDENT as any, testEmitter);
   OmniBus.onType(TestEmitter.IDENT, "message", () => eventCount++);
 
   // Emit from a different "session" (simulating different modules)
   const anotherAccessToOmniBus = OmniBus;
-  const retrievedEmitter = anotherAccessToOmniBus.get(TestEmitter.IDENT);
+  const retrievedEmitter = anotherAccessToOmniBus.get(TestEmitter.IDENT as any);
 
   suite.assert(retrievedEmitter === testEmitter, "Should maintain connected emitters");
 

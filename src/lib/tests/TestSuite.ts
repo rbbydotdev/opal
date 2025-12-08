@@ -1,4 +1,4 @@
-class TestSuite {
+export class TestSuite {
   private tests: Array<{ name: string; fn: () => void | Promise<void> }> = [];
   private passed = 0;
   private failed = 0;

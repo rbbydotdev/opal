@@ -110,7 +110,7 @@ export class TranslateFs implements CommonFileSystem {
   }
 }
 
-export class NamespacedFs2 extends TranslateFs {
+export class NamespacedFs extends TranslateFs {
   namespace: AbsPath;
 
   constructor(fs: CommonFileSystem, namespace: AbsPath | string) {

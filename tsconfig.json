@@ -31,7 +31,7 @@
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./playwrite-tests/**/*.ts", "*.ts", "*.d.ts"],
   "exclude": [
-    "**/*.test.ts",
+    // "**/*.test.ts",
     "proxies/**/*.ts",
     "proxies",
     "patches",
