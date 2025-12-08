@@ -1,6 +1,8 @@
+import { FileTree } from "@/components/filetree/Filetree";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
+import { TranslateFs } from "@/data/fs/TranslateFs";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError, unwrapError } from "@/lib/errors/errors";
@@ -39,10 +41,15 @@ export async function handleDownloadRequest(
       if (final) await writer.close();
     });
 
+    // Create a translated filesystem that maps virtual paths to the actual directory
+    const translatedFs = new TranslateFs(disk.fs, paramsPayload.dir);
+
+    // Create a new FileTree using the translated filesystem
+    const scopedTree = new FileTree(translatedFs, disk.guid, disk.mutex);
+    await scopedTree.index();
+
     const fileNodes = [
-      ...disk.fileTree
-        .toSourceTree(absPath(paramsPayload.dir))
-        .iterator(paramsPayload.type === "workspace" ? FilterOutSpecialDirs : undefined),
+      ...scopedTree.iterator(paramsPayload.type === "workspace" ? FilterOutSpecialDirs : undefined),
     ] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
