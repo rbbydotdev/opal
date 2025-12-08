@@ -8,7 +8,7 @@ export class NullHistoryDAO implements HistoryStorageInterface {
     return () => {};
   }
   clear(docId: string) {}
-  async saveEdit(workspaceId: string, id: string, newText: string): Promise<HistoryDocRecord | null> {
+  async saveEdit(workspaceId: string, id: string, newText: string, filePath?: string): Promise<HistoryDocRecord | null> {
     return null;
   }
 

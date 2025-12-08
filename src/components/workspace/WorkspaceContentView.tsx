@@ -2,7 +2,6 @@ import { useFileContents } from "@/context/useFileContents";
 import { HistorySnapDBProvider } from "@/data/dao/HistorySnapDBContext";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
-import { SnapApiPoolProvider } from "@/editor/history/SnapApiPoolContext";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
@@ -58,19 +57,17 @@ export function WorkspaceMarkdownEditor({
         path={path}
         workspaceName={currentWorkspace.name}
       >
-        <SnapApiPoolProvider max={isHistoryImageGenerationEnabled ? 1 : 0}>
-          <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
-            <EditorWithPlugins
-              mimeType={mimeType}
-              currentWorkspace={currentWorkspace}
-              editorRef={editorRef}
-              onChange={(md) => updateDebounce(matter.stringify(md, data))}
-              markdown={content}
-              className={"bg-background flex-grow flex-col h-full "}
-              contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
-            />
-          </HistorySnapDBProvider>
-        </SnapApiPoolProvider>
+        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
+          <EditorWithPlugins
+            mimeType={mimeType}
+            currentWorkspace={currentWorkspace}
+            editorRef={editorRef}
+            onChange={(md) => updateDebounce(matter.stringify(md, data))}
+            markdown={content}
+            className={"bg-background flex-grow flex-col h-full "}
+            contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
+          />
+        </HistorySnapDBProvider>
       </ScrollSync>
     </div>
   );
