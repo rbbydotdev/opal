@@ -166,8 +166,22 @@ export class HistoryDAO implements HistoryStorageInterface {
 
     this.dmp.diff_cleanupEfficiency(diffs);
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
+    
+    // Calculate CRC32 for the new content and get parent's CRC32
+    const newContentCrc32 = CRC32.str(newText);
+    const parentCrc32 = latestEdit?.crc32 ?? undefined;
 
-    const newDoc = new HistoryDocRecord(workspaceId, id, patch, Date.now(), latestEdit ? latestEdit.edit_id! : null, null, filePath);
+    const newDoc = new HistoryDocRecord(
+      workspaceId, 
+      id, 
+      patch, 
+      Date.now(), 
+      latestEdit ? latestEdit.edit_id! : null, 
+      null, 
+      filePath,
+      newContentCrc32,
+      parentCrc32
+    );
     const resultId = await ClientDb.historyDocs.add(newDoc);
     void this.emitter.emit("new_edit", HistoryDocRecord.FromJSON({ ...newDoc, edit_id: Number(resultId!) }));
     return newDoc;
