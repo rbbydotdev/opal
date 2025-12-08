@@ -19,9 +19,13 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 });
 
 self.addEventListener("fetch", (event: FetchEvent) => {
-  // const { log, error: errorLog } = !DEBUG_CONSOLE ? console : EnableRemoteLogger();
   const { request } = event;
   const url = new URL(request.url);
+
+  if (url.pathname.startsWith("/@static/")) {
+    //TODO: IDK WHY WHITE LIST CANNOT HANDLE THIS!?
+    return;
+  }
 
   logger.log(`Fetch event for: ${request.url} | Mode: ${request.mode} | Destination: ${request.destination}`);
   if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
