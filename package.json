@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build:preview && npm run build:workers && npm run build:app",
+    "build": "npm run build:workers && npm run build:app",
     "build:app": "vite build",
-    "build:preview": "tsx ./scripts/vite-build-preview.ts",
     "build:workers": "tsx vite-build-workers.ts",
     "build:workers:dev": "tsx vite-build-workers.ts dev",
     "dev": "vite",
@@ -98,6 +97,7 @@
     "dexie-encrypted": "^2.0.0",
     "dexie-react-hooks": "^1.1.7",
     "diff-match-patch": "^1.0.5",
+    "dotenv": "^17.2.3",
     "eta": "^4.0.1",
     "fflate": "^0.8.2",
     "fuzzysort": "^3.1.0",
