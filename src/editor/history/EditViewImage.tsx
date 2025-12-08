@@ -23,7 +23,6 @@ export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspac
 function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
   const { work, flush } = useSnapApiPool();
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
-
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!isHistoryImageGenerationEnabled) {
@@ -35,7 +34,9 @@ function useIframeImagePooled({ edit, workspaceId, id }: { edit: HistoryDocRecor
       let worker: ApiPoolWorker | null = NewComlinkSnapshotPoolWorker(
         { editId: edit.edit_id, workspaceId, id },
         async ({ blob }) => {
-          setImageUrl(URL.createObjectURL(blob));
+          if (blob) {
+            setImageUrl(URL.createObjectURL(blob));
+          }
         }
       );
       void work(worker);
@@ -68,7 +69,8 @@ export const EditViewImage = ({
   edit: HistoryDocRecord;
   className?: string;
 }) => {
-  const imageUrl = useIframeImagePooled({ edit, workspaceId, id: previewId({ workspaceId, editId: edit.id }) });
+  const id = previewId({ workspaceId, editId: edit.id });
+  const imageUrl = useIframeImagePooled({ edit, workspaceId, id });
   return imageUrl !== null ? (
     <ImageFileHoverCard className="w-48 h-48">
       <img src={imageUrl} className={cn("object-contain border border-border bg-white", className)} alt="" />

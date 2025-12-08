@@ -90,7 +90,7 @@ export const WHITELIST = [
   "/opal.svg",
   "/opal-blank.svg",
   "/opal-lite.svg",
-  "@/static/.*",
+  "/@/static/.*",
   {
     url: "/node_modules/.*",
     origin: "https?://localhost(:\\d+)?",
@@ -118,8 +118,8 @@ function formatConsoleMsg(msg: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return String(msg);
 }
-export function ServiceWorkerLogger() {
-  const RL = RemoteLogger("ServiceWorker");
+export function RemoteLoggerLogger(name: string = "") {
+  const RL = RemoteLogger(name);
   return {
     log: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log"),
     debug: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug"),

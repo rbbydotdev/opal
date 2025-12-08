@@ -16,10 +16,18 @@ async function build(): Promise<void> {
     minify: true,
     format: "iife",
     target: "es2020",
+    platform: "browser",
     outdir: path.resolve(appDir, "public"),
     alias: {
       "@": path.resolve(appDir, "src/"),
     },
+    define: {
+      // __ENABLE_LOG__: JSON.stringify(process.env.NODE_ENV === "development" || process.env.ENABLE_LOG === "true"),
+      // __LOG_LEVEL__: JSON.stringify(process.env.NODE_ENV === "production" ? "warn" : "debug"),
+      __ENABLE_LOG__: JSON.stringify(true),
+      __LOG_LEVEL__: JSON.stringify("debug"),
+    },
+    external: ["path", "fs", "os"],
     plugins: [
       stylePlugin({
         css: {

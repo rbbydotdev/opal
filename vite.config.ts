@@ -8,7 +8,8 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import svgr from "vite-plugin-svgr";
 
 // Service Worker Configuration (Development Watch)
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
+  const isDev = command === "serve";
   const isProd = mode === "production";
   return {
     build: {
@@ -77,8 +78,10 @@ export default defineConfig(({ mode }) => {
     define: {
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
       "process.version": JSON.stringify("v18.18.0"),
+      // __ENABLE_LOG__: JSON.stringify(isDev || process.env.ENABLE_LOG === "true"),
+      // __LOG_LEVEL__: JSON.stringify(isProd ? "warn" : "debug"),
       __ENABLE_LOG__: JSON.stringify(true),
-      __LOG_LEVEL__: JSON.stringify(isProd ? "warn" : "debug"),
+      __LOG_LEVEL__: JSON.stringify("debug"),
     },
   };
 });

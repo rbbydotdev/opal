@@ -2,11 +2,20 @@ import { HistoryDAO } from "@/data/dao/HistoryDAO";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
+import { snapdom } from "@zumer/snapdom";
 import * as Comlink from "comlink";
 import "github-markdown-css/github-markdown-light.css";
-import { snapdom } from "snapdom";
 
 initializeGlobalLogger(console);
+
+declare global {
+  var logger: {
+    log(...msg: unknown[]): void;
+    debug(...msg: unknown[]): void;
+    error(...msg: unknown[]): void;
+    warn(...msg: unknown[]): void;
+  };
+}
 
 // Fast image loading with reduced timeout
 async function loadImagesOptimized(images: HTMLImageElement[]) {
@@ -59,9 +68,10 @@ async function snapshot(target: HTMLElement) {
 
   // Snapdom capture with fast mode
   const captureStart = performance.now();
-  const capture = await snapdom.capture(target, {
+  const capture = await snapdom(target, {
     fast: false, //disabled to allow from request idle callback
-    scale: 1, // Avoid internal scaling
+    scale: 0.125,
+    quality: 0.125,
   });
   logger.debug(`[iframe] Snapdom capture took ${performance.now() - captureStart}ms`);
 

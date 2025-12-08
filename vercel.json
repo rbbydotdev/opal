@@ -5,6 +5,7 @@
       "source": "/download.zip",
       "destination": "/download.zip"
     },
+
     { "source": "/@static/(.*)", "destination": "/@static/$1" },
     {
       "source": "/auth/(.*)",

@@ -47,7 +47,7 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
       },
     },
     define: {
-      __ENABLE_LOG__: JSON.stringify(true),
+      __ENABLE_LOG__: JSON.stringify(false),
       __LOG_LEVEL__: JSON.stringify("debug"),
     },
   });
