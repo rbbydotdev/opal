@@ -137,7 +137,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
     try {
       await Promise.all([this.fsMutex.acquire(), this.indexMutex.acquire()]);
       logger.debug("Indexing file tree");
-      for await (const node of this.recurseTree(indexTree)) {
+      for await (const node of this.recurseTreeIndexing(indexTree)) {
         yield node;
       }
       //happens already in the setter() this.initialIndex = true;
@@ -156,7 +156,11 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
     await this.index();
   }
 
-  private async *recurseTree(parent: TreeDir, depth = 0, haltOnError = false): AsyncGenerator<TreeNode, void, unknown> {
+  private async *recurseTreeIndexing(
+    parent: TreeDir,
+    depth = 0,
+    haltOnError = false
+  ): AsyncGenerator<TreeNode, void, unknown> {
     const dir = parent.path;
     try {
       const entries = (await this.fs.readdir(dir)).map((e) => relPath(stringifyEntry(e)));
@@ -164,10 +168,10 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
         const fullPath = joinPath(dir, entry);
         try {
           const stat = await this.fs.stat(fullPath);
-          const node = TreeNode.FromPath(fullPath, stat.isDirectory() ? "dir" : "file", parent);
+          const node = TreeNode.FromPath(fullPath, stat.isDirectory() ? "dir" : "file", parent, this.fs);
           yield this.insertNode(parent, node);
           if (node.isTreeDir()) {
-            yield* await this.recurseTree(node, depth + 1, haltOnError);
+            yield* await this.recurseTreeIndexing(node, depth + 1, haltOnError);
           }
         } catch (e) {
           if (isErrorWithCode(e, "ENOENT")) {
@@ -263,20 +267,19 @@ export class FileTree extends BaseFileTree<TreeDirRoot> {
     }
   }
 
-  toSourceTree(scope = absPath("/")): SourceFileTree {
+  toSourceTree(source = absPath("/")): SourceFileTree {
     if (this.initialIndex === false) {
       throw new Error("FileTree must be indexed before creating a scoped tree");
     }
-    const subTree = this.root.nodeFromPath(scope)?.deepCopy();
+    const subTree = this.root.nodeFromPath(source)?.deepCopy();
     if (!subTree || !subTree.isTreeDir()) {
-      logger.error(`Scope path ${scope} not found in file tree`);
-      throw new Error(`Scope path ${scope} not found in file tree`);
+      logger.error(`Scope path ${source} not found in file tree`);
+      throw new Error(`Scope path ${source} not found in file tree`);
     }
     subTree.path = absPath("/");
-    const scopedFileTree = new SourceFileTree(this.fs, this.guid, this.fsMutex);
-    const sourceTreeRoot = SourceTreeNode.New(subTree, this.root.path);
-    scopedFileTree.root = sourceTreeRoot as SourceTreeDirRoot;
-    return scopedFileTree;
+    const sourceFileTree = new SourceFileTree(this.fs, this.guid, this.fsMutex);
+    sourceFileTree.root = SourceTreeNode.New(subTree, source) as SourceTreeDirRoot;
+    return sourceFileTree;
   }
 }
 
@@ -291,6 +294,16 @@ export class SourceFileTree extends BaseFileTree<SourceTreeDirRoot> {
     const newTree = new SourceFileTree(this.fs, this.guid, mutex) as this;
     newTree.root = this.root.clone() as SourceTreeDirRoot;
     return newTree;
+  }
+
+  // TODO: Indexing on SourceFileTree should be implemented properly to use source paths
+  // and preserve source/path parity. For now, prevent indexing to avoid corruption.
+  index(): never {
+    throw new Error("SourceFileTree indexing not implemented - use the original FileTree for indexing");
+  }
+
+  indexIter(): never {
+    throw new Error("SourceFileTree indexing not implemented - use the original FileTree for indexing");
   }
 
   forceIndex(tree: SourceTreeDirRoot | TreeDirRootJType): void {

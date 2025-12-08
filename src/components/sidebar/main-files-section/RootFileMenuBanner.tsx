@@ -1,6 +1,6 @@
 import { FileTree } from "@/components/filetree/Filetree";
 import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
-import { ROOT_NODE, TreeDir, TreeFile } from "@/components/filetree/TreeNode";
+import { ROOT_NODE, TreeNode } from "@/components/filetree/TreeNode";
 import { useNodeResolver } from "@/components/filetree/useNodeResolver";
 import { MainFileTreeContextMenu } from "@/components/sidebar/file-menu/MainFileTreeContextMenu";
 import { useFileTreeDragDrop } from "@/hooks/useFileTreeDragDrop";
@@ -17,7 +17,7 @@ export const RootFileMenuBanner = ({
 }: {
   currentWorkspace: Workspace;
   fileTree?: FileTree;
-  rootNode?: TreeDir | TreeFile | AbsPath;
+  rootNode?: TreeNode | AbsPath;
 }) => {
   const [dragEnter, setDragEnter] = useState(false);
   const { renameDirOrFileMultiple } = useWorkspaceFileMgmt(currentWorkspace);

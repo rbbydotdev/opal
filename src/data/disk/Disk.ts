@@ -785,6 +785,8 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
 
   async writeFile<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
+    //TODO: should use TreeNode.write() ?
+    await this.ready;
     const awaitedContents = contents instanceof Promise ? await contents : contents;
     await this.fs.writeFile(filePath, awaitedContents, { encoding: "utf8", mode: 0o777 });
     void this.remote.emit(DiskEvents.OUTSIDE_WRITE, { filePaths: [filePath] });
@@ -792,6 +794,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     return;
   }
   async readFile(filePath: AbsPath) {
+    //TODO: should use TreeNode.read()
     await this.ready;
     try {
       return await this.fs.readFile(filePath);
