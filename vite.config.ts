@@ -78,10 +78,8 @@ export default defineConfig(({ command, mode }) => {
     define: {
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
       "process.version": JSON.stringify("v18.18.0"),
-      // __ENABLE_LOG__: JSON.stringify(isDev || process.env.ENABLE_LOG === "true"),
-      // __LOG_LEVEL__: JSON.stringify(isProd ? "warn" : "debug"),
-      __ENABLE_LOG__: JSON.stringify(true),
-      __LOG_LEVEL__: JSON.stringify("debug"),
+      __ENABLE_LOG__: JSON.stringify(isDev || process.env.ENABLE_LOG === "true"),
+      __LOG_LEVEL__: JSON.stringify(isProd ? "warn" : "debug"),
     },
   };
 });
