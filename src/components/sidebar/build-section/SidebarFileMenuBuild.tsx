@@ -27,7 +27,6 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { Code2, Delete, Download, Ellipsis, FilesIcon, Hammer, UploadCloud } from "lucide-react";
@@ -170,7 +169,7 @@ export function SidebarFileMenuBuild({
                         }}
                         icon={<FilesIcon className="w-4 h-4" />}
                       >
-                        Files
+                        Select
                       </SelectableListItemAction>
                     </SidebarBuildsList>
                   )}
@@ -221,7 +220,7 @@ function BuildManager({
   handleDeleteBuild: (buildGuid: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const downloadBuildURL = build ? downloadBuildZipURL(build.disk.guid!, build.buildPath) : "#";
+  const downloadBuildURL = build ? build.getDownloadBuildZipURL() : "#";
   return selectMode === "delete" ? (
     <SelectHighlight
       placeholder="Select Build to Delete"

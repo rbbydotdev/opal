@@ -7,6 +7,7 @@ import { NullDisk } from "@/data/disk/NullDisk";
 import { ClientDb } from "@/data/instance";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
+import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
 import { nanoid } from "nanoid";
 
 type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
@@ -181,6 +182,10 @@ export class BuildDAO implements BuildRecord {
 
   getOutputPath(): AbsPath {
     return this.getBuildPath();
+  }
+
+  getDownloadBuildZipURL() {
+    return downloadBuildZipURL(this.disk.guid, this.buildPath);
   }
 
   async delete() {
