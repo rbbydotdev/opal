@@ -39,7 +39,7 @@ function WorkspaceLayout() {
         </FileTreeMenuCtxProvider>
       </FileTreeProvider>
       <div className="min-w-0 h-full flex w-full">
-        <ScrollSyncProvider>
+        <ScrollSyncProvider id={workspaceName}>
           <EditorSidebarLayout
             sidebar={<EditorSidebar className="main-editor-sidebar" />}
             main={<Outlet />}

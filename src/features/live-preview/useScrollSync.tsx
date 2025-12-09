@@ -4,6 +4,7 @@ import {
   ScrollSyncContext,
   useScrollSyncContext,
 } from "@/features/live-preview/useScrollSyncContext";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { nanoid } from "nanoid";
@@ -42,7 +43,7 @@ function useScrollSync({
     const listenEl = listenRef.current;
     const emitter = context.emitter;
 
-    if (!el || !emitter || !listenEl) return;
+    if (!el || !emitter || !listenEl || !context.enabled) return;
 
     const handleScroll = () => {
       if (scrollPause.current) return;
@@ -88,14 +89,17 @@ function useScrollSync({
       el.removeEventListener("scroll", handleScroll);
       unsubscribe();
     };
-  }, [context.emitter, elementRef, listenRef, originId, scrollId]);
+  }, [context.emitter, elementRef, listenRef, originId, scrollId, context.enabled]);
 
   return { ...context, originId, scrollId };
 }
 
-export function ScrollSyncProvider({ children }: { children: React.ReactNode }) {
+export function ScrollSyncProvider({ children, id }: { children: React.ReactNode; id: string }) {
   const emitter = useMemo(() => new SuperEmitter<ScrollEventPayload>(), []);
-  return <ScrollSyncContext.Provider value={{ emitter }}>{children}</ScrollSyncContext.Provider>;
+  const { storedValue: enabled, setStoredValue: setEnabled } = useLocalStorage(`live-preview/scroll-sync/${id}`, true);
+  return (
+    <ScrollSyncContext.Provider value={{ emitter, toggle: setEnabled, enabled }}>{children}</ScrollSyncContext.Provider>
+  );
 }
 
 export function ScrollSync({

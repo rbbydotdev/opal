@@ -8,6 +8,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
 import React from "react";
 
+import { getMimeType } from "@zip.js/zip.js";
 import mime from "mime-types";
 
 export function isExternalFileDrop(event: React.DragEvent | DragEvent): boolean {
@@ -30,12 +31,16 @@ export async function handleDropFilesForNode({
   const targetDir = targetNode.closestDirPath();
   const fileArray = Array.from(files);
   const imageFiles: File[] = fileArray.filter((file) => file.type.startsWith("image/"));
-  const textFiles: File[] = fileArray.filter((file) => file.type.startsWith("text/"));
+  const markdownFiles = fileArray.filter((file) => getMimeType(file.name) === "text/markdown");
+  const textFiles: File[] = fileArray.filter((file) => file.type.startsWith("text/") && !markdownFiles.includes(file));
   const docxFiles: File[] = fileArray.filter(
     (file) => mime.extension(file.type) === "docx" || file.name.endsWith(".docx")
   );
   const promises: Promise<AbsPath[]>[] = [];
 
+  if (markdownFiles.length > 0) {
+    promises.push(currentWorkspace.uploadMultipleMarkdown(markdownFiles, targetDir));
+  }
   if (docxFiles.length > 0) {
     promises.push(currentWorkspace.uploadMultipleDocx(docxFiles, targetDir));
   }

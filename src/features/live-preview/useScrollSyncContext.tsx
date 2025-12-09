@@ -4,7 +4,13 @@ import { createContext, useContext } from "react";
 
 export const ScrollSyncContext = createContext<{
   emitter: SuperEmitter<ScrollEventPayload>;
-} | null>(null);
+  toggle: (enabled: boolean) => void;
+  enabled: boolean;
+}>({
+  emitter: {} as SuperEmitter<ScrollEventPayload>,
+  toggle: () => {},
+  enabled: false,
+});
 export type ScrollEventPayload = {
   [ScrollEventsConts.SCROLL]: { x: number; y: number; scrollId: string; originId: string };
 };
