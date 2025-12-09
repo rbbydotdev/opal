@@ -89,6 +89,15 @@ export const downloadHandler = (context: RequestContext) => {
   return handleDownloadRequest(context.workspaceName, paramsPayload);
 };
 
+export const uploadMarkdownHandler = withRequestSignal(async (context: RequestContext) => {
+  const { event, url, workspaceName } = context;
+  const fullPathname = absPath(url.decodedPathname.replace("/upload-markdown", ""));
+  logger.log(`Handling markdown upload for: ${url.pathname}`);
+
+  const arrayBuffer = await event.request.arrayBuffer();
+  return handleDocxUploadRequest(workspaceName, fullPathname, await event.request.arrayBuffer());
+});
+
 export const faviconHandler = withRequestSignal((context: RequestContext) => {
   logger.log(`Handling favicon request for: ${context.url.href}`);
   return handleFaviconRequest(context.workspaceName);

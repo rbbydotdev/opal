@@ -10,6 +10,7 @@ import {
   RequestContext,
   styleSheetHandler,
   uploadImageHandler,
+  uploadMarkdownHandler,
   workspaceFilenameSearchHandler,
   workspaceSearchHandler,
 } from "@/lib/service-worker/handler";
@@ -55,6 +56,7 @@ const routes: Route[] = [
   createRoute("POST", "/replace-md-images", replaceMdImageHandler),
   createRoute("POST", "/replace-files", replaceFileHandler),
   createRoute("POST", "/upload-image/.*", uploadImageHandler),
+  createRoute("POST", "/upload-markdown/.*", uploadMarkdownHandler),
   createRoute("POST", "/upload-docx/.*", convertDocxHandler),
   createRoute("GET", "/workspace-search/:workspaceName", workspaceSearchHandler),
   createRoute("GET", "/workspace-filename-search/:workspaceName", workspaceFilenameSearchHandler),
@@ -87,9 +89,9 @@ export async function routeRequest(
   const requestMethod = methodOverride || request.method;
 
   logger.log(`RouteRequest START: ${requestMethod} ${url.pathname}`);
-  logger.log(`   - Workspace param: ${workspaceParam || 'null'}`);
-  logger.log(`   - Method override: ${methodOverride || 'none'}`);
-  logger.log(`   - Search params: ${url.search || 'none'}`);
+  logger.log(`   - Workspace param: ${workspaceParam || "null"}`);
+  logger.log(`   - Method override: ${methodOverride || "none"}`);
+  logger.log(`   - Search params: ${url.search || "none"}`);
 
   for (const route of routes) {
     if (route.method !== "ANY" && route.method !== requestMethod) {
@@ -100,7 +102,7 @@ export async function routeRequest(
     const match = url.pathname.match(route.pattern);
     if (match) {
       logger.log(`   ROUTE MATCHED: ${route.method} ${route.pattern.source}`);
-      
+
       const params = route.paramNames.reduce(
         (acc, name, index) => {
           acc[name] = decodeURIComponent(match[index + 1]!);
@@ -108,7 +110,7 @@ export async function routeRequest(
         },
         {} as Record<string, string>
       );
-      
+
       const searchParams = Object.fromEntries(
         Array.from(url.searchParams.entries()).map(([key, value]) => {
           try {
@@ -118,21 +120,21 @@ export async function routeRequest(
           }
         })
       );
-      
+
       //if workspaceParam is null try to get it from params
       if (!workspaceParam && params.workspaceName) {
         workspaceParam = params.workspaceName;
         logger.log(`   Workspace from params: ${workspaceParam}`);
       }
-      
-      logger.log(`   Route params: ${Object.keys(params).length ? JSON.stringify(params) : 'none'}`);
-      logger.log(`   Search params: ${Object.keys(searchParams).length ? JSON.stringify(searchParams) : 'none'}`);
-      logger.log(`   Final workspace: ${workspaceParam || 'unknown'}`);
-      logger.log(`   Calling handler: ${route.handler.name || 'anonymous'}`);
-      
+
+      logger.log(`   Route params: ${Object.keys(params).length ? JSON.stringify(params) : "none"}`);
+      logger.log(`   Search params: ${Object.keys(searchParams).length ? JSON.stringify(searchParams) : "none"}`);
+      logger.log(`   Final workspace: ${workspaceParam || "unknown"}`);
+      logger.log(`   Calling handler: ${route.handler.name || "anonymous"}`);
+
       const context: RequestContext = { event, url, workspaceName: workspaceParam || "unknown", params, searchParams };
       const response = await route.handler(context);
-      
+
       logger.log(`   Handler completed with status: ${response.status}`);
       return response;
     } else {

@@ -613,7 +613,10 @@ function SpotlightSearchInternal({
   // Focus input when spotlight opens
   useEffect(() => {
     if (open) {
-      inputRef.current?.focus();
+      //stack delay to steal focus, like from editor search bar returns focus to editor
+      queueMicrotask(() => {
+        inputRef.current?.focus();
+      });
     }
   }, [inputRef, open]);
 
@@ -648,6 +651,7 @@ function SpotlightSearchInternal({
           <input
             {...getInputProps()}
             value={search}
+            autoFocus
             onChange={(e) => {
               setSearch(e.target.value);
               startTransition(() => {

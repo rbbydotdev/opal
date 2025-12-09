@@ -488,6 +488,40 @@ export class Workspace {
     return result;
   }
 
+  async uploadMultipleMarkdown(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+    const result = await Workspace.UploadMultipleMarkdownFetch(files, targetDir, concurrency);
+    await this.indexAndEmitNewFiles(result);
+    return result;
+  }
+
+  static async UploadMultipleMarkdownFetch(
+    files: Iterable<File>,
+    targetDir: AbsPath,
+    concurrency = 8
+  ): Promise<AbsPath[]> {
+    const results: AbsPath[] = [];
+    let index = 0;
+    const filesArr = Array.from(files);
+
+    const uploadNext = async () => {
+      if (index >= filesArr.length) return;
+      const current = index++;
+      const file = filesArr[current];
+      const res = await fetch(joinPath(absPath("/upload-markdown"), targetDir, file!.name), {
+        method: "POST",
+        headers: {
+          "Content-Type": file!.type,
+        },
+        body: file,
+      });
+      results[current] = absPath(await res.text());
+      await uploadNext();
+    };
+
+    const workers = Array.from({ length: Math.min(concurrency, filesArr.length) }, () => uploadNext());
+    await Promise.all(workers);
+    return results;
+  }
   static async UploadMultipleDocxsFetch(
     files: Iterable<File>,
     targetDir: AbsPath,
