@@ -1,5 +1,5 @@
-import { useFileTreeMenuCtx } from "@/components/filetree/FileTreeMenuContext";
-import { ROOT_NODE, TreeNode } from "@/components/filetree/TreeNode";
+import { ROOT_NODE } from "@/components/filetree/TreeNode";
+import { useStockFile } from "@/components/sidebar/shared/useStockFile";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,12 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { DefaultFile } from "@/lib/DefaultFile";
-import { absPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { useWorkspaceFileMgmt } from "@/workspace/useWorkspaceFileMgmt";
-import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { FileCode2Icon, FileTextIcon, Globe, Package } from "lucide-react";
 import { ComponentProps, ReactNode, useRef } from "react";
 
@@ -30,23 +26,17 @@ const ActionButton = ({
 };
 
 function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () => void }) {
-  const { currentWorkspace } = useWorkspaceContext();
-  const { focused } = useFileTreeMenuCtx();
-  const { addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
-  const { expandForNode } = useTreeExpanderContext();
-
-  const addStockFile = (filename: string, content: string, dir?: TreeNode) => {
-    const node = addDirFile("file", dir?.path || focused || absPath("/"), filename, content);
-    if (expandForNode) {
-      expandForNode(node, true);
-    }
-  };
+  const addStockFile = useStockFile();
 
   return (
     <>
       <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.GlobalCSS(), ROOT_NODE))}>
         <FileCode2Icon className="w-4 h-4 mr-2" />
-        global.css
+        global.css (github.md)
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.PicoCSS(), ROOT_NODE))}>
+        <FileCode2Icon className="w-4 h-4 mr-2" />
+        global.css (pico.css)
       </DropdownMenuItem>
       <DropdownMenuItem onClick={deferFn(() => addStockFile("index.html", DefaultFile.HTML()))}>
         <Globe className="w-4 h-4 mr-2" />

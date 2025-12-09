@@ -196,15 +196,15 @@ export function applyTheme(options: ApplyThemeOptions): void {
 
     ::highlight(${MDX_SEARCH_NAME}) {
       background-color: oklch(var(--highlight)) !important;
-      color: oklch(var(--background)) !important;
+      color: oklch(var(--highlight-foreground)) !important;
     }
     ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
       background-color: oklch(var(--highlight-focus)) !important;
-      color: oklch(var(--background)) !important;
+      color: oklch(var(--highlight-focus-foreground)) !important;
     }
     ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
       background-color: oklch(var(--highlight-focus)) !important;
-      color: oklch(var(--background)) !important;
+      color: oklch(var(--highlight-focus-foreground)) !important;
     }
     img::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
       border: 2px solid oklch(var(--highlight-focus)) !important;
