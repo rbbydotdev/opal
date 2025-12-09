@@ -15,6 +15,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     description: "A simple starter workspace with a hello world markdown file",
     seedFiles: {
       "/hello.md": DefaultFile.HelloWorld(),
+      "/global.css": globalSeedCss,
     },
     navigate: "/hello.md",
   },

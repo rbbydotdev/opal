@@ -1,6 +1,6 @@
 import tailwindProse from "@tailwindcss/typography";
-import type { Config } from "tailwindcss";
 import tailwindAnimate from "tailwindcss-animate";
+import type { Config, PluginAPI } from "tailwindcss/types/config";
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,mdx}"],
@@ -65,10 +65,11 @@ export default {
         ring: "oklch(var(--ring) / <alpha-value>)",
         highlight: {
           DEFAULT: "oklch(var(--highlight) / <alpha-value>)",
-          foreground: "oklch(var(--highlight-foreground) / <alpha-value>)",
+          foreground: "oklch(var(--background) / <alpha-value>)",
           focus: "oklch(var(--highlight-focus) / <alpha-value>)",
-          "focus-foreground": "oklch(var(--highlight-focus-foreground) / <alpha-value>)",
+          "focus-foreground": "oklch(var(--background) / <alpha-value>)",
         },
+
         chart: {
           "1": "oklch(var(--chart-1) / <alpha-value>)",
           "2": "oklch(var(--chart-2) / <alpha-value>)",
@@ -133,7 +134,7 @@ export default {
   },
   safelist: [{ pattern: /pl-.+/ }],
   plugins: [
-    function ({ matchUtilities, theme }) {
+    function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {
           "animation-iteration": (value) => ({
@@ -144,7 +145,7 @@ export default {
       );
     },
 
-    function ({ matchUtilities, theme }) {
+    function ({ matchUtilities, theme }: PluginAPI) {
       const durations = theme("transitionDuration");
       matchUtilities(
         {
@@ -156,7 +157,7 @@ export default {
       );
     },
 
-    function ({ addUtilities }) {
+    function ({ addUtilities }: PluginAPI) {
       addUtilities({
         ".scrollbar-thin": {
           "scrollbar-width": "thin",

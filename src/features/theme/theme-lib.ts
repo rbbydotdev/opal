@@ -7,6 +7,8 @@
 import { invertColor } from "@/lib/colorUtils";
 
 // Import registry.json and type it as ThemeRegistry
+import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
+import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { DEFAULT_THEME_STATE } from "@/features/theme/theme-constants";
 import registryJson from "./themes.json";
 
@@ -164,7 +166,7 @@ export function applyTheme(options: ApplyThemeOptions): void {
 
         if (!current || current.toLowerCase() === (baseVal ?? "").toLowerCase()) {
           const inverted = isHex(baseVal) ? invertColor(baseVal ?? "") : "";
-          vo[key] = inverted || (mode === "light" ? "#fff" : "#000");
+          vo[key] = inverted ? inverted : mode === "light" ? "1 0 0" : "0 0 0";
         }
       }
     };
@@ -174,25 +176,6 @@ export function applyTheme(options: ApplyThemeOptions): void {
         vars.push(`--${key}: ${varObj[key]};`);
       }
     }
-
-    // /* Missing variables that map to existing theme colors */
-    // fixed for now....
-    // `
-    // --success: var(--ring);
-    // --success-foreground: var(--primary-foreground);
-    // --highlight: var(--muted);
-    // --highlight-foreground: var(--muted-foreground);
-    // --highlight-focus: var(--ring);
-    // --highlight-focus-foreground: var(--foreground);
-    // --sidebar-background: var(--sidebar);
-    // `
-    //   .split("\n")
-    //   .forEach((line) => {
-    //     const trimmed = line.trim();
-    //     if (trimmed) {
-    //       vars.push(trimmed);
-    //     }
-    //   });
 
     return vars.join("\n");
   };
@@ -209,6 +192,23 @@ export function applyTheme(options: ApplyThemeOptions): void {
     }
     .dark {
       ${darkVars}
+    }
+
+    ::highlight(${MDX_SEARCH_NAME}) {
+      background-color: oklch(var(--highlight)) !important;
+      color: oklch(var(--background)) !important;
+    }
+    ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
+      background-color: oklch(var(--highlight-focus)) !important;
+      color: oklch(var(--background)) !important;
+    }
+    ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
+      background-color: oklch(var(--highlight-focus)) !important;
+      color: oklch(var(--background)) !important;
+    }
+    img::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
+      border: 2px solid oklch(var(--highlight-focus)) !important;
+      border-offset: 2px;
     }
   `;
   document.head.appendChild(style);
@@ -249,8 +249,8 @@ export function getThemePreviewPalette(themeName: string): {
   };
 
   // Resolve sidebar first for fallback
-  const sidebarLight = getColorWithHealing("light", "sidebar") || "#000000";
-  const sidebarDark = getColorWithHealing("dark", "sidebar") || "#ffffff";
+  const sidebarLight = getColorWithHealing("light", "sidebar") || "0 0 0";
+  const sidebarDark = getColorWithHealing("dark", "sidebar") || "1 0 0";
 
   const light: ThemeColor[] = colorKeys.map((key) => ({
     key,
@@ -269,90 +269,5 @@ export function getThemePreviewPalette(themeName: string): {
     darkBg: { key: "sidebar", value: sidebarDark },
   };
 }
-
-// Generic base theme type
-interface GenericTheme<TCss = Record<string, any>> {
-  name: string;
-  type: string;
-  title: string;
-  description?: string;
-  css?: TCss;
-  cssVars: {
-    theme?: ThemeSharedVars;
-    light?: ThemeModeVars;
-    dark?: ThemeModeVars;
-  };
-}
-
-// Vintage Paper theme using the generic (can still narrow name if desired)
-// Shared vars for a single color mode (light or dark)
-type ThemeModeVars = {
-  background?: string;
-  foreground?: string;
-  card?: string;
-  "card-foreground"?: string;
-  popover?: string;
-  "popover-foreground"?: string;
-  primary?: string;
-  "primary-foreground"?: string;
-  secondary?: string;
-  "secondary-foreground"?: string;
-  muted?: string;
-  "muted-foreground"?: string;
-  accent?: string;
-  "accent-foreground"?: string;
-  destructive?: string;
-  "destructive-foreground"?: string;
-  border?: string;
-  input?: string;
-  ring?: string;
-  "chart-1"?: string;
-  "chart-2"?: string;
-  "chart-3"?: string;
-  "chart-4"?: string;
-  "chart-5"?: string;
-  radius?: string;
-  sidebar?: string;
-  "sidebar-foreground"?: string;
-  "sidebar-primary"?: string;
-  "sidebar-primary-foreground"?: string;
-  "sidebar-accent"?: string;
-  "sidebar-accent-foreground"?: string;
-  "sidebar-border"?: string;
-  "sidebar-ring"?: string;
-  "font-sans"?: string;
-  "font-serif"?: string;
-  "font-mono"?: string;
-  "shadow-color"?: string;
-  "shadow-opacity"?: string;
-  "shadow-blur"?: string;
-  "shadow-spread"?: string;
-  "shadow-offset-x"?: string;
-  "shadow-offset-y"?: string;
-  "letter-spacing"?: string;
-  spacing?: string;
-  "shadow-2xs"?: string;
-  "shadow-xs"?: string;
-  "shadow-sm"?: string;
-  shadow?: string;
-  "shadow-md"?: string;
-  "shadow-lg"?: string;
-  "shadow-xl"?: string;
-  "shadow-2xl"?: string;
-  "tracking-normal"?: string;
-};
-
-// Vars that are shared across modes (theme scope)
-type ThemeSharedVars = {
-  "font-sans"?: string;
-  "font-mono"?: string;
-  "font-serif"?: string;
-  radius?: string;
-  "tracking-tighter"?: string;
-  "tracking-tight"?: string;
-  "tracking-wide"?: string;
-  "tracking-wider"?: string;
-  "tracking-widest"?: string;
-};
 
 export const ALL_THEMES = registry.items.map((item) => item.name);

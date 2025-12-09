@@ -3,26 +3,21 @@ import { absPath, basename } from "@/lib/paths2";
 import { $isHeadingNode, HeadingNode } from "@lexical/rich-text";
 
 import { $isImageNode, lexical } from "@mdxeditor/editor";
-// --- Unique ID Generator ---
 let nodeIdCounter = 0;
 function generateUniqueId(): string {
   return `view-node-${nodeIdCounter++}`;
 }
 
 export interface LexicalTreeViewNode {
-  id: string; // Unique ID for React keys
+  id: string;
   type: string;
-  depth?: number; // For headings/sections
-  displayText?: string | React.ReactElement; // The primary text to display for this node
+  depth?: number;
+  displayText?: string | React.ReactElement;
   children?: LexicalTreeViewNode[];
 
-  lexicalNodeId: string; // The original Lexical node ID for reference
+  lexicalNodeId: string;
 
-  isContainer?: boolean; // Indicates if this node is a container (like a section or list)
-
-  // You might add other properties as needed for your UI
-  // E.g., iconType: 'paragraph' | 'heading' | 'code' etc.
-  // E.g., originalNodeType: string;
+  isContainer?: boolean;
 }
 export function isLeaf(node: LexicalTreeViewNode) {
   return node.isContainer === false;
@@ -38,10 +33,6 @@ function getLexicalTextContent(node: lexical.LexicalNode): string {
     return node.getType();
   }
 }
-/**
- * Converts a Lexical content node (like paragraph, list) to a TreeViewNode.
- * This function is called for non-heading block-level nodes.
- */
 function convertLexicalContentNode(
   lexicalNode: lexical.ElementNode,
   currentDepth: number,
@@ -55,8 +46,8 @@ function convertLexicalContentNode(
     type: lexicalNode.getType(),
     depth: currentDepth,
     displayText: truncatedText,
-    lexicalNodeId: lexicalNode.getKey(), // Store the original Lexical node ID for reference
-    isContainer: false, // Default for content nodes
+    lexicalNodeId: lexicalNode.getKey(),
+    isContainer: false,
   };
 
   switch (lexicalNode.getType()) {
@@ -97,7 +88,6 @@ function convertLexicalContentNode(
       viewNode.isContainer = false;
       break;
     case "listitem":
-      // List items are containers for their text and potential nested lists
       viewNode.isContainer = true;
       viewNode.displayText = `∙ ${truncatedText}`;
       if (lexicalNode.getChildren()?.some((child) => child.getType() === "list")) {
@@ -111,32 +101,21 @@ function convertLexicalContentNode(
 
     case "code":
     case "blockquote":
-      // These are treated as leaf nodes in the tree view
       break;
 
     default:
-      // Ignore unknown node types or return null if they shouldn't be in the tree
       return null;
   }
 
   return viewNode;
 }
 
-/**
- * Converts a Lexical RootNode into a hierarchical TreeViewNode structure,
- * creating a "sectionized" hierarchy based on headings.
- *
- * @param lexicalRoot The root node from a Lexical editor state.
- * @param maxHeadingLevel The maximum heading level to sectionize by (e.g., 6 for h1-h6).
- * @param maxLength The max length for displayText before truncating.
- * @returns The root TreeViewNode for display.
- */
 export function lexicalToTreeView(
   lexicalRoot: lexical.RootNode,
   maxHeadingLevel = 6,
   maxLength = 32
 ): LexicalTreeViewNode {
-  nodeIdCounter = 0; // Reset counter for each new tree conversion
+  nodeIdCounter = 0;
 
   const rootTreeViewNode: LexicalTreeViewNode = {
     id: generateUniqueId(),
@@ -145,39 +124,30 @@ export function lexicalToTreeView(
     depth: 0,
     isContainer: true,
     children: [],
-    lexicalNodeId: lexicalRoot.getKey(), // Store the original Lexical node ID for reference
+    lexicalNodeId: lexicalRoot.getKey(),
   };
 
-  // The stack holds the current path of open sections (as TreeViewNodes).
-  // It starts with the root. The last element is the current parent.
   const stack: LexicalTreeViewNode[] = [rootTreeViewNode];
 
   for (const lexicalNode of lexicalRoot.getChildren<lexical.ElementNode & HeadingNode>()) {
-    // We only care about ElementNodes at the top level
     if (!lexicalNode.getChildrenSize?.()) {
       continue;
     }
 
     const currentParent = stack.at(-1);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (currentParent && $isHeadingNode(lexicalNode as any)) {
       const headingNode = lexicalNode;
       const level = parseInt(headingNode.getTag().substring(1), 10);
 
       if (level > maxHeadingLevel) {
-        // Treat headings deeper than max level as simple content
         const contentNode = convertLexicalContentNode(headingNode, (currentParent.depth || 0) + 1, maxLength);
         if (contentNode) {
-          // console.debug("Adding content node for deep heading:", contentNode);
           currentParent.children?.push(contentNode);
         }
         continue;
       }
 
-      // Pop from stack until we find the correct parent level for this heading.
-      // e.g., if we see an H2, and the stack top is an H3, we pop the H3.
-      // if we see an H2, and the stack top is an H2, we pop the H2 to become siblings.
       while (stack.length > 1 && level <= (stack[stack.length - 1]?.depth ?? 0)) {
         stack.pop();
       }
@@ -186,20 +156,17 @@ export function lexicalToTreeView(
 
       const sectionNode: LexicalTreeViewNode = {
         id: generateUniqueId(),
-        type: "section", // We use 'section' to represent the group
+        type: "section",
         depth: level,
         displayText: getLexicalTextContent(headingNode),
-        lexicalNodeId: headingNode.getKey(), // Store the original Lexical node ID for reference
+        lexicalNodeId: headingNode.getKey(),
         isContainer: true,
         children: [],
       };
 
-      // console.debug("Adding section node:", sectionNode);
       newParent.children?.push(sectionNode);
-      stack.push(sectionNode); // This heading is now the current section
-      // console.log("stack", stack);
+      stack.push(sectionNode);
     } else {
-      // console.debug("Processing content node:", lexicalNode.getType());
       const contentNode = convertLexicalContentNode(lexicalNode, (currentParent?.depth || 0) + 1, maxLength);
       if (contentNode) {
         currentParent?.children?.push(contentNode);
@@ -207,7 +174,5 @@ export function lexicalToTreeView(
     }
   }
 
-  // console.log(JSON.stringify(rootTreeViewNode, null, 4));
-  // console.log(rootTreeViewNode);
   return rootTreeViewNode;
 }

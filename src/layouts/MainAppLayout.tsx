@@ -12,8 +12,6 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
-import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
 import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
@@ -107,20 +105,6 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
             </AsyncWindowErrorBoundary>
           </ServiceWorker>
         </Background>
-        <style>{`
-        ::highlight(${MDX_SEARCH_NAME}) {
-          background-color: oklch(var(--highlight));
-          color: oklch(var(--highlight-foreground));
-        }
-        ::highlight(${MDX_FOCUS_SEARCH_NAME}) {
-          background-color: oklch(var(--highlight-focus));
-          color: oklch(var(--highlight-focus-foreground));
-        }
-        ::highlight(${MDX_TREE_HIGHLIGHT_NAME}) {
-          background-color: oklch(var(--highlight-focus));
-          color: oklch(var(--highlight-focus-foreground));
-        }
-      `}</style>
       </ThemeProvider>
     </CustomQueryClientProvider>
   );

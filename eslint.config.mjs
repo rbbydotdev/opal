@@ -12,7 +12,7 @@ const config = [
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
-        project: ["./tsconfig.json", "./preview-builder/tsconfig.json"],
+        project: ["./tsconfig.json"],
       },
     },
     plugins: {

@@ -26,9 +26,6 @@
   body {
     overscroll-behavior: none;
   }
-  ::selection {
-    @apply bg-ring text-foreground;
-  }
 }
 
 .opalSvgDark {
