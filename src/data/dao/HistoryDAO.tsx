@@ -27,16 +27,14 @@ export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistorySto
 }
 
 export class HistoryDAO implements HistoryStorageInterface {
-  // --- Constants for Threshold Calculation ---
-  private readonly TIME_NORMALIZATION_MS = 30 * 1000;
-  // Number of characters changed after which a save is highly encouraged
-  private readonly CHANGE_NORMALIZATION_CHARS = 10;
-  // Weight for the time-based score component
-  private readonly TIME_WEIGHT = 0.6;
-  // Weight for the change-based score component
-  private readonly CHANGE_WEIGHT = 0.8;
-  // Bonus added to the score if the change includes structural elements (newlines)
-  private readonly STRUCTURAL_CHANGE_BONUS = 0.5;
+  TIME_NORMALIZATION_MS = 5000; // normalize to 5 seconds
+  CHANGE_NORMALIZATION_CHARS = 300; // normalize to 300 changed chars
+  TIME_WEIGHT = 0.4;
+  CHANGE_WEIGHT = 0.5;
+  STRUCTURAL_CHANGE_BONUS = 0.2;
+  ENTROPY_WEIGHT = 0.1;
+  IDLE_THRESHOLD_MS = 2500; // 2.5s pause
+  TYPING_SPEED_NORM = 10; // 10 chars/sec baseline
 
   unsubs = new Array<() => void>();
 
@@ -79,66 +77,76 @@ export class HistoryDAO implements HistoryStorageInterface {
     return ClientDb.historyDocs.where("id").equals(docId).delete();
   }
 
-  /**
-   * Calculates a score from 0.0 to 1.0 indicating whether a new edit is
-   * significant enough to be saved.
-   *
-   * The score is based on:
-   * 1. Time since the last save.
-   * 2. The number of characters inserted or deleted.
-   * 3. A bonus for structural changes (e.g., adding new paragraphs).
-   *
-   * @param documentId The document ID.
-   * @param newText The current text of the document.
-   * @returns A promise that resolves to a score between 0.0 and 1.0.
-   */
   async getSaveThreshold(documentId: string, newText: string): Promise<number> {
     const latestEdit = await this.getLatestEdit(documentId);
 
-    //dont save whitespace
-
+    //  Don't save whitespace-only states
     if (newText.trim().length === 0) {
       return 0.0;
     }
 
-    // If this is the first edit ever, it's always important.
+    // If no prior edit, always save
     if (!latestEdit) {
       return 1.0;
     }
 
-    // 1. Calculate time-based score
+    // Compute time since last save
     const timeSinceLastSave = Date.now() - latestEdit.timestamp;
     const timeScore = Math.min(timeSinceLastSave / this.TIME_NORMALIZATION_MS, 1.0);
 
-    // 2. Calculate change-based score
+    // Optional idle detection — treat inactivity as save trigger
+    if (timeSinceLastSave > this.IDLE_THRESHOLD_MS) {
+      return 1.0; // user paused — commit state
+    }
+
+    // Reconstruct parent text and get diffs
     const parentText = await this.reconstructDocument(latestEdit.edit_id);
     if (parentText === null) {
-      // Should not happen if latestEdit exists, but as a safeguard:
       return 1.0;
     }
 
     const diffs = this.dmp.diff_main(parentText, newText);
+
     let changeMagnitude = 0;
     let hasStructuralChange = false;
+    let lexicalComplexity = 0; // proxy for how "meaningful" the change is
+
     for (const [operation, text] of diffs) {
       if (operation !== 0) {
-        // 0: equal, 1: insert, -1: delete
-        changeMagnitude += text.length;
-        if (!hasStructuralChange && text.includes("\n")) {
+        const len = text.length;
+        changeMagnitude += len;
+
+        // rough lexical entropy — longer unique-word changes = higher entropy
+        lexicalComplexity += new Set(text.split(/\W+/)).size;
+
+        // detect structural hints
+        if (
+          text.includes("\n") ||
+          /^#{1,6}\s/.test(text) || // markdown headers
+          /^(\-|\*)\s/.test(text) || // list items
+          /^>\s/.test(text) // blockquotes
+        ) {
           hasStructuralChange = true;
         }
       }
     }
 
+    // 4️⃣ Compute scores
     const changeScore = Math.min(changeMagnitude / this.CHANGE_NORMALIZATION_CHARS, 1.0);
 
-    // 3. Add bonus for pertinent info (structural changes)
-    const bonus = hasStructuralChange ? this.STRUCTURAL_CHANGE_BONUS : 0;
+    const entropyScore = Math.min(lexicalComplexity / 30, 1.0);
 
-    // 4. Combine scores
-    const finalScore = timeScore * this.TIME_WEIGHT + changeScore * this.CHANGE_WEIGHT + bonus;
+    // 5️⃣ Dynamic weighting based on typing speed
+    const typingSpeed = changeMagnitude / (timeSinceLastSave / 1000 + 1e-5); // chars per second
+    const normalizedSpeed = Math.min(typingSpeed / this.TYPING_SPEED_NORM, 2.0);
+    const dynamicChangeWeight = this.CHANGE_WEIGHT * normalizedSpeed;
+    const dynamicTimeWeight = this.TIME_WEIGHT / (normalizedSpeed + 0.5);
 
-    // Clamp the final score to a maximum of 1.0
+    const bonus = (hasStructuralChange ? this.STRUCTURAL_CHANGE_BONUS : 0) + entropyScore * this.ENTROPY_WEIGHT;
+
+    // 6️⃣ Combine + clamp
+    const finalScore = timeScore * dynamicTimeWeight + changeScore * dynamicChangeWeight + bonus;
+
     return Math.min(finalScore, 1.0);
   }
 
