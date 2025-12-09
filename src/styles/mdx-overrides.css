@@ -38,6 +38,9 @@
     color: oklch(var(--foreground)) !important;
   }
 }
+.mdxeditor [class*="_editImageToolbar_"] {
+  z-index: 0;
+}
 
 .mdxeditor-popup-container [class*="_dialogContent_"] {
   flex-direction: column;

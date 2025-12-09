@@ -70,10 +70,10 @@
           "chart-5": "0.80 0.16 69.81",
           "success": "0.64 0.27 311.49",
           "success-foreground": "0.98 0.02 325.69",
-          "highlight": "0.94 0.04 309.45",
-          "highlight-foreground": "0.47 0.11 305.00",
+          "highlight": "0.64 0.27 311.49",
+          "highlight-foreground": "0.98 0.01 318.70",
           "highlight-focus": "0.64 0.27 311.49",
-          "highlight-focus-foreground": "0.26 0.04 309.01",
+          "highlight-focus-foreground": "0.98 0.01 318.70",
           "sidebar-background": "0.94 0.03 304.55"
         },
         "dark": {
@@ -119,10 +119,10 @@
           "chart-5": "0.82 0.15 72.10",
           "success": "0.71 0.30 330.46",
           "success-foreground": "0.22 0.06 296.14",
-          "highlight": "0.30 0.09 296.60",
-          "highlight-foreground": "0.79 0.12 298.85",
+          "highlight": "0.71 0.30 330.46",
+          "highlight-foreground": "0.22 0.06 296.14",
           "highlight-focus": "0.71 0.30 330.46",
-          "highlight-focus-foreground": "0.95 0.03 305.12",
+          "highlight-focus-foreground": "0.22 0.06 296.14",
           "sidebar-background": "0.26 0.09 296.36"
         }
       }
@@ -182,10 +182,10 @@
           "tracking-normal": "0em",
           "success": "0.21 0.04 265.75",
           "success-foreground": "0.98 0.00 247.86",
-          "highlight": "0.97 0.01 247.90",
-          "highlight-foreground": "0.55 0.04 257.42",
+          "highlight": "0.21 0.04 265.75",
+          "highlight-foreground": "1.00 0.00 0.00",
           "highlight-focus": "0.21 0.04 265.75",
-          "highlight-focus-foreground": "0.21 0.04 265.75",
+          "highlight-focus-foreground": "1.00 0.00 0.00",
           "sidebar": "1.00 0.00 0.00",
           "sidebar-background": "1.00 0.00 0.00"
         },
@@ -227,10 +227,10 @@
           "tracking-normal": "0em",
           "success": "0.62 0.21 255.13",
           "success-foreground": "0.17 0.04 164.20",
-          "highlight": "0.33 0.10 291.16",
-          "highlight-foreground": "0.59 0.09 284.05",
+          "highlight": "0.62 0.21 255.13",
+          "highlight-foreground": "0.26 0.07 291.00",
           "highlight-focus": "0.62 0.21 255.13",
-          "highlight-focus-foreground": "0.88 0.21 156.63",
+          "highlight-focus-foreground": "0.26 0.07 291.00",
           "sidebar-background": "0.33 0.10 291.16"
         }
       }
@@ -315,10 +315,10 @@
           "tracking-normal": "0em",
           "success": "0.62 0.19 259.81",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.98 0.00 247.84",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.62 0.19 259.81",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.62 0.19 259.81",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.98 0.00 247.84"
         },
         "dark": {
@@ -376,10 +376,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.62 0.19 259.81",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.27 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.62 0.19 259.81",
+          "highlight-foreground": "0.20 0 0",
           "highlight-focus": "0.62 0.19 259.81",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.20 0 0",
           "sidebar-background": "0.20 0 0"
         }
       }
@@ -464,10 +464,10 @@
           "tracking-normal": "0em",
           "success": "0.59 0.22 0.58",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.94 0.03 331.55",
-          "highlight-foreground": "0.49 0.12 324.45",
+          "highlight": "0.59 0.22 0.58",
+          "highlight-foreground": "0.98 0.01 325.64",
           "highlight-focus": "0.59 0.22 0.58",
-          "highlight-focus-foreground": "0.33 0.12 325.04",
+          "highlight-focus-foreground": "0.98 0.01 325.64",
           "sidebar-background": "0.94 0.03 320.58"
         },
         "dark": {
@@ -525,10 +525,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.59 0.22 0.58",
           "success-foreground": "0.86 0.06 346.37",
-          "highlight": "0.26 0.02 309.47",
-          "highlight-foreground": "0.79 0.04 307.10",
+          "highlight": "0.59 0.22 0.58",
+          "highlight-foreground": "0.24 0.02 307.53",
           "highlight-focus": "0.59 0.22 0.58",
-          "highlight-focus-foreground": "0.84 0.04 309.54",
+          "highlight-focus-foreground": "0.24 0.02 307.53",
           "sidebar-background": "0.19 0.02 331.05"
         }
       }
@@ -613,10 +613,10 @@
           "tracking-normal": "0em",
           "success": "0.68 0.16 243.35",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.92 0.00 286.37",
-          "highlight-foreground": "0.19 0.01 248.51",
+          "highlight": "0.68 0.16 243.35",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.68 0.16 243.35",
-          "highlight-focus-foreground": "0.19 0.01 248.51",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.98 0.00 197.14"
         },
         "dark": {
@@ -674,10 +674,10 @@
           "shadow-2xl": "0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0.00)",
           "success": "0.68 0.16 243.35",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.21 0 0",
-          "highlight-foreground": "0.56 0.01 247.97",
+          "highlight": "0.68 0.16 243.35",
+          "highlight-foreground": "0 0 0",
           "highlight-focus": "0.68 0.16 243.35",
-          "highlight-focus-foreground": "0.93 0.00 228.79",
+          "highlight-focus-foreground": "0 0 0",
           "sidebar-background": "0.21 0.01 274.53"
         }
       }
@@ -762,10 +762,10 @@
           "tracking-normal": "0em",
           "success": "0.61 0.06 44.36",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.85 0.04 49.09",
-          "highlight-foreground": "0.54 0.05 37.21",
+          "highlight": "0.61 0.06 44.36",
+          "highlight-foreground": "0.95 0.01 102.46",
           "highlight-focus": "0.61 0.06 44.36",
-          "highlight-focus-foreground": "0.41 0.03 40.36",
+          "highlight-focus-foreground": "0.95 0.01 102.46",
           "sidebar-background": "0.89 0.03 49.57"
         },
         "dark": {
@@ -823,10 +823,10 @@
           "shadow-2xl": "2px 2px 0px 0px hsl(20 18% 30% / 0.28)",
           "success": "0.73 0.05 52.33",
           "success-foreground": "0.27 0.01 48.18",
-          "highlight": "0.41 0.03 40.36",
-          "highlight-foreground": "0.76 0.04 50.86",
+          "highlight": "0.73 0.05 52.33",
+          "highlight-foreground": "0.27 0.01 48.18",
           "highlight-focus": "0.73 0.05 52.33",
-          "highlight-focus-foreground": "0.95 0.01 102.46",
+          "highlight-focus-foreground": "0.27 0.01 48.18",
           "sidebar-background": "0.22 0.01 52.96"
         }
       }
@@ -911,10 +911,10 @@
           "tracking-normal": "0em",
           "success": "0.70 0.16 350.75",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.88 0.05 212.10",
-          "highlight-foreground": "0.58 0 0",
+          "highlight": "0.70 0.16 350.75",
+          "highlight-foreground": "0.94 0.02 345.70",
           "highlight-focus": "0.70 0.16 350.75",
-          "highlight-focus-foreground": "0.47 0 0",
+          "highlight-focus-foreground": "0.94 0.02 345.70",
           "sidebar-background": "0.91 0.04 343.09"
         },
         "dark": {
@@ -972,10 +972,10 @@
           "shadow-2xl": "3px 3px 0px 0px hsl(206.15 28.06% 27.25% / 2.50)",
           "success": "0.70 0.09 201.87",
           "success-foreground": "0.25 0.03 234.16",
-          "highlight": "0.27 0.01 255.58",
-          "highlight-foreground": "0.78 0.08 4.13",
+          "highlight": "0.70 0.09 201.87",
+          "highlight-foreground": "0.25 0.03 234.16",
           "highlight-focus": "0.70 0.09 201.87",
-          "highlight-focus-foreground": "0.93 0.02 349.08",
+          "highlight-focus-foreground": "0.25 0.03 234.16",
           "sidebar-background": "0.23 0.03 235.97"
         }
       }
@@ -1060,10 +1060,10 @@
           "tracking-normal": "0em",
           "success": "0.50 0.19 27.48",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.78 0 0",
-          "highlight-foreground": "0.41 0 0",
+          "highlight": "0.50 0.19 27.48",
+          "highlight-foreground": "0.85 0 0",
           "highlight-focus": "0.50 0.19 27.48",
-          "highlight-focus-foreground": "0.24 0 0",
+          "highlight-focus-foreground": "0.85 0 0",
           "sidebar-background": "0.76 0 0"
         },
         "dark": {
@@ -1121,10 +1121,10 @@
           "shadow-2xl": "0px 2px 5px 0px hsl(0 0% 0% / 1.50)",
           "success": "0.61 0.21 27.03",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.26 0 0",
-          "highlight-foreground": "0.71 0 0",
+          "highlight": "0.61 0.21 27.03",
+          "highlight-foreground": "0.22 0 0",
           "highlight-focus": "0.61 0.21 27.03",
-          "highlight-focus-foreground": "0.91 0 0",
+          "highlight-focus-foreground": "0.22 0 0",
           "sidebar-background": "0.19 0 0"
         }
       }
@@ -1209,10 +1209,10 @@
           "tracking-normal": "0em",
           "success": "0.55 0.25 297.02",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.91 0.01 264.51",
-          "highlight-foreground": "0.55 0.03 279.08",
+          "highlight": "0.55 0.25 297.02",
+          "highlight-foreground": "0.96 0.01 264.53",
           "highlight-focus": "0.55 0.25 297.02",
-          "highlight-focus-foreground": "0.44 0.04 279.33",
+          "highlight-focus-foreground": "0.96 0.01 264.53",
           "sidebar-background": "0.93 0.01 264.52"
         },
         "dark": {
@@ -1270,10 +1270,10 @@
           "shadow-2xl": "0px 4px 6px 0px hsl(240 30% 25% / 0.30)",
           "success": "0.79 0.12 304.77",
           "success-foreground": "0.24 0.03 283.91",
-          "highlight": "0.30 0.03 276.21",
-          "highlight-foreground": "0.75 0.04 273.93",
+          "highlight": "0.79 0.12 304.77",
+          "highlight-foreground": "0.22 0.03 284.06",
           "highlight-focus": "0.79 0.12 304.77",
-          "highlight-focus-foreground": "0.88 0.04 272.28",
+          "highlight-focus-foreground": "0.22 0.03 284.06",
           "sidebar-background": "0.18 0.02 284.20"
         }
       }
@@ -1358,10 +1358,10 @@
           "tracking-normal": "0em",
           "success": "0.49 0 0",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.89 0 0",
-          "highlight-foreground": "0.51 0 0",
+          "highlight": "0.49 0 0",
+          "highlight-foreground": "0.96 0 0",
           "highlight-focus": "0.49 0 0",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "0.96 0 0",
           "sidebar-background": "0.94 0 0"
         },
         "dark": {
@@ -1419,10 +1419,10 @@
           "shadow-2xl": "0px 2px 0px 0px hsl(0 0% 20% / 0.38)",
           "success": "0.71 0 0",
           "success-foreground": "0.22 0 0",
-          "highlight": "0.29 0 0",
-          "highlight-foreground": "0.60 0 0",
+          "highlight": "0.71 0 0",
+          "highlight-foreground": "0.22 0 0",
           "highlight-focus": "0.71 0 0",
-          "highlight-focus-foreground": "0.89 0 0",
+          "highlight-focus-foreground": "0.22 0 0",
           "sidebar-background": "0.24 0 0"
         }
       }
@@ -1507,10 +1507,10 @@
           "tracking-normal": "0em",
           "success": "0.56 0.09 203.28",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.93 0.01 196.97",
-          "highlight-foreground": "0.54 0.06 201.57",
+          "highlight": "0.56 0.09 203.28",
+          "highlight-foreground": "0.95 0.01 197.01",
           "highlight-focus": "0.56 0.09 203.28",
-          "highlight-focus-foreground": "0.38 0.06 212.66",
+          "highlight-focus-foreground": "0.95 0.01 197.01",
           "sidebar-background": "0.93 0.02 205.32"
         },
         "dark": {
@@ -1568,10 +1568,10 @@
           "shadow-2xl": "1px 1px 2px 0px hsl(180 70% 60% / 0.50)",
           "success": "0.85 0.13 195.04",
           "success-foreground": "0.21 0.02 224.45",
-          "highlight": "0.29 0.04 218.82",
-          "highlight-foreground": "0.66 0.10 195.05",
+          "highlight": "0.85 0.13 195.04",
+          "highlight-foreground": "0.21 0.02 224.45",
           "highlight-focus": "0.85 0.13 195.04",
-          "highlight-focus-foreground": "0.85 0.13 195.04",
+          "highlight-focus-foreground": "0.21 0.02 224.45",
           "sidebar-background": "0.21 0.02 224.45"
         }
       }
@@ -1656,10 +1656,10 @@
           "tracking-normal": "0em",
           "success": "0.73 0.06 130.85",
           "success-foreground": "0.99 0.01 88.64",
-          "highlight": "0.85 0.06 91.15",
-          "highlight-foreground": "0.58 0.03 60.93",
+          "highlight": "0.73 0.06 130.85",
+          "highlight-foreground": "0.88 0.05 91.79",
           "highlight-focus": "0.73 0.06 130.85",
-          "highlight-focus-foreground": "0.43 0.03 59.22",
+          "highlight-focus-foreground": "0.88 0.05 91.79",
           "sidebar-background": "0.86 0.06 90.52"
         },
         "dark": {
@@ -1717,10 +1717,10 @@
           "shadow-2xl": "3px 3px 2px 0px hsl(88 22% 35% / 0.38)",
           "success": "0.68 0.06 132.45",
           "success-foreground": "0.27 0.01 61.02",
-          "highlight": "0.39 0.02 82.71",
-          "highlight-foreground": "0.71 0.02 73.62",
+          "highlight": "0.68 0.06 132.45",
+          "highlight-foreground": "0.33 0.02 88.07",
           "highlight-focus": "0.68 0.06 132.45",
-          "highlight-focus-foreground": "0.92 0.02 82.12",
+          "highlight-focus-foreground": "0.33 0.02 88.07",
           "sidebar-background": "0.33 0.02 88.07"
         }
       }
@@ -1805,10 +1805,10 @@
           "tracking-normal": "0em",
           "success": "0.54 0.18 288.03",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.96 0.01 286.15",
-          "highlight-foreground": "0.54 0.05 284.74",
+          "highlight": "0.54 0.18 288.03",
+          "highlight-foreground": "0.97 0.01 286.15",
           "highlight-focus": "0.54 0.18 288.03",
-          "highlight-focus-foreground": "0.30 0.06 282.42",
+          "highlight-focus-foreground": "0.97 0.01 286.15",
           "sidebar-background": "0.96 0.01 286.15"
         },
         "dark": {
@@ -1866,10 +1866,10 @@
           "shadow-2xl": "0px 4px 10px 0px hsl(240 30% 25% / 0.30)",
           "success": "0.72 0.16 290.40",
           "success-foreground": "0.17 0.02 283.80",
-          "highlight": "0.27 0.06 281.44",
-          "highlight-foreground": "0.72 0.05 285.17",
+          "highlight": "0.72 0.16 290.40",
+          "highlight-foreground": "0.17 0.02 283.80",
           "highlight-focus": "0.72 0.16 290.40",
-          "highlight-focus-foreground": "0.92 0.03 285.88",
+          "highlight-focus-foreground": "0.17 0.02 283.80",
           "sidebar-background": "0.23 0.04 282.93"
         }
       }
@@ -1954,10 +1954,10 @@
           "tracking-normal": "0em",
           "success": "0.64 0.17 36.44",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.98 0.00 247.84",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.64 0.17 36.44",
+          "highlight-foreground": "0.94 0.00 236.50",
           "highlight-focus": "0.64 0.17 36.44",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "0.94 0.00 236.50",
           "sidebar-background": "0.90 0.00 258.33"
         },
         "dark": {
@@ -2015,10 +2015,10 @@
           "shadow-2xl": "0px 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.64 0.17 36.44",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.31 0.03 266.71",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.64 0.17 36.44",
+          "highlight-foreground": "0.26 0.03 262.67",
           "highlight-focus": "0.64 0.17 36.44",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.26 0.03 262.67",
           "sidebar-background": "0.31 0.03 267.74"
         }
       }
@@ -2103,10 +2103,10 @@
           "tracking-normal": "0em",
           "success": "0.60 0.24 0.13",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.94 0.04 344.26",
-          "highlight-foreground": "0.57 0.17 352.05",
+          "highlight": "0.60 0.24 0.13",
+          "highlight-foreground": "0.97 0.02 343.93",
           "highlight-focus": "0.60 0.24 0.13",
-          "highlight-focus-foreground": "0.44 0.17 352.38",
+          "highlight-focus-foreground": "0.97 0.02 343.93",
           "sidebar-background": "0.96 0.02 345.75"
         },
         "dark": {
@@ -2164,10 +2164,10 @@
           "shadow-2xl": "0px 3px 0px 0px hsl(300 80% 50% / 0.45)",
           "success": "0.75 0.23 332.02",
           "success-foreground": "0.16 0.05 327.57",
-          "highlight": "0.27 0.08 312.35",
-          "highlight-foreground": "0.71 0.16 327.11",
+          "highlight": "0.75 0.23 332.02",
+          "highlight-foreground": "0.18 0.05 313.72",
           "highlight-focus": "0.75 0.23 332.02",
-          "highlight-focus-foreground": "0.86 0.13 326.64",
+          "highlight-focus-foreground": "0.18 0.05 313.72",
           "sidebar-background": "0.19 0.05 311.40"
         }
       }
@@ -2252,10 +2252,10 @@
           "tracking-normal": "0em",
           "success": "0.52 0.13 144.17",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.94 0.01 74.42",
-          "highlight-foreground": "0.45 0.05 39.21",
+          "highlight": "0.52 0.13 144.17",
+          "highlight-foreground": "0.97 0.01 80.72",
           "highlight-focus": "0.52 0.13 144.17",
-          "highlight-focus-foreground": "0.30 0.04 30.20",
+          "highlight-focus-foreground": "0.97 0.01 80.72",
           "sidebar-background": "0.94 0.01 74.42"
         },
         "dark": {
@@ -2313,10 +2313,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.67 0.16 144.21",
           "success-foreground": "0.22 0.05 145.73",
-          "highlight": "0.33 0.03 146.99",
-          "highlight-foreground": "0.86 0.02 76.10",
+          "highlight": "0.67 0.16 144.21",
+          "highlight-foreground": "0.27 0.03 150.77",
           "highlight-focus": "0.67 0.16 144.21",
-          "highlight-focus-foreground": "0.94 0.01 72.66",
+          "highlight-focus-foreground": "0.27 0.03 150.77",
           "sidebar-background": "0.27 0.03 150.77"
         }
       }
@@ -2401,10 +2401,10 @@
           "tracking-normal": "0em",
           "success": "0.61 0.22 292.72",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.97 0.02 293.76",
-          "highlight-foreground": "0.54 0.25 293.01",
+          "highlight": "0.61 0.22 292.72",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.61 0.22 292.72",
-          "highlight-focus-foreground": "0.36 0.14 278.70",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.97 0.02 293.76"
         },
         "dark": {
@@ -2462,10 +2462,10 @@
           "shadow-2xl": "2px 2px 4px 0px hsl(255 86% 66% / 0.50)",
           "success": "0.61 0.22 292.72",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.26 0.09 281.29",
-          "highlight-foreground": "0.81 0.10 293.57",
+          "highlight": "0.61 0.22 292.72",
+          "highlight-foreground": "0.21 0.04 265.75",
           "highlight-focus": "0.61 0.22 292.72",
-          "highlight-focus-foreground": "0.93 0.03 272.79",
+          "highlight-focus-foreground": "0.21 0.04 265.75",
           "sidebar-background": "0.21 0.04 265.75"
         }
       }
@@ -2550,10 +2550,10 @@
           "tracking-normal": "0em",
           "success": "0.47 0.15 24.94",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.94 0.01 53.44",
-          "highlight-foreground": "0.44 0.01 73.64",
+          "highlight": "0.47 0.15 24.94",
+          "highlight-foreground": "0.98 0.00 56.38",
           "highlight-focus": "0.47 0.15 24.94",
-          "highlight-focus-foreground": "0.22 0 0",
+          "highlight-focus-foreground": "0.98 0.00 56.38",
           "sidebar-background": "0.94 0.01 53.44"
         },
         "dark": {
@@ -2611,10 +2611,10 @@
           "shadow-2xl": "1px 1px 16px -2px hsl(0 63% 18% / 0.30)",
           "success": "0.51 0.19 27.52",
           "success-foreground": "0.98 0.00 56.38",
-          "highlight": "0.27 0.01 34.30",
-          "highlight-foreground": "0.87 0.00 56.37",
+          "highlight": "0.51 0.19 27.52",
+          "highlight-foreground": "0.22 0.01 56.04",
           "highlight-focus": "0.51 0.19 27.52",
-          "highlight-focus-foreground": "0.97 0.00 106.42",
+          "highlight-focus-foreground": "0.22 0.01 56.04",
           "sidebar-background": "0.22 0.01 56.04"
         }
       }
@@ -2699,10 +2699,10 @@
           "tracking-normal": "0em",
           "success": "0.77 0.16 70.08",
           "success-foreground": "0 0 0",
-          "highlight": "0.98 0.00 247.84",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.77 0.16 70.08",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.77 0.16 70.08",
-          "highlight-focus-foreground": "0.27 0 0",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.98 0.00 247.84"
         },
         "dark": {
@@ -2760,10 +2760,10 @@
           "shadow-2xl": "0px 4px 8px -1px hsl(0 0% 0% / 0.25)",
           "success": "0.77 0.16 70.08",
           "success-foreground": "0 0 0",
-          "highlight": "0.27 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.77 0.16 70.08",
+          "highlight-foreground": "0.20 0 0",
           "highlight-focus": "0.77 0.16 70.08",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.20 0 0",
           "sidebar-background": "0.17 0 0"
         }
       }
@@ -2848,10 +2848,10 @@
           "tracking-normal": "0.025em",
           "success": "0.83 0.13 160.91",
           "success-foreground": "0.26 0.01 166.46",
-          "highlight": "0.95 0 0",
-          "highlight-foreground": "0.24 0 0",
+          "highlight": "0.83 0.13 160.91",
+          "highlight-foreground": "0.99 0 0",
           "highlight-focus": "0.83 0.13 160.91",
-          "highlight-focus-foreground": "0.20 0 0",
+          "highlight-focus-foreground": "0.99 0 0",
           "sidebar-background": "0.99 0 0"
         },
         "dark": {
@@ -2909,10 +2909,10 @@
           "shadow-2xl": "0px 1px 3px 0px hsl(0 0% 0% / 0.43)",
           "success": "0.80 0.18 151.71",
           "success-foreground": "0.92 0.01 167.16",
-          "highlight": "0.24 0 0",
-          "highlight-foreground": "0.71 0 0",
+          "highlight": "0.80 0.18 151.71",
+          "highlight-foreground": "0.18 0 0",
           "highlight-focus": "0.80 0.18 151.71",
-          "highlight-focus-foreground": "0.93 0.01 255.51",
+          "highlight-focus-foreground": "0.18 0 0",
           "sidebar-background": "0.18 0 0"
         }
       }
@@ -2997,10 +2997,10 @@
           "tracking-normal": "0em",
           "success": "0.65 0.24 26.97",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.96 0 0",
-          "highlight-foreground": "0.32 0 0",
+          "highlight": "0.65 0.24 26.97",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.65 0.24 26.97",
-          "highlight-focus-foreground": "0 0 0",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.96 0 0"
         },
         "dark": {
@@ -3058,10 +3058,10 @@
           "shadow-2xl": "4px 4px 0px 0px hsl(0 0% 0% / 2.50)",
           "success": "0.70 0.19 23.19",
           "success-foreground": "0 0 0",
-          "highlight": "0.32 0 0",
-          "highlight-foreground": "0.85 0 0",
+          "highlight": "0.70 0.19 23.19",
+          "highlight-foreground": "0 0 0",
           "highlight-focus": "0.70 0.19 23.19",
-          "highlight-focus-foreground": "1.00 0 0",
+          "highlight-focus-foreground": "0 0 0",
           "sidebar-background": "0 0 0"
         }
       }
@@ -3146,10 +3146,10 @@
           "tracking-normal": "0em",
           "success": "0.56 0.15 49.00",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.94 0.02 83.26",
-          "highlight-foreground": "0.55 0.01 58.07",
+          "highlight": "0.56 0.15 49.00",
+          "highlight-foreground": "0.99 0.01 84.57",
           "highlight-focus": "0.56 0.15 49.00",
-          "highlight-focus-foreground": "0.37 0.03 49.61",
+          "highlight-focus-foreground": "0.99 0.01 84.57",
           "sidebar-background": "0.94 0.02 83.26"
         },
         "dark": {
@@ -3207,10 +3207,10 @@
           "shadow-2xl": "0px 2px 3px 0px hsl(0 0% 5% / 0.45)",
           "success": "0.70 0.19 47.60",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.27 0.01 34.30",
-          "highlight-foreground": "0.72 0.01 56.26",
+          "highlight": "0.70 0.19 47.60",
+          "highlight-foreground": "0.22 0.01 56.04",
           "highlight-focus": "0.70 0.19 47.60",
-          "highlight-focus-foreground": "0.97 0.00 106.42",
+          "highlight-focus-foreground": "0.22 0.01 56.04",
           "sidebar-background": "0.27 0.01 34.30"
         }
       }
@@ -3295,10 +3295,10 @@
           "tracking-normal": "0em",
           "success": "0.59 0.20 277.12",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.92 0.00 48.72",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.59 0.20 277.12",
+          "highlight-foreground": "0.92 0.00 48.72",
           "highlight-focus": "0.59 0.20 277.12",
-          "highlight-focus-foreground": "0.28 0.04 260.03",
+          "highlight-focus-foreground": "0.92 0.00 48.72",
           "sidebar-background": "0.87 0.00 56.37"
         },
         "dark": {
@@ -3356,10 +3356,10 @@
           "shadow-2xl": "2px 2px 10px 4px hsl(0 0% 0% / 0.45)",
           "success": "0.68 0.16 276.93",
           "success-foreground": "0.22 0.01 67.44",
-          "highlight": "0.28 0.01 59.34",
-          "highlight-foreground": "0.71 0.02 261.32",
+          "highlight": "0.68 0.16 276.93",
+          "highlight-foreground": "0.22 0.01 67.44",
           "highlight-focus": "0.68 0.16 276.93",
-          "highlight-focus-foreground": "0.93 0.01 255.51",
+          "highlight-focus-foreground": "0.22 0.01 67.44",
           "sidebar-background": "0.34 0.01 59.42"
         }
       }
@@ -3444,10 +3444,10 @@
           "tracking-normal": "0em",
           "success": "0.71 0.16 293.54",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.95 0.03 307.17",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.71 0.16 293.54",
+          "highlight-foreground": "0.97 0.01 314.78",
           "highlight-focus": "0.71 0.16 293.54",
-          "highlight-focus-foreground": "0.37 0.03 259.73",
+          "highlight-focus-foreground": "0.97 0.01 314.78",
           "sidebar-background": "0.91 0.05 306.09"
         },
         "dark": {
@@ -3505,10 +3505,10 @@
           "shadow-2xl": "0px 8px 16px -4px hsl(0 0% 0% / 0.20)",
           "success": "0.79 0.12 295.75",
           "success-foreground": "0.22 0.01 56.04",
-          "highlight": "0.28 0.03 307.23",
-          "highlight-foreground": "0.71 0.02 261.32",
+          "highlight": "0.79 0.12 295.75",
+          "highlight-foreground": "0.22 0.01 56.04",
           "highlight-focus": "0.79 0.12 295.75",
-          "highlight-focus-foreground": "0.93 0.03 272.79",
+          "highlight-focus-foreground": "0.22 0.01 56.04",
           "sidebar-background": "0.34 0.04 308.85"
         }
       }
@@ -3593,10 +3593,10 @@
           "tracking-normal": "0em",
           "success": "0.59 0.20 277.12",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.97 0.00 264.54",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.59 0.20 277.12",
+          "highlight-foreground": "0.98 0.00 247.86",
           "highlight-focus": "0.59 0.20 277.12",
-          "highlight-focus-foreground": "0.28 0.04 260.03",
+          "highlight-focus-foreground": "0.98 0.00 247.86",
           "sidebar-background": "0.97 0.00 264.54"
         },
         "dark": {
@@ -3654,10 +3654,10 @@
           "shadow-2xl": "0px 4px 8px -1px hsl(0 0% 0% / 0.25)",
           "success": "0.68 0.16 276.93",
           "success-foreground": "0.21 0.04 265.75",
-          "highlight": "0.28 0.04 260.03",
-          "highlight-foreground": "0.71 0.02 261.32",
+          "highlight": "0.68 0.16 276.93",
+          "highlight-foreground": "0.21 0.04 265.75",
           "highlight-focus": "0.68 0.16 276.93",
-          "highlight-focus-foreground": "0.93 0.01 255.51",
+          "highlight-focus-foreground": "0.21 0.04 265.75",
           "sidebar-background": "0.28 0.04 260.03"
         }
       }
@@ -3742,10 +3742,10 @@
           "tracking-normal": "0em",
           "success": "0.43 0.04 41.99",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.95 0 0",
-          "highlight-foreground": "0.50 0 0",
+          "highlight": "0.43 0.04 41.99",
+          "highlight-foreground": "0.98 0 0",
           "highlight-focus": "0.43 0.04 41.99",
-          "highlight-focus-foreground": "0.24 0 0",
+          "highlight-focus-foreground": "0.98 0 0",
           "sidebar-background": "0.99 0 0"
         },
         "dark": {
@@ -3803,10 +3803,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.92 0.05 66.17",
           "success-foreground": "0.20 0.02 200.20",
-          "highlight": "0.25 0 0",
-          "highlight-foreground": "0.77 0 0",
+          "highlight": "0.92 0.05 66.17",
+          "highlight-foreground": "0.18 0 0",
           "highlight-focus": "0.92 0.05 66.17",
-          "highlight-focus-foreground": "0.95 0 0",
+          "highlight-focus-foreground": "0.18 0 0",
           "sidebar-background": "0.21 0.01 285.89"
         }
       }
@@ -3891,10 +3891,10 @@
           "tracking-normal": "0em",
           "success": "0.72 0.19 149.58",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.97 0.00 264.54",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.72 0.19 149.58",
+          "highlight-foreground": "0.98 0.01 244.25",
           "highlight-focus": "0.72 0.19 149.58",
-          "highlight-focus-foreground": "0.37 0.03 259.73",
+          "highlight-focus-foreground": "0.98 0.01 244.25",
           "sidebar-background": "0.95 0.03 236.82"
         },
         "dark": {
@@ -3952,10 +3952,10 @@
           "shadow-2xl": "0px 4px 8px -1px hsl(0 0% 0% / 0.25)",
           "success": "0.77 0.15 163.22",
           "success-foreground": "0.21 0.04 265.75",
-          "highlight": "0.28 0.04 260.03",
-          "highlight-foreground": "0.55 0.02 264.36",
+          "highlight": "0.77 0.15 163.22",
+          "highlight-foreground": "0.21 0.04 265.75",
           "highlight-focus": "0.77 0.15 163.22",
-          "highlight-focus-foreground": "0.87 0.01 258.34",
+          "highlight-focus-foreground": "0.21 0.04 265.75",
           "sidebar-background": "0.28 0.04 260.03"
         }
       }
@@ -4040,10 +4040,10 @@
           "tracking-normal": "0em",
           "success": "0.59 0.20 355.89",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.70 0.02 196.79",
-          "highlight-foreground": "0.31 0.05 219.65",
+          "highlight": "0.59 0.20 355.89",
+          "highlight-foreground": "0.97 0.03 90.10",
           "highlight-focus": "0.59 0.20 355.89",
-          "highlight-focus-foreground": "0.31 0.05 219.65",
+          "highlight-focus-foreground": "0.97 0.03 90.10",
           "sidebar-background": "0.97 0.03 90.10"
         },
         "dark": {
@@ -4101,10 +4101,10 @@
           "shadow-2xl": "2px 2px 4px 0px hsl(196 83% 10% / 0.38)",
           "success": "0.59 0.20 355.89",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.52 0.03 219.14",
-          "highlight-foreground": "0.70 0.02 196.79",
+          "highlight": "0.59 0.20 355.89",
+          "highlight-foreground": "0.27 0.05 219.82",
           "highlight-focus": "0.59 0.20 355.89",
-          "highlight-focus-foreground": "0.70 0.02 196.79",
+          "highlight-focus-foreground": "0.27 0.05 219.82",
           "sidebar-background": "0.27 0.05 219.82"
         }
       }
@@ -4189,10 +4189,10 @@
           "tracking-normal": "0em",
           "success": "0.57 0.20 283.08",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.82 0.02 91.62",
-          "highlight-foreground": "0.54 0 0",
+          "highlight": "0.57 0.20 283.08",
+          "highlight-foreground": "0.98 0 0",
           "highlight-focus": "0.57 0.20 283.08",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "0.98 0 0",
           "sidebar-background": "0.98 0 0"
         },
         "dark": {
@@ -4250,10 +4250,10 @@
           "shadow-2xl": "0px 5px 10px -2px hsl(0 0% 0% / 0.25)",
           "success": "0.57 0.20 283.08",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.39 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.57 0.20 283.08",
+          "highlight-foreground": "0.23 0.01 264.29",
           "highlight-focus": "0.57 0.20 283.08",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.23 0.01 264.29",
           "sidebar-background": "0.23 0.01 264.29"
         }
       }
@@ -4338,10 +4338,10 @@
           "tracking-normal": "0em",
           "success": "0.87 0.07 7.09",
           "success-foreground": "0 0 0",
-          "highlight": "0.88 0.03 98.10",
-          "highlight-foreground": "0.54 0 0",
+          "highlight": "0.87 0.07 7.09",
+          "highlight-foreground": "0.98 0.00 228.78",
           "highlight-focus": "0.87 0.07 7.09",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "0.98 0.00 228.78",
           "sidebar-background": "0.98 0.00 228.78"
         },
         "dark": {
@@ -4399,10 +4399,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.80 0.14 349.23",
           "success-foreground": "0 0 0",
-          "highlight": "0.39 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.80 0.14 349.23",
+          "highlight-foreground": "0.23 0.01 264.29",
           "highlight-focus": "0.80 0.14 349.23",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.23 0.01 264.29",
           "sidebar-background": "0.23 0.01 264.29"
         }
       }
@@ -4487,10 +4487,10 @@
           "tracking-normal": "0em",
           "success": "0.65 0.15 150.31",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.88 0.03 98.10",
-          "highlight-foreground": "0.54 0 0",
+          "highlight": "0.65 0.15 150.31",
+          "highlight-foreground": "0.98 0.00 286.38",
           "highlight-focus": "0.65 0.15 150.31",
-          "highlight-focus-foreground": "0.32 0 0",
+          "highlight-focus-foreground": "0.98 0.00 286.38",
           "sidebar-background": "0.98 0.00 286.38"
         },
         "dark": {
@@ -4548,10 +4548,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.65 0.15 150.31",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.39 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.65 0.15 150.31",
+          "highlight-foreground": "0.23 0.01 264.29",
           "highlight-focus": "0.65 0.15 150.31",
-          "highlight-focus-foreground": "0.92 0 0",
+          "highlight-focus-foreground": "0.23 0.01 264.29",
           "sidebar-background": "0.23 0.01 264.29"
         }
       }
@@ -4636,10 +4636,10 @@
           "tracking-normal": "0em",
           "success": "0.62 0.08 65.54",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.92 0.02 83.06",
-          "highlight-foreground": "0.54 0.04 71.17",
+          "highlight": "0.62 0.08 65.54",
+          "highlight-foreground": "0.96 0.02 90.24",
           "highlight-focus": "0.62 0.08 65.54",
-          "highlight-focus-foreground": "0.38 0.02 64.34",
+          "highlight-focus-foreground": "0.96 0.02 90.24",
           "sidebar-background": "0.92 0.02 83.06"
         },
         "dark": {
@@ -4697,10 +4697,10 @@
           "shadow-2xl": "2px 3px 5px 0px hsl(28 13% 20% / 0.30)",
           "success": "0.73 0.06 66.70",
           "success-foreground": "0.27 0.01 57.65",
-          "highlight": "0.32 0.02 59.06",
-          "highlight-foreground": "0.80 0.02 82.11",
+          "highlight": "0.73 0.06 66.70",
+          "highlight-foreground": "0.27 0.01 57.65",
           "highlight-focus": "0.73 0.06 66.70",
-          "highlight-focus-foreground": "0.92 0.02 83.06",
+          "highlight-focus-foreground": "0.27 0.01 57.65",
           "sidebar-background": "0.27 0.01 57.65"
         }
       }
@@ -4785,10 +4785,10 @@
           "tracking-normal": "0em",
           "success": "0.74 0.16 34.71",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.97 0.02 39.40",
-          "highlight-foreground": "0.55 0.01 58.07",
+          "highlight": "0.74 0.16 34.71",
+          "highlight-foreground": "0.99 0.01 56.32",
           "highlight-focus": "0.74 0.16 34.71",
-          "highlight-focus-foreground": "0.34 0.01 2.77",
+          "highlight-focus-foreground": "0.99 0.01 56.32",
           "sidebar-background": "0.97 0.02 39.40"
         },
         "dark": {
@@ -4846,10 +4846,10 @@
           "shadow-2xl": "0px 6px 12px -3px hsl(0 0% 0% / 0.22)",
           "success": "0.74 0.16 34.71",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.32 0.02 341.45",
-          "highlight-foreground": "0.84 0.02 52.63",
+          "highlight": "0.74 0.16 34.71",
+          "highlight-foreground": "0.26 0.02 352.40",
           "highlight-focus": "0.74 0.16 34.71",
-          "highlight-focus-foreground": "0.94 0.01 51.32",
+          "highlight-focus-foreground": "0.26 0.02 352.40",
           "sidebar-background": "0.26 0.02 352.40"
         }
       }
@@ -4934,10 +4934,10 @@
           "tracking-normal": "0em",
           "success": "0.86 0.12 81.01",
           "success-foreground": "0.99 0.03 98.05",
-          "highlight": "0.92 0.01 106.56",
-          "highlight-foreground": "0.48 0.12 263.38",
+          "highlight": "0.86 0.12 81.01",
+          "highlight-foreground": "0.98 0.00 258.32",
           "highlight-focus": "0.86 0.12 81.01",
-          "highlight-focus-foreground": "0.26 0.04 268.07",
+          "highlight-focus-foreground": "0.98 0.00 258.32",
           "sidebar-background": "0.93 0.01 251.56"
         },
         "dark": {
@@ -4995,10 +4995,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.91 0.14 95.11",
           "success-foreground": "0.91 0.14 95.11",
-          "highlight": "0.27 0.04 281.30",
-          "highlight-foreground": "0.62 0.04 262.04",
+          "highlight": "0.91 0.14 95.11",
+          "highlight-foreground": "0.22 0.02 275.84",
           "highlight-focus": "0.91 0.14 95.11",
-          "highlight-focus-foreground": "0.94 0.01 266.70",
+          "highlight-focus-foreground": "0.22 0.02 275.84",
           "sidebar-background": "0.27 0.04 281.30"
         }
       }
@@ -5083,10 +5083,10 @@
           "tracking-normal": "0em",
           "success": "0.59 0.17 253.06",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.93 0.02 90.24",
-          "highlight-foreground": "0.61 0.01 97.42",
+          "highlight": "0.59 0.17 253.06",
+          "highlight-foreground": "0.98 0.01 95.10",
           "highlight-focus": "0.59 0.17 253.06",
-          "highlight-focus-foreground": "0.34 0.03 95.72",
+          "highlight-focus-foreground": "0.98 0.01 95.10",
           "sidebar-background": "0.97 0.01 98.88"
         },
         "dark": {
@@ -5144,10 +5144,10 @@
           "shadow-2xl": "0 1px 3px 0px hsl(0 0% 0% / 0.25)",
           "success": "0.59 0.17 253.06",
           "success-foreground": "1.00 0 0",
-          "highlight": "0.22 0.00 106.71",
-          "highlight-foreground": "0.77 0.02 99.07",
+          "highlight": "0.59 0.17 253.06",
+          "highlight-foreground": "0.27 0.00 106.64",
           "highlight-focus": "0.59 0.17 253.06",
-          "highlight-focus-foreground": "0.81 0.01 93.01",
+          "highlight-focus-foreground": "0.27 0.00 106.64",
           "sidebar-background": "0.24 0.00 67.71"
         }
       }
@@ -5232,10 +5232,10 @@
           "tracking-normal": "0em",
           "success": "0 0 0",
           "success-foreground": "1 0 0",
-          "highlight": "0.97 0 0",
-          "highlight-foreground": "0.44 0 0",
+          "highlight": "0 0 0",
+          "highlight-foreground": "0.99 0 0",
           "highlight-focus": "0 0 0",
-          "highlight-focus-foreground": "0 0 0",
+          "highlight-focus-foreground": "0.99 0 0",
           "sidebar-background": "0.99 0 0"
         },
         "dark": {
@@ -5293,10 +5293,10 @@
           "shadow-2xl": "0px 1px 2px 0px hsl(0 0% 0% / 0.45)",
           "success": "0.72 0 0",
           "success-foreground": "0 0 0",
-          "highlight": "0.23 0 0",
-          "highlight-foreground": "0.72 0 0",
+          "highlight": "0.72 0 0",
+          "highlight-foreground": "0 0 0",
           "highlight-focus": "0.72 0 0",
-          "highlight-focus-foreground": "1 0 0",
+          "highlight-focus-foreground": "0 0 0",
           "sidebar-background": "0.18 0 0"
         }
       }
@@ -5381,10 +5381,10 @@
           "tracking-normal": "0em",
           "success": "0.71 0 0",
           "success-foreground": "0.99 0 0",
-          "highlight": "0.97 0 0",
-          "highlight-foreground": "0.55 0 0",
+          "highlight": "0.71 0 0",
+          "highlight-foreground": "1.00 0 0",
           "highlight-focus": "0.71 0 0",
-          "highlight-focus-foreground": "0.14 0 0",
+          "highlight-focus-foreground": "1.00 0 0",
           "sidebar-background": "0.99 0 0"
         },
         "dark": {
@@ -5442,10 +5442,10 @@
           "shadow-2xl": "0px 1px 0px 0px hsl(0 0% 0% / 0.00)",
           "success": "0.56 0 0",
           "success-foreground": "0.99 0 0",
-          "highlight": "0.27 0 0",
-          "highlight-foreground": "0.71 0 0",
+          "highlight": "0.56 0 0",
+          "highlight-foreground": "0.14 0 0",
           "highlight-focus": "0.56 0 0",
-          "highlight-focus-foreground": "0.99 0 0",
+          "highlight-focus-foreground": "0.14 0 0",
           "sidebar-background": "0.20 0 0"
         }
       }
@@ -5519,10 +5519,10 @@
           "shadow": "0px 4px 8px -1px hsl(0 0% 0% / 0.10)",
           "success": "0.55 0.19 275",
           "success-foreground": "0.99 0 0",
-          "highlight": "0.92 0.01 260",
-          "highlight-foreground": "0.45 0.02 250",
+          "highlight": "0.55 0.19 275",
+          "highlight-foreground": "0.98 0.01 250",
           "highlight-focus": "0.55 0.19 275",
-          "highlight-focus-foreground": "0.20 0.02 250",
+          "highlight-focus-foreground": "0.98 0.01 250",
           "sidebar-background": "0.95 0.01 250"
         },
         "dark": {
@@ -5570,10 +5570,10 @@
           "shadow": "0px 4px 8px -1px hsl(0 0% 0% / 0.10)",
           "success": "0.55 0.19 275",
           "success-foreground": "0.15 0.02 260",
-          "highlight": "0.28 0.03 260",
-          "highlight-foreground": "0.65 0.02 260",
+          "highlight": "0.55 0.19 275",
+          "highlight-foreground": "0.22 0.03 260",
           "highlight-focus": "0.55 0.19 275",
-          "highlight-focus-foreground": "0.90 0.02 260",
+          "highlight-focus-foreground": "0.22 0.03 260",
           "sidebar-background": "0.28 0.03 260"
         }
       }
@@ -5625,10 +5625,10 @@
           "sidebar-ring": "0.78 0.09 304.99",
           "success": "0.78 0.09 304.99",
           "success-foreground": "0.26 0.04 287.73",
-          "highlight": "0.35 0.05 289.83",
-          "highlight-foreground": "0.65 0.04 291.23",
+          "highlight": "0.78 0.09 304.99",
+          "highlight-foreground": "0.26 0.04 287.73",
           "highlight-focus": "0.78 0.09 304.99",
-          "highlight-focus-foreground": "0.91 0.03 289.97",
+          "highlight-focus-foreground": "0.26 0.04 287.73",
           "sidebar-background": "0.26 0.04 287.73"
         },
         "light": {
@@ -5666,10 +5666,10 @@
           "sidebar-ring": "0.62 0.07 305.70",
           "success": "0.62 0.07 305.70",
           "success-foreground": "0.97 0.01 71.90",
-          "highlight": "0.94 0.01 64.34",
-          "highlight-foreground": "0.58 0.05 291.00",
+          "highlight": "0.62 0.07 305.70",
+          "highlight-foreground": "0.97 0.01 71.90",
           "highlight-focus": "0.62 0.07 305.70",
-          "highlight-focus-foreground": "0.46 0.06 289.56",
+          "highlight-focus-foreground": "0.97 0.01 71.90",
           "sidebar-background": "0.97 0.01 71.90"
         }
       }
