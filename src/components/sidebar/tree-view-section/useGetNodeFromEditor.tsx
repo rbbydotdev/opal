@@ -21,6 +21,5 @@ export function useGetNodeFromEditor(editorRealmId = MainEditorRealmId) {
     );
   };
 
-  // Return the functions to get lexical and DOM nodes
   return { getLexicalNode, getDOMNode };
 }

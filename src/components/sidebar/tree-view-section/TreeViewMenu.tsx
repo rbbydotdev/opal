@@ -20,7 +20,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { useEditorDisplayTreeCtx } from "../sidebar/tree-view-section/DisplayTreeContext";
+import { useEditorDisplayTreeCtx } from "./DisplayTreeContext";
 const { $createParagraphNode } = lexical;
 
 export function SidebarTreeViewMenu() {
@@ -57,15 +57,11 @@ function HighlightNodeSelector({
   asChild?: boolean;
 }) {
   const handleClick = async (e: React.MouseEvent<HTMLDivElement>) => {
-    // Don't interfere with drag operations
-    if ((e.target as HTMLElement).draggable) {
-      return;
-    }
+    if ((e.target as HTMLElement).draggable) return;
     e.preventDefault();
     e.stopPropagation();
-    // Always use currentTarget for the div itself
     const div = e.currentTarget;
-    if (!div) return; // Defensive: should never be null
+    if (!div) return;
     const element = await getDOMNode();
     if (!element) {
       console.error("could not get dom node for tree view highlight");
@@ -73,16 +69,8 @@ function HighlightNodeSelector({
     }
     const clear = highlightMdxElement(element);
     scrollToEditorElement(element, { offset: -10 });
-    // Focus the div
     div.focus();
-    // Listen for blur on the div itself
-    div.addEventListener(
-      "blur",
-      () => {
-        clear();
-      },
-      { once: true }
-    );
+    div.addEventListener("blur", clear, { once: true });
   };
   if (asChild) {
     return (
@@ -118,14 +106,6 @@ function SidebarTreeViewMenuContent({
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
 
-  const validateListStructure = (node: lexical.LexicalNode): boolean => {
-    if ($isListItemNode(node)) {
-      const parent = node.getParent();
-      return parent !== null && $isListNode(parent);
-    }
-    return true;
-  };
-
   const getListTypeSecure = (listItemNode: lexical.LexicalNode): string | null => {
     if ($isListItemNode(listItemNode)) {
       const parent = listItemNode.getParent();
@@ -137,14 +117,12 @@ function SidebarTreeViewMenuContent({
   };
 
   const findMergeableParent = (node: lexical.LexicalNode): lexical.LexicalNode | null => {
-    // For list items, find the parent list
     if ($isListItemNode(node)) {
       const parent = node.getParent();
       if (parent && $isListNode(parent)) {
         return parent;
       }
     }
-    // For other nodes, return the node itself
     return node;
   };
 
@@ -153,7 +131,6 @@ function SidebarTreeViewMenuContent({
       return false;
     }
 
-    // Move all children from source to target
     const sourceChildren = sourceList.getChildren();
     sourceList.remove();
 
@@ -432,7 +409,7 @@ function SidebarTreeViewMenuContent({
               >
                 <CollapsibleTrigger asChild>
                   <div>
-                    <SidebarMenuButton asChild className="h-6" onClick={() => {}}>
+                    <SidebarMenuButton asChild className="h-6">
                       <TreeViewMenuParent depth={depth} node={displayNode}>
                         <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                           <span className="hover:underline flex" title={displayNode.type}>
@@ -460,7 +437,7 @@ function SidebarTreeViewMenuContent({
                 </CollapsibleContent>
               </Collapsible>
             ) : isLeaf(displayNode) ? (
-              <SidebarMenuButton asChild onClick={() => {}}>
+              <SidebarMenuButton asChild>
                 <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6">
                   <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                     <div className="py-1 hover:underline font-mono text-2xs w-full truncate">
@@ -520,7 +497,6 @@ const TreeViewMenuParent = ({
     inorderWalk(node, (n) => {
       nodes.push(n.lexicalNodeId);
     });
-    // e.dataTransfer.setData("text/plain", node.lexicalNodeId);
     e.dataTransfer.setData("text/plain", nodes.join(","));
     e.dataTransfer.effectAllowed = "move";
   };

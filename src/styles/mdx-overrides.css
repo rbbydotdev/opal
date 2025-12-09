@@ -88,10 +88,6 @@
   }
 }
 
-.mdxeditor::selection {
-  @apply bg-ring text-primary-foreground;
-}
-
 .mdxeditor {
   /* for scroll into view to work properly*/
   .cm-editor {
