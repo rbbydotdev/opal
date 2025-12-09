@@ -1,6 +1,7 @@
 import { newMd } from "@/data/newMd";
 import { AbsPath, basename, prefix } from "@/lib/paths2";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
+import PicoCSS from "@/seedfiles/pico-seed.css?raw";
 
 export const DefaultFile = {
   MarkdownFromPath: (path: AbsPath) => {
@@ -18,6 +19,9 @@ export const DefaultFile = {
 
   GlobalCSS: () => {
     return globalSeedCss;
+  },
+  PicoCSS: () => {
+    return PicoCSS;
   },
 
   HTML: () => {

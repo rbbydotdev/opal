@@ -1,10 +1,10 @@
 import { DefaultFile } from "@/lib/DefaultFile";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
-type WorkspaceTemplate = {
+export type WorkspaceTemplate = {
   id: string;
   name: string;
   description: string;
-  seedFiles: Record<string, string | Promise<string>>;
+  seedFiles: Record<string, string | Promise<string> | (() => Promise<string>)>;
   navigate?: string;
 };
 
@@ -42,7 +42,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
       "/index.md": DefaultFile.BlogIndex(),
       "/posts/first-post.md": DefaultFile.BlogPost(),
       "/posts/getting-started.md": DefaultFile.BlogGettingStarted(),
-      "/global.css": globalSeedCss,
+      "/global.css": DefaultFile.GlobalCSS(),
     },
   },
 ];

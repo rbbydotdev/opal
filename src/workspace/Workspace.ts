@@ -32,7 +32,7 @@ import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/comp
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
-import { DefaultTemplate } from "@/data/WorkspaceTemplates";
+import { DefaultTemplate, WorkspaceTemplate } from "@/data/WorkspaceTemplates";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
@@ -217,15 +217,9 @@ export class Workspace {
     return { workspaceName, filePath };
   }
 
-  // Deprecated: Use parseWorkspacePath instead
-  // static parseWorkspacePathLegacy(pathOrUrl: string) {
-  //   const result = Workspace.parseWorkspacePath(pathOrUrl);
-  //   return { workspaceName: result.workspaceName, filePath: result.filePath };
-  // }
-
   static async CreateNew(
     name: string,
-    files: Record<string, string | Promise<string> | (() => string | Promise<string>)> = {},
+    files: WorkspaceTemplate["seedFiles"] = {},
     diskType: DiskType,
     diskOptions?: {
       selectedDirectory: FileSystemDirectoryHandle | null;

@@ -45,16 +45,7 @@ export function useFileTreeMenuCtx() {
 }
 type EditType = "rename" | "new" | "duplicate";
 
-export const FileTreeMenuCtxProvider = ({
-  children,
-  scope,
-  // filterRange is needed since selecting ranges will include hidden files in the range
-  // so they need filtered out
-  // filterRange, TODO - i don't think we need this anymore
-}: {
-  children: React.ReactNode;
-  scope?: AbsPath;
-}) => {
+export const FileTreeMenuCtxProvider = ({ children, scope }: { children: React.ReactNode; scope?: AbsPath }) => {
   const location = useLocation();
   const { currentWorkspace } = useWorkspaceContext();
   const nodeFromPath = currentWorkspace.nodeFromPath;

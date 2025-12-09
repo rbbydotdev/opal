@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { handleHyperBlur } from "@/hooks/useHyperBlur";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
@@ -210,6 +211,11 @@ export function EditorSearchBar({
     setSearchBarSetting({ ...searchBarSetting, expanded });
   };
 
+  useEffect(
+    () => handleHyperBlur({ element: editorSearchBarRef.current, open: isOpen, handleClose }),
+    [editorSearchBarRef, handleClose, isOpen]
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -323,17 +329,6 @@ export function EditorSearchBar({
             <X className="h-3 w-3" />
           </Button>
         </div>
-        {/* <div className="flex justify-end">
-          <button
-            onMouseDown={() => {}}
-            onDragStart={() => {
-              console.log("drag start");
-            }}
-            className="rounded border h-8 w-8 p-2 mb-2 mr-2 flex justify-center items-center cursor-grab"
-          >
-            <Grip className="w-4 h-4" />
-          </button>
-        </div> */}
       </div>
     </div>
   );

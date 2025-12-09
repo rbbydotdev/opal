@@ -12,6 +12,7 @@ import { useWindowContextProvider } from "@/features/live-preview/IframeContextP
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
+import { handleHyperBlur } from "@/hooks/useHyperBlur";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useThemeContext } from "@/layouts/ThemeContext";
 import { DefaultFile } from "@/lib/DefaultFile";
@@ -191,6 +192,7 @@ function SpotlightSearchInternal({
 
   const execQueue = useRef<CmdMapMember[] | null>(null);
   const execContext = useRef<Record<string, unknown>>({});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleClose = () => {
     setOpen(false);
     setState("spotlight");
@@ -615,16 +617,10 @@ function SpotlightSearchInternal({
     }
   }, [inputRef, open]);
 
-  useEffect(() => {
-    //because onBlur is not enough
-    const handleFocusIn = (e: FocusEvent) => {
-      if (open && containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
-    window.addEventListener("focusin", handleFocusIn, { passive: true });
-    return () => window.removeEventListener("focusin", handleFocusIn);
-  }, [containerRef, handleClose, open]);
+  useEffect(
+    () => handleHyperBlur({ element: containerRef.current, open, handleClose }),
+    [containerRef, handleClose, open]
+  );
 
   if (!open) return null;
   // MARK: Render
