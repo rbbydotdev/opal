@@ -1,9 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
+import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Printer } from "lucide-react";
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode, useState, useRef } from "react";
 
 interface LivePreviewDialogContextType {
   showDialog: (show: boolean) => void;
+  extPreviewCtrl: React.RefObject<WindowPreviewHandler>;
+  onRenderBodyReadyRef: React.MutableRefObject<((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null>;
 }
 
 const LivePreviewDialogContext = createContext<LivePreviewDialogContextType | undefined>(undefined);
@@ -14,14 +18,30 @@ interface LivePreviewDialogProviderProps {
 
 export function LivePreviewDialogProvider({ children }: LivePreviewDialogProviderProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { path } = useWorkspaceRoute();
+  const { currentWorkspace } = useWorkspaceContext();
+  const extPreviewCtrl = useRef<WindowPreviewHandler>(null);
+  const onRenderBodyReadyRef = useRef<((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null>(null);
 
   const showDialog = (show: boolean) => {
     setIsDialogOpen(show);
   };
 
+  const handleRenderBodyReady = (el: HTMLElement, context: { document: Document; window: Window; ready: true }) => {
+    if (onRenderBodyReadyRef.current) {
+      onRenderBodyReadyRef.current(el, context);
+    }
+  };
+
   return (
-    <LivePreviewDialogContext.Provider value={{ showDialog }}>
+    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl, onRenderBodyReadyRef }}>
       {children}
+      <WindowPreviewComponent
+        path={path!}
+        ref={extPreviewCtrl}
+        currentWorkspace={currentWorkspace}
+        onRenderBodyReady={handleRenderBodyReady}
+      />
       <Dialog open={isDialogOpen}>
         <DialogContent>
           <DialogTitle className="sr-only">Print Dialog Open</DialogTitle>

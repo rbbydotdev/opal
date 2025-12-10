@@ -2,7 +2,7 @@ import { BuildCreationProvider } from "@/components/build-modal/BuildModalContex
 import { ConfirmProvider } from "@/components/ConfirmContext";
 import { CustomQueryClientProvider } from "@/components/CustomQueryClientProvider";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
-import { LivePreviewDialogProvider } from "@/components/LivePreviewDialogProvider";
+import { LivePreviewDialogProvider } from "@/components/LivePreviewProvider";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";

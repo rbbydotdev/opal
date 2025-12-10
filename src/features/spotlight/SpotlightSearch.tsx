@@ -9,6 +9,7 @@ import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
+import { useLivePreview } from "@/features/live-preview/useLivePreview";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { ALL_WS_KEY } from "@/features/workspace-search/AllWSKey";
 import { useWorkspaceFilenameSearchResults } from "@/features/workspace-search/useWorkspaceFilenameSearchResults";
@@ -826,7 +827,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
   const { open: openPreview } = useWindowContextProvider();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useThemeContext();
   const { openNew } = useBuildCreation();
-  // const foo = useLivePreview();
+  const { handlePrintClick, previewNode } = useLivePreview();
 
   const cmdMap = useMemo(
     () =>
@@ -860,6 +861,21 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
           NewCmdExec(() => {
             if (workspaceName) {
               openPreview();
+            }
+          }),
+        ],
+
+        Print: [
+          NewCmdExec(() => {
+            if (previewNode) {
+              handlePrintClick();
+            } else {
+              toast({
+                title: "No preview available",
+                description: "Please navigate to a previewable file first.",
+                type: "warning",
+                position: "top-right",
+              });
             }
           }),
         ],
@@ -1122,6 +1138,9 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
       cmds.add("Trash File");
       // cmds.add("Open External Preview");
     }
+    if (!previewNode) {
+      cmds.add("Print");
+    }
     if (!isMarkdown) {
       cmds.add("Rich Text View");
       cmds.add("Source View");
@@ -1136,7 +1155,14 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
       cmds.add("Git Merge Commit");
     }
     return cmds;
-  }, [currentWorkspace, currentPath, isMarkdown, gitRepoInfo.fullInitialized, gitRepoInfo.conflictingFiles.length]);
+  }, [
+    currentWorkspace,
+    currentPath,
+    isMarkdown,
+    gitRepoInfo.fullInitialized,
+    gitRepoInfo.conflictingFiles.length,
+    previewNode,
+  ]);
 
   const filteredCmds = useMemo(() => {
     return Object.entries(cmdMap)
