@@ -145,7 +145,7 @@ export function RemoteResourceCreate({
       setMode("input/success");
     } catch (_e) {
       inputRef.current?.addEventListener("focus", () => (pauseCloseRef.current = false), { once: true });
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => inputRef.current?.focus(), 500);
     }
   };
   return (
