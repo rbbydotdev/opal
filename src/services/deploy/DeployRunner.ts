@@ -3,7 +3,7 @@ import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { RemoteAuthAgentDeployableFiles } from "@/data/RemoteSearchFuzzyCache";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { AnyDeployBundle, DeployBundle, DeployBundleTreeEntry } from "@/services/deploy/DeployBundle";
+import { DeployBundle, GithubDeployBundle } from "@/services/deploy/DeployBundle";
 
 type DeployLogType = DeployLogLine["type"];
 function logLine(message: string, type: DeployLogType = "info") {
@@ -77,32 +77,19 @@ export abstract class DeployRunner<TBundle extends DeployBundle<unknown>, TParam
   abstract runDeploy(params: TParams): Promise<void>;
 }
 
-// export class GithubDeployRunner extends DeployRunner<DeployBundle<any>, { owner: string; repo: string; branch: string; message?: string }> {
-//   private bundle: TBundle;
-//   async runDeploy(params: { owner: string; repo: string; branch: string; message?: string }): Promise<void> {
-//     this.log("Starting deployment...");
-//     await this.build.Disk.refresh();
-//     await this.agent.deployFiles(this.bundle, params);
-//     this.log("Deployment completed successfully.");
-//   }
-// }
-
-export class GithubDeployRunner extends DeployRunner<
-  DeployBundle<DeployBundleTreeEntry>,
-  { repotName: string; repoOwner: string }
-> {
+export class GithubDeployRunner extends DeployRunner<GithubDeployBundle, { repotName: string; repoOwner: string }> {
   constructor(params: {
     build: BuildDAO;
     destination: DestinationDAO;
     deploy: DeployDAO;
-    agent: RemoteAuthAgentDeployableFiles<any, { repotName: string; repoOwner: string }>;
+    agent: RemoteAuthAgentDeployableFiles<GithubDeployBundle, { repotName: string; repoOwner: string }>;
   }) {
     super(params);
   }
   async runDeploy(params: { repotName: string; repoOwner: string }): Promise<void> {
     this.log("Starting deployment...");
     await this.build.Disk.refresh();
-    const deployBundle = new AnyDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
+    const deployBundle = new GithubDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
     await this.agent.deployFiles(deployBundle, params);
     this.log("Deployment completed successfully.");
   }
@@ -129,36 +116,3 @@ export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams> extends
     this.log("Deployment completed successfully.");
   }
 }
-
-// export interface VercelRemoteAuthAgentDeployable
-//   extends RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>, { projectName: string }> {}
-
-// export interface GithubRemoteAuthAgentDeployable
-//   extends RemoteAuthAgentDeployableFiles<
-//     DeployBundle<GithubInlinedFile>,
-//     {
-//       owner: string;
-//       repo: string;
-//       branch: string;
-//       message: string;
-//       files: GithubInlinedFile[];
-//     }
-//   > {}
-
-// export class VercelDeployRunner extends DeployRunner<DeployBundle<InlinedFile>, { projectName: string }> {
-//   constructor(params: {
-//     build: BuildDAO;
-//     destination: DestinationDAO;
-//     deploy: DeployDAO;
-//     agent: VercelRemoteAuthAgentDeployable;
-//   }) {
-//     super(params);
-//   }
-//   async runDeploy(params: { projectName: string }): Promise<void> {
-//     this.log("Starting deployment...");
-//     await this.build.Disk.refresh();
-//     const deployBundle = new VercelDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
-//     await this.agent.deployFiles(deployBundle, params);
-//     this.log("Deployment completed successfully.");
-//   }
-// }
