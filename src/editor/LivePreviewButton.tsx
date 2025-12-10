@@ -103,7 +103,7 @@ export function LivePreviewButtons() {
         >
           <>
             <Button size="sm" className="rounded-l-none rounded-r-none" onClick={handlePrintClick}>
-              Print <Printer className="stroke-background flex-shrink !w-4 !h-4" />
+              Print <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
             </Button>
             {!isOpen ? (
               <Button

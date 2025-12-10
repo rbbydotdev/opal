@@ -157,7 +157,7 @@ export function SidebarFileMenuBuild({
                   Deployments
                 </MiniTab>
               </div>
-              <div className="bg-highlight rounded rounded-tl-none pb-4 pt-1 px-2">
+              <div className="bg-muted rounded rounded-tl-none pb-4 pt-1 px-2">
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
                 <div>
                   {activeTab === "builds" && (
