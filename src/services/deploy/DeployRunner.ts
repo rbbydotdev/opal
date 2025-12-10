@@ -1,10 +1,9 @@
-import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { RemoteAuthAgentDeployableFiles } from "@/data/RemoteSearchFuzzyCache";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { AnyDeployBundle, DeployBundle } from "@/services/deploy/DeployBundle";
+import { AnyDeployBundle, DeployBundle, DeployBundleTreeEntry } from "@/services/deploy/DeployBundle";
 
 type DeployLogType = DeployLogLine["type"];
 function logLine(message: string, type: DeployLogType = "info") {
@@ -89,7 +88,7 @@ export abstract class DeployRunner<TBundle extends DeployBundle<unknown>, TParam
 // }
 
 export class GithubDeployRunner extends DeployRunner<
-  DeployBundle<GithubInlinedFile>,
+  DeployBundle<DeployBundleTreeEntry>,
   { repotName: string; repoOwner: string }
 > {
   constructor(params: {
@@ -104,8 +103,7 @@ export class GithubDeployRunner extends DeployRunner<
     this.log("Starting deployment...");
     await this.build.Disk.refresh();
     const deployBundle = new AnyDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
-    await this.agent.deployFiles(deployBundle as any, params);
-    throw new Error("Method not implemented.^^^^^^^^ any fix ");
+    await this.agent.deployFiles(deployBundle, params);
     this.log("Deployment completed successfully.");
   }
 }

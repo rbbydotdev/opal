@@ -13,7 +13,7 @@ import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
-type DeployBundleTreeEntry =
+export type DeployBundleTreeEntry =
   | {
       path: string;
       getContent: () => Promise<DeployBundleTreeFileContent>;
