@@ -136,16 +136,14 @@ export class VercelDeployBundle extends DeployBundle<InlinedFile> {
   };
 }
 
-export class GithubDeployBundle extends DeployBundle<GithubInlinedFile> {
+export class GithubDeployBundle extends DeployBundle<Promise<GithubInlinedFile>> {
   getFiles = async () => {
     const files = await this.getDeployBundleFiles();
-    return Promise.all(
-      files.map(async (file) => ({
-        path: file.path,
-        content: (await file.getContent()).toString(),
-        encoding: file.encoding,
-      }))
-    );
+    return files.map(async (file) => ({
+      path: file.path,
+      content: (await file.getContent()).toString(),
+      encoding: file.encoding,
+    }));
   };
 }
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {

@@ -6,7 +6,8 @@ import { useResolvePathForPreview } from "@/features/live-preview/useResolvePath
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, Printer, X, Zap } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 
 function printOnRenderBodyReady(
   el: HTMLElement,
@@ -16,24 +17,14 @@ function printOnRenderBodyReady(
     ready: true;
   }
 ) {
-  // Show overlay immediately
-
   const script = context.document.createElement("script");
   script.textContent = /* javascript */ `
-
-    
-    window.opener?.postMessage({ type: 'showPrintOverlay' }, '*')
-    // Hide overlay when print dialog closes
     window.addEventListener('afterprint', () => {
       window.opener?.postMessage({ type: 'hidePrintOverlay' }, '*');
     });
-    
     if (document.querySelector("#render-body")?.children.length > 0){
-       window.opener?.postMessage({ type: 'showPrintOverlay' }, '*')
-       setTimeout(()=>window.print(), 500);
+       setTimeout(()=>window.print(),0);
     }
-    
-
   `;
   el.appendChild(script);
 }
@@ -43,39 +34,45 @@ export function LivePreviewButtons() {
   const { currentWorkspace } = useWorkspaceContext();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const extPreviewCtrl = useRef<WindowPreviewHandler>(null);
-  const [printOverlayRequested, setPrintOverlayRequested] = useState(false);
-
+  const overlayRequestedRef = useRef(false);
   const { isOpen } = useWindowContextProvider();
-
-  // Derive overlay state reactively - only show if requested AND window is open
-  const showPrintOverlay = printOverlayRequested && isOpen;
+  const showPrintOverlay = overlayRequestedRef.current && isOpen;
 
   const onRenderBodyReadyRef =
     useRef<(el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      onRenderBodyReadyRef.current = printOnRenderBodyReady;
+    if (showPrintOverlay) {
       return () => {
         onRenderBodyReadyRef.current = null;
       };
     }
-  }, [isOpen]);
-  useEffect(() => {
-    const handleOverlayMessage = (event: MessageEvent) => {
-      if (event.data?.type === "showPrintOverlay") {
-        setPrintOverlayRequested(true);
-      } else if (event.data?.type === "hidePrintOverlay") {
-        setPrintOverlayRequested(false);
-      }
-    };
-    window.addEventListener("message", handleOverlayMessage);
-    return () => window.removeEventListener("message", handleOverlayMessage);
-  }, []);
+  }, [isOpen, overlayRequestedRef, showPrintOverlay]);
   function handlePrintClick() {
-    if (!isOpen) extPreviewCtrl.current?.open();
+    if (!isOpen) {
+      onRenderBodyReadyRef.current = printOnRenderBodyReady;
+      overlayRequestedRef.current = true;
+      extPreviewCtrl.current?.open();
+      const handleOverlayMessage = (event: MessageEvent) => {
+        if (event.data?.type === "hidePrintOverlay") {
+          overlayRequestedRef.current = false;
+        }
+      };
+      window.addEventListener("message", handleOverlayMessage, {
+        once: true,
+      });
+    }
   }
   if (!previewNode) return null;
+  if (overlayRequestedRef.current) {
+    //when print is not locking(firefox) this will close it immediately
+    //it will also prevent it opening when its not needed
+    setTimeout(() => {
+      flushSync(() => {
+        overlayRequestedRef.current = false;
+      });
+    }, 0);
+  }
   return (
     <>
       <div className={"flex items-center justify-center flex-nowrap"}>
