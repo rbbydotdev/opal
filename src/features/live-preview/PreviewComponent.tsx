@@ -4,7 +4,7 @@ import { injectCssFiles, PreviewContent } from "@/features/live-preview/PreviewC
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { BrowserDetection } from "@/lib/BrowserDetection";
-import { AbsPath, relPath } from "@/lib/paths2";
+import { AbsPath, prefix, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -107,6 +107,11 @@ export const WindowPreviewComponent = forwardRef<
     path: resolvedPath,
     currentWorkspace,
   });
+
+  useEffect(() => {
+    if (context.document == null) return;
+    context.document.title = prefix(resolvedPath);
+  }, [context.document, resolvedPath]);
 
   useEffect(() => {
     if (!context.ready) return;
