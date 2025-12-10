@@ -18,10 +18,7 @@ function getScrollElement(context: any, renderBodyElement: HTMLElement | null): 
 }
 
 function getListenElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | Window | null {
-  if (BrowserDetection.isFirefox()) {
-    return context.window as any;
-  }
-
+  if (BrowserDetection.isFirefox()) return context.window as any;
   return renderBodyElement || (context.window as any);
 }
 
@@ -88,8 +85,20 @@ export interface WindowPreviewHandler {
 
 export const WindowPreviewComponent = forwardRef<
   WindowPreviewHandler,
-  { path: AbsPath; currentWorkspace: Workspace; Open?: React.ReactNode; Closed?: React.ReactNode }
->(function WindowPreviewComponent({ path, currentWorkspace, Open, Closed }, ref) {
+  {
+    path: AbsPath;
+    currentWorkspace: Workspace;
+    children: React.ReactNode;
+    onRenderBodyReady?: (
+      element: HTMLElement,
+      context: {
+        document: Document;
+        window: Window;
+        ready: true;
+      }
+    ) => void;
+  }
+>(function WindowPreviewComponent({ path, currentWorkspace, children, onRenderBodyReady }, ref) {
   const { open, close, isOpen, ...context } = useWindowContextProvider();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const resolvedPath = previewNode?.path || path;
@@ -122,12 +131,13 @@ export const WindowPreviewComponent = forwardRef<
               mode="external"
               path={resolvedPath}
               currentWorkspace={currentWorkspace}
+              onRenderBodyReady={(el) => onRenderBodyReady?.(el, context)}
               context={context}
             />,
             context.document.body
           )}
 
-      {isOpen ? (Open ?? null) : (Closed ?? null)}
+      {children}
     </>
   );
 });
