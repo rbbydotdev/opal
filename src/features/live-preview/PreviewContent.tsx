@@ -13,9 +13,63 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
   const renderBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (renderBodyRef.current && onRenderBodyReady) {
-      onRenderBodyReady(renderBodyRef.current);
+    if (!renderBodyRef.current || !onRenderBodyReady || !trigger) return;
+
+    const element = renderBodyRef.current;
+    const images = element.querySelectorAll('img');
+    
+    let imagesLoaded = false;
+    let cssLoaded = false;
+    
+    const checkAllReady = () => {
+      if (imagesLoaded && cssLoaded) {
+        onRenderBodyReady(element);
+      }
+    };
+
+    // Handle image loading
+    let loadedImageCount = 0;
+    const totalImages = images.length;
+    
+    const checkImagesComplete = () => {
+      loadedImageCount++;
+      if (loadedImageCount === totalImages) {
+        imagesLoaded = true;
+        checkAllReady();
+      }
+    };
+
+    // Listen for image loads
+    if (totalImages > 0) {
+      images.forEach(img => {
+        if (img.complete) {
+          checkImagesComplete();
+        } else {
+          img.addEventListener('load', checkImagesComplete, { once: true });
+          img.addEventListener('error', checkImagesComplete, { once: true });
+        }
+      });
+    } else {
+      imagesLoaded = true;
     }
+
+    // Listen for CSS loading
+    const handleCssLoaded = () => {
+      cssLoaded = true;
+      checkAllReady();
+    };
+
+    // Get the window context for listening to CSS events
+    const targetWindow = element.ownerDocument?.defaultView || window;
+    targetWindow.addEventListener('cssLoaded', handleCssLoaded, { once: true });
+
+    // Initial check in case CSS is already loaded
+    checkAllReady();
+
+    return () => {
+      targetWindow.removeEventListener('cssLoaded', handleCssLoaded);
+    };
+
   }, [trigger, onRenderBodyReady]);
 
   return renderBodyRef;
@@ -44,10 +98,21 @@ function RenderBodyContainer({
 const getBaseHref = (href: string): string => href.split("?")[0]!;
 
 // Shared CSS injection logic with smooth transitions
-export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[]): void {
+export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[], onAllLoaded?: () => void): void {
   const head = context.document.head;
 
   const newBaseHrefs = new Set(cssFiles.map(getBaseHref));
+  let pendingLoads = 0;
+
+  const checkAllLoaded = () => {
+    if (pendingLoads === 0) {
+      // Emit event in the context window
+      context.window.dispatchEvent(new CustomEvent('cssLoaded'));
+      if (onAllLoaded) {
+        onAllLoaded();
+      }
+    }
+  };
 
   // Step 1: Add or swap links with smooth transitions
   cssFiles.forEach((newHref) => {
@@ -69,6 +134,17 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[]):
       newLink.rel = "stylesheet";
       newLink.href = newHref;
       newLink.setAttribute("data-preview-css", baseHref);
+      
+      pendingLoads++;
+      const handleLoadOrError = () => {
+        pendingLoads--;
+        newLink.removeEventListener("load", handleLoadOrError);
+        newLink.removeEventListener("error", handleLoadOrError);
+        checkAllLoaded();
+      };
+      newLink.addEventListener("load", handleLoadOrError);
+      newLink.addEventListener("error", handleLoadOrError);
+      
       head.appendChild(newLink);
     } else {
       // CSS file changed - smooth transition and remove ALL old versions
@@ -77,13 +153,16 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[]):
       newLink.href = newHref;
       newLink.setAttribute("data-preview-css", baseHref);
 
+      pendingLoads++;
       const handleLoadOrError = () => {
+        pendingLoads--;
         // Remove ALL old versions of this CSS file
         existingLinks.forEach((oldLink) => {
           oldLink.remove();
         });
         newLink.removeEventListener("load", handleLoadOrError);
         newLink.removeEventListener("error", handleLoadOrError);
+        checkAllLoaded();
       };
 
       newLink.addEventListener("load", handleLoadOrError);
@@ -100,6 +179,9 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[]):
       link.remove();
     }
   });
+
+  // If no CSS files were added, call callback immediately
+  checkAllLoaded();
 }
 
 export function PreviewContent({
@@ -250,5 +332,8 @@ function HtmlRenderer({
   const content = useLiveFileContent(currentWorkspace, path);
   const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, content);
 
+  if (content === null) {
+    return <div>Loading...</div>;
+  }
   return <RenderBodyContainer mode={mode} html={content || ""} renderBodyRef={renderBodyRef} />;
 }
