@@ -2,6 +2,7 @@ import { BuildCreationProvider } from "@/components/build-modal/BuildModalContex
 import { ConfirmProvider } from "@/components/ConfirmContext";
 import { CustomQueryClientProvider } from "@/components/CustomQueryClientProvider";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
+import { LivePreviewDialogProvider } from "@/components/LivePreviewDialogProvider";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
@@ -66,7 +67,8 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                   <WorkspaceProvider>
                     <TooltipProvider delayDuration={1000}>
                       <WindowContextProviderComponent>
-                        <GitStatusProvider>
+                        <LivePreviewDialogProvider>
+                          <GitStatusProvider>
                           <PublicationModalProvider>
                             <SidebarProvider>
                               <DestinationManagerProvider>
@@ -96,7 +98,8 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                               </DestinationManagerProvider>
                             </SidebarProvider>
                           </PublicationModalProvider>
-                        </GitStatusProvider>
+                          </GitStatusProvider>
+                        </LivePreviewDialogProvider>
                       </WindowContextProviderComponent>
                     </TooltipProvider>
                   </WorkspaceProvider>

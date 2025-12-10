@@ -1,60 +1,27 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
-import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
-import { printOnRenderBodyReady } from "@/features/live-preview/printOnRenderBodyReady";
-import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview.js";
+import { WindowPreviewComponent } from "@/features/live-preview/PreviewComponent";
+import { useLivePreview } from "@/features/live-preview/useLivePreview";
+import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, Printer, X, Zap } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 
 export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
+
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
-  const extPreviewCtrl = useRef<WindowPreviewHandler>(null);
-  const overlayRequestedRef = useRef(false);
-  const { isOpen } = useWindowContextProvider();
-  const showPrintOverlay = overlayRequestedRef.current && isOpen;
+  const {
+    extPreviewCtrl,
+    onRenderBodyReadyRef,
+    isOpen,
+    handlePrintClick,
+    openPreview,
+    closePreview,
+  } = useLivePreview();
 
-  const onRenderBodyReadyRef =
-    useRef<(el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void | null>(null);
-
-  useEffect(() => {
-    if (showPrintOverlay) {
-      return () => {
-        onRenderBodyReadyRef.current = null;
-      };
-    }
-  }, [isOpen, overlayRequestedRef, showPrintOverlay]);
-  function handlePrintClick() {
-    if (!isOpen) {
-      onRenderBodyReadyRef.current = printOnRenderBodyReady;
-      overlayRequestedRef.current = true;
-      extPreviewCtrl.current?.open();
-      const handleOverlayMessage = (event: MessageEvent) => {
-        if (event.data?.type === "hidePrintOverlay") {
-          overlayRequestedRef.current = false;
-        }
-      };
-      window.addEventListener("message", handleOverlayMessage, {
-        once: true,
-      });
-    }
-  }
   if (!previewNode) return null;
-  if (overlayRequestedRef.current) {
-    //when print is not locking(firefox) this will close it immediately
-    //it will also prevent it opening when its not needed
-    setTimeout(() => {
-      flushSync(() => {
-        overlayRequestedRef.current = false;
-      });
-    }, 0);
-  }
   return (
     <>
       <div className={"flex items-center justify-center flex-nowrap"}>
@@ -88,7 +55,7 @@ export function LivePreviewButtons() {
               <Button
                 size="sm"
                 className={"text-secondary rounded-l-none border-l-border"}
-                onClick={extPreviewCtrl.current?.open}
+                onClick={openPreview}
                 asChild
               >
                 <span>
@@ -99,7 +66,7 @@ export function LivePreviewButtons() {
               <Button
                 size="sm"
                 className={"active:scale-95 text-secondary rounded-l-none border-l-border"}
-                onClick={extPreviewCtrl.current?.close}
+                onClick={closePreview}
                 asChild
               >
                 <span>
@@ -110,18 +77,6 @@ export function LivePreviewButtons() {
           </>
         </WindowPreviewComponent>
       </div>
-      <Dialog open={showPrintOverlay}>
-        <DialogContent>
-          <DialogTitle className="sr-only">Print Dialog Open</DialogTitle>
-          <DialogHeader className="flex justify-center items-center">
-            <Printer className="mx-auto mb-4 w-12 h-12 text-primary" />
-            <h3 className="text-lg font-semibold mb-2">Print Dialog Open</h3>
-          </DialogHeader>
-          <div className="text-center">
-            <p className="mb-4">Close the print dialog in the preview window to continue using the editor.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
