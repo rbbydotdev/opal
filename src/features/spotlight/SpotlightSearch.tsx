@@ -826,6 +826,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
   const { open: openPreview } = useWindowContextProvider();
   const { mode, setTheme, setMode, availableThemes, themeName: currentTheme } = useThemeContext();
   const { openNew } = useBuildCreation();
+  // const foo = useLivePreview();
 
   const cmdMap = useMemo(
     () =>
