@@ -30,6 +30,10 @@
     {
       "source": "/settings",
       "destination": "/index.html"
+    },
+    {
+      "source": "/newWorkspace",
+      "destination": "/index.html"
     }
   ],
   "headers": [

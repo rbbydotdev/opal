@@ -10,6 +10,14 @@ export interface GitHubRepo {
   html_url: string;
 }
 
+type GithubTreeItem = {
+  path?: string;
+  mode?: "100644" | "100755" | "040000" | "160000" | "120000";
+  type?: "blob" | "tree" | "commit";
+  sha?: string | null;
+  content?: string;
+};
+
 export interface GitHubUser {
   login: string;
   id: number;
@@ -21,7 +29,7 @@ export interface GitHubUser {
 
 export interface GithubInlinedFile {
   path: string;
-  content: string;
+  getContent: () => Promise<string>;
   encoding: "utf-8" | "base64";
 }
 
@@ -143,19 +151,20 @@ export class GitHubClient {
       commit_sha: latestCommitSha,
     });
 
-    const tree = await Promise.all(
-      files.map(async ({ path, content, encoding }) => {
-        const {
-          data: { sha },
-        } = await this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
-          owner,
-          repo,
-          content,
-          encoding,
-        });
-        return { path, mode: "100644" as "100644", type: "blob" as "blob", sha };
-      })
-    );
+    const tree: GithubTreeItem[] = [];
+
+    for (const file of files) {
+      const content = await file.getContent();
+      const {
+        data: { sha },
+      } = await this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
+        owner,
+        repo,
+        content,
+        encoding: file.encoding,
+      });
+      tree.push({ path: file.path, mode: "100644", type: "blob", sha });
+    }
 
     const {
       data: { sha: newTreeSha },
