@@ -6,7 +6,7 @@ import { useResolvePathForPreview } from "@/features/live-preview/useResolvePath
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, Printer, X, Zap } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function printOnRenderBodyReady(
   el: HTMLElement,
@@ -20,7 +20,9 @@ function printOnRenderBodyReady(
 
   const script = context.document.createElement("script");
   script.textContent = /* javascript */ `
+
     
+    window.opener?.postMessage({ type: 'showPrintOverlay' }, '*')
     // Hide overlay when print dialog closes
     window.addEventListener('afterprint', () => {
       window.opener?.postMessage({ type: 'hidePrintOverlay' }, '*');
@@ -28,7 +30,7 @@ function printOnRenderBodyReady(
     
     if (document.querySelector("#render-body")?.children.length > 0){
        window.opener?.postMessage({ type: 'showPrintOverlay' }, '*')
-       setTimeout(()=>window.print(), 0);
+       setTimeout(()=>window.print(), 500);
     }
     
 
@@ -51,15 +53,14 @@ export function LivePreviewButtons() {
   const onRenderBodyReadyRef =
     useRef<(el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void | null>(null);
 
-  // Using ref to do an conditional on imperitive function execution
-  useLayoutEffect(() => {
-    if (!isOpen) onRenderBodyReadyRef.current = null;
-  }, [isOpen]);
   useEffect(() => {
-    onRenderBodyReadyRef.current = null;
-  }, []);
-
-  // Handle print overlay events
+    if (isOpen) {
+      onRenderBodyReadyRef.current = printOnRenderBodyReady;
+      return () => {
+        onRenderBodyReadyRef.current = null;
+      };
+    }
+  }, [isOpen]);
   useEffect(() => {
     const handleOverlayMessage = (event: MessageEvent) => {
       if (event.data?.type === "showPrintOverlay") {
@@ -68,26 +69,13 @@ export function LivePreviewButtons() {
         setPrintOverlayRequested(false);
       }
     };
-
-    window.addEventListener("showPrintOverlay", () => setPrintOverlayRequested(true));
     window.addEventListener("message", handleOverlayMessage);
-
-    return () => {
-      window.removeEventListener("showPrintOverlay", () => setPrintOverlayRequested(true));
-      window.removeEventListener("message", handleOverlayMessage);
-    };
+    return () => window.removeEventListener("message", handleOverlayMessage);
   }, []);
   function handlePrintClick() {
-    if (!isOpen) {
-      onRenderBodyReadyRef.current = printOnRenderBodyReady;
-      extPreviewCtrl.current?.open();
-      return () => (onRenderBodyReadyRef.current = null);
-    }
+    if (!isOpen) extPreviewCtrl.current?.open();
   }
-  // --------
-
   if (!previewNode) return null;
-
   return (
     <>
       <div className={"flex items-center justify-center flex-nowrap"}>
@@ -158,15 +146,3 @@ export function LivePreviewButtons() {
     </>
   );
 }
-
-// <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 backdrop-blur-sm">
-//   <Card className="bg-card rounded-lg p-6 max-w-md mx-4 shadow-2xl">
-//     <CardHeader>
-//       <Printer className="mx-auto mb-4 w-12 h-12 text-primary" />
-//       <h3 className="text-lg font-semibold mb-2">Print Dialog Open</h3>
-//     </CardHeader>
-//     <CardContent className="text-center">
-//       <p className="mb-4">Close the print dialog in the preview window to continue using the editor.</p>
-//     </CardContent>
-//   </Card>
-// </div>,
