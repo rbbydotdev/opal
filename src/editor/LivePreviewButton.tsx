@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { WindowPreviewComponent } from "@/features/live-preview/PreviewComponent";
 import { useLivePreview } from "@/features/live-preview/useLivePreview";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
@@ -14,7 +13,6 @@ export function LivePreviewButtons() {
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const {
     extPreviewCtrl,
-    onRenderBodyReadyRef,
     isOpen,
     handlePrintClick,
     openPreview,
@@ -41,41 +39,32 @@ export function LivePreviewButtons() {
           </div>
         </Button>
 
-        <WindowPreviewComponent
-          path={path!}
-          ref={extPreviewCtrl}
-          currentWorkspace={currentWorkspace}
-          onRenderBodyReady={onRenderBodyReadyRef.current!}
-        >
-          <>
-            <Button size="sm" className="rounded-l-none rounded-r-none" onClick={handlePrintClick}>
-              Print <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
-            </Button>
-            {!isOpen ? (
-              <Button
-                size="sm"
-                className={"text-secondary rounded-l-none border-l-border"}
-                onClick={openPreview}
-                asChild
-              >
-                <span>
-                  <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
-                </span>
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className={"active:scale-95 text-secondary rounded-l-none border-l-border"}
-                onClick={closePreview}
-                asChild
-              >
-                <span>
-                  <X size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
-                </span>
-              </Button>
-            )}
-          </>
-        </WindowPreviewComponent>
+        <Button size="sm" className="rounded-l-none rounded-r-none" onClick={handlePrintClick}>
+          Print <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
+        </Button>
+        {!isOpen ? (
+          <Button
+            size="sm"
+            className={"text-secondary rounded-l-none border-l-border"}
+            onClick={openPreview}
+            asChild
+          >
+            <span>
+              <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
+            </span>
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className={"active:scale-95 text-secondary rounded-l-none border-l-border"}
+            onClick={closePreview}
+            asChild
+          >
+            <span>
+              <X size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
+            </span>
+          </Button>
+        )}
       </div>
     </>
   );
