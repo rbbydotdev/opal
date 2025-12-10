@@ -5,7 +5,8 @@ import { useResolvePathForPreview } from "@/features/live-preview/useResolvePath
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, Printer, X, Zap } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 
 function printOnRenderBodyReady(
   el: HTMLElement,
@@ -15,8 +16,20 @@ function printOnRenderBodyReady(
     ready: true;
   }
 ) {
+  // Show overlay in main window and flush immediately
+  flushSync(() => {
+    window.dispatchEvent(new CustomEvent("showPrintOverlay"));
+  });
+
+  // Now execute print - overlay is guaranteed to be rendered
   const script = context.document.createElement("script");
-  script.textContent = "window.print()";
+  script.textContent = `
+    window.print();
+    // Hide overlay when print dialog closes
+    window.addEventListener('afterprint', () => {
+      window.opener?.postMessage({ type: 'hidePrintOverlay' }, '*');
+    });
+  `;
   el.appendChild(script);
 }
 export function LivePreviewButtons() {
@@ -25,6 +38,7 @@ export function LivePreviewButtons() {
   const { currentWorkspace } = useWorkspaceContext();
   const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const extPreviewCtrl = useRef<WindowPreviewHandler>(null);
+  const [showPrintOverlay, setShowPrintOverlay] = useState(false);
 
   const { isOpen } = useWindowContextProvider();
 
@@ -37,6 +51,60 @@ export function LivePreviewButtons() {
   }, [isOpen]);
   useEffect(() => {
     onRenderBodyReadyRef.current = null;
+  }, []);
+
+  // Handle print overlay events
+  useEffect(() => {
+    let threadMonitor: number | null = null;
+
+    const handleShowOverlay = () => {
+      setShowPrintOverlay(true);
+
+      // Start monitoring main thread to detect when print dialog closes
+      let lastTime = Date.now();
+      const checkThreadUnlock = () => {
+        const currentTime = Date.now();
+        const timeDiff = currentTime - lastTime;
+
+        // If more than 200ms has passed since last check,
+        // main thread was likely blocked by print dialog
+        if (timeDiff > 200) {
+          // Thread is now unblocked - print dialog likely closed
+          setShowPrintOverlay(false);
+          if (threadMonitor) {
+            cancelAnimationFrame(threadMonitor);
+            threadMonitor = null;
+          }
+          return;
+        }
+
+        lastTime = currentTime;
+        threadMonitor = requestAnimationFrame(checkThreadUnlock);
+      };
+
+      threadMonitor = requestAnimationFrame(checkThreadUnlock);
+    };
+
+    const handleHideOverlay = (event: MessageEvent) => {
+      if (event.data?.type === "hidePrintOverlay") {
+        setShowPrintOverlay(false);
+        if (threadMonitor) {
+          cancelAnimationFrame(threadMonitor);
+          threadMonitor = null;
+        }
+      }
+    };
+
+    window.addEventListener("showPrintOverlay", handleShowOverlay);
+    window.addEventListener("message", handleHideOverlay);
+
+    return () => {
+      window.removeEventListener("showPrintOverlay", handleShowOverlay);
+      window.removeEventListener("message", handleHideOverlay);
+      if (threadMonitor) {
+        cancelAnimationFrame(threadMonitor);
+      }
+    };
   }, []);
   function handlePrintClick() {
     if (!isOpen) {
@@ -103,6 +171,21 @@ export function LivePreviewButtons() {
           </>
         </WindowPreviewComponent>
       </div>
+      {showPrintOverlay &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-2xl">
+              <div className="text-center">
+                <Printer className="mx-auto mb-4 w-12 h-12 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">Print Dialog Open</h3>
+                <p className="text-gray-600 mb-4">
+                  Close the print dialog in the preview window to continue using the editor.
+                </p>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }
