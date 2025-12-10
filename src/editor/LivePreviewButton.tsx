@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
+import { printOnRenderBodyReady } from "@/features/live-preview/printOnRenderBodyReady";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview.js";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
@@ -9,25 +10,6 @@ import { ExternalLink, Printer, X, Zap } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 
-function printOnRenderBodyReady(
-  el: HTMLElement,
-  context: {
-    document: Document;
-    window: Window;
-    ready: true;
-  }
-) {
-  const script = context.document.createElement("script");
-  script.textContent = /* javascript */ `
-    window.addEventListener('afterprint', () => {
-      window.opener?.postMessage({ type: 'hidePrintOverlay' }, '*');
-    });
-    if (document.querySelector("#render-body")?.children.length > 0){
-       setTimeout(()=>window.print(),0);
-    }
-  `;
-  el.appendChild(script);
-}
 export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
   const { path } = useWorkspaceRoute();
