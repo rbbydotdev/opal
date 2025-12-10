@@ -16,11 +16,11 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
     if (!renderBodyRef.current || !onRenderBodyReady || !trigger) return;
 
     const element = renderBodyRef.current;
-    const images = element.querySelectorAll('img');
-    
+    const images = element.querySelectorAll("img");
+
     let imagesLoaded = false;
     let cssLoaded = false;
-    
+
     const checkAllReady = () => {
       if (imagesLoaded && cssLoaded) {
         onRenderBodyReady(element);
@@ -30,7 +30,7 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
     // Handle image loading
     let loadedImageCount = 0;
     const totalImages = images.length;
-    
+
     const checkImagesComplete = () => {
       loadedImageCount++;
       if (loadedImageCount === totalImages) {
@@ -41,12 +41,12 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
 
     // Listen for image loads
     if (totalImages > 0) {
-      images.forEach(img => {
+      images.forEach((img) => {
         if (img.complete) {
           checkImagesComplete();
         } else {
-          img.addEventListener('load', checkImagesComplete, { once: true });
-          img.addEventListener('error', checkImagesComplete, { once: true });
+          img.addEventListener("load", checkImagesComplete, { once: true });
+          img.addEventListener("error", checkImagesComplete, { once: true });
         }
       });
     } else {
@@ -61,15 +61,24 @@ function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => voi
 
     // Get the window context for listening to CSS events
     const targetWindow = element.ownerDocument?.defaultView || window;
-    targetWindow.addEventListener('cssLoaded', handleCssLoaded, { once: true });
 
-    // Initial check in case CSS is already loaded
+    // Check if there are any CSS files to wait for
+    const cssLinks = targetWindow.document?.querySelectorAll("link[data-preview-css]") || [];
+
+    if (cssLinks.length === 0) {
+      // No CSS files to wait for
+      cssLoaded = true;
+    } else {
+      // Wait for CSS loading event
+      targetWindow.addEventListener("cssLoaded", handleCssLoaded, { once: true });
+    }
+
+    // Initial check in case everything is already loaded
     checkAllReady();
 
     return () => {
-      targetWindow.removeEventListener('cssLoaded', handleCssLoaded);
+      targetWindow.removeEventListener("cssLoaded", handleCssLoaded);
     };
-
   }, [trigger, onRenderBodyReady]);
 
   return renderBodyRef;
@@ -107,7 +116,7 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[], 
   const checkAllLoaded = () => {
     if (pendingLoads === 0) {
       // Emit event in the context window
-      context.window.dispatchEvent(new CustomEvent('cssLoaded'));
+      context.window.dispatchEvent(new CustomEvent("cssLoaded"));
       if (onAllLoaded) {
         onAllLoaded();
       }
@@ -134,7 +143,7 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[], 
       newLink.rel = "stylesheet";
       newLink.href = newHref;
       newLink.setAttribute("data-preview-css", baseHref);
-      
+
       pendingLoads++;
       const handleLoadOrError = () => {
         pendingLoads--;
@@ -144,7 +153,7 @@ export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[], 
       };
       newLink.addEventListener("load", handleLoadOrError);
       newLink.addEventListener("error", handleLoadOrError);
-      
+
       head.appendChild(newLink);
     } else {
       // CSS file changed - smooth transition and remove ALL old versions
@@ -246,7 +255,7 @@ function MarkdownRenderer({
   mode?: "pane" | "external";
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
-  const [html, setHtml] = useState<string>("");
+  const [html, setHtml] = useState<string | null>(null);
   const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, html);
 
   useEffect(() => {
@@ -259,6 +268,7 @@ function MarkdownRenderer({
       setHtml('<div style="color: red; padding: 16px;">Error rendering markdown</div>');
     }
   }, [content]);
+  if (html === null) return null;
 
   return <RenderBodyContainer mode={mode} html={html} renderBodyRef={renderBodyRef} />;
 }
@@ -275,7 +285,7 @@ function TemplateRenderer({
   mode: "pane" | "external";
 }) {
   const content = useLiveFileContent(currentWorkspace, path);
-  const [html, setHtml] = useState<string>("");
+  const [html, setHtml] = useState<string | null>(null);
   const renderBodyRef = useRenderBodyCallback(onRenderBodyReady, html);
 
   useEffect(() => {
@@ -301,7 +311,6 @@ function TemplateRenderer({
         );
         setHtml(rendered);
       } catch (error) {
-        console.error("Template render error:", error);
         const err = error as Error;
         const message = err.message || String(err);
         const stack = err.stack || "";
@@ -315,6 +324,7 @@ function TemplateRenderer({
     void renderTemplate();
   }, [content, path, currentWorkspace]);
 
+  if (html === null) return null;
   return <RenderBodyContainer mode={mode} html={html} renderBodyRef={renderBodyRef} />;
 }
 
