@@ -1,4 +1,5 @@
 import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
+import { DeployBundleTreeFileOnly } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
 
 export interface GitHubRepo {
@@ -27,11 +28,13 @@ export interface GitHubUser {
   bio?: string;
 }
 
-export interface GithubInlinedFile {
-  path: string;
-  getContent: () => Promise<string>;
-  encoding: "utf-8" | "base64";
-}
+// export interface GithubInlinedFile {
+//   path: string;
+//   getContent: () => Promise<DeployBundleTreeFileContent>;
+//   encoding: "utf-8" | "base64";
+// }
+
+export type GithubInlinedFile = DeployBundleTreeFileOnly[0];
 
 export class GitHubClient {
   private octokit: Octokit;
@@ -160,7 +163,7 @@ export class GitHubClient {
       } = await this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
         owner,
         repo,
-        content,
+        content: content.toString(),
         encoding: file.encoding,
       });
       tree.push({ path: file.path, mode: "100644", type: "blob", sha });
