@@ -100,8 +100,8 @@ export const WindowPreviewComponent = forwardRef<
   }
 >(function WindowPreviewComponent({ path, currentWorkspace, children, onRenderBodyReady }, ref) {
   const { open, close, isOpen, ...context } = useWindowContextProvider();
-  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
-  const resolvedPath = previewNode?.path || path;
+  const { pathPreviewNode } = useResolvePathForPreview({ path, currentWorkspace });
+  const resolvedPath = pathPreviewNode?.path || path;
 
   const cssFiles = useLiveCssFiles({
     path: resolvedPath,

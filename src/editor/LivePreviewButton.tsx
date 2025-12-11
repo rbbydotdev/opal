@@ -10,14 +10,8 @@ export function LivePreviewButtons() {
 
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
-  const {
-    extPreviewCtrl,
-    isOpen,
-    handlePrintClick,
-    openPreview,
-    closePreview,
-  } = useLivePreview();
+  const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
+  const { isOpen, handlePrintClick, openPreview, closePreview } = useLivePreview();
 
   if (!previewNode) return null;
   return (
@@ -43,12 +37,7 @@ export function LivePreviewButtons() {
           Print <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
         </Button>
         {!isOpen ? (
-          <Button
-            size="sm"
-            className={"text-secondary rounded-l-none border-l-border"}
-            onClick={openPreview}
-            asChild
-          >
+          <Button size="sm" className={"text-secondary rounded-l-none border-l-border"} onClick={openPreview} asChild>
             <span>
               <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
             </span>

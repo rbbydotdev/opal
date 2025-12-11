@@ -89,7 +89,7 @@ export function EditorSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="overflow-clip h-full flex-shrink">
+      <SidebarContent className="h-full flex-shrink pl-0 ml-0">
         <SidebarMenuSections />
       </SidebarContent>
 
