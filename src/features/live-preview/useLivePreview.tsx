@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 export function useLivePreview() {
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
+  const { pathPreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const [overlayRequested, setOverlayRequested] = useState(false);
   const { isOpen } = useWindowContextProvider();
   const { showDialog, extPreviewCtrl, onRenderBodyReadyRef } = useLivePreviewDialog();

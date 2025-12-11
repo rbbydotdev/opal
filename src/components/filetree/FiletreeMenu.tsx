@@ -70,7 +70,6 @@ export function FileTreeMenu({
           <SidebarMenuItem
             key={fileNode.path}
             className={cn({
-              "ml-[0.577rem] w-[calc(100%-0.7rem)]": depth === 0,
               "bg-sidebar-accent": highlightDragover(fileNode),
             })}
             onDragOver={(e) => handleDragOver(e, fileNode)}

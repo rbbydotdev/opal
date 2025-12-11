@@ -239,68 +239,76 @@ export const EditorSidebarLayout = ({
   }, [isResizing, rightPaneIsResizing, rightPaneEnabled, panes.left.displayWidth]);
 
   return (
-    <div className="flex h-screen w-full overflow-clip">
-      <aside
-        ref={sidebarRef}
-        style={{ width: `${currentDisplayWidth}px` }}
-        className="relative flex-shrink-0 overflow-y-auto"
-      >
-        {/* {currentDisplayWidth > 0 || COLLAPSED_STATE_WIDTH > 0 || renderHiddenSidebar === true ? sidebar : null} */}
-        {sidebar}
-      </aside>
-
+    <div
+      className="flex w-full flex-col bg-card"
+      style={{
+        height: "100vh",
+      }}
+    >
       <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-valuenow={currentDisplayWidth}
-        aria-valuemin={COLLAPSED_STATE_WIDTH}
-        aria-valuemax={MAX_RESIZABLE_WIDTH}
-        onMouseDown={handleMouseDown}
-        id="editor-sidebar-resize-handle"
-        className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
-        title="Resize sidebar"
-      ></div>
-
-      <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
-        {panes.left.isCollapsed && (
-          <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg">
-            <Button
-              onClick={() => panes.left.setIsCollapsed(false)}
-              title="Show sidebar (Cmd+B)"
-              variant="outline"
-              className="w-full"
+        className="flex w-full overflow-clip border"
+        style={{
+          height: "calc(100vh - 1.5rem)",
+        }}
+      >
+        <aside
+          ref={sidebarRef}
+          style={{ width: `${currentDisplayWidth}px` }}
+          className="relative flex-shrink-0 overflow-y-auto"
+        >
+          {sidebar}
+        </aside>
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={currentDisplayWidth}
+          aria-valuemin={COLLAPSED_STATE_WIDTH}
+          aria-valuemax={MAX_RESIZABLE_WIDTH}
+          onMouseDown={handleMouseDown}
+          id="editor-sidebar-resize-handle"
+          className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+          title="Resize sidebar"
+        ></div>
+        <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
+          {panes.left.isCollapsed && (
+            <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg">
+              <Button
+                onClick={() => panes.left.setIsCollapsed(false)}
+                title="Show sidebar (Cmd+B)"
+                variant="outline"
+                className="w-full"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          {main}
+        </main>
+        {rightPaneEnabled && (
+          <>
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-valuenow={rightPaneCurrentWidth}
+              aria-valuemin={RIGHT_PANE_COLLAPSED_WIDTH}
+              aria-valuemax={MAX_RIGHT_PANE_WIDTH}
+              onMouseDown={handleRightPaneMouseDown}
+              className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+              title="Resize right pane"
+            ></div>
+            <aside
+              ref={rightPaneRef}
+              style={{ width: `${rightPaneCurrentWidth}px` }}
+              className={`relative flex-shrink-0 ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
             >
-              <PanelLeft className="h-4 w-4" />
-            </Button>
-          </div>
+              {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0
+                ? rightPane || <div id={PREVIEW_PANE_ID} className="h-full w-full border-l border-border"></div>
+                : null}
+            </aside>
+          </>
         )}
-        {main}
-      </main>
-
-      {rightPaneEnabled && (
-        <>
-          <div
-            role="separator"
-            aria-orientation="vertical"
-            aria-valuenow={rightPaneCurrentWidth}
-            aria-valuemin={RIGHT_PANE_COLLAPSED_WIDTH}
-            aria-valuemax={MAX_RIGHT_PANE_WIDTH}
-            onMouseDown={handleRightPaneMouseDown}
-            className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
-            title="Resize right pane"
-          ></div>
-
-          <aside
-            ref={rightPaneRef}
-            style={{ width: `${rightPaneCurrentWidth}px` }}
-            className={`relative flex-shrink-0 ${rightPaneIsResizing ? "pointer-events-none" : ""}`}
-          >
-            {rightPaneCurrentWidth > 0 || RIGHT_PANE_COLLAPSED_WIDTH > 0
-              ? rightPane || <div id={PREVIEW_PANE_ID} className="h-full w-full border-l border-border"></div>
-              : null}
-          </aside>
-        </>
-      )}
+      </div>
+      <div className="font-mono text-xs flex justify-end pr-4 items-center h-full">{/*future status bar */}</div>
     </div>
   );
 };

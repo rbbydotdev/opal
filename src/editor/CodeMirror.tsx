@@ -301,7 +301,7 @@ const CodeMirrorToolbar = ({
   const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile } = useCurrentFilepath();
 
   const { left } = useSidebarPanes();
-  const { previewNode } = useResolvePathForPreview({ path, currentWorkspace });
+  const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
 
   const handlePrettify = async () => {

@@ -1,7 +1,7 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { AbsPath, prefix } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function useResolvePathForPreview({
   path,
@@ -10,7 +10,7 @@ export function useResolvePathForPreview({
   path: AbsPath | null;
   currentWorkspace: Workspace;
 }) {
-  const getPreviewNode = useCallback(() => {
+  const previewNode = useMemo(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
     // Prioritize mustache files first
@@ -25,12 +25,18 @@ export function useResolvePathForPreview({
       null
     );
   }, [currentWorkspace, path]);
-  const [previewNode, setPreviewNode] = useState<TreeNode | null>(getPreviewNode);
-
+  const [preferPreviewNode, setPreferPreviewNode] = useState<TreeNode | null>(null);
+  const reset = () => {
+    setPreferPreviewNode(null);
+  };
   useEffect(() => {
-    const resolvedNode = getPreviewNode();
-    setPreviewNode(resolvedNode!);
-  }, [currentWorkspace, getPreviewNode, path]);
-
-  return { setPreviewNode, previewNode };
+    if (preferPreviewNode !== previewNode) setPreferPreviewNode(previewNode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]);
+  return {
+    pathPreviewNode: previewNode,
+    setPreviewNode: setPreferPreviewNode,
+    choicePreviewNode: preferPreviewNode || previewNode,
+    reset,
+  };
 }

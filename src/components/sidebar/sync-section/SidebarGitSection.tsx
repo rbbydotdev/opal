@@ -192,10 +192,6 @@ function CommitSection({
     }
   };
 
-  // const handleRemoteInit = () => {
-  //   initialRepo();
-  // };
-
   const handleMessageSubmit = async (message: string) => {
     if (message.trim()) return handleCommit(message);
   };

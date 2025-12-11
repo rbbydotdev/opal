@@ -2,12 +2,12 @@ import { BuildCreationProvider } from "@/components/build-modal/BuildModalContex
 import { ConfirmProvider } from "@/components/ConfirmContext";
 import { CustomQueryClientProvider } from "@/components/CustomQueryClientProvider";
 import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
-import { LivePreviewDialogProvider } from "@/components/LivePreviewProvider";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
 import { WorkspaceErrorBoundaryFallback } from "@/components/errors/WorkspaceErrorBoundaryFallback";
 import { GitStatusProvider } from "@/components/GitStatusModal";
+import { LivePreviewDialogProvider } from "@/components/LivePreviewProvider";
 import { PromptProvider } from "@/components/Prompt";
 import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
 import { ErrorPopper } from "@/components/ui/error-popup";
@@ -69,35 +69,33 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                       <WindowContextProviderComponent>
                         <LivePreviewDialogProvider>
                           <GitStatusProvider>
-                          <PublicationModalProvider>
-                            <SidebarProvider>
-                              <DestinationManagerProvider>
-                                <BuildCreationProvider>
-                                  <PromptProvider>
-                                    <ConfirmProvider>
-                                      <RemoteMDXEditorRealmProvider>
-                                        <div className="w-full flex">
-                                          <ErrorBoundary fallback={ErrorPlaque}>
-                                            <div
-                                              id={WS_BUTTON_BAR_ID}
-                                              className={cn(
-                                                "flex flex-col flex-shrink-0 bg-muted overflow-clip flex-grow-0 max-h-screen"
-                                              )}
-                                            >
-                                              <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                                <WorkspaceButtonBar />
-                                              </ErrorBoundary>
-                                            </div>
-                                            <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                          </ErrorBoundary>
-                                        </div>
-                                      </RemoteMDXEditorRealmProvider>
-                                    </ConfirmProvider>
-                                  </PromptProvider>
-                                </BuildCreationProvider>
-                              </DestinationManagerProvider>
-                            </SidebarProvider>
-                          </PublicationModalProvider>
+                            <PublicationModalProvider>
+                              <SidebarProvider>
+                                <DestinationManagerProvider>
+                                  <BuildCreationProvider>
+                                    <PromptProvider>
+                                      <ConfirmProvider>
+                                        <RemoteMDXEditorRealmProvider>
+                                          <div className="w-full flex">
+                                            <ErrorBoundary fallback={ErrorPlaque}>
+                                              <div
+                                                id={WS_BUTTON_BAR_ID}
+                                                className={cn("flex flex-col flex-shrink-0 bg-muted overflow-clip")}
+                                              >
+                                                <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                  <WorkspaceButtonBar />
+                                                </ErrorBoundary>
+                                              </div>
+                                              <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                            </ErrorBoundary>
+                                          </div>
+                                        </RemoteMDXEditorRealmProvider>
+                                      </ConfirmProvider>
+                                    </PromptProvider>
+                                  </BuildCreationProvider>
+                                </DestinationManagerProvider>
+                              </SidebarProvider>
+                            </PublicationModalProvider>
                           </GitStatusProvider>
                         </LivePreviewDialogProvider>
                       </WindowContextProviderComponent>

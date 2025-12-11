@@ -149,7 +149,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
       </DropdownMenu>
       <div
         ref={sidebarListRef}
-        className="space-y-1 pl-1 py-1 sidebar-menu-section-list overflow-y-auto no-scrollbar pr-4"
+        className="space-y-1 pl-1 py-1 sidebar-menu-section-list overflow-y-auto no-scrollbar"
         tabIndex={-1}
       >
         <SidebarMenuDndList show={storedValue} currentWorkspace={currentWorkspace} />
