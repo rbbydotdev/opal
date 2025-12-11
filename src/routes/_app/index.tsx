@@ -11,7 +11,7 @@ function Index() {
   const { cmdMap, commands } = useHomeSpotlightCommands();
 
   return (
-    <div className="w-full h-screen max-h-screen flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="flex-1 overflow-hidden">
         <div className="w-full h-full flex items-center justify-center">
           <OpalCard />

@@ -320,15 +320,15 @@ export function WorkspaceButtonBar() {
   const variant: ButtonVariant = shrink ? "sm" : "lg";
 
   return (
-    <div className="flex relative min-h-0">
+    <div className="flex relative">
       <div
         className={cn(
-          "[&>*]:outline-none transition-all [&>*]:select-none relative min-h-0 flex flex-col gap-4 justify-center items-center ",
+          "[&>*]:outline-none transition-all [&>*]:select-none flex-grow flex flex-col gap-4 justify-center items-center max-h-[100vh]",
           shrink ? "w-8" : "w-20"
         )}
       >
         <div
-          className={cn("flex justify-center flex-col items-center w-full min-h-0", {
+          className={cn("flex justify-center flex-col items-center w-full flex-grow", {
             "mt-[1.35rem]": shrink,
             "mb-4 mt-8": !shrink,
           })}
