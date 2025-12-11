@@ -1,0 +1,34 @@
+import { useLayoutEffect, useState } from "react";
+
+export const ServiceWorker = ({ children }: { children: React.ReactNode }) => {
+  const [ready, setReady] = useState(false);
+
+  useLayoutEffect(() => {
+    void setupServiceWorker().then(() => setReady(true));
+  }, []);
+  if (!ready) return null;
+  return <>{children}</>;
+};
+
+export async function setupServiceWorker(): Promise<void> {
+  try {
+    // Register the service worker if it's not controlling the page
+    if (!navigator.serviceWorker.controller) {
+      console.warn("Service Worker is not controlling the page.");
+      await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      });
+
+      // Wait for the service worker to be ready
+      await navigator.serviceWorker.ready;
+      console.log("service worker ready");
+    }
+  } catch (error) {
+    console.error("Error setting up Service Worker", error);
+    //log stack trace in development mode
+    if (process.env.NODE_ENV !== "development") {
+      throw error;
+    }
+  }
+}

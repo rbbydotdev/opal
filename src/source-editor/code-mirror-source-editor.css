@@ -1,0 +1,15 @@
+.code-mirror-source-editor {
+  .cm-activeLine {
+    background-color: unset !important;
+  }
+}
+
+.code-mirror-source-editor {
+  .cm-highlight-range,
+  .cm-selectionBackground {
+    background-color: oklch(var(--ring)) !important;
+    & > * {
+      color: oklch(var(--foreground)) !important;
+    }
+  }
+}

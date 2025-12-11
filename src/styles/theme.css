@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* Non-color variables that won't be overridden by theme registry */
+    --navbar-height: 2.5rem;
+    --editor-toolbar-height: 3.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: oklch(var(--border));
+  }
+  body {
+    background-color: oklch(var(--background));
+    color: oklch(var(--foreground));
+  }
+  *::selection {
+    background-color: oklch(var(--ring));
+    color: oklch(var(--primary-foreground)) !important;
+  }
+}

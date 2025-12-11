@@ -1,0 +1,40 @@
+diff --git a/node_modules/codemirror-lang-ejs/dist/index.js b/node_modules/codemirror-lang-ejs/dist/index.js
+index 0d719a5..14571b7 100644
+--- a/node_modules/codemirror-lang-ejs/dist/index.js
++++ b/node_modules/codemirror-lang-ejs/dist/index.js
+@@ -1,5 +1,6 @@
+ import { LRLanguage, indentNodeProp, delimitedIndent, LanguageSupport } from '@codemirror/language';
+ import { javascriptLanguage, javascript } from '@codemirror/lang-javascript';
++import { htmlLanguage, html } from '@codemirror/lang-html';
+ import { styleTags, tags } from '@lezer/highlight';
+ import { parseMixed } from '@lezer/common';
+ import { ExternalTokenizer, LRParser, LocalTokenGroup } from '@lezer/lr';
+@@ -72,16 +73,22 @@ const ejsLanguage = LRLanguage.define({
+                 Quote: tags.quote,
+             }),
+         ],
+-        wrap: parseMixed((node) => node.type.isTop
+-            ? {
+-                parser: javascriptLanguage.parser,
+-                overlay: (node) => node.type.name === "JavascriptExpression",
++        wrap: parseMixed((node) => {
++            if (node.type.isTop) {
++                return {
++                    parser: htmlLanguage.parser,
++                    overlay: (node) => node.type.name === "Text"
++                };
+             }
+-            : null),
++            if (node.type.name === "JavascriptExpression") {
++                return { parser: javascriptLanguage.parser };
++            }
++            return null;
++        }),
+     }),
+ });
+ function ejs() {
+-    return new LanguageSupport(ejsLanguage, javascript().support);
++    return new LanguageSupport(ejsLanguage, [javascript().support, html().support]);
+ }
+ 
+ export { ejs, ejsLanguage };

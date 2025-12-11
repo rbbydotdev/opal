@@ -1,0 +1,224 @@
+@import "@mdxeditor/editor/style.css";
+
+.mdxeditor-popup-container {
+  z-index: 10 !important;
+}
+.content-editable {
+  max-width: 100%;
+  height: 100%;
+  min-width: 400px;
+}
+.mdxeditor-root-contenteditable {
+  min-height: 0;
+  flex-grow: 1;
+}
+.mdxeditor-toolbar {
+  border-radius: 0;
+  flex-shrink: 0;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.mdxeditor {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mdxeditor .cm-selectionBackground {
+  background-color: oklch(var(--ring)) !important;
+}
+
+.mdxeditor .cm-highlight-range {
+  background-color: oklch(var(--ring)) !important;
+  & > * {
+    color: oklch(var(--foreground)) !important;
+  }
+}
+.mdxeditor [class*="_editImageToolbar_"] {
+  z-index: 0;
+}
+
+.mdxeditor-popup-container [class*="_dialogContent_"] {
+  flex-direction: column;
+}
+
+.mdxeditor {
+  [data-editor-block-type="image"] {
+    border: 1px solid oklch(var(--border));
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  [data-editor-block-type="image"] img {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    outline: none;
+  }
+}
+
+.mdxeditor-root-contenteditable,
+.mdxeditor-rich-text-editor .content-editable,
+.mdxeditor-diff-source-wrapper,
+.mdxeditor-rich-text-editor,
+.mdxeditor-root-contenteditable > div {
+  height: 100%;
+  /* overflow: hidden; */
+}
+.mdxeditor-rich-text-editor .content-editable {
+  background-color: transparent !important;
+}
+
+.mdxeditor [data-lexical-decorator="true"] {
+  /* this fixes scroll to calculations */
+  display: inline-block;
+}
+
+.mdxeditor-source-editor .cm-focused .cm-matchingBracket {
+  outline: none !important;
+}
+
+.mdxeditor-source-editor .cm-nonmatchingBracket {
+  outline: none !important;
+}
+
+.hide-rich-text .mdxeditor {
+  /* super hack to hide rich text editor */
+  [class^="_diffSourceToggleWrapper_"] {
+    display: none;
+  }
+}
+
+.mdxeditor {
+  /* for scroll into view to work properly*/
+  .cm-editor {
+    /* height: 100vh; */
+  }
+  .cm-scroller {
+    height: 100%;
+  }
+}
+
+.mdxeditor {
+  hr {
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* MDXEditor Theme Integration with Shadcn Colors */
+.mdxeditor {
+  /* Base colors - using shadcn muted/background colors */
+  --baseBase: oklch(var(--background)) !important;
+  --baseBgSubtle: oklch(var(--muted)) !important;
+  --baseBg: oklch(var(--card)) !important;
+  --baseBgHover: oklch(var(--accent)) !important;
+  --baseBgActive: oklch(var(--accent)) !important;
+  --baseLine: oklch(var(--border)) !important;
+  --baseBorder: oklch(var(--border)) !important;
+  --baseBorderHover: oklch(var(--input)) !important;
+  --baseSolid: oklch(var(--muted-foreground)) !important;
+  --baseSolidHover: oklch(var(--foreground)) !important;
+  --baseText: oklch(var(--foreground)) !important;
+  --baseTextContrast: oklch(var(--foreground)) !important;
+
+  /* Accent colors - using shadcn primary colors */
+  --accentBase: oklch(var(--primary)) !important;
+  --accentBgSubtle: oklch(var(--secondary)) !important;
+  --accentBg: oklch(var(--secondary)) !important;
+  --accentBgHover: oklch(var(--secondary)) !important;
+  --accentBgActive: oklch(var(--secondary)) !important;
+  --accentLine: oklch(var(--primary)) !important;
+  --accentBorder: oklch(var(--primary)) !important;
+  --accentBorderHover: oklch(var(--primary)) !important;
+  --accentSolid: oklch(var(--primary)) !important;
+  --accentSolidHover: oklch(var(--primary)) !important;
+  --accentText: oklch(var(--primary)) !important;
+  --accentTextContrast: oklch(var(--primary-foreground)) !important;
+
+  /* Admonition colors - using available shadcn colors */
+  --admonitionTipBg: oklch(var(--secondary)) !important;
+  --admonitionTipBorder: oklch(var(--border)) !important;
+
+  --admonitionInfoBg: oklch(var(--secondary)) !important;
+  --admonitionInfoBorder: oklch(var(--border)) !important;
+
+  --admonitionCautionBg: oklch(var(--secondary)) !important;
+  --admonitionCautionBorder: oklch(var(--border)) !important;
+
+  --admonitionDangerBg: oklch(var(--destructive)) !important;
+  --admonitionDangerBorder: oklch(var(--destructive)) !important;
+
+  --admonitionNoteBg: oklch(var(--muted)) !important;
+  --admonitionNoteBorder: oklch(var(--border)) !important;
+
+  /* Typography - using shadcn font variables if available */
+  font-family: var(
+    --font-sans,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif
+  ) !important;
+  --font-mono: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace
+  ) !important;
+
+  /* Background and text colors */
+  color: oklch(var(--foreground)) !important;
+  --basePageBg: oklch(var(--background)) !important;
+  background: oklch(var(--background)) !important;
+
+  /* Ensure proper contrast in content editable */
+  .mdxeditor-root-contenteditable {
+    color: oklch(var(--foreground)) !important;
+    > div {
+      /* weird */
+      overflow-x: scroll;
+    }
+  }
+
+  /* Fix caret color */
+  .mdxeditor-root-contenteditable,
+  .content-editable {
+    caret-color: oklch(var(--foreground)) !important;
+  }
+}
+
+.mdxeditor {
+  img {
+    max-width: 32rem;
+    margin: auto;
+    display: block;
+  }
+}
+.mdxeditor.center-images p span[data-lexical-decorator]:has(img) {
+  display: block;
+  margin: auto;
+  text-align: center;
+}
+
+.mdxeditor {
+  .prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    margin-bottom: 0.175rem;
+    margin-top: 0.175rem;
+  }
+}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Showcase</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .theme-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e1e5e9;
+        }
+        
+        .theme-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            text-transform: capitalize;
+        }
+        
+        .theme-preview {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .mode-group {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+        
+        .light-mode {
+            background: white;
+            border: 1px solid #ddd;
+        }
+        
+        .dark-mode {
+            background: black;
+            border: 1px solid #333;
+        }
+        
+        .color-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .mode-label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-left: 0.5rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Theme Showcase</h1>
+        <div id="theme-grid" class="theme-grid">
+            <!-- Themes will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Theme data - this would normally be imported
+        const themeRegistry = {
+            "items": [
+                {
+                    "name": "discord",
+                    "cssVars": {
+                        "light": {
+                            "primary": "oklch(0.55 0.25 265)",
+                            "foreground": "oklch(0.25 0.02 250)",
+                            "background": "oklch(0.98 0.01 250)",
+                            "secondary": "oklch(0.95 0.01 250)"
+                        },
+                        "dark": {
+                            "primary": "oklch(0.55 0.25 265)",
+                            "foreground": "oklch(0.95 0.01 250)",
+                            "background": "oklch(0.20 0.02 250)",
+                            "secondary": "oklch(0.30 0.02 250)"
+                        }
+                    }
+                }
+            ]
+        };
+        
+        // Color inversion function (simplified)
+        function invertColor(oklchColor) {
+            // This is a simplified version - in reality you'd need the full color conversion
+            const match = oklchColor.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+            if (!match) return oklchColor;
+            
+            const [, l, c, h] = match;
+            const invertedL = (1 - parseFloat(l)).toFixed(2);
+            return `oklch(${invertedL} ${c} ${h})`;
+        }
+        
+        // Get color with healing
+        function getColorWithHealing(themeItem, mode, key) {
+            const oppositeMode = mode === "light" ? "dark" : "light";
+            
+            // 1. Current mode
+            let value = themeItem.cssVars[mode]?.[key];
+            
+            // 2. Opposite mode (inverted)
+            if (!value && themeItem.cssVars[oppositeMode]?.[key]) {
+                value = invertColor(themeItem.cssVars[oppositeMode][key]);
+            }
+            
+            // 3. Shared theme vars
+            if (!value && themeItem.cssVars.theme?.[key]) {
+                value = themeItem.cssVars.theme[key];
+            }
+            
+            return value || null;
+        }
+        
+        // Get theme preview palette
+        function getThemePreviewPalette(themeName) {
+            const themeItem = themeRegistry.items.find(item => item.name === themeName);
+            if (!themeItem) return null;
+            
+            const colorKeys = ['primary', 'foreground', 'background', 'secondary'];
+            
+            const lightColors = colorKeys.map(key => getColorWithHealing(themeItem, "light", key)).filter(Boolean);
+            const darkColors = colorKeys.map(key => getColorWithHealing(themeItem, "dark", key)).filter(Boolean);
+            
+            return {
+                light: lightColors,
+                dark: darkColors
+            };
+        }
+        
+        // Render themes
+        function renderThemes() {
+            const grid = document.getElementById('theme-grid');
+            
+            themeRegistry.items.forEach(theme => {
+                const palette = getThemePreviewPalette(theme.name);
+                if (!palette) return;
+                
+                const card = document.createElement('div');
+                card.className = 'theme-card';
+                
+                card.innerHTML = `
+                    <div class="theme-name">${theme.name}</div>
+                    <div class="theme-preview">
+                        <div class="mode-group light-mode">
+                            ${palette.light.map((color, index) => `
+                                <div class="color-circle" style="background-color: ${color}" title="Light mode color ${index + 1}"></div>
+                            `).join('')}
+                        </div>
+                        <span class="mode-label">Light</span>
+                        
+                        <div class="mode-group dark-mode">
+                            ${palette.dark.map((color, index) => `
+                                <div class="color-circle" style="background-color: ${color}" title="Dark mode color ${index + 1}"></div>
+                            `).join('')}
+                        </div>
+                        <span class="mode-label">Dark</span>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Load theme data and render
+        async function loadThemes() {
+            try {
+                // In a real implementation, you'd fetch the actual themes.json
+                // For now, we'll use a simplified version with just one theme as an example
+                renderThemes();
+            } catch (error) {
+                console.error('Failed to load themes:', error);
+                document.getElementById('theme-grid').innerHTML = '<p>Failed to load themes</p>';
+            }
+        }
+        
+        loadThemes();
+    </script>
+</body>
+</html>
