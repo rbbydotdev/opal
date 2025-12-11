@@ -47,3 +47,11 @@ npm run build
 2. Add Project
 3. Select file system, (indexeddb) 
 4. Enjoy!
+
+## Credits
+
+- The workhorse of the WYSIWIG editing is from the great work of [@petyosi](https://github.com/petyosi) - [MDX-Editor](https://github.com/mdx-editor/editor)
+- Polished Stone Effect adapted from [@jhey's codepen](https://codepen.io/jh3y/pen/OPJyVGb)
+- [Codemirror 6](https://codemirror.net/)
+- [shadcn](https://ui.shadcn.com/)
+
