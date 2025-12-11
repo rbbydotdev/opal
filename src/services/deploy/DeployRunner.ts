@@ -1,6 +1,7 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { DeployableAgentFromAuth } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAgentDeployableFiles } from "@/data/RemoteSearchFuzzyCache";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { AnyDeployBundle, DeployBundle } from "@/services/deploy/DeployBundle";
@@ -26,7 +27,6 @@ export abstract class DeployRunner<
   TParams,
   TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
 > {
-  readonly build: BuildDAO;
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
@@ -38,17 +38,14 @@ export abstract class DeployRunner<
   }>();
   constructor({
     agent,
-    build,
     destination,
     deploy,
   }: {
     agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
-    build: BuildDAO;
     destination: DestinationDAO;
     deploy: DeployDAO;
   }) {
     this.agent = agent;
-    this.build = build;
     this.destination = destination;
     this.deploy = deploy;
   }
@@ -91,32 +88,10 @@ export function useDeployRunnerLogs(runner: DeployRunner<any, any, any>) {
   return useSyncExternalStore(runner.onLog, runner.getLogs);
 }
 
-export class GithubDeployRunner extends DeployRunner<AnyDeployBundle, { repoName: string; repoOwner: string }> {
-  constructor(params: {
-    build: BuildDAO;
-    destination: DestinationDAO;
-    deploy: DeployDAO;
-    agent: RemoteAuthAgentDeployableFiles<AnyDeployBundle, { repoName: string; repoOwner: string }>;
-  }) {
-    super(params);
-  }
-  async runDeploy(params: { repoName: string; repoOwner: string }): Promise<void> {
-    this.log("Starting deployment...");
-    await this.build.Disk.refresh();
-    const deployBundle = new AnyDeployBundle(this.build.getSourceDisk(), this.build.getBuildPath());
-    let files = 0;
-    await this.agent.deployFiles(deployBundle, params, (deployedFile) => {
-      this.log(`Deployed file (${++files}): ${deployedFile.path}`);
-    });
-    this.log("Deployment completed successfully.");
-  }
-}
-
 export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> extends DeployRunner<TBundle, TParams> {
   private bundle: TBundle;
 
   constructor(params: {
-    build: BuildDAO;
     destination: DestinationDAO;
     deploy: DeployDAO;
     agent: RemoteAuthAgentDeployableFiles<TBundle, TParams>;
@@ -126,10 +101,49 @@ export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> e
     this.bundle = params.bundle;
   }
 
+  static Create({
+    build,
+    destination,
+    workspaceId,
+    label,
+  }: {
+    build: BuildDAO;
+    destination: DestinationDAO;
+    workspaceId: string;
+    label: string;
+  }) {
+    return new AnyDeployRunner({
+      destination,
+      deploy: DeployDAO.CreateNew({
+        label,
+        workspaceId,
+        data: {},
+        buildId: build.guid,
+        destinationId: destination.guid,
+      }),
+      agent: DeployableAgentFromAuth(destination.RemoteAuth),
+      bundle: new AnyDeployBundle(build),
+    });
+  }
+
   async runDeploy(params: TParams): Promise<void> {
     this.log("Starting deployment...");
-    await this.build.Disk.refresh();
-    await this.agent.deployFiles(this.bundle, params);
+    let files = 0;
+    await this.agent.deployFiles(this.bundle, params, (deployedFile) => {
+      this.log(`Deployed file (${++files}): ${deployedFile.path}`);
+    });
     this.log("Deployment completed successfully.");
   }
+}
+
+export class NullDeployRunner extends DeployRunner<AnyDeployBundle, any> {
+  constructor() {
+    super({
+      agent: {} as RemoteAuthAgentDeployableFiles<AnyDeployBundle, any>,
+      destination: {} as DestinationDAO,
+      deploy: {} as DeployDAO,
+    });
+  }
+
+  async runDeploy(_params: any): Promise<void> {}
 }

@@ -3,7 +3,7 @@ import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
 import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { TreeNode } from "@/components/filetree/TreeNode";
-import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
@@ -54,10 +54,12 @@ type DeployBundleTree = DeployBundleTreeEntry[];
 export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
 export abstract class DeployBundle<TFile> {
-  constructor(
-    readonly disk: Disk,
-    readonly buildDir = absPath("/")
-  ) {}
+  readonly disk: Disk;
+  readonly buildDir = absPath("/");
+  constructor(build: BuildDAO) {
+    this.disk = build.Disk;
+    this.buildDir = build.getOutputPath();
+  }
 
   protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
@@ -144,13 +146,13 @@ export class GithubDeployBundle extends DeployBundle<GithubInlinedFile> {
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
   getFiles = this.getDeployBundleFiles;
 }
-export function GetBundleForDestination(
-  destination: DestinationDAO<unknown>,
-  disk: Disk,
-  buildDir: AbsPath
-): DeployBundle<DeployBundleTreeEntry> {
-  if (isGithubRemoteAuth(destination.RemoteAuth) && destination.remoteAuth.source === "github") {
-    return new GithubDeployBundle(disk, buildDir);
-  }
-  return new AnyDeployBundle(disk, buildDir);
-}
+// export function GetBundleForDestination(
+//   destination: DestinationDAO<unknown>,
+//   disk: Disk,
+//   buildDir: AbsPath
+// ): DeployBundle<DeployBundleTreeEntry> {
+//   if (isGithubRemoteAuth(destination.RemoteAuth) && destination.remoteAuth.source === "github") {
+//     return new GithubDeployBundle(disk, buildDir);
+//   }
+//   return new AnyDeployBundle(disk, buildDir);
+// }
