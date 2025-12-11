@@ -17,8 +17,8 @@ import { AnyDestinationMetaType, DestinationDAO } from "@/data/dao/DestinationDA
 import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { BuildLog } from "@/hooks/useBuildLogs";
 import { cn } from "@/lib/utils";
+import { useDeployRunner } from "@/services/deploy/useDeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
@@ -303,24 +303,23 @@ function PublicationModalPublishContent({
   const { destinations } = useDestinations();
 
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [logs, setLogs] = useState<BuildLog[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const NO_REMOTES = remoteAuths.length === 0;
+  const { deployRunner, logs } = useDeployRunner({
+    label: `>>>>>>>${"foo"}<<<<<`,
+    workspaceId: currentWorkspace.id,
+    build,
+    destination,
+  });
+  // const logs = useSyncExternalStore(deployRunner.onLog, deployRunner.getLogs);
+
+  // deployRunner.runDeploy();
 
   const handleOkay = () => onOpenChange(false);
-  // const log = useCallback((bl: BuildLogLine) => {
-  //   setLogs((prev) => [...prev, bl]);
-  // }, []);
-  // GithubDeployBundle
-  const handleBuild = async () => {
+  const handleDeploy = async () => {
     if (!destination) return;
     setIsPublishing(true);
-    setLogs([]);
     setPublishError(null);
-    destination;
-    //getbundlefromremoteauth
-    // GetBundleForRemoteAuth(destination)
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
@@ -352,7 +351,6 @@ function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
-      {/* <BuildLabel build={build} className="border bg-card p-2 rounded-lg font-mono" /> */}
       <BuildSelector builds={builds} build={build} setBuildId={handleBuildSelect}></BuildSelector>
       <div className="space-y-2">
         <span className="text-sm font-medium">Destination</span>
@@ -367,7 +365,7 @@ function PublicationModalPublishContent({
                   <UploadCloud size={16} className="text-ring" />
                   My Destinations
                 </div>
-                {destinations.length === 0 && (
+                {!destinations.length && (
                   <div className="font-mono font-bold italic flex border-dashed p-1 border border-ring justify-center text-2xs mb-2 mx-4">
                     none
                   </div>
@@ -423,7 +421,7 @@ function PublicationModalPublishContent({
             title="Add Destination"
             onClick={() => {
               setDestination(null);
-              pushView(NO_REMOTES ? "connection" : "destination");
+              pushView(remoteAuths.length === 0 ? "connection" : "destination");
             }}
           >
             <Plus />
@@ -455,7 +453,7 @@ function PublicationModalPublishContent({
           >
             Cancel
           </Button>
-          <Button onClick={handleBuild} className="flex items-center gap-2" variant="secondary">
+          <Button onClick={handleDeploy} className="flex items-center gap-2" variant="secondary">
             {isPublishing ? (
               <>
                 <Loader size={16} className="animate-spin" />

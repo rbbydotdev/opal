@@ -10,8 +10,9 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   buildId: string;
   timestamp: number;
   workspaceId: string;
-  destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-  destinationName: string;
+  // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
+  // destinationName: string;
+  destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];
   data: T;
@@ -25,24 +26,26 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     label,
     timestamp,
     workspaceId,
-    destinationType,
-    destinationName,
+    // destinationType,
+    // destinationName,
+    destinationId,
     buildId,
     status = "idle",
     logs,
     data,
     completedAt = null,
     error = null,
-  }: Optional<DeployRecord, "status" | "completedAt" | "error">) {
+  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs">) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
     this.buildId = buildId;
     this.workspaceId = workspaceId;
-    this.destinationType = destinationType;
-    this.destinationName = destinationName;
+    // this.destinationType = destinationType;
+    // this.destinationName = destinationName;
+    this.destinationId = destinationId;
     this.status = status;
-    this.logs = logs;
+    this.logs = logs || [];
     this.data = data;
     this.completedAt = completedAt;
     this.error = error;
@@ -59,8 +62,9 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       timestamp: this.timestamp,
       buildId: this.buildId,
       workspaceId: this.workspaceId,
-      destinationType: this.destinationType,
-      destinationName: this.destinationName,
+      destinationId: this.destinationId,
+      // destinationType: this.destinationType,
+      // destinationName: this.destinationName,
       status: this.status,
       data: this.data,
       logs: this.logs,
@@ -72,21 +76,23 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   static CreateNew<T = any>({
     label,
     workspaceId,
-    destinationType,
-    destinationName,
+    destinationId,
     data,
     buildId,
     guid = DeployDAO.guid(),
-    logs = [],
+    // logs,
+    // destinationType,
+    // destinationName,
   }: {
     label: string;
     workspaceId: string;
     buildId: string;
     data: T;
-    destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-    destinationName: string;
+    destinationId: string;
+    // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
+    // destinationName: string;
     guid?: string;
-    logs?: DeployLogLine[];
+    // logs?: DeployLogLine[];
   }) {
     return new DeployDAO<T>({
       guid,
@@ -95,11 +101,12 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       timestamp: Date.now(),
       buildId,
       workspaceId,
-      destinationType,
+      // destinationType,
+      // destinationName,
+      destinationId,
       completedAt: null,
       error: null,
-      destinationName,
-      logs,
+      logs: [],
     });
   }
 
@@ -147,8 +154,9 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       timestamp: this.timestamp,
       buildId: this.buildId,
       workspaceId: this.workspaceId,
-      destinationType: this.destinationType,
-      destinationName: this.destinationName,
+      destinationId: this.destinationId,
+      // destinationType: this.destinationType,
+      // destinationName: this.destinationName,
       status: this.status,
       data: this.data,
       logs: this.logs,
@@ -198,10 +206,11 @@ class NullDeployDAO extends DeployDAO {
       timestamp: Date.now(),
       buildId: "",
       workspaceId: "",
-      destinationType: "netlify",
+      destinationId: "",
       data: {},
-      destinationName: "null",
       logs: [],
+      // destinationType: "netlify",
+      // destinationName: "null",
     });
   }
 }

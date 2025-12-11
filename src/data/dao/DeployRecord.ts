@@ -4,8 +4,9 @@ export interface DeployRecord<T = any> {
   timestamp: number;
   buildId: string;
   workspaceId: string;
-  destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-  destinationName: string;
+  // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
+  // destinationName: string;
+  destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];
   data: T;
