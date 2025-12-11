@@ -84,10 +84,15 @@ export class BuildRunner {
   }
   private abortController: AbortController = new AbortController();
   protected readonly log = (message: string, type?: BuildLogType) => {
-    const l = logLine(message, type);
-    this.build.logs = [...this.build.logs, l];
-    this.emitter.emit("log", l);
-    return l;
+    const logLine = {
+      timestamp: Date.now(),
+      message,
+      type,
+    } as BuildLogLine;
+
+    this.build.logs = [...this.build.logs, logLine];
+    this.emitter.emit("log", logLine);
+    return logLine;
   };
 
   static async recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
@@ -126,6 +131,7 @@ export class BuildRunner {
     return this.emitter.on("log", callback);
   };
   getLogs = () => this.logs;
+
   onComplete = (callback: (complete: boolean) => void) => {
     return this.emitter.on("complete", callback);
   };

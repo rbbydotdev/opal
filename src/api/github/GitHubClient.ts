@@ -1,5 +1,5 @@
 import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
-import { DeployBundleTreeFileOnly } from "@/services/deploy/DeployBundle";
+import { DeployBundleTreeEntry } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
 
 export interface GitHubRepo {
@@ -28,13 +28,7 @@ export interface GitHubUser {
   bio?: string;
 }
 
-// export interface GithubInlinedFile {
-//   path: string;
-//   getContent: () => Promise<DeployBundleTreeFileContent>;
-//   encoding: "utf-8" | "base64";
-// }
-
-export type GithubInlinedFile = DeployBundleTreeFileOnly[0];
+export type GithubInlinedFile = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
 export class GitHubClient {
   private octokit: Octokit;
@@ -85,7 +79,7 @@ export class GitHubClient {
           per_page: perPage,
           affiliation: "owner,collaborator",
           headers: {
-            "If-None-Match": "", // Force fresh response, bypass browser cache
+            "If-None-Match": "",
           },
           request: { signal },
         });
