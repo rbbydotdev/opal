@@ -372,7 +372,7 @@ const CodeMirrorToolbar = ({
         )}
 
         <Label htmlFor="vimMode" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
-          <span className="text-sm">Vim Mode</span>
+          <span className="text-sm whitespace-nowrap truncate">Vim Mode</span>
           <Switch
             id="vimMode"
             className="ml-1"

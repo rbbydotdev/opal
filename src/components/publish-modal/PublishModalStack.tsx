@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
-import { BuildLogLine } from "@/data/dao/BuildRecord";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
@@ -310,14 +309,18 @@ function PublicationModalPublishContent({
   const NO_REMOTES = remoteAuths.length === 0;
 
   const handleOkay = () => onOpenChange(false);
-  const log = useCallback((bl: BuildLogLine) => {
-    setLogs((prev) => [...prev, bl]);
-  }, []);
+  // const log = useCallback((bl: BuildLogLine) => {
+  //   setLogs((prev) => [...prev, bl]);
+  // }, []);
+  // GithubDeployBundle
   const handleBuild = async () => {
     if (!destination) return;
     setIsPublishing(true);
     setLogs([]);
     setPublishError(null);
+    destination;
+    //getbundlefromremoteauth
+    // GetBundleForRemoteAuth(destination)
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
