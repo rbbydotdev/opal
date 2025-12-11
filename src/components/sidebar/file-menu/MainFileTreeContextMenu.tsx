@@ -52,7 +52,7 @@ export const MainFileTreeContextMenu = ({
   const { selectedFocused } = useFileTreeMenuCtx();
   const { setExpandAll } = useTreeExpanderContext();
 
-  const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
+  const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.disk.type), [currentWorkspace]);
 
   const addCssFile = () => addFile(fileNode, "styles.css");
   const addEjsFile = () => addFile(fileNode, "template.ejs");

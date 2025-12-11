@@ -185,7 +185,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const workspaces = useWorkspaces();
   const workspaceRoute = useWorkspaceRoute();
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(NULL_WORKSPACE);
-  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ disk: currentWorkspace.getDisk() });
+  const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({ disk: currentWorkspace.disk });
   const location = useLocation();
   const navigate = useNavigate();
   const { workspaceName } = Workspace.parseWorkspacePath(location.pathname);
@@ -287,8 +287,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
         fileTree,
         fileTreeDir,
         git: {
-          repo: currentWorkspace.getRepo(),
-          playbook: currentWorkspace.getPlaybook(),
+          repo: currentWorkspace.repo,
+          playbook: currentWorkspace.playbook,
         },
       }}
     >

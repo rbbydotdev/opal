@@ -815,7 +815,7 @@ function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
   // const { repo, playbook } = useMemo(
-  //   () => ({ repo: currentWorkspace.getRepo(), playbook: currentWorkspace.getPlaybook() }),
+  //   () => ({ repo: currentWorkspace.repo, playbook: currentWorkspace.playbook }),
   //   [currentWorkspace]
   // );
   const { repo, playbook } = useWorkspaceGitRepo({ currentWorkspace });

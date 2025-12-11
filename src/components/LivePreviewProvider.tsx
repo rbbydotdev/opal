@@ -2,12 +2,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Printer } from "lucide-react";
-import { createContext, useContext, ReactNode, useState, useRef } from "react";
+import { createContext, ReactNode, useContext, useRef, useState } from "react";
 
 interface LivePreviewDialogContextType {
   showDialog: (show: boolean) => void;
-  extPreviewCtrl: React.RefObject<WindowPreviewHandler>;
-  onRenderBodyReadyRef: React.MutableRefObject<((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null>;
+  extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
+  onRenderBodyReadyRef: React.MutableRefObject<
+    ((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null
+  >;
 }
 
 const LivePreviewDialogContext = createContext<LivePreviewDialogContextType | undefined>(undefined);
@@ -20,8 +22,10 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  const extPreviewCtrl = useRef<WindowPreviewHandler>(null);
-  const onRenderBodyReadyRef = useRef<((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null>(null);
+  const extPreviewCtrl = useRef<WindowPreviewHandler | null>(null);
+  const onRenderBodyReadyRef = useRef<
+    ((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null
+  >(null);
 
   const showDialog = (show: boolean) => {
     setIsDialogOpen(show);
@@ -61,7 +65,7 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
 export function useLivePreviewDialog() {
   const context = useContext(LivePreviewDialogContext);
   if (context === undefined) {
-    throw new Error('useLivePreviewDialog must be used within a LivePreviewDialogProvider');
+    throw new Error("useLivePreviewDialog must be used within a LivePreviewDialogProvider");
   }
   return context;
 }

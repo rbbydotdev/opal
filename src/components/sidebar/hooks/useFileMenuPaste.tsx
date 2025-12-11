@@ -47,14 +47,14 @@ export function useFileMenuPaste({ currentWorkspace }: { currentWorkspace: Works
 
           // Transfer between different workspaces
           const sourceNodes = getSourceNodes();
-          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
+          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.disk);
           await sourceWorkspace.removeMultiple(sourceNodes.map((n) => n.source));
           return sourceNodes.length;
         }
 
         if (action === "copy") {
           const sourceNodes = getSourceNodes();
-          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.getDisk());
+          await currentWorkspace.copyMultipleSourceNodes(sourceNodes, sourceWorkspace.disk);
           return sourceNodes.length;
         }
 

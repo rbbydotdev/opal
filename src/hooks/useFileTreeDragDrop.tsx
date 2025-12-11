@@ -155,10 +155,7 @@ export function useFileTreeDragDrop({
     return handleDropFilesForNode({ currentWorkspace, files: event.dataTransfer.files, targetNode });
   };
 
-  const handleDrop = async (
-    event: React.DragEvent,
-    targetNode: TreeNode = currentWorkspace.getDisk().fileTree.root
-  ) => {
+  const handleDrop = async (event: React.DragEvent, targetNode: TreeNode = currentWorkspace.disk.fileTree.root) => {
     setDragOver(null);
     setIsDragging(false);
     event.preventDefault();

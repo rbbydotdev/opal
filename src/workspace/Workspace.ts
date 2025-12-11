@@ -64,31 +64,31 @@ export class Workspace {
 
   name: string;
   guid: string;
-  private remoteAuths?: RemoteAuthDAO[];
-  private disk: Disk;
-  private thumbs: Disk;
-  private repo: GitRepo;
-  private playbook: GitPlaybook;
+  private _remoteAuths?: RemoteAuthDAO[];
+  private _disk: Disk;
+  private _thumbs: Disk;
+  private _repo: GitRepo;
+  private _playbook: GitPlaybook;
   tornDown: boolean = false;
   local = new WorkspaceEventsLocal();
   remote: WorkspaceEventsRemote;
 
   private unsubs: (() => void)[] = [];
 
-  getDisk() {
-    return this.disk;
+  get disk() {
+    return this._disk;
   }
-  getRepo() {
-    return this.repo;
+  get repo() {
+    return this._repo;
   }
-  getPlaybook() {
-    return this.playbook;
+  get playbook() {
+    return this._playbook;
   }
-  getThumbsDisk() {
-    return this.thumbs;
+  get thumbs() {
+    return this._thumbs;
   }
-  getRemoteAuths() {
-    return this.remoteAuths ?? [];
+  get remoteAuths() {
+    return this._remoteAuths ?? [];
   }
 
   constructor(
@@ -109,12 +109,12 @@ export class Workspace {
   ) {
     this.name = WorkspaceDAO.Slugify(name);
     this.guid = guid;
-    this.remoteAuths = remoteAuths || [];
-    this.disk = disk;
-    this.thumbs = thumbs;
+    this._remoteAuths = remoteAuths || [];
+    this._disk = disk;
+    this._thumbs = thumbs;
     this.imageCache = Workspace.newCache(this.name);
-    this.repo = GitRepo.FromDisk(this.disk, `${this.id}/repo`);
-    this.playbook = new GitPlaybook(this.repo);
+    this._repo = GitRepo.FromDisk(this.disk, `${this.id}/repo`);
+    this._playbook = new GitPlaybook(this.repo);
     this.remote = new WorkspaceEventsRemote(this.guid);
   }
 
@@ -408,8 +408,8 @@ export class Workspace {
   };
 
   async recoverDirectoryAccess(): Promise<void> {
-    const disk = this.getDisk();
-    const thumbDisk = this.getThumbsDisk();
+    const disk = this.disk;
+    const thumbDisk = this.thumbs;
     if (disk instanceof OpFsDirMountDisk) {
       const handle = await disk.selectDirectory();
       if (thumbDisk instanceof OpFsDirMountDisk) {

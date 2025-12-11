@@ -1,5 +1,5 @@
-import { BrowserDetection } from "@/lib/BrowserDetection";
 import { WindowContext } from "@/features/live-preview/WindowContext";
+import { BrowserDetection } from "@/lib/BrowserDetection";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 

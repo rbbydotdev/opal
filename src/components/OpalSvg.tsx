@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { ClassAttributes, ImgHTMLAttributes, JSX } from "react";
 
 function OpalSvgDark({
@@ -14,12 +15,17 @@ function OpalSvgLight({
   return <img src="/opal.svg" alt="Opal Icon" {...props} className={"opalSvgLight " + (className ?? "")} />;
 }
 
-export function OpalSvg(
-  props: JSX.IntrinsicAttributes & ClassAttributes<HTMLImageElement> & ImgHTMLAttributes<HTMLImageElement>
-) {
+export function OpalSvg({
+  className,
+  variant = "square",
+  ...props
+}: JSX.IntrinsicAttributes &
+  ClassAttributes<HTMLImageElement> &
+  ImgHTMLAttributes<HTMLImageElement> & { variant?: "round" | "square" }) {
   return (
     <>
-      <OpalSvgDark {...props} /> <OpalSvgLight {...props} />
+      <OpalSvgDark {...props} className={cn(className, variant === "round" ? "rounded-full" : "")} />{" "}
+      <OpalSvgLight {...props} className={cn(className, variant === "round" ? "rounded-full" : "")} />
     </>
   );
 }

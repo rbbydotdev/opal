@@ -37,7 +37,7 @@ export function FileTreeProvider({
 }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { fileTreeDir, flatTree, fileTree } = useWatchWorkspaceFileTree({
-    disk: disk || currentWorkspace.getDisk(),
+    disk: disk || currentWorkspace.disk,
     filterIn,
     filterOut,
   });

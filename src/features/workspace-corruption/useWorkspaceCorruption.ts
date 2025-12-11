@@ -46,7 +46,7 @@ export async function analyzeWorkspaceError(workspaceName: string, error: Error)
   const isServiceUnavailable = error instanceof ServiceUnavailableError;
   const isOpfsRevoked =
     isServiceUnavailable && workspaceForRecovery ? await checkOpfsHandleRevocation(workspaceForRecovery, error) : false;
-  const diskType = workspaceForRecovery?.getDisk().type ?? null;
+  const diskType = workspaceForRecovery?.disk.type ?? null;
 
   const opfsMessage = `Workspace "${workspaceName}" lost access to its directory. This happens when the browser revokes file system access or if the folder was moved. You can select the directory again or create a new workspace for the current location.`;
   const corruptionMessage = `Workspace "${workspaceName}" appears to be corrupted or has missing files. This is likely due to external file system changes. You can create a new workspace to start again, or select the directory again if using OPFS.`;
@@ -77,7 +77,7 @@ export async function analyzeWorkspaceError(workspaceName: string, error: Error)
 }
 
 export async function checkOpfsHandleRevocation(workspace: Workspace, _error: Error): Promise<boolean> {
-  const disk = workspace.getDisk();
+  const disk = workspace.disk;
   if (disk instanceof OpFsDirMountDisk) {
     // Check if the disk needs directory selection (handle was revoked)
     const needsSelection = await disk.needsDirectorySelection();

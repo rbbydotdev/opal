@@ -170,14 +170,6 @@ export class WorkspaceDAO {
     return slugifier(name);
   }
 
-  getDisk() {
-    return DiskDAO.FromJSON(this.disk);
-  }
-
-  getThumbs() {
-    return DiskDAO.FromJSON(this.thumbs);
-  }
-
   static async fetchFromRoute(route: string) {
     if (!isAncestor({ child: route, parent: WorkspaceDAO.rootRoute }))
       throw new BadRequestError("Invalid route " + route);

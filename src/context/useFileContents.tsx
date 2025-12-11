@@ -1,13 +1,11 @@
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
-import { getMarkdownData, mergeFrontmatter } from "@/lib/markdown/frontMatter";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { nanoid } from "nanoid";
 
 /**
  * Simplified hook for watching file content changes (read-only)
@@ -34,11 +32,11 @@ export function useLiveFileContent(currentWorkspace: Workspace, path: AbsPath | 
     void loadContent();
 
     // Watch for file changes
-    const unsubscribeInside = currentWorkspace.getDisk().insideWriteListener(path, (content) => {
+    const unsubscribeInside = currentWorkspace.disk.insideWriteListener(path, (content) => {
       setContent(String(content));
     });
 
-    const unsubscribeOutside = currentWorkspace.getDisk().outsideWriteListener(path, (content) => {
+    const unsubscribeOutside = currentWorkspace.disk.outsideWriteListener(path, (content) => {
       setContent(String(content));
     });
 
@@ -132,7 +130,7 @@ export function useFileContents({
   const writeFileContents = useCallback(
     (updates: string) => {
       if (filePath && currentWorkspace) {
-        void currentWorkspace?.getDisk().writeFile(filePath, updates);
+        void currentWorkspace?.disk.writeFile(filePath, updates);
         // DO NOT EMIT OUTSIDE_WRITE - causes text-md-text corruption in editor
         // INSIDE_WRITE events are emitted by the disk write operation itself
       }
@@ -172,7 +170,7 @@ export function useFileContents({
     // If filePath changed and we have pending changes, flush them to the previous file
     if (previousFilePathRef.current !== filePath && debounceRef.current && pendingContentRef.current !== null) {
       if (currentWorkspace && previousFilePathRef.current) {
-        void currentWorkspace.getDisk().writeFile(previousFilePathRef.current, String(pendingContentRef.current));
+        void currentWorkspace.disk.writeFile(previousFilePathRef.current, String(pendingContentRef.current));
       }
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
@@ -195,7 +193,7 @@ export function useFileContents({
         previousFilePathRef.current
       ) {
         console.log("FINAL CLEANUP - FLUSHING CHANGES");
-        void currentWorkspace.getDisk().writeFile(previousFilePathRef.current, String(pendingContentRef.current));
+        void currentWorkspace.disk.writeFile(previousFilePathRef.current, String(pendingContentRef.current));
         clearTimeout(debounceRef.current);
         debounceRef.current = null;
       }
@@ -213,7 +211,7 @@ export function useFileContents({
     async (signal) => {
       if (currentWorkspace && filePath) {
         try {
-          const fileContents = await currentWorkspace.getDisk().readFile(filePath);
+          const fileContents = await currentWorkspace.disk.readFile(filePath);
 
           // Check if operation was cancelled
           if (signal.aborted) return;
@@ -264,7 +262,7 @@ export function useFileContents({
    */
   useEffect(() => {
     if (filePath) {
-      return currentWorkspace.getDisk().insideWriteListener(filePath, (c) => {
+      return currentWorkspace.disk.insideWriteListener(filePath, (c) => {
         setHotContents(c);
       });
     }
@@ -278,7 +276,7 @@ export function useFileContents({
    */
   useEffect(() => {
     if (filePath) {
-      return currentWorkspace.getDisk().outsideWriteListener(filePath, (c) => {
+      return currentWorkspace.disk.outsideWriteListener(filePath, (c) => {
         setHotContents(c);
         setInitialContents(c);
       });
