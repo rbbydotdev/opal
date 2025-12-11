@@ -3,6 +3,7 @@ import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
 import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { TreeNode } from "@/components/filetree/TreeNode";
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
@@ -142,4 +143,14 @@ export class GithubDeployBundle extends DeployBundle<GithubInlinedFile> {
 }
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
   getFiles = this.getDeployBundleFiles;
+}
+export function GetBundleForDestination(
+  destination: DestinationDAO<unknown>,
+  disk: Disk,
+  buildDir: AbsPath
+): DeployBundle<DeployBundleTreeEntry> {
+  if (isGithubRemoteAuth(destination.RemoteAuth) && destination.remoteAuth.source === "github") {
+    return new GithubDeployBundle(disk, buildDir);
+  }
+  return new AnyDeployBundle(disk, buildDir);
 }
