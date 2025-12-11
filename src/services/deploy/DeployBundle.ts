@@ -49,7 +49,8 @@ const isDeployBundleTreeDirEntry = (
 };
 
 type DeployBundleTree = DeployBundleTreeEntry[];
-export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>[];
+
+export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
 export abstract class DeployBundle<TFile> {
   constructor(
@@ -57,7 +58,7 @@ export abstract class DeployBundle<TFile> {
     readonly buildDir = absPath("/")
   ) {}
 
-  protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly> => {
+  protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
     return Promise.all(
       [...this.disk.fileTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>

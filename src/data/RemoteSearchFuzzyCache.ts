@@ -17,7 +17,10 @@ export interface RemoteAuthAgentSearchType<T = unknown> {
   fetchAll(options?: { signal?: AbortSignal }): Promise<T[]>;
 }
 
-export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundle<any>, TParams = unknown>
-  extends RemoteAuthAgent {
-  deployFiles(bundle: TBundle, params: TParams): Promise<unknown>;
+export interface RemoteAuthAgentDeployableFiles<
+  TBundle extends DeployBundle<TFile>,
+  TParams = unknown,
+  TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
+> extends RemoteAuthAgent {
+  deployFiles(bundle: TBundle, params: TParams, cb?: (file: TFile) => void): Promise<unknown>;
 }
