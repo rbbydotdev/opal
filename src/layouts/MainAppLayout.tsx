@@ -21,7 +21,6 @@ import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
 import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
-import { cn } from "@/lib/utils";
 import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
 import { Toaster } from "sonner";
@@ -78,10 +77,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                         <RemoteMDXEditorRealmProvider>
                                           <div className="w-full flex">
                                             <ErrorBoundary fallback={ErrorPlaque}>
-                                              <div
-                                                id={WS_BUTTON_BAR_ID}
-                                                className={cn("flex flex-col flex-shrink-0 bg-muted overflow-clip")}
-                                              >
+                                              <div id={WS_BUTTON_BAR_ID} className="bg-muted">
                                                 <ErrorBoundary fallback={ErrorMiniPlaque}>
                                                   <WorkspaceButtonBar />
                                                 </ErrorBoundary>
