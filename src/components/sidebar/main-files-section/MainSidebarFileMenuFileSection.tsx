@@ -63,7 +63,7 @@ export function MainSidebarFileMenuFileSection({
 
   const { fileTreeDir, fileTree } = useFileTreeContext();
 
-  const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.getDisk().type), [currentWorkspace]);
+  const diskType = useMemo(() => getDiskTypeLabel(currentWorkspace.disk.type), [currentWorkspace]);
 
   const hasDirChildren = useMemo(() => fileTree.root.hasDirChildren(), [fileTree]);
 
@@ -102,7 +102,7 @@ export function MainSidebarFileMenuFileSection({
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
-              dirName={currentWorkspace.getDisk().dirName}
+              dirName={currentWorkspace.disk.dirName}
               currentWorkspace={currentWorkspace}
             />
           </span>

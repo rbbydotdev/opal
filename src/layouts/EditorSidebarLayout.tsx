@@ -1,3 +1,4 @@
+import { MadeByMe } from "@/components/MadeByMe";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
@@ -308,7 +309,10 @@ export const EditorSidebarLayout = ({
           </>
         )}
       </div>
-      <div className="font-mono text-xs flex justify-end pr-4 items-center h-full">{/*future status bar */}</div>
+      <div className="font-mono text-xs flex justify-end pr-4 items-center h-full">
+        {/*future status bar */}
+        <MadeByMe />
+      </div>
     </div>
   );
 };

@@ -88,7 +88,7 @@ export const WindowPreviewComponent = forwardRef<
   {
     path: AbsPath;
     currentWorkspace: Workspace;
-    children: React.ReactNode;
+    children?: React.ReactNode;
     onRenderBodyReady?: (
       element: HTMLElement,
       context: {

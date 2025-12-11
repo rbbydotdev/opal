@@ -21,7 +21,7 @@ export async function handleDownloadRequest(
   try {
     const disk =
       paramsPayload.type === "workspace"
-        ? (await SWWStore.tryWorkspace(workspaceName)).getDisk()
+        ? (await SWWStore.tryWorkspace(workspaceName)).disk
         : DiskFromJSON(await DiskDAO.FetchFromGuidOrThrow(paramsPayload.diskId));
 
     await disk.init({ skipListeners: true });

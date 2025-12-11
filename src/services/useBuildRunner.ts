@@ -43,8 +43,8 @@ export function useBuildRunner(currentWorkspace: Workspace): {
       const build = BuildDAO.CreateNew({
         label: `Build ${new Date().toLocaleString()}`,
         workspaceId: currentWorkspace.guid,
-        disk: currentWorkspace.getDisk(),
-        sourceDisk: currentWorkspace.getDisk(),
+        disk: currentWorkspace.disk,
+        sourceDisk: currentWorkspace.disk,
         strategy,
         logs: [],
       });

@@ -78,19 +78,19 @@ function WorkspaceSettingsPage() {
                 </tr>
                 <tr className="border-b last:border-b-0">
                   <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Main Disk ID</td>
-                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.getDisk().guid}</td>
+                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.disk.guid}</td>
                 </tr>
                 <tr>
                   <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Disk Type</td>
-                  <td className="py-3 px-2 text-sm">{currentWorkspace.getDisk().type}</td>
+                  <td className="py-3 px-2 text-sm">{currentWorkspace.disk.type}</td>
                 </tr>
                 <tr className="border-b last:border-b-0">
                   <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Thumb Disk ID</td>
-                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.getThumbsDisk().guid}</td>
+                  <td className="py-3 px-2 text-sm break-words">{currentWorkspace.thumbs.guid}</td>
                 </tr>
                 <tr>
                   <td className="w-1/3 py-3 px-2 text-sm font-medium text-muted-foreground">Disk Type</td>
-                  <td className="py-3 px-2 text-sm">{currentWorkspace.getThumbsDisk().type}</td>
+                  <td className="py-3 px-2 text-sm">{currentWorkspace.thumbs.type}</td>
                 </tr>
               </tbody>
             </table>

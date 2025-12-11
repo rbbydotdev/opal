@@ -36,8 +36,8 @@ export async function handleDownloadRequestEncrypted(
     // zip.js ZipWriter takes a WritableStreamDefaultWriter or a WritableStream
     const zipWriter = new ZipWriter(new BlobWriter("application/zip"), zipWriterOptions);
 
-    await workspace.getDisk().fileTree.index();
-    const fileNodes = [...workspace.getDisk().fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
+    await workspace.disk.fileTree.index();
+    const fileNodes = [...workspace.disk.fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
       logger.log("{EncZip}: No files found in the workspace to download.");
@@ -52,7 +52,7 @@ export async function handleDownloadRequestEncrypted(
       .filter((node) => node.isTreeFile())
       .map(async (node) => {
         try {
-          const data = await workspace.getDisk().readFile(node.path);
+          const data = await workspace.disk.readFile(node.path);
           await zipWriter.add(
             joinPath(workspaceDirName, node.path),
             new Uint8ArrayReader(coerceUint8Array(data)),
