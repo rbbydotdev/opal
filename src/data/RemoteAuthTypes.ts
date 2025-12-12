@@ -1,5 +1,6 @@
-import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { z } from "zod";
+import { RemoteAuthAgentDeployableFiles } from "./remote-auth/AgentFromRemoteAuthFactory";
+import { RemoteAuthAgentSearchType } from "./useFuzzySearchQuery";
 
 // 1. Add the new type to the union
 export type RemoteAuthType = "api" | "oauth" | "oauth-device" | "basic-auth" | "no-auth";

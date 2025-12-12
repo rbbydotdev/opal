@@ -1,6 +1,6 @@
 import { NetlifyClient, NetlifySite } from "@/api/netlify/NetlifyClient";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
-import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
 export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite> {
   private _netlifyClient!: NetlifyClient;

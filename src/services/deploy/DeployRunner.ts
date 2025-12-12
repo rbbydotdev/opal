@@ -1,8 +1,8 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
-import { DeployableAgentFromAuth } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { RemoteAuthAgentDeployableFiles } from "@/data/RemoteSearchFuzzyCache";
+import { DeployableAgentFromAuth, RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import { unwrapError } from "@/lib/errors/errors";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { AnyDeployBundle, DeployBundle } from "@/services/deploy/DeployBundle";
 import { useSyncExternalStore } from "react";
@@ -22,14 +22,15 @@ export type DeployLogLine = {
   type: "info" | "error";
 };
 
-export abstract class DeployRunner<
+export class DeployRunner<
   TBundle extends DeployBundle<TFile>,
   TParams,
-  TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
+  TFile extends { path?: string } = TBundle extends DeployBundle<infer U> ? U : unknown,
 > {
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
+  private bundle: TBundle;
 
   emitter = CreateSuperTypedEmitter<{
     log: DeployLogLine;
@@ -40,14 +41,17 @@ export abstract class DeployRunner<
     agent,
     destination,
     deploy,
+    bundle,
   }: {
     agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
     destination: DestinationDAO;
     deploy: DeployDAO;
+    bundle: TBundle;
   }) {
     this.agent = agent;
     this.destination = destination;
     this.deploy = deploy;
+    this.bundle = bundle;
   }
 
   get isDeploying() {
@@ -69,38 +73,6 @@ export abstract class DeployRunner<
     return this.deploy.status === "idle";
   }
 
-  onLog = (callback: (log: DeployLogLine) => void) => {
-    return this.emitter.on("log", callback);
-  };
-  getLogs = () => this.deploy.logs;
-
-  protected readonly log = (message: string, type?: DeployLogType) => {
-    const line = logLine(message, type);
-    this.deploy.logs = [...this.deploy.logs, line];
-    this.emitter.emit("log", line);
-    return line;
-  };
-
-  abstract runDeploy(params: TParams): Promise<void>;
-}
-
-export function useDeployRunnerLogs(runner: DeployRunner<any, any, any>) {
-  return useSyncExternalStore(runner.onLog, runner.getLogs);
-}
-
-export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> extends DeployRunner<TBundle, TParams> {
-  private bundle: TBundle;
-
-  constructor(params: {
-    destination: DestinationDAO;
-    deploy: DeployDAO;
-    agent: RemoteAuthAgentDeployableFiles<TBundle, TParams>;
-    bundle: TBundle;
-  }) {
-    super(params);
-    this.bundle = params.bundle;
-  }
-
   static Create({
     build,
     destination,
@@ -117,7 +89,7 @@ export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> e
       deploy: DeployDAO.CreateNew({
         label,
         workspaceId,
-        data: {},
+        meta: {},
         buildId: build.guid,
         destinationId: destination.guid,
       }),
@@ -126,15 +98,38 @@ export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> e
     });
   }
 
+  onLog = (callback: (log: DeployLogLine) => void) => {
+    return this.emitter.on("log", callback);
+  };
+  getLogs = () => this.deploy.logs;
+
+  protected readonly log = (message: string, type?: DeployLogType) => {
+    const line = logLine(message, type);
+    this.deploy.logs = [...this.deploy.logs, line];
+    this.emitter.emit("log", line);
+    return line;
+  };
+
   async runDeploy(params: TParams): Promise<void> {
-    this.log("Starting deployment...");
-    let files = 0;
-    await this.agent.deployFiles(this.bundle, params, (deployedFile) => {
-      this.log(`Deployed file (${++files}): ${deployedFile.path}`);
-    });
-    this.log("Deployment completed successfully.");
+    try {
+      this.log("Starting deployment...");
+      let files = 0;
+      await this.agent.deployFiles(this.bundle, params, (deployedFile) => {
+        // this.log(`Deployed file ${++files}`);
+        this.log(`Deployed file (${++files}): ${deployedFile.path ?? "unknown"}`);
+      });
+      this.log("Deployment completed successfully.");
+    } catch (e) {
+      this.log(`Deployment failed: ${unwrapError(e)}`, "error");
+    }
   }
 }
+
+export function useDeployRunnerLogs(runner: DeployRunner<any, any, any>) {
+  return useSyncExternalStore(runner.onLog, runner.getLogs);
+}
+
+export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> extends DeployRunner<TBundle, TParams> {}
 
 export class NullDeployRunner extends DeployRunner<AnyDeployBundle, any> {
   constructor() {
@@ -142,6 +137,7 @@ export class NullDeployRunner extends DeployRunner<AnyDeployBundle, any> {
       agent: {} as RemoteAuthAgentDeployableFiles<AnyDeployBundle, any>,
       destination: {} as DestinationDAO,
       deploy: {} as DeployDAO,
+      bundle: {} as AnyDeployBundle,
     });
   }
 

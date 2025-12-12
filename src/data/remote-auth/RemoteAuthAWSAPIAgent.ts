@@ -1,7 +1,7 @@
 import { AWSS3Bucket, AWSS3Client } from "@/api/aws/AWSClient";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
-import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import type { AWSAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
 export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<AWSS3Bucket> {
   private _s3Client!: AWSS3Client;
