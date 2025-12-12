@@ -21,8 +21,9 @@ import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 import { RemoteAuthVercelOAuthAgent } from "./RemoteAuthVercelOAuthAgent";
 
-import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 import { useMemo } from "react";
+import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
 export function DeployableAgentFromAuth(remoteAuth: RemoteAuthDAO) {
   const agent = AgentFromRemoteAuthFactory(remoteAuth);
@@ -85,4 +86,11 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
   remoteAuth?: RemoteAuthDAO | null
 ) {
   return useMemo(() => AgentFromRemoteAuthFactory(remoteAuth) as T, [remoteAuth]);
+}
+export interface RemoteAuthAgentDeployableFiles<
+  TBundle extends DeployBundle<TFile>,
+  TParams = unknown,
+  TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
+> extends RemoteAuthAgent {
+  deployFiles(bundle: TBundle, params: TParams, cb?: (file: TFile) => void): Promise<unknown>;
 }

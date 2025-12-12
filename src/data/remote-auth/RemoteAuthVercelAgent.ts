@@ -1,9 +1,10 @@
 import { VercelClient, VercelProject } from "@/api/vercel/VercelClient";
 import { RefreshAuth } from "@/data/RefreshAuth";
 import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
-import { RemoteAuthAgentDeployableFiles, RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
+import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
+import { RemoteAuthAgentDeployableFiles } from "./AgentFromRemoteAuthFactory";
 
 export type { VercelProject };
 

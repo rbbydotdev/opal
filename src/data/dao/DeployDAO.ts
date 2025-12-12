@@ -15,7 +15,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];
-  data: T;
+  meta: T;
   completedAt: number | null;
   error: string | null = null;
 
@@ -32,7 +32,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     buildId,
     status = "idle",
     logs,
-    data,
+    meta,
     completedAt = null,
     error = null,
   }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs">) {
@@ -46,7 +46,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.destinationId = destinationId;
     this.status = status;
     this.logs = logs || [];
-    this.data = data;
+    this.meta = meta;
     this.completedAt = completedAt;
     this.error = error;
   }
@@ -66,7 +66,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       // destinationType: this.destinationType,
       // destinationName: this.destinationName,
       status: this.status,
-      data: this.data,
+      meta: this.meta,
       logs: this.logs,
       completedAt: this.completedAt,
       error: this.error,
@@ -77,7 +77,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     label,
     workspaceId,
     destinationId,
-    data,
+    meta,
     buildId,
     guid = DeployDAO.guid(),
     // logs,
@@ -87,7 +87,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     label: string;
     workspaceId: string;
     buildId: string;
-    data: T;
+    meta: T;
     destinationId: string;
     // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
     // destinationName: string;
@@ -97,7 +97,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     return new DeployDAO<T>({
       guid,
       label,
-      data,
+      meta,
       timestamp: Date.now(),
       buildId,
       workspaceId,
@@ -158,7 +158,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       // destinationType: this.destinationType,
       // destinationName: this.destinationName,
       status: this.status,
-      data: this.data,
+      meta: this.meta,
       logs: this.logs,
       completedAt: this.completedAt,
       error: this.error,
@@ -207,7 +207,7 @@ class NullDeployDAO extends DeployDAO {
       buildId: "",
       workspaceId: "",
       destinationId: "",
-      data: {},
+      meta: {},
       logs: [],
       // destinationType: "netlify",
       // destinationName: "null",

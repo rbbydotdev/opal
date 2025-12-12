@@ -1,4 +1,3 @@
-import { RemoteAuthAgentSearchType } from "@/data/RemoteSearchFuzzyCache";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import fuzzysort from "fuzzysort";
 
@@ -46,4 +45,11 @@ export function useFuzzySearchQuery<TResult extends Record<string, any>>(
     clearError,
     results: data,
   };
+}
+export interface RemoteAuthAgentSearchType<T = unknown> {
+  hasUpdates(
+    etag: string | null,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ updated: boolean; newEtag: string | null }>;
+  fetchAll(options?: { signal?: AbortSignal }): Promise<T[]>;
 }
