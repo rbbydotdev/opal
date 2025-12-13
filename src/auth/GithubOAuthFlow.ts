@@ -10,6 +10,7 @@ type GithubOAuthFlowPayload = {
   login: string;
   token: string;
   obtainedAt: number;
+  scope: string;
 };
 
 /**
@@ -17,7 +18,7 @@ type GithubOAuthFlowPayload = {
  */
 export function getGithubOAuthUrl({
   redirectUri,
-  scopes = ["read:user", "repo", "workflow"], // slim default scope recommendations
+  scopes = ["read:user", "public_repo", "workflow"], // slim default scope recommendations
   state,
   codeChallenge,
 }: {
@@ -90,6 +91,7 @@ export async function exchangeCodeForToken({
       login: user.login,
       token,
       obtainedAt: Date.now(),
+      scope: tokenData.scope || "",
     };
   } catch (e) {
     throw mapToTypedError(e);

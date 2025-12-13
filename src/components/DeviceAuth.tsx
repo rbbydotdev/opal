@@ -17,11 +17,13 @@ export function DeviceAuth({
   form,
   source,
   onCancel = () => {},
+  children,
 }: {
   mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth-device">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  children?: React.ReactNode;
 }) {
   const [state, setState] = useState<
     "idle" | "pin-loading" | "pin-loaded" | "auth-success" | "pending-rad-save" | "error"
@@ -37,9 +39,11 @@ export function DeviceAuth({
     setState("pin-loading");
     setPin("");
     const formCorsProxy = form.getValues().data?.corsProxy;
+    const scopes = form.getValues().data?.scope?.split(",") || ["read:user", "public_repo", "workflow"];
     try {
       await GithubDeviceAuthFlow({
         corsProxy: formCorsProxy || undefined,
+        scopes,
         onVerification: (data) => {
           setVerificationUri(data.verification_uri);
           setPin(data.user_code);
@@ -50,6 +54,7 @@ export function DeviceAuth({
             accessToken: auth.token,
             login: auth.login,
             obtainedAt: Date.now(),
+            scope: auth.scope,
             corsProxy: formCorsProxy, // Use form's corsProxy value
           };
 
@@ -96,6 +101,9 @@ export function DeviceAuth({
           </FormItem>
         )}
       />
+
+      {children}
+
       {state === "error" && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">
           <p className="mb-2 font-bold">Error</p>

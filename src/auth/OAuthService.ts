@@ -8,6 +8,7 @@ import { OAuthCbChannel, OAuthProvider } from "./providers/OAuthProvider";
 interface OAuthServiceConfig {
   source: RemoteAuthSource;
   corsProxy?: string;
+  scopes?: string[];
   onSuccess: (data: RemoteAuthDataFor<"oauth">) => void;
   onError: (error: string) => void;
   onStateChange: (state: OAuthState) => void;
@@ -114,6 +115,7 @@ export class OAuthService {
         redirectUri: `${window.location.origin}/auth/${config.source}`,
         state: nanoid(),
         corsProxy: config.corsProxy,
+        scopes: config.scopes,
       });
 
       // Open popup window

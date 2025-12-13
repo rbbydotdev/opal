@@ -54,6 +54,7 @@ const RemoteAuthDeviceOAuthRecordInternalSchema = z.object({
   expiresIn: z.number().optional(),
   login: z.string(),
   obtainedAt: z.number(),
+  scope: z.string().optional(),
   corsProxy: z
     .string()
     .optional()
@@ -165,3 +166,4 @@ export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployableFiles<
 ): agent is T => {
   return !!(agent as any)?.deployFiles;
 };
+
