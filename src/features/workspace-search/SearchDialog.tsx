@@ -83,40 +83,7 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleOpenChange]);
 
-  const renderSearchResults = useMemo(() => {
-    if (error) {
-      return <div className="py-8 text-center text-sm font-mono text-destructive">{error}</div>;
-    }
-    if (hasResults) {
-      return workspaceResults.map(([workspaceName, items]) => (
-        <SearchResults
-          key={workspaceName + "@" + items?.length}
-          workspaceName={workspaceName}
-          workspaceId={items[0]!.meta.workspaceId ?? ""}
-          results={items}
-          dismissFile={(path) => hideResult(workspaceName, path)}
-          onNavigate={() => handleOpenChange(false)}
-        />
-      ));
-    }
-    if (isSearching) {
-      return (
-        <div className="flex h-full w-full items-center justify-center py-8 font-mono text-sm text-muted-foreground">
-          <div className="animate-spin">
-            <Loader className="h-6 w-6" />
-          </div>
-        </div>
-      );
-    }
-    if (searchTerm)
-      return (
-        <div className="flex h-12 w-full items-center justify-center gap-2 font-mono">
-          <SearchXIcon />
-          {"no results"}
-        </div>
-      );
-    return null;
-  }, [error, handleOpenChange, hasResults, hideResult, isSearching, searchTerm, workspaceResults]);
+  // const renderSearchResults = useMemo(, [error, handleOpenChange, hasResults, hideResult, isSearching, searchTerm, workspaceResults]);
 
   const handleWorkspaceChange = (workspaceId: string) => {
     setOptionsValue((prev) => ({ ...prev, workspace: workspaceId }));
@@ -215,10 +182,71 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
             </div>
           </CollapsibleContent>
         </Collapsible>
-        <div className="no-scrollbar mt-2 h-full overflow-y-scroll">{renderSearchResults}</div>
+        <div className="no-scrollbar mt-2 h-full overflow-y-scroll">
+          <RenderSearchResults
+            error={error}
+            hasResults={hasResults}
+            isSearching={isSearching}
+            searchTerm={searchTerm}
+            workspaceResults={workspaceResults}
+            hideResult={hideResult}
+            handleOpenChange={handleOpenChange}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+function RenderSearchResults({
+  error,
+  hasResults,
+  isSearching,
+  searchTerm,
+  workspaceResults,
+  hideResult,
+  handleOpenChange,
+}: {
+  error: string | null;
+  hasResults: boolean;
+  isSearching: boolean;
+  searchTerm: string;
+  workspaceResults: [string, WorkspaceSearchItem[]][];
+  hideResult: (workspaceName: string, path: AbsPath) => void;
+  handleOpenChange: (open: boolean) => void;
+}) {
+  if (error) {
+    return <div className="py-8 text-center text-sm font-mono text-destructive">{error}</div>;
+  }
+  if (hasResults) {
+    return workspaceResults.map(([workspaceName, items]) => (
+      <SearchResults
+        key={workspaceName + "@" + items?.length}
+        workspaceName={workspaceName}
+        workspaceId={items[0]!.meta.workspaceId ?? ""}
+        results={items}
+        dismissFile={(path) => hideResult(workspaceName, path)}
+        onNavigate={() => handleOpenChange(false)}
+      />
+    ));
+  }
+  if (isSearching) {
+    return (
+      <div className="flex h-full w-full items-center justify-center py-8 font-mono text-sm text-muted-foreground">
+        <div className="animate-spin">
+          <Loader className="h-6 w-6" />
+        </div>
+      </div>
+    );
+  }
+  if (searchTerm)
+    return (
+      <div className="flex h-12 w-full items-center justify-center gap-2 font-mono">
+        <SearchXIcon />
+        {"no results"}
+      </div>
+    );
+  return null;
 }
 function SearchResults({
   results,

@@ -1,3 +1,4 @@
+import { OctokitClient } from "@/auth/OctokitClient";
 import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
 import { DeployBundleTreeEntry } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
@@ -34,7 +35,7 @@ export class GitHubClient {
   private octokit: Octokit;
 
   constructor(auth: string) {
-    this.octokit = new Octokit({
+    this.octokit = OctokitClient({
       auth,
       request: {
         fetch: globalThis.fetch,

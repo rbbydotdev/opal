@@ -112,7 +112,8 @@ export function useAllPlugins({
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         markdownShortcutPlugin(),
       ].filter(Boolean),
-    [contents, currentWorkspace, documentId, realm, realmId, workspaceImagesPlugin, writeFileContents]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentWorkspace, documentId, realm, realmId, workspaceImagesPlugin, writeFileContents]
   );
 }
 

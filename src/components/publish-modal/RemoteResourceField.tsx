@@ -18,6 +18,7 @@ interface RemoteResourceRootProps<T extends FieldValues, K extends FieldPath<T>>
   control: Control<T>;
   fieldName: K;
   onValueChange: (value: string) => void;
+  onBlur?: () => void;
   getValue: () => string | undefined;
 }
 
@@ -26,6 +27,7 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
   control,
   fieldName,
   onValueChange,
+  onBlur,
   getValue,
 }: RemoteResourceRootProps<T, K>) {
   const [mode, setMode] = useState<RemoteResourceMode>("input");
@@ -43,6 +45,7 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
     control,
     fieldName,
     onValueChange,
+    onBlur,
     getValue,
     inputRef,
   };
@@ -57,7 +60,6 @@ export function RemoteResourceSearch({
   onActive,
   onClose,
   onSearchChange,
-
   searchResults,
   error,
 }: {
@@ -66,6 +68,7 @@ export function RemoteResourceSearch({
   searchValue: string;
   onActive?: () => void;
   onClose?: () => void;
+
   onSearchChange: (value: string) => void;
   searchResults: Array<{ element: ReactNode; label: string; value: string }>;
   error: string | Error | null;
@@ -184,7 +187,7 @@ function RemoteResourceInputField({
   placeholder: string;
   children?: React.ReactNode;
 }) {
-  const { mode, setMode, control, fieldName, inputRef } = useRemoteResourceContext();
+  const { mode, setMode, control, fieldName, inputRef, onBlur } = useRemoteResourceContext();
 
   const { cmdRef } = useTooltipToastCmd();
 
@@ -213,9 +216,11 @@ function RemoteResourceInputField({
                     <Check />
                   </div>
                 )}
+
                 <Input
                   {...field}
                   ref={inputRef}
+                  onBlur={onBlur}
                   placeholder={placeholder}
                   className="flex-1 w-full"
                   onChange={(e) => {

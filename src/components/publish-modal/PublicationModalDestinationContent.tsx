@@ -77,7 +77,8 @@ export function PublicationModalDestinationContent({
         opt2
       );
     },
-    mode: "onChange",
+    // mode: "onChange",
+    mode: "onBlur",
   });
 
   const formValues = useWatch({ control: form.control });
