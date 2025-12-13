@@ -111,15 +111,24 @@ export class DeployRunner<
 
   async runDeploy(): Promise<void> {
     try {
-      this.log("Starting deployment...");
-      let files = 0;
-      await this.agent.deployFiles(this.bundle, this.destination, (deployedFile) => {
-        // this.log(`Deployed file ${++files}`);
-        this.log(`Deployed file (${++files}): ${deployedFile.path ?? "unknown"}`);
-      });
-      this.log("Deployment completed successfully.");
+      this.deploy.status = "pending";
+      this.emitter.emit("update", this.deploy);
+      
+      await this.agent.deployFiles(
+        this.bundle, 
+        this.destination, 
+        (status: string) => {
+          this.log(status);
+        }
+      );
+      
+      this.deploy.status = "success";
+      this.emitter.emit("update", this.deploy);
     } catch (e) {
+      this.deploy.status = "failed";
       this.log(`Deployment failed: ${unwrapError(e)}`, "error");
+      this.emitter.emit("update", this.deploy);
+      throw e;
     }
   }
 }

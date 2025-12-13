@@ -91,5 +91,5 @@ export interface RemoteAuthAgentDeployableFiles<
   TBundle extends DeployBundle<TFile>,
   TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
 > extends RemoteAuthAgent {
-  deployFiles(bundle: TBundle, destination: any, cb?: (file: TFile) => void): Promise<unknown>;
+  deployFiles(bundle: TBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown>;
 }

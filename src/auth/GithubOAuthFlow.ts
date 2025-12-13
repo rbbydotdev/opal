@@ -84,7 +84,7 @@ export async function exchangeCodeForToken({
       throw new Error("No access token received in response");
     }
 
-    const octokit = OctokitClient(corsProxy, { auth: token });
+    const octokit = OctokitClient({ auth: token }, corsProxy);
     const { data: user } = await octokit.request("GET /user");
     return {
       login: user.login,

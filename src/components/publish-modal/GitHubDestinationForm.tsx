@@ -14,6 +14,11 @@ import {
   RemoteResourceSearch,
 } from "./RemoteResourceField";
 
+// https://github.com/rbbydotdev/test123/settings/pages
+// should set up gear link to assist and remind user to set up github pages
+// should add force push check box for gh-pages branch
+// add public or private repo option
+
 export function GitHubDestinationForm({
   form,
   remoteAuth,

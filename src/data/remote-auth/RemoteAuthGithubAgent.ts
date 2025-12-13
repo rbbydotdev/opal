@@ -32,7 +32,11 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(bundle: DeployBundle<GithubInlinedFile>, destination: any) {
+  async deployFiles(
+    bundle: DeployBundle<GithubInlinedFile>, 
+    destination: any,
+    logStatus?: (status: string) => void
+  ) {
     const files = await bundle.getFiles();
     const { repository, branch } = destination.meta;
     const [owner, repo] = repository.split("/");
@@ -42,7 +46,7 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
       branch,
       files,
       message: "publish deploy",
-    });
+    }, logStatus);
   }
 
   async hasUpdates(
