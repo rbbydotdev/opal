@@ -1,5 +1,5 @@
 import { Disk } from "@/data/disk/Disk";
-import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
+import { AbsPath, absPath } from "@/lib/paths2";
 //
 import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { FileTree } from "@/components/filetree/Filetree";
@@ -65,20 +65,20 @@ export abstract class DeployBundle<TFile> {
 
   protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
-    
+
     // Create a translated filesystem that maps virtual paths to the build directory
     const translatedFs = new TranslateFs(this.disk.fs, this.buildDir);
-    
+
     // Create a new FileTree using the translated filesystem
     const scopedTree = new FileTree(translatedFs, this.disk.guid, this.disk.mutex);
     await scopedTree.index();
-    
+
     return Promise.all(
       [...scopedTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
         DeployFile({
-          path: node.path.toString().replace(/^\//, ''), // Remove leading slash for relative path
-          getContent: async () => translatedFs.readFile(node.path) as Promise<DeployBundleTreeFileContent>,
-          encoding: isStringish(node.path) ? "utf-8" : "base64",
+          path: node.path.toString().replace(/^\//, ""), // Remove leading slash for relative path
+          getContent: async () => Buffer.from(await translatedFs.readFile(node.path)).toString("base64"),
+          encoding: "base64", // Always use base64 encoding
         })
       )
     );

@@ -18,7 +18,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
       redirectUri: config.redirectUri,
       state: config.state,
       codeChallenge,
-      scopes: ["read:user", "repo", "workflow"],
+      scopes: config.scopes || ["read:user", "public_repo", "workflow"],
     });
   }
 
@@ -42,7 +42,7 @@ export class GitHubOAuthProvider extends OAuthProvider {
     return {
       accessToken: authData.token,
       tokenType: "bearer",
-      scope: data.state || "",
+      scope: authData.scope || "",
       obtainedAt: authData.obtainedAt,
       expiresIn: 0,
       refreshToken: "",

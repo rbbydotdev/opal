@@ -16,11 +16,13 @@ export function OAuth({
   form,
   source,
   onCancel,
+  children,
 }: {
   mode?: ConnectionsModalMode;
   form: UseFormReturn<RemoteAuthFormValues<"oauth">>;
   source: RemoteAuthSource;
   onCancel: () => void;
+  children?: React.ReactNode;
 }) {
   const oauthServiceRef = useRef<OAuthService | null>(null);
   const [oauthState, setOAuthState] = useState<OAuthState>("idle");
@@ -71,9 +73,11 @@ export function OAuth({
     const corsProxy = form.getValues()?.data.corsProxy;
 
     try {
+      const scopes = source === "github" ? form.getValues().data.scope?.split(",") : undefined;
       await oauthServiceRef.current.startOAuthFlow({
         source,
         corsProxy: corsProxy ?? undefined,
+        scopes,
         onSuccess: handleAuthSuccess,
         onError: handleAuthError,
         onStateChange: handleStateChange,
@@ -121,6 +125,8 @@ export function OAuth({
           </FormItem>
         )}
       />
+
+      {children}
 
       {authError && (
         <div className="rounded-md bg-destructive p-4 text-destructive-foreground">

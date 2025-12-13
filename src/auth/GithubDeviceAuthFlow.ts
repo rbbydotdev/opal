@@ -10,10 +10,11 @@ type GithubDeviceAuthFlowPayload = {
   login: string;
   token: string;
   obtainedAt: number;
+  scope: string;
 };
 export async function GithubDeviceAuthFlow({
   corsProxy,
-  scopes = ["read:user", "repo", "workflow"],
+  scopes = ["read:user", "public_repo", "workflow"],
   onVerification,
   onAuthentication,
 }: {
@@ -49,27 +50,12 @@ export async function GithubDeviceAuthFlow({
       login: user.login,
       token: authResult.token,
       obtainedAt: Date.now(),
+      scope: scopes.join(","),
     } satisfies GithubDeviceAuthFlowPayload;
     onAuthentication?.(payload);
     return payload;
   } catch (e) {
-    logger.error("Failed to fetch user info:", e);
+    console.error("Failed to fetch user info:", e);
     throw mapToTypedError(e);
   }
 }
-
-// const token = auth.token;
-
-// const response = await fetch("https://api.github.com/user", {
-//   headers: {
-//     Authorization: `Bearer ${token}`,
-//     Accept: "application/vnd.github+json",
-//   },
-// });
-
-// if (!response.ok) {
-//   throw new Error("Failed to fetch user info");
-// }
-
-// const user = await response.json();
-// logger.log(user.login); // This is the username

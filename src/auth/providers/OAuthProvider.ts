@@ -5,6 +5,7 @@ export interface OAuthProviderConfig {
   redirectUri: string;
   state: string;
   corsProxy?: string;
+  scopes?: string[];
 }
 
 export abstract class OAuthProvider {

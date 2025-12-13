@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 
 import { DeviceAuth } from "@/components/DeviceAuth";
+import { GitHubScopeSelector } from "@/components/github/GitHubScopeSelector";
 import { OAuth } from "@/components/OAuth";
 import { RemoteAuthFormValues, RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { useRemoteAuthSubmit } from "@/components/remote-auth/useRemoteAuthSubmit";
@@ -234,7 +235,11 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
-            />
+            >
+              {selectedTemplate.source === "github" && (
+                <GitHubScopeSelector form={form as UseFormReturn<RemoteAuthFormValues<"oauth" | "oauth-device">>} />
+              )}
+            </OAuth>
           )}
           {selectedTemplate?.type === "oauth-device" && (
             <DeviceAuth
@@ -242,7 +247,11 @@ export function ConnectionsModalContent({
               form={form as UseFormReturn<RemoteAuthFormValues<"oauth-device">>}
               source={selectedTemplate.source}
               onCancel={cancelReset}
-            />
+            >
+              {selectedTemplate.source === "github" && (
+                <GitHubScopeSelector form={form as UseFormReturn<RemoteAuthFormValues<"oauth-device" | "oauth">>} />
+              )}
+            </DeviceAuth>
           )}
 
           {selectedTemplate?.type === "basic-auth" && (
