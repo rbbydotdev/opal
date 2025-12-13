@@ -21,6 +21,30 @@ import {
 
 type RegionItem = { element: ReactNode; label: string; value: string };
 
+function searchResults(searchValue: string | null): RegionItem[] {
+  if (!searchValue) {
+    return AWS_REGIONS.map((region) => ({
+      value: region.value,
+      label: region.label,
+      element: <span className="uppercase">{region.label}</span>,
+    }));
+  }
+
+  return fuzzysort.go(searchValue, AWS_REGIONS, { key: "label" }).map((result) => ({
+    value: result.obj.value,
+    label: result.obj.label,
+    element: (
+      <span className="uppercase">
+        {result.highlight((m, i) => (
+          <b className="text-ring" key={i}>
+            {m}
+          </b>
+        )) || result.obj.label}
+      </span>
+    ),
+  }));
+}
+
 function RegionSearchDropdown({
   searchValue,
   onSearchChange,
@@ -34,29 +58,7 @@ function RegionSearchDropdown({
   onSelect: (item: RegionItem) => void;
   className?: string;
 }) {
-  const allItems = useMemo(() => {
-    if (!searchValue) {
-      return AWS_REGIONS.map((region) => ({
-        value: region.value,
-        label: region.label,
-        element: <span className="uppercase">{region.label}</span>,
-      }));
-    }
-
-    return fuzzysort.go(searchValue, AWS_REGIONS, { key: "label" }).map((result) => ({
-      value: result.obj.value,
-      label: result.obj.label,
-      element: (
-        <span className="uppercase">
-          {result.highlight((m, i) => (
-            <b className="text-ring" key={i}>
-              {m}
-            </b>
-          )) || result.obj.label}
-        </span>
-      ),
-    }));
-  }, [searchValue]);
+  const allItems = useMemo(() => searchResults(searchValue), [searchValue]);
 
   const { resetActiveIndex, containerRef, handleKeyDown, getInputProps, getMenuProps, getItemProps } =
     useKeyboardNavigation({

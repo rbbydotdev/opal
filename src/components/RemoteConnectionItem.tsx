@@ -422,7 +422,8 @@ export function useRemoteGitRepoSearch({
       searchKey: "full_name",
       mapResult: (repo, highlightedElement) => ({
         label: repo.full_name,
-        value: repo.html_url,
+        // value: repo.html_url,
+        value: repo.full_name,
         element: highlightedElement || repo.full_name,
       }),
     },

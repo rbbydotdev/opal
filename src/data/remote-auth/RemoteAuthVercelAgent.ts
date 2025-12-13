@@ -14,7 +14,7 @@ export abstract class RemoteAuthVercelAgent
     RemoteAuthAgentCORS,
     RemoteAuthAgentRefreshToken,
     RemoteAuthAgentSearchType<VercelProject>,
-    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>, { projectName: string }>
+    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>>
 {
   private _vercelClient!: VercelClient;
 
@@ -36,8 +36,9 @@ export abstract class RemoteAuthVercelAgent
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
     return this.vercelClient.createProject(params, { signal });
   }
-  async deployFiles(bundle: DeployBundle<InlinedFile>, { projectName }: { projectName: string }) {
+  async deployFiles(bundle: DeployBundle<InlinedFile>, destination: any, cb?: (file: InlinedFile) => void) {
     const files = await bundle.getFiles();
+    const projectName = destination.meta.project;
     return this.vercelClient.deploy({ projectName, files });
   }
 

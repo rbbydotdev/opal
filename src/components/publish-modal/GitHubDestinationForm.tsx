@@ -3,8 +3,9 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { flushSync } from "react-dom";
 import { UseFormReturn } from "react-hook-form";
 import {
   RemoteResourceCreate,
@@ -50,6 +51,9 @@ export function GitHubDestinationForm({
         control={form.control}
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
+        onBlur={() =>
+          flushSync(() => form.setValue("meta.repository", coerceRepoToName(form.getValues("meta.repository"))))
+        }
         getValue={() => form.getValues("meta.repository")}
       >
         <RemoteResourceSearch

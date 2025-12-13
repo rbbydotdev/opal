@@ -45,7 +45,7 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
 
 export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   remoteAuth?: T | null
-): ((RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | RemoteAuthAgentDeployableFiles<any, any>) | null {
+): ((RemoteAuthAgent & RemoteAuthAgentSearchType<any>) | RemoteAuthAgentDeployableFiles<any>) | null {
   if (!remoteAuth) return null;
 
   if (isGithubAPIRemoteAuthDAO(remoteAuth)) {
@@ -89,8 +89,7 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
 }
 export interface RemoteAuthAgentDeployableFiles<
   TBundle extends DeployBundle<TFile>,
-  TParams = unknown,
   TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
 > extends RemoteAuthAgent {
-  deployFiles(bundle: TBundle, params: TParams, cb?: (file: TFile) => void): Promise<unknown>;
+  deployFiles(bundle: TBundle, destination: any, cb?: (file: TFile) => void): Promise<unknown>;
 }

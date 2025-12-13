@@ -8,13 +8,13 @@ import { TemplateManager } from "@/features/templating/TemplateManager";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
-import { PageData } from "@/services/builder-types";
+import { PageData } from "@/services/build/builder-types";
 import { Workspace } from "@/workspace/Workspace";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { NULL_BUILD } from "../data/dao/BuildDAO";
+import { NULL_BUILD } from "../../data/dao/BuildDAO";
 
 type BuildLogType = BuildLogLine["type"];
 function logLine(message: string, type: BuildLogType = "info") {
@@ -616,18 +616,18 @@ class NullBuildRunner extends BuildRunner {
 }
 export const NULL_BUILD_RUNNER = new NullBuildRunner();
 
-const DefaultPageLayout = `<!DOCTYPE html>
+const DefaultPageLayout = /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{title}}</title>
   {{#globalCssPath}}
-  <link rel="stylesheet" href="{{globalCssPath}}">
+  <link rel="stylesheet" href="{{{globalCssPath}}}">
   {{/globalCssPath}}
   {{#additionalStylePaths}}
   {{#.}}
-  <link rel="stylesheet" href="{{.}}">
+  <link rel="stylesheet" href="{{{.}}}">
   {{/.}}
   {{/additionalStylePaths}}
 </head>

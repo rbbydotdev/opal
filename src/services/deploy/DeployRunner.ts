@@ -24,12 +24,11 @@ export type DeployLogLine = {
 
 export class DeployRunner<
   TBundle extends DeployBundle<TFile>,
-  TParams,
   TFile extends { path?: string } = TBundle extends DeployBundle<infer U> ? U : unknown,
 > {
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
-  readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
+  readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
   private bundle: TBundle;
 
   emitter = CreateSuperTypedEmitter<{
@@ -43,7 +42,7 @@ export class DeployRunner<
     deploy,
     bundle,
   }: {
-    agent: RemoteAuthAgentDeployableFiles<TBundle, TParams, TFile>;
+    agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
     destination: DestinationDAO;
     deploy: DeployDAO;
     bundle: TBundle;
@@ -110,11 +109,11 @@ export class DeployRunner<
     return line;
   };
 
-  async runDeploy(params: TParams): Promise<void> {
+  async runDeploy(): Promise<void> {
     try {
       this.log("Starting deployment...");
       let files = 0;
-      await this.agent.deployFiles(this.bundle, params, (deployedFile) => {
+      await this.agent.deployFiles(this.bundle, this.destination, (deployedFile) => {
         // this.log(`Deployed file ${++files}`);
         this.log(`Deployed file (${++files}): ${deployedFile.path ?? "unknown"}`);
       });
@@ -125,21 +124,21 @@ export class DeployRunner<
   }
 }
 
-export function useDeployRunnerLogs(runner: DeployRunner<any, any, any>) {
+export function useDeployRunnerLogs(runner: DeployRunner<any, any>) {
   return useSyncExternalStore(runner.onLog, runner.getLogs);
 }
 
-export class AnyDeployRunner<TBundle extends DeployBundle<any>, TParams = any> extends DeployRunner<TBundle, TParams> {}
+export class AnyDeployRunner<TBundle extends DeployBundle<any>> extends DeployRunner<TBundle> {}
 
-export class NullDeployRunner extends DeployRunner<AnyDeployBundle, any> {
+export class NullDeployRunner extends DeployRunner<AnyDeployBundle> {
   constructor() {
     super({
-      agent: {} as RemoteAuthAgentDeployableFiles<AnyDeployBundle, any>,
+      agent: {} as RemoteAuthAgentDeployableFiles<AnyDeployBundle>,
       destination: {} as DestinationDAO,
       deploy: {} as DeployDAO,
       bundle: {} as AnyDeployBundle,
     });
   }
 
-  async runDeploy(_params: any): Promise<void> {}
+  async runDeploy(): Promise<void> {}
 }

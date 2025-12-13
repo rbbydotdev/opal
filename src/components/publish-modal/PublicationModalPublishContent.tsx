@@ -59,7 +59,7 @@ export function PublicationModalPublishContent({
     if (!destination) return;
     setIsPublishing(true);
     setPublishError(null);
-    await deployRunner.runDeploy({});
+    await deployRunner.runDeploy();
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;

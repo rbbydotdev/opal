@@ -1,7 +1,16 @@
 import { GitHubClient, GithubInlinedFile } from "@/api/github/GitHubClient";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
+import { relPath } from "@/lib/paths2";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 
+export function coerceRepoToName(repoName: string): string {
+  // If a full URL is provided, extract the path part
+  try {
+    const url = new URL(repoName);
+    return relPath(url.pathname.replace(/\.git$/, "")).trim();
+  } catch {}
+  return repoName;
+}
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   private _githubClient!: GitHubClient;
   get githubClient() {
@@ -12,14 +21,7 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return this.githubClient.getAuthCredentials(this.getUsername(), this.getApiToken());
   };
   async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
-    const resolvedRepoName = (() => {
-      try {
-        const url = new URL(repoName);
-        return url.pathname.replace(/\.git$/, "");
-      } catch {}
-      return repoName;
-    })();
-    return this.githubClient.createRepo(resolvedRepoName, { signal });
+    return this.githubClient.createRepo(coerceRepoToName(repoName), { signal });
   }
   async getRemoteUsername(): Promise<string> {
     const user = await this.githubClient.getCurrentUser();
@@ -30,22 +32,16 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(
-    bundle: DeployBundle<GithubInlinedFile>,
-    {
-      branch,
-      owner,
-      repo,
-      message = "publsih deploy",
-    }: { branch: string; owner: string; repo: string; message?: string }
-  ) {
+  async deployFiles(bundle: DeployBundle<GithubInlinedFile>, destination: any) {
     const files = await bundle.getFiles();
+    const { repository, branch } = destination.meta;
+    const [owner, repo] = repository.split("/");
     return this.githubClient.deploy({
       owner,
       repo,
       branch,
       files,
-      message,
+      message: "publish deploy",
     });
   }
 

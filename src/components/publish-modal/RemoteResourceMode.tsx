@@ -15,7 +15,11 @@ export type RemoteResourceContextValue<T extends FieldValues, K extends FieldPat
   setMode: (mode: RemoteResourceMode) => void;
   control: Control<T>;
   fieldName: K;
+  onBlur?: () => void;
   onValueChange: (value: string) => void;
+  rules?: {
+    setValueAs: (value: string) => string;
+  };
   getValue: () => string | undefined;
   inputRef: React.RefObject<HTMLInputElement | null>;
 };

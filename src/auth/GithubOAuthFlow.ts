@@ -1,6 +1,6 @@
+import { OctokitClient } from "@/auth/OctokitClient";
 import { ENV } from "@/lib/env"; // still using your env
 import { mapToTypedError } from "@/lib/errors/errors";
-import { Octokit } from "@octokit/core";
 import { stripTrailingSlash } from "./oauth-utils";
 
 /**
@@ -59,9 +59,6 @@ export async function exchangeCodeForToken({
     params.append("code_verifier", codeVerifier);
     if (redirectUri) params.append("redirect_uri", redirectUri);
 
-    // logger.log("Token exchange URL:", tokenUrl);
-    // logger.log("Token request params:", Object.fromEntries(params));
-
     const tokenResponse = await fetch(tokenUrl, {
       method: "POST",
       headers: {
@@ -69,8 +66,6 @@ export async function exchangeCodeForToken({
       },
       body: params,
     });
-
-    // logger.log("Fetch completed. Response status:", tokenResponse.status, tokenResponse.statusText);
 
     const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
@@ -89,23 +84,14 @@ export async function exchangeCodeForToken({
       throw new Error("No access token received in response");
     }
 
-    const apiBaseUrl = corsProxy ? `${stripTrailingSlash(corsProxy)}/api.github.com` : undefined;
-
-    const octokit = new Octokit({
-      auth: token,
-      baseUrl: apiBaseUrl,
-    });
-
+    const octokit = OctokitClient(corsProxy, { auth: token });
     const { data: user } = await octokit.request("GET /user");
-    // logger.log("User data received:", { login: user.login, id: user.id });
-
     return {
       login: user.login,
       token,
       obtainedAt: Date.now(),
     };
   } catch (e) {
-    // logger.error("=== OAuth token exchange failed ===", e);
     throw mapToTypedError(e);
   }
 }

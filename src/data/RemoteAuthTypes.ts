@@ -160,7 +160,7 @@ export const isRemoteGitApiAgent = <T extends RemoteGitApiAgent>(agent: T | unkn
   return !!(agent as any)?.onAuth;
 };
 
-export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployableFiles<any, any>>(
+export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployableFiles<any>>(
   agent: T | unknown | null
 ): agent is T => {
   return !!(agent as any)?.deployFiles;
