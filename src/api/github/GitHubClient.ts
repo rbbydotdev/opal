@@ -133,10 +133,10 @@ export class GitHubClient {
       data: {
         object: { sha: latestCommitSha },
       },
-    } = await this.octokit.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
+    } = await this.octokit.request("GET /repos/{owner}/{repo}/git/ref/heads/{branch}", {
       owner,
       repo,
-      ref: `heads/${branch}`,
+      branch,
     });
 
     const {
@@ -183,10 +183,10 @@ export class GitHubClient {
       parents: [latestCommitSha],
     });
 
-    await this.octokit.request("PATCH /repos/{owner}/{repo}/git/refs/{ref}", {
+    await this.octokit.request("PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}", {
       owner,
       repo,
-      ref: `heads/${branch}`,
+      branch,
       sha: newCommitSha,
     });
 
