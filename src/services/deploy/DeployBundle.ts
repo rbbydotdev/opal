@@ -2,9 +2,11 @@ import { Disk } from "@/data/disk/Disk";
 import { AbsPath, absPath, isStringish, resolveFromRoot } from "@/lib/paths2";
 //
 import { GithubInlinedFile } from "@/api/github/GitHubClient";
+import { FileTree } from "@/components/filetree/Filetree";
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { archiveTree } from "@/data/disk/archiveTree";
+import { TranslateFs } from "@/data/fs/TranslateFs";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
@@ -63,11 +65,19 @@ export abstract class DeployBundle<TFile> {
 
   protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
+    
+    // Create a translated filesystem that maps virtual paths to the build directory
+    const translatedFs = new TranslateFs(this.disk.fs, this.buildDir);
+    
+    // Create a new FileTree using the translated filesystem
+    const scopedTree = new FileTree(translatedFs, this.disk.guid, this.disk.mutex);
+    await scopedTree.index();
+    
     return Promise.all(
-      [...this.disk.fileTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
+      [...scopedTree.root.deepCopy().iterator((node: TreeNode) => node.isTreeFile())].map(async (node) =>
         DeployFile({
-          path: resolveFromRoot(this.buildDir, node.path),
-          getContent: async () => this.disk.readFile(node.path) as Promise<DeployBundleTreeFileContent>,
+          path: node.path.toString().replace(/^\//, ''), // Remove leading slash for relative path
+          getContent: async () => translatedFs.readFile(node.path) as Promise<DeployBundleTreeFileContent>,
           encoding: isStringish(node.path) ? "utf-8" : "base64",
         })
       )
