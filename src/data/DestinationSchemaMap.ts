@@ -1,5 +1,4 @@
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
-import { DestinationRecord } from "@/data/dao/DestinationRecord";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { absPath } from "@/lib/paths2";
 import z from "zod";
@@ -14,7 +13,7 @@ export const DestinationSchemaMap = {
         projectName: z.string().trim().min(1, "Project Name is required"),
       }),
     })
-    .brand("cloudflare")
+
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Cloudflare"),
@@ -39,7 +38,7 @@ export const DestinationSchemaMap = {
         // implicit! teamId: z.string().trim().optional(),
       }),
     })
-    .brand("vercel")
+
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Vercel"),
@@ -56,7 +55,7 @@ export const DestinationSchemaMap = {
         siteName: z.string().trim().min(1, "Site Name is required"),
       }),
     })
-    .brand("netlify")
+
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Netlify"),
@@ -74,7 +73,7 @@ export const DestinationSchemaMap = {
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
     })
-    .brand("github")
+
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Github"),
@@ -89,7 +88,7 @@ export const DestinationSchemaMap = {
         region: z.string().trim().min(1, "Region is required"),
       }),
     })
-    .brand("aws")
+
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("AWS"),
@@ -101,7 +100,7 @@ export const DestinationSchemaMap = {
       label: z.string().trim().default(""),
       meta: z.object({}),
     })
-    .brand("custom")
+
     .default(() => ({
       remoteAuthId: "",
       label: "",
@@ -117,39 +116,35 @@ export type DestinationSchemaTypeMap<DestinationType extends keyof typeof Destin
 export type GithubDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["github"]>>;
 export type DestinationProvider<T extends DestinationType> = DestinationDAO<z.infer<(typeof DestinationSchemaMap)[T]>>;
 // Type guards using Zod branded types
-export function isCloudflareDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"]> {
-  return DestinationSchemaMap.cloudflare.safeParse(dest.meta).success;
+export type CloudflareDestinationMeta = z.infer<typeof DestinationSchemaMap.cloudflare>["meta"];
+export type VercelDestinationMeta = z.infer<typeof DestinationSchemaMap.vercel>["meta"];
+export type NetlifyDestinationMeta = z.infer<typeof DestinationSchemaMap.netlify>["meta"];
+export type GithubDestinationMeta = z.infer<typeof DestinationSchemaMap.github>["meta"];
+export type AWSDestinationMeta = z.infer<typeof DestinationSchemaMap.aws>["meta"];
+
+export function isCloudflareDestination(dest: DestinationDAO): dest is DestinationDAO<CloudflareDestinationMeta> {
+  return dest.provider === "cloudflare";
 }
 
-export function isVercelDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"]> {
-  return DestinationSchemaMap.vercel.safeParse(dest.meta).success;
+export function isVercelDestination(dest: DestinationDAO): dest is DestinationDAO<VercelDestinationMeta> {
+  return dest.provider === "vercel";
 }
 
-export function isNetlifyDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"]> {
-  return DestinationSchemaMap.netlify.safeParse(dest.meta).success;
+export function isNetlifyDestination(dest: DestinationDAO): dest is DestinationDAO<NetlifyDestinationMeta> {
+  return dest.provider === "netlify";
 }
 
-export function isGithubDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["github"]>["meta"]> {
-  return DestinationSchemaMap.github.safeParse(dest.meta).success;
+export function isGithubDestination(dest: DestinationDAO): dest is DestinationDAO<GithubDestinationMeta> {
+  return dest.provider === "github";
 }
 
-export function isAWSDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"]> {
-  return DestinationSchemaMap.aws.safeParse(dest.meta).success;
+export function isAWSDestination(dest: DestinationDAO): dest is DestinationDAO<AWSDestinationMeta> {
+  return dest.provider === "aws";
 }
 
-export function isCustomDestination(
-  dest: DestinationRecord
-): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["custom"]>["meta"]> {
-  return DestinationSchemaMap.custom.safeParse(dest.meta).success;
+type CustomDestinationMeta = z.infer<typeof DestinationSchemaMap.custom>["meta"];
+
+export function isCustomDestination(dest: DestinationDAO): dest is DestinationDAO<CustomDestinationMeta> {
+  return dest.provider === "custom";
 }
 export const DestinationTypes = Object.keys(DestinationSchemaMap) as DestinationType[];

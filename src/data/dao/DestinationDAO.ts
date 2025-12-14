@@ -22,6 +22,9 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   remoteAuth: RemoteAuthDAO | RemoteAuthJType;
   meta: DestinationData<T>;
   timestamp?: number;
+  get provider() {
+    return this.remoteAuth.source;
+  }
   static guid = () => "__dest__" + nanoid();
 
   constructor({ guid, remoteAuth, meta, label, timestamp }: DestinationRecord<T>) {
