@@ -50,8 +50,6 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
   const workspaceName = params.workspaceName;
   const searchTerm = searchParams.searchTerm as string | null;
   const regexpParam = searchParams.regexp;
-  // const searchTerm = url.searchParams.get("searchTerm");
-  // const regexpParam = url.searchParams.get("regexp");
   const regexp = regexpParam === null ? true : regexpParam === "1";
 
   if (!workspaceName) {
@@ -94,7 +92,6 @@ export const uploadMarkdownHandler = withRequestSignal(async (context: RequestCo
   const fullPathname = absPath(url.decodedPathname.replace("/upload-markdown", ""));
   logger.log(`Handling markdown upload for: ${url.pathname}`);
 
-  const arrayBuffer = await event.request.arrayBuffer();
   return handleDocxUploadRequest(workspaceName, fullPathname, await event.request.arrayBuffer());
 });
 

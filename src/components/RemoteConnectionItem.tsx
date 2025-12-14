@@ -6,6 +6,7 @@ import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, useFuzzySearchQuery } from "@/data/useFuzzySearchQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { errF } from "@/lib/errors/errors";
 import { isFuzzyResult } from "@/lib/fuzzy-helpers";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
@@ -612,6 +613,7 @@ function useRemoteResource<T>({
       setIsLoading(false);
       return result;
     } catch (err: any) {
+      console.error(errF`Remote resource creation failed: ${err}`);
       setError(err.message || config.messages.errorFallback);
       abortCntrlRef.current = null;
       setIsLoading(false);

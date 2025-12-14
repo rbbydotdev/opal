@@ -22,7 +22,18 @@ import { NotFoundError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { OpalMimeType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, isAncestor, isBin, isCss, isEjs, isHtml, isImage, isMarkdown, isSourceOnly } from "@/lib/paths2";
+import {
+  AbsPath,
+  isAncestor,
+  isBin,
+  isCss,
+  isEjs,
+  isHtml,
+  isImage,
+  isMarkdown,
+  isSourceOnly,
+  resolveFromRoot,
+} from "@/lib/paths2";
 import { isSourceMimeType } from "@/source-editor/SourceMimeType";
 import { NullWorkspace } from "@/workspace/NullWorkspace";
 import { useWorkspaces } from "@/workspace/useWorkspaces";
@@ -74,6 +85,7 @@ export function useCurrentFilepath() {
       mimeType: DEFAULT_MIME_TYPE,
       isImage: false,
       isHtml: false,
+      isBuildPath: false,
       isMarkdown: false,
       isCssFile: false,
       isEjs: false,
@@ -85,11 +97,13 @@ export function useCurrentFilepath() {
       isRichView: false,
       isDiffView: false,
       viewMode: null,
+      buildId: null,
       hasEditOverride: false,
     };
   }
   const mimeType = getMimeType(filePath) || DEFAULT_MIME_TYPE;
 
+  const isBuildPath = filePath.startsWith(SpecialDirs.Build);
   return {
     filePath,
     mimeType,
@@ -101,6 +115,9 @@ export function useCurrentFilepath() {
     isCssFile: isCss(filePath),
     isEjs: isEjs(filePath),
     isBin: isBin(filePath),
+
+    isBuildPath,
+    buildId: isBuildPath ? resolveFromRoot(SpecialDirs.Build, filePath).split("/")[0] : null,
 
     inTrash: filePath.startsWith(SpecialDirs.Trash),
     isRecognized: isRecognizedFileType(mimeType) || editOverride,

@@ -49,7 +49,6 @@ function createWorkspaceSearchStream({
                 // Create a result in the same format as content search
                 const result = {
                   matches: matchedFiles.map((filePath) => ({
-                    // chsum: filePath, // Use file path as checksum for filename search
                     chsum: 0,
                     lineNumber: 1,
                     lineStart: 0,
@@ -113,7 +112,7 @@ export async function handleWorkspaceSearch({
 }: WorkspaceQueryParams): Promise<Response> {
   // 1. Cancel previous searches.
   const searchController = new AbortController();
-  const searchKey = workspaceName; //all ? ALL_WS_KEY : workspaceName!;
+  const searchKey = workspaceName;
   const all = workspaceName === ALL_WS_KEY;
 
   if (activeSearches.has(searchKey)) {
