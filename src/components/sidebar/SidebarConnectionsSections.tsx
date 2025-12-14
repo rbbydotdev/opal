@@ -56,7 +56,7 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
         </SelectableListHeader>
 
         <SelectableListActions>
-          <DropdownMenuItem onClick={handleAddConnection} className="grid grid-cols-[auto_1fr] items-center gap-2">
+          <DropdownMenuItem onSelect={handleAddConnection} className="grid grid-cols-[auto_1fr] items-center gap-2">
             <Plus /> Add Connection
           </DropdownMenuItem>
         </SelectableListActions>

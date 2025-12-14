@@ -274,23 +274,23 @@ const FileMenuCompactActions = ({
             }
           }}
         >
-          <DropdownMenuItem className="whitespace-nowrap" onClick={addMustacheFile}>
+          <DropdownMenuItem className="whitespace-nowrap" onSelect={addMustacheFile}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New Mustache Template
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={deferFn(addFile)}>
+          <DropdownMenuItem onSelect={deferFn(addFile)}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={deferFn(addCssFile)}>
+          <DropdownMenuItem onSelect={deferFn(addCssFile)}>
             <FileCode2Icon className="w-4 h-4 mr-2" />
             New CSS File
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={deferFn(addEjsFile)}>
+          <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New EJS Template
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={deferFn(addDir)}>
+          <DropdownMenuItem onSelect={deferFn(addDir)}>
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
           </DropdownMenuItem>
@@ -300,19 +300,19 @@ const FileMenuCompactActions = ({
               Stock Files
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={deferFn(addGlobalCssFile)}>
+              <DropdownMenuItem onSelect={deferFn(addGlobalCssFile)}>
                 <FileCode2Icon className="w-4 h-4 mr-2" />
                 global.css
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={deferFn(addHtmlFile)}>
+              <DropdownMenuItem onSelect={deferFn(addHtmlFile)}>
                 <Globe className="w-4 h-4 mr-2" />
                 index.html
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={deferFn(addMustacheFile)}>
+              <DropdownMenuItem onSelect={deferFn(addMustacheFile)}>
                 <FileTextIcon className="w-4 h-4 mr-2" />
                 template.mustache
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={deferFn(addEjsFile)}>
+              <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
                 <FileTextIcon className="w-4 h-4 mr-2" />
                 template.ejs
               </DropdownMenuItem>
@@ -320,31 +320,31 @@ const FileMenuCompactActions = ({
           </DropdownMenuSub>
 
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={copyFiles}>
+          <DropdownMenuItem onSelect={copyFiles}>
             <ClipboardCopy className="w-4 h-4 mr-2" />
             Copy Files
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={cutFiles}>
+          <DropdownMenuItem onSelect={cutFiles}>
             <Scissors className="w-4 h-4 mr-2" />
             Cut Files
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={pasteFiles}>
+          <DropdownMenuItem onSelect={pasteFiles}>
             <ClipboardPasteIcon className="w-4 h-4 mr-2" />
             Paste Files
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={trashSelectedFiles}>
+          <DropdownMenuItem onSelect={trashSelectedFiles}>
             <Trash2 className="w-4 h-4 mr-2" />
             Trash Files
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setExpandAll(false)}>
+          <DropdownMenuItem onSelect={() => setExpandAll(false)}>
             <CopyMinus className="w-4 h-4 mr-2" />
             Collapse All
           </DropdownMenuItem>
-          <DropdownMenuItem onDoubleClick={() => setExpandAll(true)} onClick={() => setExpandAll(true)}>
+          <DropdownMenuItem onDoubleClick={() => setExpandAll(true)} onSelect={() => setExpandAll(true)}>
             <CopyMinus className="w-4 h-4 mr-2" />
             Expand All
           </DropdownMenuItem>

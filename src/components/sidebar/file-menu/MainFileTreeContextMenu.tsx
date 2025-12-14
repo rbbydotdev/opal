@@ -87,23 +87,23 @@ export const MainFileTreeContextMenu = ({
           }
         }}
       >
-        <ContextMenuItem inset onClick={deferredFn(() => addMustacheFile())}>
+        <ContextMenuItem inset onSelect={deferredFn(() => addMustacheFile())}>
           <FileTextIcon className="mr-3 h-4 w-4" />
           New Mustache Template
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addMarkdownFile())} className="w-full flex justify-start">
+        <ContextMenuItem inset onSelect={deferredFn(() => addMarkdownFile())} className="w-full flex justify-start">
           <FileEditIcon className="mr-3 h-4 w-4" />
           New Markdown File
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addCssFile())}>
+        <ContextMenuItem inset onSelect={deferredFn(() => addCssFile())}>
           <FileCode2Icon className="mr-3 h-4 w-4" />
           New CSS File
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addEjsFile())}>
+        <ContextMenuItem inset onSelect={deferredFn(() => addEjsFile())}>
           <FileTextIcon className="mr-3 h-4 w-4" />
           New EJS Template
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => addDir(fileNode))}>
+        <ContextMenuItem inset onSelect={deferredFn(() => addDir(fileNode))}>
           <FolderPlusIcon className="mr-3 h-4 w-4" />
           New Folder
         </ContextMenuItem>
@@ -114,19 +114,19 @@ export const MainFileTreeContextMenu = ({
             Stock Files
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuItem onClick={deferredFn(() => addGlobalCssFile())}>
+            <ContextMenuItem onSelect={deferredFn(() => addGlobalCssFile())}>
               <FileCode2Icon className="mr-3 h-4 w-4" />
               global.css
             </ContextMenuItem>
-            <ContextMenuItem onClick={deferredFn(() => addHtmlFile())}>
+            <ContextMenuItem onSelect={deferredFn(() => addHtmlFile())}>
               <Globe className="mr-3 h-4 w-4" />
               index.html
             </ContextMenuItem>
-            <ContextMenuItem onClick={deferredFn(() => addStockMustacheFile())}>
+            <ContextMenuItem onSelect={deferredFn(() => addStockMustacheFile())}>
               <FileTextIcon className="mr-3 h-4 w-4" />
               template.mustache
             </ContextMenuItem>
-            <ContextMenuItem onClick={deferredFn(() => addStockEjsFile())}>
+            <ContextMenuItem onSelect={deferredFn(() => addStockEjsFile())}>
               <FileTextIcon className="mr-3 h-4 w-4" />
               template.ejs
             </ContextMenuItem>
@@ -136,35 +136,35 @@ export const MainFileTreeContextMenu = ({
         <ContextMenuSeparator />
         {!isRoot && (
           <>
-            <ContextMenuItem inset onClick={deferredFn(() => copy(currentWorkspace.nodesFromPaths(selectedFocused)))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => copy(currentWorkspace.nodesFromPaths(selectedFocused)))}>
               <ClipboardCopy className="mr-3 h-4 w-4" />
               Copy Files
             </ContextMenuItem>
-            <ContextMenuItem inset onClick={deferredFn(() => cut(currentWorkspace.nodesFromPaths(selectedFocused)))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => cut(currentWorkspace.nodesFromPaths(selectedFocused)))}>
               <Scissors className="mr-3 h-4 w-4" />
               Cut Files
             </ContextMenuItem>
           </>
         )}
-        <ContextMenuItem inset onClick={deferredFn(() => paste(fileNode))}>
+        <ContextMenuItem inset onSelect={deferredFn(() => paste(fileNode))}>
           <ClipboardPasteIcon className="mr-3 h-4 w-4" />
           Paste Files
         </ContextMenuItem>
 
         <ContextMenuSeparator />
         {!isRoot && (
-          <ContextMenuItem inset onClick={deferredFn(() => rename(fileNode))}>
+          <ContextMenuItem inset onSelect={deferredFn(() => rename(fileNode))}>
             <SquarePen className="mr-3 h-4 w-4" />
             Rename
           </ContextMenuItem>
         )}
         {!isRoot && (
           <>
-            <ContextMenuItem inset onClick={deferredFn(() => duplicate(fileNode))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => duplicate(fileNode))}>
               <FilePlusIcon className="mr-3 h-4 w-4" />
               Duplicate
             </ContextMenuItem>
-            <ContextMenuItem inset onClick={deferredFn(() => trash(fileNode, selectedFocused))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => trash(fileNode, selectedFocused))}>
               <Trash2 className="mr-3 h-4 w-4" />
               Trash Files
             </ContextMenuItem>
@@ -172,11 +172,11 @@ export const MainFileTreeContextMenu = ({
         )}
 
         <ContextMenuSeparator />
-        <ContextMenuItem inset onClick={deferredFn(() => setExpandAll(false))}>
+        <ContextMenuItem inset onSelect={deferredFn(() => setExpandAll(false))}>
           <CopyMinus className="mr-3 h-4 w-4" />
           Collapse All
         </ContextMenuItem>
-        <ContextMenuItem inset onClick={deferredFn(() => setExpandAll(true))}>
+        <ContextMenuItem inset onSelect={deferredFn(() => setExpandAll(true))}>
           <CopyMinus className="mr-3 h-4 w-4" />
           Expand All
         </ContextMenuItem>

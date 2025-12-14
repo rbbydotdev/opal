@@ -348,7 +348,7 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
           </SidebarMenuItem>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={() => onDelete(id)} className="grid grid-cols-[auto_1fr] items-center gap-2">
+          <ContextMenuItem onSelect={() => onDelete(id)} className="grid grid-cols-[auto_1fr] items-center gap-2">
             <Delete className="w-4 h-4 text-destructive" />
             <span>Delete</span>
           </ContextMenuItem>
@@ -418,12 +418,12 @@ export function SelectableListItemAction({
 }: SelectableListItemActionProps) {
   const { itemData } = useSelectableListItemContext();
 
-  const handleClick = (event: React.MouseEvent) => {
-    onClick(event, itemData);
+  const handleSelect = () => {
+    onClick({} as React.MouseEvent, itemData);
   };
 
   return (
-    <DropdownMenuItem onClick={handleClick} className={destructive ? "text-destructive" : ""} asChild={asChild}>
+    <DropdownMenuItem onSelect={handleSelect} className={destructive ? "text-destructive" : ""} asChild={asChild}>
       {icon && <div className="w-4 h-4 mr-2">{icon}</div>}
       {children}
     </DropdownMenuItem>

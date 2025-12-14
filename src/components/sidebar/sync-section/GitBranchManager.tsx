@@ -134,7 +134,7 @@ function GitBranchManager({
             </DropdownMenuItem>
           )}
           {refs.length > 1 && currentGitRef && isBranchRef(currentGitRef) && (
-            <DropdownMenuItem onClick={() => setSelectMode("delete")}>
+            <DropdownMenuItem onSelect={() => setSelectMode("delete")}>
               <Delete className="text-destructive" /> Delete Branch
             </DropdownMenuItem>
           )}

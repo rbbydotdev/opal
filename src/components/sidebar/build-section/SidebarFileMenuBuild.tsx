@@ -236,7 +236,7 @@ function BuildManager({
   ) : (
     <BuildSelector builds={builds} setBuildId={setBuildId} build={build}>
       <BuildMenuDropDown open={open} setOpen={setOpen} disabled={builds.length === 0}>
-        <DropdownMenuItem onClick={() => build && openNewPub({ build })} disabled={!build}>
+        <DropdownMenuItem onSelect={() => build && openNewPub({ build })} disabled={!build}>
           <UploadCloud /> Publish Build
         </DropdownMenuItem>
         <DropdownMenuItem disabled={builds.length === 0} asChild>
@@ -245,7 +245,7 @@ function BuildManager({
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setSelectMode("delete")} disabled={builds.length === 0}>
+        <DropdownMenuItem onSelect={() => setSelectMode("delete")} disabled={builds.length === 0}>
           <Delete className="text-destructive" /> Delete Build
         </DropdownMenuItem>
       </BuildMenuDropDown>
