@@ -355,7 +355,7 @@ export class GitHubClient {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/trees", {
       owner,
       repo,
-      base_tree: baseTree,
+      base_tree: baseTree || null,
       tree,
     });
   }

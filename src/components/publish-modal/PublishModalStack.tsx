@@ -166,35 +166,35 @@ export function PublishModalStack({
             </div>
           </DialogTitle>
           <DialogDescription className="flex flex-col w-full">
-            <span className="font-bold text-lg text-foreground">
-              <SwitchCase>
-                <Case condition={currentView === "publish"}>
-                  <span className="flex justify-start items center gap-2">
+            <SwitchCase>
+              <Case condition={currentView === "publish"}>
+                <div className="flex flex-col w-full">
+                  <span className="font-bold text-lg text-foreground flex justify-start items-center gap-2">
                     <ArrowUpRight className="text-ring" />
                     Deploy
                   </span>
-                </Case>
-                <Case condition={currentView === "destination"}>
-                  <span className="flex justify-start items center gap-2">
+                  <span className="w-full flex justify-start">Deploy to selected destination</span>
+                </div>
+              </Case>
+              <Case condition={currentView === "destination"}>
+                <div className="flex flex-col w-full">
+                  <span className="font-bold text-lg text-foreground flex justify-start items-center gap-2">
                     <Globe className="text-ring" />
                     Destination
                   </span>
-                </Case>
-                <Case condition={currentView === "connection"}>
-                  <span className="flex justify-start items center gap-2">
+                  <span className="w-full flex justify-start">Create Destination to deploy to</span>
+                </div>
+              </Case>
+              <Case condition={currentView === "connection"}>
+                <div className="flex flex-col w-full">
+                  <span className="font-bold text-lg text-foreground flex justify-start items-center gap-2">
                     <Zap className="text-ring" />
                     Connection
                   </span>
-                </Case>
-              </SwitchCase>
-            </span>
-            <span className="w-full flex justify-start">
-              <SwitchCase>
-                <Case condition={currentView === "publish"}>Deploy to selected destination</Case>
-                <Case condition={currentView === "destination"}>Create Destination to deploy to</Case>
-                <Case condition={currentView === "connection"}>Add or manage connections</Case>
-              </SwitchCase>
-            </span>
+                  <span className="w-full flex justify-start">Add or manage connections</span>
+                </div>
+              </Case>
+            </SwitchCase>
           </DialogDescription>
         </DialogHeader>
 

@@ -20,7 +20,10 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   onAuth = () => {
     return this.githubClient.getAuthCredentials(this.getUsername(), this.getApiToken());
   };
-  async createRepo({ repoName, private: isPrivate }: { repoName: string; private?: boolean }, { signal }: { signal?: AbortSignal } = {}) {
+  async createRepo(
+    { repoName, private: isPrivate }: { repoName: string; private?: boolean },
+    { signal }: { signal?: AbortSignal } = {}
+  ) {
     return this.githubClient.createRepo({ repoName: coerceRepoToName(repoName), private: isPrivate }, { signal });
   }
   async getRemoteUsername(): Promise<string> {
@@ -32,25 +35,20 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(
-    bundle: DeployBundle<GithubInlinedFile>,
-    destination: any,
-    logStatus?: (status: string) => void
-  ) {
-    console.log('RemoteAuthGithubAgent.deployFiles: Getting files from bundle...');
+  async deployFiles(bundle: DeployBundle<GithubInlinedFile>, destination: any, logStatus?: (status: string) => void) {
     const files = await bundle.getFiles();
-    console.log('RemoteAuthGithubAgent.deployFiles: Got files, count:', files.length);
-    console.log('RemoteAuthGithubAgent.deployFiles: First file structure:', files[0]);
-    console.log('RemoteAuthGithubAgent.deployFiles: First file getContent type:', typeof files[0]?.getContent);
     const { repository, branch } = destination.meta;
     const [owner, repo] = repository.split("/");
-    return this.githubClient.deploy({
-      owner,
-      repo,
-      branch,
-      files,
-      message: "publish deploy",
-    }, logStatus);
+    return this.githubClient.deploy(
+      {
+        owner,
+        repo,
+        branch,
+        files,
+        message: "publish deploy",
+      },
+      logStatus
+    );
   }
 
   async hasUpdates(

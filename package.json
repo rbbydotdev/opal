@@ -112,6 +112,7 @@
     "mime-types": "^2.1.35",
     "mustache": "^4.2.0",
     "nanoid": "^5.1.5",
+    "nuqs": "^2.8.5",
     "patch-package": "^8.0.1",
     "prettier": "^3.6.2",
     "react": "19.2.0",

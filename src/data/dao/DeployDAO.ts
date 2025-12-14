@@ -19,7 +19,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   completedAt: number | null;
   error: string | null = null;
 
-  static guid = () => "deploy_id_" + nanoid();
+  static guid = () => "__deploy__" + nanoid();
 
   constructor({
     guid,
@@ -63,6 +63,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationId: this.destinationId,
+
       // destinationType: this.destinationType,
       // destinationName: this.destinationName,
       status: this.status,

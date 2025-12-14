@@ -1,4 +1,3 @@
-import { useDestinationManager } from "@/components/DestinationManagerContext";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -9,27 +8,25 @@ import {
 } from "@/components/selectable-list/SelectableList";
 import { DeployLabel } from "@/components/sidebar/build-files-section/DeployLabel";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
-import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { DeployDAO } from "@/data/dao/DeployDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye } from "lucide-react";
 
 export function SidebarDeploymentList() {
-  const { openDestinationFlow } = useDestinationManager();
   const errorToss = useErrorToss();
   const { deploys } = useDeploys();
+
   const handleDelete = async (destId: string) => {
     try {
-      await DestinationDAO.delete(destId);
+      await DeployDAO.delete(destId);
     } catch (error) {
       errorToss(coerceError(error));
     }
   };
 
-  const handleView = (destinationId: string) => {
-    openDestinationFlow(destinationId);
-  };
+  const handleView = (deploymentId: string) => {};
 
   return (
     <SelectableListSimple

@@ -43,7 +43,7 @@ export function PublicationModalPublishContent({
   const { destinations } = useDestinations();
 
   const { deployRunner, logs } = useDeployRunner({
-    label: `>>>>>>>my deploy<<<<<`,
+    label: `Deploy ${new Date().toLocaleString()}`,
     workspaceId: currentWorkspace.id,
     build,
     destination,
@@ -52,11 +52,7 @@ export function PublicationModalPublishContent({
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {
     if (!destination) return;
-    try {
-      await deployRunner.execute();
-    } catch (error) {
-      console.error(`PublicationModalPublishContent: Deployment failed ${error}`);
-    }
+    await deployRunner.execute();
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
