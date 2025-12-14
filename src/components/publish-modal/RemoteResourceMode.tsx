@@ -9,7 +9,7 @@ export function useRemoteResourceContext<T extends FieldValues, K extends FieldP
   }
   return context as RemoteResourceContextValue<T, K>;
 }
-export type RemoteResourceMode = "search" | "input" | "create" | "input/success" | "select-visibility";
+export type RemoteResourceMode = "search" | "input" | "create" | "input/success" | "option";
 export type RemoteResourceContextValue<T extends FieldValues, K extends FieldPath<T>> = {
   mode: RemoteResourceMode;
   setMode: (mode: RemoteResourceMode) => void;
