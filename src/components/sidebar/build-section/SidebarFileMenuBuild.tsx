@@ -29,8 +29,9 @@ import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
+import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { Code2, Delete, Download, Ellipsis, FilesIcon, Hammer, UploadCloud } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 const BuildItem = ({
@@ -220,6 +221,14 @@ function BuildManager({
   handleDeleteBuild: (buildGuid: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { isBuildPath, buildId } = useCurrentFilepath();
+  useEffect(() => {
+    if (isBuildPath && buildId && buildId !== build?.guid) {
+      setBuildId(buildId);
+    }
+    // hacky to make the workspace wide search work for builds for now, donut change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBuildPath, buildId, setBuildId]);
   const downloadBuildURL = build ? build.getDownloadBuildZipURL() : "#";
   return selectMode === "delete" ? (
     <SelectHighlight
