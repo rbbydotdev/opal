@@ -1,4 +1,6 @@
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
+import { RepositoryVisibilitySelector, RepositoryVisibility, getVisibilityIcon } from "@/components/repository/RepositoryVisibilitySelector";
+import { RepositoryCreationProvider, createGitHubCapabilities, createGitHubAPICapabilities } from "@/components/repository/RepositoryCreationProvider";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
@@ -7,6 +9,7 @@ import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/Remo
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { flushSync } from "react-dom";
 import { UseFormReturn } from "react-hook-form";
+import { useState, useRef } from "react";
 import {
   RemoteResourceCreate,
   RemoteResourceInput,
@@ -29,6 +32,16 @@ export function GitHubDestinationForm({
   defaultName?: string;
 }) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
+  
+  // Check if user has private repo permissions based on scope
+  // For GitHub OAuth: "repo" = full access, "public_repo" = public only
+  const hasScope = !!(remoteAuth?.data && 'scope' in remoteAuth.data && remoteAuth.data.scope);
+  const scopeValue = hasScope ? (remoteAuth.data as any).scope : null;
+  const canCreatePrivate = hasScope && scopeValue && scopeValue.includes("repo") && !scopeValue.includes("public_repo");
+  
+  // Default visibility: private if they can create private, otherwise public
+  const [visibility, setVisibility] = useState<RepositoryVisibility>(canCreatePrivate ? "private" : "public");
+  
   const {
     isLoading,
     searchValue,
@@ -43,15 +56,23 @@ export function GitHubDestinationForm({
   });
   const { ident, msg, request } = useRemoteGitRepo({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
-      const response = await agent.createRepo(name, options);
+      const response = await agent.createRepo({ 
+        repoName: name, 
+        private: visibility === "private" 
+      }, options);
       clearCache();
       return response.data;
     },
     defaultName,
   });
 
+  // Choose appropriate capability factory based on auth type
+  const capabilities = hasScope 
+    ? createGitHubCapabilities(canCreatePrivate)
+    : createGitHubAPICapabilities(); // API keys don't have scope info
+
   return (
-    <>
+    <RepositoryCreationProvider capabilities={capabilities}>
       <RemoteResourceRoot
         control={form.control}
         fieldName="meta.repository"
@@ -75,7 +96,13 @@ export function GitHubDestinationForm({
           ident={ident}
           msg={msg}
           request={request}
-        />
+          icon={getVisibilityIcon(visibility)}
+        >
+          <RepositoryVisibilitySelector
+            value={visibility}
+            onChange={setVisibility}
+          />
+        </RemoteResourceCreate>
         <RemoteResourceInput
           label="Repository"
           placeholder="my-website-repo"
@@ -108,6 +135,6 @@ export function GitHubDestinationForm({
           </FormItem>
         )}
       />
-    </>
+    </RepositoryCreationProvider>
   );
 }

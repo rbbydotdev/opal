@@ -151,6 +151,7 @@ export interface Repo {
   description: string | null;
   html_url: string;
   updated_at: Date;
+  private: boolean;
 }
 
 export interface RemoteGitApiAgent extends RemoteAuthAgent, RemoteAuthAgentSearchType<Repo> {

@@ -20,8 +20,8 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   onAuth = () => {
     return this.githubClient.getAuthCredentials(this.getUsername(), this.getApiToken());
   };
-  async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
-    return this.githubClient.createRepo(coerceRepoToName(repoName), { signal });
+  async createRepo({ repoName, private: isPrivate }: { repoName: string; private?: boolean }, { signal }: { signal?: AbortSignal } = {}) {
+    return this.githubClient.createRepo({ repoName: coerceRepoToName(repoName), private: isPrivate }, { signal });
   }
   async getRemoteUsername(): Promise<string> {
     const user = await this.githubClient.getCurrentUser();

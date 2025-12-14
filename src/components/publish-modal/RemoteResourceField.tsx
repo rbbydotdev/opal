@@ -5,6 +5,7 @@ import {
   useRemoteResourceContext,
 } from "@/components/publish-modal/RemoteResourceMode";
 import { RemoteItemCreateInput, RemoteItemSearchDropDown } from "@/components/RemoteConnectionItem";
+import { useRepositoryCreation } from "@/components/repository/RepositoryCreationProvider";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -113,6 +114,8 @@ export function RemoteResourceCreate({
   ident,
   msg,
   request,
+  children,
+  icon,
 }: {
   label: string;
   placeholder: string;
@@ -133,10 +136,53 @@ export function RemoteResourceCreate({
     submit: () => Promise<{ name: string } | null>;
     reset: () => void;
   };
+  children?: React.ReactNode;
+  icon?: React.ReactNode;
 }) {
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const pauseCloseRef = useRef<boolean>(false);
+  // const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // // Auto-open dropdown when entering select-visibility mode
+  // useEffect(() => {
+  //   if (mode === "select-visibility") {
+  //     setDropdownOpen(true);
+  //   }
+  // }, [mode]);
+
+  // Handle visibility selection mode (sentinel input + dropdown)
+  if (mode === "select-visibility") {
+    return (
+      <div>
+        <FormLabel>{label}</FormLabel>
+        <div className="flex justify-center w-full items-center gap-2 mt-2">
+          {/* Sentinel input - visual placeholder only */}
+          <Input className="flex-1" placeholder={placeholder} value="" readOnly />
+          {children}
+          {/* {children && isValidElement(children) ? cloneElement(children, { 
+            ...(children.props as any),
+            open: dropdownOpen,
+            onOpenChange: (open: boolean) => {
+              setDropdownOpen(open);
+              if (!open) {
+                setMode("input"); // Cancel if dropdown closes without selection
+              }
+            },
+            onSelectionComplete: () => {
+              (children.props as any)?.onSelectionComplete?.();
+              setDropdownOpen(false);
+              setMode("create");
+            }
+          }) : children}  */}
+          <Button type="button" variant="outline" title="Cancel" onClick={() => setMode("input")}>
+            <X />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (mode !== "create") return null;
   const handleCreateSubmit = async () => {
     try {
@@ -148,7 +194,7 @@ export function RemoteResourceCreate({
       setMode("input/success");
     } catch (_e) {
       inputRef.current?.addEventListener("focus", () => (pauseCloseRef.current = false), { once: true });
-      setTimeout(() => inputRef.current?.focus(), 500);
+      inputRef.current?.focus();
     }
   };
   return (
@@ -159,6 +205,7 @@ export function RemoteResourceCreate({
           className="flex-1"
           ref={inputRef}
           placeholder={placeholder}
+          icon={icon}
           onClose={(newName) => {
             if (!pauseCloseRef.current) {
               onValueChange(newName || "");
@@ -258,6 +305,7 @@ function RemoteResourceCreateButton({
   createReset?: () => void;
 }) {
   const { setMode, getValue } = useRemoteResourceContext();
+  const repoCapabilities = useRepositoryCreation();
 
   return (
     <Button
@@ -269,7 +317,13 @@ function RemoteResourceCreateButton({
         createReset?.();
         const currentValue = getValue();
         ident.setName(currentValue || "");
-        setMode("create");
+
+        // Check if repository creation requires visibility selection
+        if (repoCapabilities?.requiresVisibilitySelection) {
+          setMode("select-visibility");
+        } else {
+          setMode("create");
+        }
       }}
     >
       <Plus />
