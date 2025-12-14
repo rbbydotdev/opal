@@ -16,7 +16,6 @@ import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes"
 import { useDeployRunner } from "@/services/deploy/useDeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, CheckCircle, Loader, Pencil, Plus, UploadCloud, UploadCloudIcon, Zap } from "lucide-react";
-import { timeAgo } from "short-time-ago";
 
 export function PublicationModalPublishContent({
   build,
@@ -250,7 +249,8 @@ export function PublicationModalPublishContent({
                   key={index}
                   className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                 >
-                  <span className="text-muted-foreground shrink-0">[{timeAgo(new Date(log.timestamp))}]</span>
+                  <span className="text-muted-foreground shrink-0 text-2xs">{`[${new Date(log.timestamp).toLocaleString()}]`}</span>
+
                   <span className="break-all">{log.message}</span>
                 </div>
               ))
