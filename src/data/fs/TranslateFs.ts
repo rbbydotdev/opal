@@ -2,7 +2,33 @@ import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { isErrorWithCode } from "@/lib/errors/errors";
 import { AbsPath, absPath, joinPath, relPath, stringifyEntry } from "@/lib/paths2";
 
-function translateFs(
+export function createVirtualWriteFs(fs: CommonFileSystem): CommonFileSystem {
+  const virtualWrites = new Map<string, Uint8Array | Buffer | string>();
+
+  return new Proxy(fs, {
+    get(target, prop) {
+      if (prop === "writeFile") {
+        return (path: string, data: Uint8Array | Buffer | string, options?: { encoding?: "utf8"; mode: number }) => {
+          virtualWrites.set(path, data);
+          return Promise.resolve();
+        };
+      }
+
+      if (prop === "readFile") {
+        return async (path: string, options?: { encoding?: "utf8" }) => {
+          if (virtualWrites.has(path)) {
+            return virtualWrites.get(path)!;
+          }
+          return target.readFile(path, options);
+        };
+      }
+
+      return target[prop as keyof CommonFileSystem];
+    },
+  });
+}
+
+export function TranslateFsTransform(
   fs: CommonFileSystem,
   translate: AbsPath | string | ((path: AbsPath | string) => AbsPath | string)
 ): CommonFileSystem {
@@ -20,7 +46,6 @@ function translateFs(
     "writeFile",
     "rmdir",
     "lstat",
-    "symlink",
     "readlink",
   ] as const) {
     const originalMethod = fs[method];
@@ -34,6 +59,11 @@ function translateFs(
     }
   }
 
+  // Special handling for symlink which takes path as second argument
+  newFs["symlink"] = (target: string, path: string) => {
+    return fs.symlink(target, translateFn(path));
+  };
+
   // Special handling for rename which takes two path arguments
   newFs["rename"] = (oldPath: string, newPath: string) => {
     return fs.rename(translateFn(oldPath), translateFn(newPath));
@@ -42,13 +72,13 @@ function translateFs(
   return newFs;
 }
 
-export class TranslateFs implements CommonFileSystem {
+export class TranslateFsClass implements CommonFileSystem {
   private translatedFs: CommonFileSystem;
   constructor(
     protected fs: CommonFileSystem,
-    private translate: AbsPath | string | ((path: AbsPath | string) => AbsPath | string)
+    protected translate: AbsPath | string | ((path: AbsPath | string) => AbsPath | string)
   ) {
-    this.translatedFs = translateFs(this.fs, this.translate);
+    this.translatedFs = TranslateFsTransform(this.fs, this.translate);
   }
 
   async readdir(path: string): Promise<
@@ -110,7 +140,7 @@ export class TranslateFs implements CommonFileSystem {
   }
 }
 
-export class NamespacedFs extends TranslateFs {
+export class NamespacedFs extends TranslateFsClass {
   namespace: AbsPath;
 
   constructor(fs: CommonFileSystem, namespace: AbsPath | string) {

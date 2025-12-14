@@ -14,10 +14,10 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     name: "Hello World",
     description: "A simple starter workspace with a hello world markdown file",
     seedFiles: {
-      "/hello.md": DefaultFile.HelloWorld(),
+      "/index.md": DefaultFile.HelloWorld(),
       "/global.css": globalSeedCss,
     },
-    navigate: "/hello.md",
+    navigate: "/index.md",
   },
   {
     id: "blank",

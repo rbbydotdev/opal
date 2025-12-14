@@ -9,7 +9,6 @@ import { useBuildRunner } from "@/services/build/useBuildRunner";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Download, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
-import { timeAgo } from "short-time-ago";
 
 export function BuildModal({
   cmdRef,
@@ -225,7 +224,9 @@ export function BuildModal({
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                     >
-                      <span className="text-muted-foreground shrink-0">[{timeAgo(new Date(log.timestamp))}]</span>
+                      <span className="text-muted-foreground shrink-0 text-2xs">
+                        {`[${new Date(log.timestamp).toLocaleString()}]`}
+                      </span>
                       <span className="break-all">{log.message}</span>
                     </div>
                   ))

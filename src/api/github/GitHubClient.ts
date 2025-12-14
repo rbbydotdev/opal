@@ -155,9 +155,6 @@ export class GitHubClient {
     },
     logStatus: (status: string) => void = () => {}
   ) {
-    console.log('GitHubClient.deploy: Received files, count:', files.length);
-    console.log('GitHubClient.deploy: First file received:', files[0]);
-    console.log('GitHubClient.deploy: First file getContent type:', typeof files[0]?.getContent);
     const { latestCommitSha, baseTreeSha, isOrphan } = await this.resolveBranchForDeploy({
       owner,
       repo,

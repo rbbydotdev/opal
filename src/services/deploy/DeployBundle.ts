@@ -8,12 +8,17 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { GithubDestinationMeta, isGithubDestination } from "@/data/DestinationSchemaMap";
 import { archiveTree } from "@/data/disk/archiveTree";
-import { TranslateFs } from "@/data/fs/TranslateFs";
-import { VirtualWriteFsProxy } from "@/data/fs/VirtualWriteFsProxy";
+import { TranslateFsTransform } from "@/data/fs/TranslateFs";
+import { VirtualWriteFsTransform } from "@/data/fs/VirtualWriteFsTransform";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { ApplicationError, errF } from "@/lib/errors/errors";
+import {
+  findHtmlFilesInTree,
+  updateAbsoluteUrlsInHtmlContent,
+  updateFileNodeContents,
+} from "@/services/deploy/deployHelpers";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 //
@@ -77,11 +82,14 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
   protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
 
-    // Create a virtual and translated filesystem that maps virtual paths to the build directory
-    const translatedFs = VirtualWriteFsProxy(new TranslateFs(this.disk.fs, this.buildDir));
+    // Create a virtual and translated filesystem, this does two things:
+    // 1. Translates paths to be relative to the buildDir
+    // 2. Captures any writes to the filesystem in-memory (so preDeployAction can modify files without touching disk)
+
+    const translatedVirtualFs = VirtualWriteFsTransform(TranslateFsTransform(this.disk.fs, this.buildDir));
 
     // Create a new FileTree using the translated filesystem
-    const scopedTree = new FileTree(translatedFs, this.disk.guid, this.disk.mutex);
+    const scopedTree = new FileTree(translatedVirtualFs, this.disk.guid, this.disk.mutex);
     await scopedTree.index();
 
     if (this.preDeployAction) {
@@ -93,7 +101,7 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
       [...scopedTree.iterator((node: TreeNode) => node.isTreeFile())].map(async (node) => {
         const file = DeployFile({
           path: node.path.toString().replace(/^\//, ""), // Remove leading slash for relative path
-          getContent: async () => Buffer.from(await translatedFs.readFile(node.path)).toString("base64"),
+          getContent: async () => Buffer.from(await translatedVirtualFs.readFile(node.path)).toString("base64"),
           encoding: "base64", // Always use base64 encoding
         });
         console.log("Created file:", file.path, "getContent type:", typeof file.getContent);
@@ -183,52 +191,6 @@ export class GithubDeployBundle extends DeployBundle<GithubInlinedFile, GithubDe
       );
     }
   }
-}
-
-export function updateAbsoluteUrlsInHtmlContent(content: string, baseUrl: string): string {
-  const base = baseUrl.replace(/\/$/, ""); // normalize (no trailing slash)
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(content, "text/html");
-
-  const attrsToUpdate = ["href", "src", "srcset", "poster", "data-src"];
-
-  for (const attr of attrsToUpdate) {
-    const elements = doc.querySelectorAll(`[${attr}]`);
-    elements.forEach((el) => {
-      const value = el.getAttribute(attr);
-      if (!value) return;
-
-      // skip fully-qualified URLs and anchors
-      if (
-        value.startsWith("http://") ||
-        value.startsWith("https://") ||
-        value.startsWith("//") ||
-        value.startsWith("#")
-      )
-        return;
-
-      if (value.startsWith("/")) el.setAttribute(attr, `${base}${value}`);
-    });
-  }
-
-  // Serialize the document back to a string — includes <html>, <head>, <body>, etc.
-  return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
-}
-
-function updateFileNodeContents(node: TreeFile, cb: (contents: string) => string): Promise<void> {
-  return node.read().then((data) => {
-    const updatedContent = cb(data.toString());
-    return node.write(updatedContent);
-  });
-}
-function findHtmlFilesInTree(tree: FileTree): TreeNode[] {
-  const htmlFiles: TreeNode[] = [];
-  for (const node of tree.iterator()) {
-    if (node.isTreeFile() && node.path.endsWith(".html")) {
-      htmlFiles.push(node);
-    }
-  }
-  return htmlFiles;
 }
 
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
