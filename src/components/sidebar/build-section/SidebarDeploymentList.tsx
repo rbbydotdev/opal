@@ -1,3 +1,4 @@
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -17,6 +18,7 @@ import { Delete, Eye } from "lucide-react";
 export function SidebarDeploymentList() {
   const errorToss = useErrorToss();
   const { deploys } = useDeploys();
+  const { openDeployment } = useBuildPublisher();
 
   const handleDelete = async (destId: string) => {
     try {
@@ -26,7 +28,9 @@ export function SidebarDeploymentList() {
     }
   };
 
-  const handleView = (deploymentId: string) => {};
+  const handleView = (deploymentId: string) => {
+    openDeployment(deploymentId);
+  };
 
   return (
     <SelectableListSimple
@@ -40,17 +44,17 @@ export function SidebarDeploymentList() {
       <SelectableListActions />
 
       <SelectableListItems>
-        <div className="flex flex-col gap-2 mt-4 #ml-3 group">
+        <div className="flex flex-col gap-2 mt-4 group">
           {deploys.length === 0 && <EmptySidebarLabel label="no deploys" />}
           {deploys.map((deploy) => (
             <SelectableListItem key={deploy.guid} id={deploy.guid}>
               <DeployLabel deploy={deploy} />
               <SelectableListItemMenu>
-                <SelectableListItemAction onClick={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
+                <SelectableListItemAction onSelect={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
                 </SelectableListItemAction>
                 <SelectableListItemAction
-                  onClick={() => handleDelete(deploy.guid)}
+                  onSelect={() => handleDelete(deploy.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >

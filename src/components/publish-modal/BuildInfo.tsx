@@ -2,6 +2,7 @@ import { DataDisplay } from "@/components/publish-modal/DataDisplay";
 import { Badge } from "@/components/ui/badge";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { cn } from "@/lib/utils";
 import { timeAgo } from "short-time-ago";
 
 export function BuildInfo({
@@ -41,7 +42,7 @@ export function BuildInfo({
   }
 
   return (
-    <details className={`w-full ${className}`}>
+    <details className={cn("w-full", className)}>
       <summary className="cursor-pointer text-sm font-medium mb-2">
         {/* Ready to publish to {destination.label} via {destination.RemoteAuth.source} hosting */}
         <Badge variant="outline">Info</Badge>

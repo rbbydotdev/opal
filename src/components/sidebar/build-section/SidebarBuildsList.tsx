@@ -57,11 +57,11 @@ export function SidebarBuildsList({ workspaceId, children }: { workspaceId: stri
                     Download
                   </a>
                 </DropdownMenuItem>
-                <SelectableListItemAction onClick={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
+                <SelectableListItemAction onSelect={() => handleView(build.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
                 </SelectableListItemAction>
                 <SelectableListItemAction
-                  onClick={() => handleDelete(build.guid)}
+                  onSelect={() => handleDelete(build.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >

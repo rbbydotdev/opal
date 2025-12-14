@@ -5,8 +5,9 @@ import { PublicationModalPublishContent } from "@/components/publish-modal/Publi
 import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
 import { Case, SwitchCase } from "@/components/SwitchCase";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
+import { DeployDAO } from "@/data/dao/DeployDAO";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/dao/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ export function PublishModalStack({
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
   const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
+  const [deploy, setDeploy] = useState<DeployDAO | null>(null);
   const handleSubmit = async ({ remoteAuthId, label, meta }: AnyDestinationMetaType) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
@@ -77,6 +79,7 @@ export function PublishModalStack({
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setPreferredConnection(null);
+    setDeploy(null);
   }, []);
 
   const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } = useViewStack<PublishViewType>(
@@ -100,8 +103,6 @@ export function PublishModalStack({
       }
       event.preventDefault();
       popView();
-      // if (canGoBack) return popView();
-      // if (currentView === "publish") return setIsOpen(false);
     },
     [popView]
   );
@@ -115,6 +116,14 @@ export function PublishModalStack({
       },
       close: () => {
         setIsOpen(false);
+      },
+      openDeployment: async (deployId) => {
+        const deploy = await DeployDAO.FetchModelFromGuidSafe(deployId);
+        setBuild(deploy.Build);
+        setDestination(deploy.Destination);
+        setDeploy(deploy);
+        replaceView("publish");
+        setIsOpen(true);
       },
       openDestinationFlow: async (destinationId) => {
         if (destinationId) {
@@ -147,8 +156,9 @@ export function PublishModalStack({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={cn("overflow-y-auto top-[10vh] min-h-[50vh] max-w-2xl", {
+        className={cn("overflow-y-auto top-[10vh] min-h-[50vh] max-w-2xl max-h-[85vh]", {
           "min-h-[80vh]": currentView === "publish",
+          "top-[2vh] max-h-[95vh]": deploy?.completed,
         })}
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}
@@ -165,7 +175,7 @@ export function PublishModalStack({
               Publish
             </div>
           </DialogTitle>
-          <DialogDescription className="flex flex-col w-full">
+          <div className="text-sm text-muted-foreground flex flex-col w-full">
             <SwitchCase>
               <Case condition={currentView === "publish"}>
                 <div className="flex flex-col w-full">
@@ -195,7 +205,7 @@ export function PublishModalStack({
                 </div>
               </Case>
             </SwitchCase>
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         {/* MARK: view dest*/}
@@ -241,6 +251,7 @@ export function PublishModalStack({
             pushView={pushView}
             //*
             destination={destination}
+            deploy={deploy}
             setDestination={setDestination}
             currentWorkspace={currentWorkspace}
             onOpenChange={setIsOpen}

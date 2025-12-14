@@ -5,6 +5,7 @@ export type BuildPublisherCmd = {
   open: (options: { build: BuildDAO }) => void;
   close: () => void;
   openDestinationFlow: (destinationId?: string | null) => void;
+  openDeployment: (deployId: string) => void;
 };
 export function useBuildPublisher() {
   return useContext(BuildPublisherContext);
@@ -13,4 +14,5 @@ export const BuildPublisherContext = createContext<BuildPublisherCmd>({
   open: () => {},
   close: () => {},
   openDestinationFlow: () => {},
+  openDeployment: () => {},
 });

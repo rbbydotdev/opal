@@ -132,6 +132,35 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       timestamp: json.timestamp,
     });
   }
+
+  static FromJSONSafe(json: any, fallbackGuid?: string): RemoteAuthDAO {
+    if (!json || !json.source) {
+      // Create a fallback remote auth for missing/invalid connections
+      return new RemoteAuthDAO({
+        guid: fallbackGuid || json?.guid || "unknown",
+        source: "custom",
+        type: "no-auth",
+        name: "Missing Connection",
+        data: { endpoint: "", corsProxy: undefined },
+        tags: [],
+        timestamp: Date.now(),
+      });
+    }
+    try {
+      return RemoteAuthDAO.FromJSON(json);
+    } catch (error) {
+      // If FromJSON fails, create fallback
+      return new RemoteAuthDAO({
+        guid: fallbackGuid || json?.guid || "unknown",
+        source: "custom",
+        type: "no-auth",
+        name: "Missing Connection",
+        data: { endpoint: "", corsProxy: undefined },
+        tags: [],
+        timestamp: Date.now(),
+      });
+    }
+  }
 }
 
 // Use generics to create specific DAO types

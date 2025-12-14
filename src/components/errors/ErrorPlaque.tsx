@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationError } from "@/lib/errors/errors";
+import { useEffect } from "react";
 // import { RotateCcw } from "lucide-react";
 
 export function ErrorMiniPlaque({ reset }: { reset?: () => void }) {
@@ -30,6 +31,20 @@ export function ErrorPlaque({
   error?: Error | null;
   reset?: () => void;
 }) {
+  useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        reset && reset();
+      }
+    });
+    return () => {
+      window.removeEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          reset && reset();
+        }
+      });
+    };
+  }, [reset]);
   const navigateTo = error instanceof ApplicationError ? error.getNavigateTo() : null;
   return (
     <div className="flex h-screen w-[calc(100vw-5rem)]">

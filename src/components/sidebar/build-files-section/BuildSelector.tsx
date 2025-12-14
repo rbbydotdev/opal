@@ -9,12 +9,14 @@ export function BuildSelector({
   build,
   children,
   className,
+  disabled,
 }: {
   builds: BuildDAO[];
   setBuildId: (buildId: string) => void;
   build: BuildDAO | null;
   children?: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="w-full flex items-center justify-between space-x-2">
@@ -23,7 +25,7 @@ export function BuildSelector({
           key={builds.length}
           value={build?.guid}
           onValueChange={(guid) => setBuildId(guid)}
-          disabled={builds.length === 0}
+          disabled={builds.length === 0 || disabled}
         >
           <SelectTrigger
             title="Select Build"

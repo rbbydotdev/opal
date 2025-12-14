@@ -33,6 +33,28 @@ export function DeployableAgentFromAuth(remoteAuth: RemoteAuthDAO) {
   return agent;
 }
 
+export function DeployableAgentFromAuthSafe(remoteAuth: RemoteAuthDAO) {
+  try {
+    const agent = AgentFromRemoteAuthFactory(remoteAuth);
+    if (!isRemoteAuthDeployable(agent)) {
+      // Return a null/no-op agent for missing connections
+      return {
+        deployFiles: async () => {
+          throw new Error("Cannot deploy: Remote connection is missing or invalid");
+        },
+      };
+    }
+    return agent;
+  } catch (error) {
+    // Return a null/no-op agent for any factory errors
+    return {
+      deployFiles: async () => {
+        throw new Error("Cannot deploy: Remote connection is missing or invalid");
+      },
+    };
+  }
+}
+
 export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   const agent = AgentFromRemoteAuthFactory(remoteAuth);
   if (!isRemoteGitApiAgent(agent)) {
