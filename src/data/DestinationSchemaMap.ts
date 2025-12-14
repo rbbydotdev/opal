@@ -1,5 +1,7 @@
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
+import { DestinationRecord } from "@/data/dao/DestinationRecord";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { absPath } from "@/lib/paths2";
 import z from "zod";
 
 export const DestinationSchemaMap = {
@@ -12,6 +14,7 @@ export const DestinationSchemaMap = {
         projectName: z.string().trim().min(1, "Project Name is required"),
       }),
     })
+    .brand("cloudflare")
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Cloudflare"),
@@ -36,6 +39,7 @@ export const DestinationSchemaMap = {
         // implicit! teamId: z.string().trim().optional(),
       }),
     })
+    .brand("vercel")
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Vercel"),
@@ -52,6 +56,7 @@ export const DestinationSchemaMap = {
         siteName: z.string().trim().min(1, "Site Name is required"),
       }),
     })
+    .brand("netlify")
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Netlify"),
@@ -66,12 +71,14 @@ export const DestinationSchemaMap = {
       meta: z.object({
         repository: z.string().trim().min(1, "Repository is required"),
         branch: z.string().trim().min(1, "Branch is required"),
+        baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
     })
+    .brand("github")
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Github"),
-      meta: { repository: "", branch: "gh-pages" },
+      meta: { repository: "", branch: "gh-pages", baseUrl: "/" },
     })),
   aws: z
     .object({
@@ -82,6 +89,7 @@ export const DestinationSchemaMap = {
         region: z.string().trim().min(1, "Region is required"),
       }),
     })
+    .brand("aws")
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("AWS"),
@@ -93,6 +101,7 @@ export const DestinationSchemaMap = {
       label: z.string().trim().default(""),
       meta: z.object({}),
     })
+    .brand("custom")
     .default(() => ({
       remoteAuthId: "",
       label: "",
@@ -105,13 +114,42 @@ export type DestinationType = keyof typeof DestinationSchemaMap;
 export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<
   (typeof DestinationSchemaMap)[DestinationType]
 >;
-type CloudflareDestinationData = z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"];
-class CloudflareDestination extends DestinationDAO<CloudflareDestinationData> {}
-type NetlifyDestinationData = z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"];
-class NetlifyDestination extends DestinationDAO<NetlifyDestinationData> {}
-type AWSDestinationData = z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"];
-class AWSDestination extends DestinationDAO<AWSDestinationData> {}
-type GitHubDestinationData = z.infer<(typeof DestinationSchemaMap)["github"]>["meta"];
-class GitHubDestination extends DestinationDAO<GitHubDestinationData> {}
-type VercelDestinationData = z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"];
-class VercelDestination extends DestinationDAO<VercelDestinationData> {}
+export type GithubDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["github"]>>;
+export type DestinationProvider<T extends DestinationType> = DestinationDAO<z.infer<(typeof DestinationSchemaMap)[T]>>;
+// Type guards using Zod branded types
+export function isCloudflareDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"]> {
+  return DestinationSchemaMap.cloudflare.safeParse(dest.meta).success;
+}
+
+export function isVercelDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"]> {
+  return DestinationSchemaMap.vercel.safeParse(dest.meta).success;
+}
+
+export function isNetlifyDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"]> {
+  return DestinationSchemaMap.netlify.safeParse(dest.meta).success;
+}
+
+export function isGithubDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["github"]>["meta"]> {
+  return DestinationSchemaMap.github.safeParse(dest.meta).success;
+}
+
+export function isAWSDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"]> {
+  return DestinationSchemaMap.aws.safeParse(dest.meta).success;
+}
+
+export function isCustomDestination(
+  dest: DestinationRecord
+): dest is DestinationRecord<z.infer<(typeof DestinationSchemaMap)["custom"]>["meta"]> {
+  return DestinationSchemaMap.custom.safeParse(dest.meta).success;
+}
+export const DestinationTypes = Object.keys(DestinationSchemaMap) as DestinationType[];

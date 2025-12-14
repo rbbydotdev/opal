@@ -16,7 +16,6 @@ import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes"
 import { useDeployRunner } from "@/services/deploy/useDeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, CheckCircle, Loader, Pencil, Plus, UploadCloud, UploadCloudIcon, Zap } from "lucide-react";
-import { useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 export function PublicationModalPublishContent({
@@ -44,9 +43,6 @@ export function PublicationModalPublishContent({
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
 
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const [isPublishing, setIsPublishing] = useState(false);
-
   const { deployRunner, logs } = useDeployRunner({
     label: `>>>>>>>my deploy<<<<<`,
     workspaceId: currentWorkspace.id,
@@ -57,9 +53,11 @@ export function PublicationModalPublishContent({
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {
     if (!destination) return;
-    setIsPublishing(true);
-    setPublishError(null);
-    await deployRunner.runDeploy();
+    try {
+      await deployRunner.execute();
+    } catch (error) {
+      console.error(`PublicationModalPublishContent: Deployment failed ${error}`);
+    }
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
@@ -190,8 +188,13 @@ export function PublicationModalPublishContent({
           >
             Cancel
           </Button>
-          <Button onClick={handleDeploy} className="flex items-center gap-2" variant="secondary">
-            {isPublishing ? (
+          <Button
+            onClick={handleDeploy}
+            className="flex items-center gap-2"
+            variant="secondary"
+            disabled={deployRunner.isDeploying || deployRunner.isCompleted}
+          >
+            {deployRunner.isDeploying ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...
@@ -205,8 +208,8 @@ export function PublicationModalPublishContent({
         </div>
       )}
 
-      {/* Build Success Indicator */}
-      {publishError && status === "SUCCESS" && (
+      {/* Deploy Success Indicator */}
+      {deployRunner.isSuccessful && (
         <div className="border-2 border-success bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-success justify-between">
             <div className="flex items-center gap-4">
@@ -220,13 +223,13 @@ export function PublicationModalPublishContent({
         </div>
       )}
 
-      {/* Build Error Indicator */}
-      {publishError && status === "ERROR" && (
+      {/* Deploy Error Indicator */}
+      {deployRunner.isFailed && (
         <div className="border-2 border-destructive bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-destructive justify-between">
             <div className="flex items-center gap-4">
               <AlertTriangle size={20} className="text-destructive" />
-              <span className="font-semibold">BUILD FAILED</span>
+              <span className="font-semibold uppercase">publish failed</span>
             </div>
             <Button onClick={handleOkay} variant="destructive" className="flex items-center gap-2">
               Okay

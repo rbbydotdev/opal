@@ -4,7 +4,7 @@ import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { DeployableAgentFromAuth, RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { unwrapError } from "@/lib/errors/errors";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { AnyDeployBundle, DeployBundle } from "@/services/deploy/DeployBundle";
+import { AnyDeployBundle, DeployBundle, DeployBundleFactory } from "@/services/deploy/DeployBundle";
 import { useSyncExternalStore } from "react";
 
 type DeployLogType = DeployLogLine["type"];
@@ -30,6 +30,7 @@ export class DeployRunner<
   readonly deploy: DeployDAO;
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
   private bundle: TBundle;
+  private abortController: AbortController = new AbortController();
 
   emitter = CreateSuperTypedEmitter<{
     log: DeployLogLine;
@@ -93,7 +94,7 @@ export class DeployRunner<
         destinationId: destination.guid,
       }),
       agent: DeployableAgentFromAuth(destination.RemoteAuth),
-      bundle: new AnyDeployBundle(build),
+      bundle: DeployBundleFactory(build, destination.toJSON()),
     });
   }
 
@@ -102,6 +103,20 @@ export class DeployRunner<
   };
   getLogs = () => this.deploy.logs;
 
+  onComplete = (callback: (complete: boolean) => void) => {
+    return this.emitter.on("complete", callback);
+  };
+  getComplete = () => this.isCompleted;
+
+  tearDown() {
+    this.emitter.clearListeners();
+  }
+
+  cancel() {
+    this.abortController.abort();
+    this.log("Deployment cancelled by user", "error");
+  }
+
   protected readonly log = (message: string, type?: DeployLogType) => {
     const line = logLine(message, type);
     this.deploy.logs = [...this.deploy.logs, line];
@@ -109,26 +124,77 @@ export class DeployRunner<
     return line;
   };
 
-  async runDeploy(): Promise<void> {
+  async execute({
+    abortSignal = this.abortController.signal,
+    log = () => {},
+  }: {
+    log?: (l: DeployLogLine) => void;
+    abortSignal?: AbortSignal;
+  } = {}): Promise<DeployDAO> {
+    const errorLog = (message: string) => log(this.log(message, "error"));
+    const infoLog = (message: string) => log(this.log(message, "info"));
+
     try {
       this.deploy.status = "pending";
+      await this.deploy.save();
       this.emitter.emit("update", this.deploy);
-      
-      await this.agent.deployFiles(
-        this.bundle, 
-        this.destination, 
-        (status: string) => {
-          this.log(status);
+
+      if (abortSignal?.aborted) {
+        errorLog("Deployment cancelled");
+        return this.deploy.update({
+          logs: this.deploy.logs,
+          status: "cancelled",
+        });
+      }
+
+      infoLog(`Starting deployment, id ${this.deploy.guid}...`);
+      infoLog(`Destination: ${this.destination.label}`);
+
+      await this.agent.deployFiles(this.bundle, this.destination, (status: string) => {
+        if (abortSignal?.aborted) {
+          throw new Error("Deployment cancelled");
         }
-      );
-      
+        this.log(status);
+      });
+
+      if (abortSignal?.aborted) {
+        return this.deploy.update({
+          logs: this.deploy.logs,
+          status: "cancelled",
+        });
+      }
+
       this.deploy.status = "success";
+      this.deploy.completedAt = Date.now();
+      infoLog("Deployment completed successfully.");
+
+      return await this.deploy.update({
+        logs: this.deploy.logs,
+        status: "success",
+        completedAt: Date.now(),
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Deployment failed:", error);
+      errorLog(`Deployment failed: ${errorMessage}`);
+      if (!abortSignal?.aborted) {
+        this.deploy.status = "failed";
+        this.emitter.emit("update", this.deploy);
+        return await this.deploy.update({
+          logs: this.deploy.logs,
+          status: "failed",
+        });
+      } else {
+        this.deploy.status = "cancelled";
+        this.emitter.emit("update", this.deploy);
+        return await this.deploy.update({
+          logs: this.deploy.logs,
+          status: "cancelled",
+        });
+      }
+    } finally {
+      this.emitter.emit("complete", this.isCompleted);
       this.emitter.emit("update", this.deploy);
-    } catch (e) {
-      this.deploy.status = "failed";
-      this.log(`Deployment failed: ${unwrapError(e)}`, "error");
-      this.emitter.emit("update", this.deploy);
-      throw e;
     }
   }
 }
@@ -149,5 +215,7 @@ export class NullDeployRunner extends DeployRunner<AnyDeployBundle> {
     });
   }
 
-  async runDeploy(): Promise<void> {}
+  async execute(): Promise<DeployDAO> {
+    return this.deploy;
+  }
 }

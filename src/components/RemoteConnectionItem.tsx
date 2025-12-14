@@ -9,7 +9,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { isFuzzyResult } from "@/lib/fuzzy-helpers";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
-import { Ban, Loader, Eye, EyeOff } from "lucide-react";
+import { Ban, Eye, EyeOff, Loader } from "lucide-react";
 import { ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from "react";
 
 // const { msg, request, isValid, name, setName } = useAccountItem({ remoteAuth, defaultName: workspaceName });
@@ -49,71 +49,77 @@ export const RemoteItemCreateInput = forwardRef<
     noAutoFocus?: boolean;
     icon?: React.ReactNode;
   }
->(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing", noAutoFocus = false, icon }, ref) => {
-  const handleBlur = () => onClose(ident.name.trim() || undefined);
-  return (
-    <div className={cn("w-full relative", className)}>
-      <div className="w-full p-0 relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <Input
-          ref={ref}
-          data-no-escape
-          autoFocus={!noAutoFocus}
-          value={ident.name}
-          onChange={(e) => ident.setName(e.target.value)}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className={cn("w-full", icon && "pl-10")}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") handleBlur();
-            if (e.key === "Enter") {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          disabled={request.isLoading}
-        />
-
-        {request.error && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
-            <span className="flex items-center px-3 py-2 text-sm text-destructive">
-              <Ban className="flex-shrink-0 h-4 w-4 mr-2" />
-              <span className="truncate" title={request.error}>
-                {request.error}
-              </span>
-            </span>
-          </div>
-        )}
-
-        {request.isLoading && (
-          <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
-            <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
-              <Loader className="animate-spin h-4 w-4 mr-2" />
-              {msg.creating}
-            </div>
-          </div>
-        )}
-
-        {ident.isValid && (
-          <button
-            className="hover:text-ring group text-left flex justify-center items-center absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              submit();
+>(
+  (
+    { onClose, request, msg, className, ident, submit, placeholder = "my-new-thing", noAutoFocus = false, icon },
+    ref
+  ) => {
+    const handleBlur = () => onClose(ident.name.trim() || undefined);
+    return (
+      <div className={cn("w-full relative", className)}>
+        <div className="w-full p-0 relative">
+          {icon && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">{icon}</div>
+          )}
+          <Input
+            ref={ref}
+            data-no-escape
+            autoFocus={!noAutoFocus}
+            // autoFocus={true}
+            value={ident.name}
+            onChange={(e) => ident.setName(e.target.value)}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className={cn("w-full", icon && "pl-10")}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") handleBlur();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
             }}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <span className="px-3 py-2 text-sm group-hover:text-ring text-muted-foreground truncate">{msg.valid}</span>
-          </button>
-        )}
+            disabled={request.isLoading}
+          />
+
+          {request.error && (
+            <div className="absolute z-20 w-full top-10 bg-sidebar border border-destructive rounded-b-lg shadow-lg">
+              <span className="flex items-center px-3 py-2 text-sm text-destructive">
+                <Ban className="flex-shrink-0 h-4 w-4 mr-2" />
+                <span className="truncate" title={request.error}>
+                  {request.error}
+                </span>
+              </span>
+            </div>
+          )}
+
+          {request.isLoading && (
+            <div className="absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg">
+              <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
+                <Loader className="animate-spin h-4 w-4 mr-2" />
+                {msg.creating}
+              </div>
+            </div>
+          )}
+
+          {ident.isValid && (
+            <button
+              className="hover:text-ring group text-left flex justify-center items-center absolute z-20 w-full top-10 bg-sidebar border rounded-b-lg shadow-lg"
+              onClick={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <span className="px-3 py-2 text-sm group-hover:text-ring text-muted-foreground truncate">
+                {msg.valid}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 RemoteItemCreateInput.displayName = "RemoteItemCreateInput";
 
@@ -434,7 +440,7 @@ export function useRemoteGitRepoSearch({
         element: (
           <div className="flex items-center gap-2">
             {repo.private ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-            {highlightedElement || repo.full_name}
+            <span>{highlightedElement || repo.full_name}</span>
           </div>
         ),
       }),

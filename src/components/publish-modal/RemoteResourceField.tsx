@@ -142,39 +142,12 @@ export function RemoteResourceCreate({
   const { mode, setMode, onValueChange } = useRemoteResourceContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const pauseCloseRef = useRef<boolean>(false);
-  // const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // // Auto-open dropdown when entering select-visibility mode
-  // useEffect(() => {
-  //   if (mode === "select-visibility") {
-  //     setDropdownOpen(true);
-  //   }
-  // }, [mode]);
-
-  // Handle visibility selection mode (sentinel input + dropdown)
-  if (mode === "select-visibility") {
+  if (mode === "option") {
     return (
       <div>
         <FormLabel>{label}</FormLabel>
         <div className="flex justify-center w-full items-center gap-2 mt-2">
-          {/* Sentinel input - visual placeholder only */}
-          <Input className="flex-1" placeholder={placeholder} value="" readOnly />
           {children}
-          {/* {children && isValidElement(children) ? cloneElement(children, { 
-            ...(children.props as any),
-            open: dropdownOpen,
-            onOpenChange: (open: boolean) => {
-              setDropdownOpen(open);
-              if (!open) {
-                setMode("input"); // Cancel if dropdown closes without selection
-              }
-            },
-            onSelectionComplete: () => {
-              (children.props as any)?.onSelectionComplete?.();
-              setDropdownOpen(false);
-              setMode("create");
-            }
-          }) : children}  */}
           <Button type="button" variant="outline" title="Cancel" onClick={() => setMode("input")}>
             <X />
           </Button>
@@ -320,7 +293,7 @@ function RemoteResourceCreateButton({
 
         // Check if repository creation requires visibility selection
         if (repoCapabilities?.requiresVisibilitySelection) {
-          setMode("select-visibility");
+          setMode("option");
         } else {
           setMode("create");
         }

@@ -144,6 +144,7 @@ export function BuildModal({
             </Select>
           </div>
 
+          <div className="flex gap-2">{/* base url, for base tag */}</div>
           {/* Build Controls */}
           <div className="flex gap-2">
             {!buildCompleted && (
