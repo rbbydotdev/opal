@@ -36,7 +36,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
 
         <CollapsibleContent>
           <div className="px-4 pt-2 py-4 flex flex-col gap-2">
-            <Button className="w-full text-xs" size="sm" variant="outline" asChild>
+            <Button tabIndex={0} className="w-full text-xs" size="sm" variant="outline" asChild>
               <a href={downloadZipURL} className="flex">
                 <Download className="mr-1 !w-4 !h-4 stroke-1" />
                 <span className="w-full flex justify-center">Download Zip</span>
@@ -52,6 +52,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
                 size="sm"
                 variant="outline"
                 asChild
+                tabIndex={0}
               >
                 <div className="flex">
                   <Lock className="inline !w-4 !h-4 stroke-1" />
