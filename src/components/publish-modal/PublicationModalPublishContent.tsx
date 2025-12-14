@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BuildDAO } from "@/data/dao/BuildDAO";
+import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
@@ -19,6 +20,7 @@ import { AlertTriangle, CheckCircle, Loader, Pencil, Plus, UploadCloud, UploadCl
 
 export function PublicationModalPublishContent({
   build,
+  deploy,
   setBuild,
   destination,
   currentWorkspace,
@@ -29,6 +31,7 @@ export function PublicationModalPublishContent({
   setPreferredConnection,
 }: {
   build: BuildDAO;
+  deploy: DeployDAO | null;
   setBuild: (build: BuildDAO) => void;
   currentWorkspace: Workspace;
   destination: DestinationDAO | null;
@@ -46,6 +49,7 @@ export function PublicationModalPublishContent({
     label: `Deploy ${new Date().toLocaleString()}`,
     workspaceId: currentWorkspace.id,
     build,
+    deploy,
     destination,
   });
 
@@ -80,13 +84,13 @@ export function PublicationModalPublishContent({
   };
 
   return (
-    <div className="flex flex-col gap-4 flex-1 min-h-0">
-      <BuildSelector builds={builds} build={build} setBuildId={handleBuildSelect}></BuildSelector>
-      <div className="space-y-2">
+    <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
+      <BuildSelector disabled={deployRunner.isCompleted} builds={builds} build={build} setBuildId={handleBuildSelect} />
+      <div className="space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
-            <Select value={destination?.guid} onValueChange={handleSetDestination}>
+            <Select disabled={deploy?.completed} value={destination?.guid} onValueChange={handleSetDestination}>
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
@@ -149,6 +153,7 @@ export function PublicationModalPublishContent({
             variant={"outline"}
             className="min-h-12"
             title="Add Destination"
+            disabled={deploy?.completed}
             onClick={() => {
               setDestination(null);
               pushView(remoteAuths.length === 0 ? "connection" : "destination");
@@ -161,6 +166,7 @@ export function PublicationModalPublishContent({
               className="min-h-12"
               title="Edit Destination"
               type="button"
+              disabled={deploy?.completed}
               variant="outline"
               onClick={() => pushView("destination")}
             >
@@ -168,7 +174,7 @@ export function PublicationModalPublishContent({
             </Button>
           )}
         </div>
-        <div className="w-full">
+        <div className="w-full min-h-6 h-full flex flex-col overflow-y-auto">
           <BuildInfo build={build} destination={destination} />
         </div>
       </div>
@@ -177,6 +183,7 @@ export function PublicationModalPublishContent({
       {destination && (
         <div className="flex gap-2">
           <Button
+            disabled={deployRunner.isCompleted}
             variant="outline"
             onClick={onClose || (() => onOpenChange(false))}
             className="flex items-center gap-2"

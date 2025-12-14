@@ -6,6 +6,7 @@ import { DiskJType } from "@/data/disk/DiskType";
 import { NullDisk } from "@/data/disk/NullDisk";
 import { ClientDb } from "@/data/instance";
 import { SpecialDirs } from "@/data/SpecialDirs";
+import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
 import { nanoid } from "nanoid";
@@ -113,6 +114,34 @@ export class BuildDAO implements BuildRecord {
       buildPath,
       logs,
       fileCount,
+    });
+  }
+
+  static async FetchDAOFromGuid(guid: string, throwNotFound: false): Promise<BuildDAO | null>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound: true): Promise<BuildDAO>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound = false) {
+    const build = await ClientDb.builds.where("guid").equals(guid).first();
+    if (throwNotFound && !build) {
+      throw new NotFoundError("Build not found");
+    }
+    return build ? BuildDAO.FromJSON(build) : null;
+  }
+
+  static FetchDAOFromGuidSafe(guid: string): BuildDAO {
+    // Create a fallback build for missing builds
+    return new BuildDAO({
+      guid: guid,
+      label: "Missing Build",
+      timestamp: Date.now(),
+      fileCount: 0,
+      disk: new NullDisk(),
+      sourceDisk: new NullDisk(),
+      sourcePath: absPath("/"),
+      strategy: "static",
+      status: "failed",
+      workspaceId: "",
+      buildPath: absPath("/"),
+      logs: [],
     });
   }
 

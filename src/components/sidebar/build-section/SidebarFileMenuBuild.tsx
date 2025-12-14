@@ -163,7 +163,7 @@ export function SidebarFileMenuBuild({
                   {activeTab === "builds" && (
                     <SidebarBuildsList workspaceId={currentWorkspace.guid}>
                       <SelectableListItemAction
-                        onClick={(_, build) => {
+                        onSelect={(build) => {
                           setBuildId(build.guid);
                           setActiveTab("files");
                         }}

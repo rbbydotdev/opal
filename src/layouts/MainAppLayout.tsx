@@ -1,7 +1,6 @@
 import { BuildCreationProvider } from "@/components/build-modal/BuildModalContextProvider";
 import { ConfirmProvider } from "@/components/ConfirmContext";
 import { CustomQueryClientProvider } from "@/components/CustomQueryClientProvider";
-import { DestinationManagerProvider } from "@/components/DestinationManagerContext";
 import { AsyncWindowErrorBoundary } from "@/components/errors/AsyncWindowErrorBoundary";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
@@ -23,6 +22,7 @@ import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
+import { NuqsAdapter } from "nuqs/adapters/react";
 import { Toaster } from "sonner";
 import { useThemeContext } from "./ThemeContext";
 
@@ -53,24 +53,24 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
   usePreserveViewModeURL();
   useZoom();
   return (
-    <CustomQueryClientProvider>
-      <ThemeProvider>
-        <Background>
-          <ServiceWorker>
-            <Toaster />
-            <CompatibilityAlert />
+    <NuqsAdapter>
+      <CustomQueryClientProvider>
+        <ThemeProvider>
+          <Background>
+            <ServiceWorker>
+              <Toaster />
+              <CompatibilityAlert />
 
-            <AsyncWindowErrorBoundary>
-              <ErrorPopper>
-                <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
-                  <WorkspaceProvider>
-                    <TooltipProvider delayDuration={1000}>
-                      <WindowContextProviderComponent>
-                        <LivePreviewDialogProvider>
-                          <GitStatusProvider>
-                            <PublicationModalProvider>
-                              <SidebarProvider>
-                                <DestinationManagerProvider>
+              <AsyncWindowErrorBoundary>
+                <ErrorPopper>
+                  <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
+                    <WorkspaceProvider>
+                      <TooltipProvider delayDuration={1000}>
+                        <WindowContextProviderComponent>
+                          <LivePreviewDialogProvider>
+                            <GitStatusProvider>
+                              <PublicationModalProvider>
+                                <SidebarProvider>
                                   <BuildCreationProvider>
                                     <PromptProvider>
                                       <ConfirmProvider>
@@ -89,20 +89,20 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                       </ConfirmProvider>
                                     </PromptProvider>
                                   </BuildCreationProvider>
-                                </DestinationManagerProvider>
-                              </SidebarProvider>
-                            </PublicationModalProvider>
-                          </GitStatusProvider>
-                        </LivePreviewDialogProvider>
-                      </WindowContextProviderComponent>
-                    </TooltipProvider>
-                  </WorkspaceProvider>
-                </ErrorBoundary>
-              </ErrorPopper>
-            </AsyncWindowErrorBoundary>
-          </ServiceWorker>
-        </Background>
-      </ThemeProvider>
-    </CustomQueryClientProvider>
+                                </SidebarProvider>
+                              </PublicationModalProvider>
+                            </GitStatusProvider>
+                          </LivePreviewDialogProvider>
+                        </WindowContextProviderComponent>
+                      </TooltipProvider>
+                    </WorkspaceProvider>
+                  </ErrorBoundary>
+                </ErrorPopper>
+              </AsyncWindowErrorBoundary>
+            </ServiceWorker>
+          </Background>
+        </ThemeProvider>
+      </CustomQueryClientProvider>
+    </NuqsAdapter>
   );
 }

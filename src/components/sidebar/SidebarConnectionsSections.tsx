@@ -78,13 +78,13 @@ function ConnectionManager(props: React.ComponentProps<typeof SidebarGroup>) {
               </SelectableListItemSubLabel>
               <SelectableListItemMenu>
                 <SelectableListItemAction
-                  onClick={() => handleEdit(connection.guid)}
+                  onSelect={() => handleEdit(connection.guid)}
                   icon={<Pencil className="w-4 h-4" />}
                 >
                   Edit
                 </SelectableListItemAction>
                 <SelectableListItemAction
-                  onClick={() => handleDelete(connection.guid)}
+                  onSelect={() => handleDelete(connection.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >

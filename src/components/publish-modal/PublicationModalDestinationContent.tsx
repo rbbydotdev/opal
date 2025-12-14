@@ -87,7 +87,9 @@ export function PublicationModalDestinationContent({
 
   const remoteAuth = useMemo(
     () =>
-      currentRemoteAuthId ? RemoteAuthDAO.FromJSON(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId)) : null,
+      currentRemoteAuthId
+        ? RemoteAuthDAO.FromJSONSafe(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId), currentRemoteAuthId)
+        : null,
     [currentRemoteAuthId, remoteAuths]
   );
 

@@ -1,5 +1,8 @@
+import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployLogLine, DeployRecord } from "@/data/dao/DeployRecord";
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { ClientDb } from "@/data/instance";
+import { NotFoundError } from "@/lib/errors/errors";
 import { nanoid } from "nanoid";
 
 type DeployJType = ReturnType<typeof DeployDAO.prototype.toJSON>;
@@ -111,6 +114,28 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     });
   }
 
+  static async FetchDAOFromGuid(guid: string, throwNotFound: false): Promise<DeployDAO | null>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound: true): Promise<DeployDAO>;
+  static async FetchDAOFromGuid(guid: string, throwNotFound = false) {
+    const deploy = await ClientDb.deployments.where("guid").equals(guid).first();
+    if (throwNotFound && !deploy) {
+      throw new NotFoundError("Deploy not found");
+    }
+    return deploy ? DeployDAO.FromJSON(deploy) : null;
+  }
+
+  static async FetchModelFromGuid(guid: string): Promise<DeployModel> {
+    const deploy = await DeployDAO.FetchDAOFromGuid(guid, false);
+    if (!deploy) throw new NotFoundError("Deploy not found");
+    return DeployModel.FromDeployDAO(deploy);
+  }
+
+  static async FetchModelFromGuidSafe(guid: string): Promise<DeployModel> {
+    const deploy = await DeployDAO.FetchDAOFromGuid(guid, false);
+    if (!deploy) throw new NotFoundError("Deploy not found");
+    return DeployModel.FromDeployDAOSafe(deploy);
+  }
+
   static async FetchFromGuid<T = any>(guid: string) {
     const result = await ClientDb.deployments.where("guid").equals(guid).first();
     if (!result) return result;
@@ -199,7 +224,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 }
 
-class NullDeployDAO extends DeployDAO {
+export class NullDeployDAO extends DeployDAO {
   constructor() {
     super({
       guid: "_null_deploy_",
@@ -215,3 +240,40 @@ class NullDeployDAO extends DeployDAO {
     });
   }
 }
+
+export class DeployModel extends DeployDAO {
+  Build!: BuildDAO;
+  Destination!: DestinationDAO;
+  private constructor(...args: ConstructorParameters<typeof DeployDAO>) {
+    super(...args);
+  }
+  static async FromDeployDAO(deploy: DeployDAO) {
+    const model = new DeployModel({ ...deploy });
+    await model.hydrateMembers();
+    return model;
+  }
+
+  static async FromDeployDAOSafe(deploy: DeployDAO) {
+    const model = new DeployModel({ ...deploy });
+    await model.hydrateMembersSafe();
+    return model;
+  }
+
+  private async hydrateMembers() {
+    this.Build = await BuildDAO.FetchDAOFromGuid(this.buildId, true);
+    this.Destination = await DestinationDAO.FetchDAOFromGuid(this.destinationId, true);
+    return this;
+  }
+
+  private async hydrateMembersSafe() {
+    const build = await BuildDAO.FetchDAOFromGuid(this.buildId, false);
+    this.Build = build || BuildDAO.FetchDAOFromGuidSafe(this.buildId);
+
+    const destination = await DestinationDAO.FetchDAOFromGuid(this.destinationId, false);
+    this.Destination = destination || DestinationDAO.FetchDAOFromGuidSafe(this.destinationId);
+
+    return this;
+  }
+}
+
+export const NULL_DEPLOY = new NullDeployDAO();

@@ -1,8 +1,7 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
-import { DeployableAgentFromAuth, RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { unwrapError } from "@/lib/errors/errors";
+import { DeployableAgentFromAuthSafe, RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { AnyDeployBundle, DeployBundle, DeployBundleFactory } from "@/services/deploy/DeployBundle";
 import { useSyncExternalStore } from "react";
@@ -31,6 +30,7 @@ export class DeployRunner<
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
   private bundle: TBundle;
   private abortController: AbortController = new AbortController();
+  kind = "deploy-runner";
 
   emitter = CreateSuperTypedEmitter<{
     log: DeployLogLine;
@@ -73,27 +73,41 @@ export class DeployRunner<
     return this.deploy.status === "idle";
   }
 
+  static async FromDeploy(deploy: DeployDAO) {
+    const destination = await DestinationDAO.FetchDAOFromGuid(deploy.destinationId, true);
+    return new DeployRunner({
+      bundle: {} as DeployBundle<any>,
+      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle<any>, any>,
+      destination,
+      deploy,
+    });
+  }
+
   static Create({
     build,
+    deploy,
     destination,
     workspaceId,
     label,
   }: {
     build: BuildDAO;
+    deploy: DeployDAO | null;
     destination: DestinationDAO;
     workspaceId: string;
     label: string;
   }) {
     return new AnyDeployRunner({
       destination,
-      deploy: DeployDAO.CreateNew({
-        label,
-        workspaceId,
-        meta: {},
-        buildId: build.guid,
-        destinationId: destination.guid,
-      }),
-      agent: DeployableAgentFromAuth(destination.RemoteAuth),
+      deploy:
+        deploy ||
+        DeployDAO.CreateNew({
+          label,
+          workspaceId,
+          meta: {},
+          buildId: build.guid,
+          destinationId: destination.guid,
+        }),
+      agent: DeployableAgentFromAuthSafe(destination.RemoteAuth),
       bundle: DeployBundleFactory(build, destination),
     });
   }

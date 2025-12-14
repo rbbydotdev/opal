@@ -23,7 +23,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   meta: DestinationData<T>;
   timestamp?: number;
   get provider() {
-    return this.remoteAuth.source;
+    return this.remoteAuth?.source || "custom";
   }
   static guid = () => "__dest__" + nanoid();
 
@@ -50,7 +50,9 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   get RemoteAuth() {
-    return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
+    return this.remoteAuth instanceof RemoteAuthDAO
+      ? this.remoteAuth
+      : RemoteAuthDAO.FromJSONSafe(this.remoteAuth, this.remoteAuthId);
   }
 
   static async CreateNew<T>({
@@ -82,6 +84,25 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
       throw new NotFoundError("Destination not found");
     }
     return dest ? DestinationDAO.FromJSON(dest) : null;
+  }
+
+  static FetchDAOFromGuidSafe(guid: string): DestinationDAO {
+    // Create a fallback destination for missing destinations
+    return new DestinationDAO({
+      guid: guid,
+      label: "Missing Destination",
+      remoteAuth: {
+        guid: "missing",
+        source: "custom",
+        type: "no-auth",
+        name: "Missing Connection",
+        data: { endpoint: "", corsProxy: undefined },
+        tags: [],
+        timestamp: Date.now(),
+      },
+      meta: {},
+      timestamp: Date.now(),
+    });
   }
 
   hydrate = async () => {

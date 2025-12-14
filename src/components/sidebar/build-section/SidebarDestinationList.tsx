@@ -1,4 +1,4 @@
-import { useDestinationManager } from "@/components/DestinationManagerContext";
+import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import {
   SelectableListActions,
   SelectableListItem,
@@ -17,7 +17,7 @@ import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye, Plus } from "lucide-react";
 
 export function SidebarDestinationList() {
-  const { openDestinationFlow } = useDestinationManager();
+  const { openDestinationFlow } = useBuildPublisher();
   const errorToss = useErrorToss();
   const { destinations } = useDestinations();
   const handleDelete = async (destId: string) => {
@@ -58,13 +58,13 @@ export function SidebarDestinationList() {
               <DestinationLabel destination={destination} />
               <SelectableListItemMenu>
                 <SelectableListItemAction
-                  onClick={() => handleView(destination.guid)}
+                  onSelect={() => handleView(destination.guid)}
                   icon={<Eye className="w-4 h-4" />}
                 >
                   View
                 </SelectableListItemAction>
                 <SelectableListItemAction
-                  onClick={() => handleDelete(destination.guid)}
+                  onSelect={() => handleDelete(destination.guid)}
                   icon={<Delete className="w-4 h-4" />}
                   destructive
                 >

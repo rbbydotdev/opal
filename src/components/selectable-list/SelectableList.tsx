@@ -401,25 +401,23 @@ export function SelectableListItemMenu({ children }: { children: React.ReactNode
   );
 }
 
-type SelectableListItemActionProps = {
-  children: React.ReactNode;
-  onClick: (event: React.MouseEvent, item?: any) => void;
-  icon?: React.ReactNode;
-  destructive?: boolean;
-  asChild?: boolean;
-};
-
 export function SelectableListItemAction({
   children,
-  onClick,
+  onSelect,
   icon,
   destructive,
   asChild,
-}: SelectableListItemActionProps) {
+}: {
+  children: React.ReactNode;
+  onSelect: (item?: any) => void;
+  icon?: React.ReactNode;
+  destructive?: boolean;
+  asChild?: boolean;
+}) {
   const { itemData } = useSelectableListItemContext();
 
   const handleSelect = () => {
-    onClick({} as React.MouseEvent, itemData);
+    onSelect(itemData);
   };
 
   return (

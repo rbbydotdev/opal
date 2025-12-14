@@ -104,11 +104,9 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
           getContent: async () => Buffer.from(await translatedVirtualFs.readFile(node.path)).toString("base64"),
           encoding: "base64", // Always use base64 encoding
         });
-        console.log("Created file:", file.path, "getContent type:", typeof file.getContent);
         return file;
       })
     );
-    console.log("All files created, count:", files.length);
     return files;
   };
 
@@ -167,7 +165,6 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
 
 export class VercelDeployBundle extends DeployBundle<InlinedFile> {
   getFiles = async () => {
-    console.log("VercelDeployBundle.getFiles: Converting to InlinedFile format");
     return Promise.all(
       (await this.getDeployBundleFiles()).map(async (file) => ({
         encoding: file.encoding,

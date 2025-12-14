@@ -8,6 +8,7 @@ export const PublicationModalProvider = ({ children }: { children: ReactNode }) 
     open: () => {},
     close: () => {},
     openDestinationFlow: () => {},
+    openDeployment: () => {},
   });
   const { currentWorkspace } = useWorkspaceContext();
   return (
