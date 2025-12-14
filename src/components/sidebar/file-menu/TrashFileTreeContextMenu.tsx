@@ -43,18 +43,18 @@ export const TrashFileTreeContextMenu = ({
         }}
       >
         {isRoot && (
-          <ContextMenuItem className="flex gap-8 justify-start w-full" onClick={() => remove(SpecialDirs.Trash)}>
+          <ContextMenuItem className="flex gap-8 justify-start w-full" onSelect={() => remove(SpecialDirs.Trash)}>
             <Delete className="h-5 w-5 text-destructive" />
             Empty
           </ContextMenuItem>
         )}
         {!isRoot && (
           <>
-            <ContextMenuItem inset onClick={deferredFn(() => untrash(selectedRange, fileNode))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => untrash(selectedRange, fileNode))}>
               <Undo className="mr-3 h-4 w-4" />
               Put Back
             </ContextMenuItem>
-            <ContextMenuItem inset onClick={deferredFn(() => remove(selectedRange, fileNode))}>
+            <ContextMenuItem inset onSelect={deferredFn(() => remove(selectedRange, fileNode))}>
               <Delete className="mr-3 h-4 w-4" />
               Delete
             </ContextMenuItem>

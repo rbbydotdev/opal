@@ -336,7 +336,7 @@ function PushMenu({ forcePush, disabled }: { forcePush?: () => void; disabled?: 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={forcePush} className="text-destructive">
+        <DropdownMenuItem onSelect={forcePush} className="text-destructive">
           <Upload /> Force Push
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -725,11 +725,11 @@ function GitManager({
         </SidebarGroupAction>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem disabled={info.bareInitialized} onClick={initRepo}>
+        <DropdownMenuItem disabled={info.bareInitialized} onSelect={initRepo}>
           <PlusIcon /> Initialize Repo
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={onConfigureAuthor}>
+        <DropdownMenuItem onSelect={onConfigureAuthor}>
           <User /> Configure Author
         </DropdownMenuItem>
 

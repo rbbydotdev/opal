@@ -84,11 +84,11 @@ function GitRemoteManager({
         onSelect={setSelectRemote}
       >
         <GitRemoteManagerDropDown open={selectOpen} setOpen={setSelectOpen}>
-          <DropdownMenuItem onClick={() => cmdRef.current.open("add")}>
+          <DropdownMenuItem onSelect={() => cmdRef.current.open("add")}>
             <Plus /> Add Remote
           </DropdownMenuItem>
           {Boolean(remotes.length) && (
-            <DropdownMenuItem onClick={() => setSelectMode("delete")}>
+            <DropdownMenuItem onSelect={() => setSelectMode("delete")}>
               <Delete className="text-destructive" /> Delete Remote
             </DropdownMenuItem>
           )}
@@ -121,16 +121,16 @@ function GitRemoteManager({
           {Boolean(selectRemote) && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={syncRepo} disabled={isMerging}>
+              <DropdownMenuItem onSelect={syncRepo} disabled={isMerging}>
                 <RefreshCw /> Sync Now
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={pushRepo} disabled={isMerging}>
+              <DropdownMenuItem onSelect={pushRepo} disabled={isMerging}>
                 <Upload /> Push
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={pullRepo} disabled={isMerging}>
+              <DropdownMenuItem onSelect={pullRepo} disabled={isMerging}>
                 <Download /> Pull
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={fetchRepo} disabled={isMerging}>
+              <DropdownMenuItem onSelect={fetchRepo} disabled={isMerging}>
                 <Download /> Fetch
               </DropdownMenuItem>
             </>

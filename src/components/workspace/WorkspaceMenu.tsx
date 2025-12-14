@@ -26,13 +26,13 @@ export function WorkspaceMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent onCloseAutoFocus={onCloseAutoFocus}>
         {Boolean(onRename) && (
-          <ContextMenuItem className="w-full gap-4 flex items-center justify-start h-full" onClick={onRename}>
+          <ContextMenuItem className="w-full gap-4 flex items-center justify-start h-full" onSelect={onRename}>
             <Pencil className="w-5 h-5" size={12} strokeWidth={1} />
             <span>Rename</span>
           </ContextMenuItem>
         )}
         <ContextMenuItem
-          onClick={() => {
+          onSelect={() => {
             void open(
               async () => {
                 const currentWorkspace = await WorkspaceDAO.FetchByGuid(workspaceGuid).then((ws) =>

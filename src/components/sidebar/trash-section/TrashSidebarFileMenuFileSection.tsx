@@ -34,7 +34,7 @@ export function TrashSidebarFileMenuFileSection({ className }: { className?: str
             </SidebarFileMenuFiles>
           </ContextMenuTrigger>
           <ContextMenuContent>
-            <ContextMenuItem className="flex gap-2" onClick={() => removeFile(SpecialDirs.Trash)}>
+            <ContextMenuItem className="flex gap-2" onSelect={() => removeFile(SpecialDirs.Trash)}>
               <Delete className="mr-3 h-4 w-4 text-destructive" />
               Empty
             </ContextMenuItem>

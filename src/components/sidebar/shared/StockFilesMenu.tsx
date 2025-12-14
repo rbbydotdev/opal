@@ -30,23 +30,23 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
 
   return (
     <>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.GlobalCSS(), ROOT_NODE))}>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("global.css", DefaultFile.GlobalCSS(), ROOT_NODE))}>
         <FileCode2Icon className="w-4 h-4 mr-2" />
         global.css (github.md)
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("global.css", DefaultFile.PicoCSS(), ROOT_NODE))}>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("global.css", DefaultFile.PicoCSS(), ROOT_NODE))}>
         <FileCode2Icon className="w-4 h-4 mr-2" />
         global.css (pico.css)
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("index.html", DefaultFile.HTML()))}>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("index.html", DefaultFile.HTML()))}>
         <Globe className="w-4 h-4 mr-2" />
         index.html
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("template.mustache", DefaultFile.Mustache()))}>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.mustache", DefaultFile.Mustache()))}>
         <FileTextIcon className="w-4 h-4 mr-2" />
         template.mustache
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={deferFn(() => addStockFile("template.ejs", DefaultFile.EJS()))}>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.ejs", DefaultFile.EJS()))}>
         <FileTextIcon className="w-4 h-4 mr-2" />
         template.ejs
       </DropdownMenuItem>
