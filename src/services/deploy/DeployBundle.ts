@@ -9,6 +9,7 @@ import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { GithubDestinationMeta, isGithubDestination } from "@/data/DestinationSchemaMap";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { TranslateFs } from "@/data/fs/TranslateFs";
+import { VirtualWriteFsProxy } from "@/data/fs/VirtualWriteFsProxy";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
@@ -76,8 +77,8 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
   protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
     await this.disk.refresh();
 
-    // Create a translated filesystem that maps virtual paths to the build directory
-    const translatedFs = new TranslateFs(this.disk.fs, this.buildDir);
+    // Create a virtual and translated filesystem that maps virtual paths to the build directory
+    const translatedFs = VirtualWriteFsProxy(new TranslateFs(this.disk.fs, this.buildDir));
 
     // Create a new FileTree using the translated filesystem
     const scopedTree = new FileTree(translatedFs, this.disk.guid, this.disk.mutex);
@@ -173,20 +174,47 @@ export class VercelDeployBundle extends DeployBundle<InlinedFile> {
 export class GithubDeployBundle extends DeployBundle<GithubInlinedFile, GithubDestinationMeta> {
   getFiles = this.getDeployBundleFiles;
   async preDeployAction(tree: FileTree): Promise<void> {
+    if (this.destination.meta.baseUrl === "/" || !this.destination.meta.baseUrl) {
+      return;
+    }
     for (const node of findHtmlFilesInTree(tree)) {
-      await updateFileNodeContents(node as TreeFile, (contents) => {
-        return addBaseTagToHtmlContent(contents, this.destination.meta.baseUrl || "/");
-      });
+      await updateFileNodeContents(node as TreeFile, (contents) =>
+        updateAbsoluteUrlsInHtmlContent(contents, this.destination.meta.baseUrl)
+      );
     }
   }
 }
 
-function addBaseTagToHtmlContent(content: string, baseUrl: string): string {
-  if (content.includes("<base ")) {
-    return content; // Base tag already exists
+export function updateAbsoluteUrlsInHtmlContent(content: string, baseUrl: string): string {
+  const base = baseUrl.replace(/\/$/, ""); // normalize (no trailing slash)
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, "text/html");
+
+  const attrsToUpdate = ["href", "src", "srcset", "poster", "data-src"];
+
+  for (const attr of attrsToUpdate) {
+    const elements = doc.querySelectorAll(`[${attr}]`);
+    elements.forEach((el) => {
+      const value = el.getAttribute(attr);
+      if (!value) return;
+
+      // skip fully-qualified URLs and anchors
+      if (
+        value.startsWith("http://") ||
+        value.startsWith("https://") ||
+        value.startsWith("//") ||
+        value.startsWith("#")
+      )
+        return;
+
+      if (value.startsWith("/")) el.setAttribute(attr, `${base}${value}`);
+    });
   }
-  return content.replace(/<head>/, `<head>\n<base href="${baseUrl}">\n`);
+
+  // Serialize the document back to a string — includes <html>, <head>, <body>, etc.
+  return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
 }
+
 function updateFileNodeContents(node: TreeFile, cb: (contents: string) => string): Promise<void> {
   return node.read().then((data) => {
     const updatedContent = cb(data.toString());
