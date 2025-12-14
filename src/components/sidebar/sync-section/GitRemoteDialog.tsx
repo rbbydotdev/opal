@@ -284,7 +284,7 @@ function GitRemoteDialogInternal({
       if (!createAgent) {
         throw new Error("No authentication configured for repository creation");
       }
-      const response = await createAgent.createRepo(name, options);
+      const response = await createAgent.createRepo({ repoName: name }, options);
       return response.data;
     },
     defaultName: currentWorkspace.name,

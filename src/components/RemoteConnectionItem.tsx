@@ -9,7 +9,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { isFuzzyResult } from "@/lib/fuzzy-helpers";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
-import { Ban, Loader } from "lucide-react";
+import { Ban, Loader, Eye, EyeOff } from "lucide-react";
 import { ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from "react";
 
 // const { msg, request, isValid, name, setName } = useAccountItem({ remoteAuth, defaultName: workspaceName });
@@ -46,21 +46,28 @@ export const RemoteItemCreateInput = forwardRef<
     ident: RemoteItemType.Ident;
     className?: string;
     placeholder?: string;
+    noAutoFocus?: boolean;
+    icon?: React.ReactNode;
   }
->(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing" }, ref) => {
+>(({ onClose, request, msg, className, ident, submit, placeholder = "my-new-thing", noAutoFocus = false, icon }, ref) => {
   const handleBlur = () => onClose(ident.name.trim() || undefined);
   return (
     <div className={cn("w-full relative", className)}>
       <div className="w-full p-0 relative">
+        {icon && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">
+            {icon}
+          </div>
+        )}
         <Input
           ref={ref}
           data-no-escape
-          autoFocus
+          autoFocus={!noAutoFocus}
           value={ident.name}
           onChange={(e) => ident.setName(e.target.value)}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className="w-full"
+          className={cn("w-full", icon && "pl-10")}
           onKeyDown={(e) => {
             if (e.key === "Escape") handleBlur();
             if (e.key === "Enter") {
@@ -424,7 +431,12 @@ export function useRemoteGitRepoSearch({
         label: repo.full_name,
         // value: repo.html_url,
         value: repo.full_name,
-        element: highlightedElement || repo.full_name,
+        element: (
+          <div className="flex items-center gap-2">
+            {repo.private ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {highlightedElement || repo.full_name}
+          </div>
+        ),
       }),
     },
     cacheKey,

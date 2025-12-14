@@ -10,6 +10,7 @@ export interface GitHubRepo {
   full_name: string;
   description: string | null;
   html_url: string;
+  private: boolean;
 }
 
 type GithubTreeItem = {
@@ -56,24 +57,23 @@ export class GitHubClient {
     return this.octokit.request("GET /user");
   }
 
-  async createRepo(repoName: string, { signal }: { signal?: AbortSignal } = {}) {
+  async createRepo(
+    { repoName, private: isPrivate }: { repoName: string; private?: boolean },
+    { signal }: { signal?: AbortSignal } = {}
+  ) {
     try {
       const finalRepoName = repoName.trim();
-      return this.createRepoRequest({ name: finalRepoName, signal });
+      return this.octokit.request("POST /user/repos", {
+        name: finalRepoName,
+        private: isPrivate ?? true, // Default to private if not specified
+        auto_init: false,
+        request: {
+          signal,
+        },
+      });
     } catch (e) {
       throw mapToTypedError(e);
     }
-  }
-
-  private async createRepoRequest({ name, signal }: { name: string; signal?: AbortSignal }) {
-    return this.octokit.request("POST /user/repos", {
-      name,
-      private: true,
-      auto_init: false,
-      request: {
-        signal,
-      },
-    });
   }
 
   async getRepos({ signal }: { signal?: AbortSignal } = {}): Promise<GitHubRepo[]> {
@@ -93,14 +93,17 @@ export class GitHubClient {
           );
         }
 
-        const result = response.data.map(({ updated_at, id, name, full_name, description, html_url }) => ({
-          updated_at: new Date(updated_at ?? Date.now()),
-          id,
-          name,
-          full_name,
-          description: description || null,
-          html_url,
-        }));
+        const result = response.data.map(
+          ({ updated_at, id, name, full_name, description, html_url, private: isPrivate }) => ({
+            updated_at: new Date(updated_at ?? Date.now()),
+            id,
+            name,
+            full_name,
+            description: description || null,
+            html_url,
+            private: isPrivate,
+          })
+        );
         allRepos.push(...result);
 
         page++;
@@ -116,7 +119,15 @@ export class GitHubClient {
     }
   }
 
-  private async getUserReposRequest({ page, perPage, signal }: { page: number; perPage: number; signal?: AbortSignal }) {
+  private async getUserReposRequest({
+    page,
+    perPage,
+    signal,
+  }: {
+    page: number;
+    perPage: number;
+    signal?: AbortSignal;
+  }) {
     return this.octokit.request("GET /user/repos", {
       page,
       per_page: perPage,
@@ -128,34 +139,52 @@ export class GitHubClient {
     });
   }
 
-  async deploy({
-    owner,
-    repo,
-    branch,
-    message,
-    files,
-  }: {
-    owner: string;
-    repo: string;
-    branch: string;
-    message: string;
-    files: GithubInlinedFile[];
-  }, logStatus: (status: string) => void = () => {}) {
-    const { latestCommitSha, baseTreeSha, isOrphan } = await this.resolveBranchForDeploy({ owner, repo, branch, logStatus });
-    const newCommitSha = await this.createDeployCommit({ 
-      owner, 
-      repo, 
-      branch, 
-      message, 
-      files, 
-      baseTreeSha: isOrphan ? undefined : baseTreeSha ?? undefined,
-      parentSha: isOrphan ? undefined : latestCommitSha ?? undefined,
-      logStatus
+  async deploy(
+    {
+      owner,
+      repo,
+      branch,
+      message,
+      files,
+    }: {
+      owner: string;
+      repo: string;
+      branch: string;
+      message: string;
+      files: GithubInlinedFile[];
+    },
+    logStatus: (status: string) => void = () => {}
+  ) {
+    const { latestCommitSha, baseTreeSha, isOrphan } = await this.resolveBranchForDeploy({
+      owner,
+      repo,
+      branch,
+      logStatus,
+    });
+    const newCommitSha = await this.createDeployCommit({
+      owner,
+      repo,
+      branch,
+      message,
+      files,
+      baseTreeSha: isOrphan ? undefined : (baseTreeSha ?? undefined),
+      parentSha: isOrphan ? undefined : (latestCommitSha ?? undefined),
+      logStatus,
     });
     return newCommitSha;
   }
 
-  private async resolveBranchForDeploy({ owner, repo, branch, logStatus = () => {} }: { owner: string; repo: string; branch: string; logStatus?: (status: string) => void }) {
+  private async resolveBranchForDeploy({
+    owner,
+    repo,
+    branch,
+    logStatus = () => {},
+  }: {
+    owner: string;
+    repo: string;
+    branch: string;
+    logStatus?: (status: string) => void;
+  }) {
     try {
       logStatus(`Checking if branch '${branch}' exists...`);
       const {
@@ -163,13 +192,13 @@ export class GitHubClient {
           object: { sha },
         },
       } = await this.getBranchRefRequest({ owner, repo, branch });
-      
+
       const {
         data: {
           tree: { sha: baseTreeSha },
         },
       } = await this.getCommitRequest({ owner, repo, commitSha: sha });
-      
+
       logStatus(`Found existing branch '${branch}'`);
       return { latestCommitSha: sha, baseTreeSha, isOrphan: false };
     } catch (error: any) {
@@ -183,15 +212,15 @@ export class GitHubClient {
     }
   }
 
-  private async createDeployCommit({ 
-    owner, 
-    repo, 
-    branch, 
-    message, 
-    files, 
-    baseTreeSha, 
+  private async createDeployCommit({
+    owner,
+    repo,
+    branch,
+    message,
+    files,
+    baseTreeSha,
     parentSha,
-    logStatus = () => {} 
+    logStatus = () => {},
   }: {
     owner: string;
     repo: string;
@@ -210,18 +239,18 @@ export class GitHubClient {
       const {
         data: { sha },
       } = await this.createBlobRequest({ owner, repo, content: content.toString(), encoding: file.encoding });
-      
+
       tree.push({ path: file.path, mode: "100644", type: "blob", sha });
     }
 
     logStatus(`Creating tree with ${tree.length} files...`);
     const {
       data: { sha: newTreeSha },
-    } = await this.createTreeRequest({ 
-      owner, 
-      repo, 
-      baseTree: baseTreeSha || "", 
-      tree 
+    } = await this.createTreeRequest({
+      owner,
+      repo,
+      baseTree: baseTreeSha || "",
+      tree,
     });
 
     const commitParams: any = {
@@ -230,7 +259,7 @@ export class GitHubClient {
       message,
       tree: newTreeSha,
     };
-    
+
     if (parentSha) {
       commitParams.parentSha = parentSha;
     }
@@ -266,7 +295,17 @@ export class GitHubClient {
     });
   }
 
-  private async createBranchRefRequest({ owner, repo, branch, sha }: { owner: string; repo: string; branch: string; sha: string }) {
+  private async createBranchRefRequest({
+    owner,
+    repo,
+    branch,
+    sha,
+  }: {
+    owner: string;
+    repo: string;
+    branch: string;
+    sha: string;
+  }) {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/refs", {
       owner,
       repo,
@@ -283,7 +322,17 @@ export class GitHubClient {
     });
   }
 
-  private async createBlobRequest({ owner, repo, content, encoding }: { owner: string; repo: string; content: string; encoding: string }) {
+  private async createBlobRequest({
+    owner,
+    repo,
+    content,
+    encoding,
+  }: {
+    owner: string;
+    repo: string;
+    content: string;
+    encoding: string;
+  }) {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
       owner,
       repo,
@@ -292,7 +341,17 @@ export class GitHubClient {
     });
   }
 
-  private async createTreeRequest({ owner, repo, baseTree, tree }: { owner: string; repo: string; baseTree: string; tree: GithubTreeItem[] }) {
+  private async createTreeRequest({
+    owner,
+    repo,
+    baseTree,
+    tree,
+  }: {
+    owner: string;
+    repo: string;
+    baseTree: string;
+    tree: GithubTreeItem[];
+  }) {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/trees", {
       owner,
       repo,
@@ -301,22 +360,44 @@ export class GitHubClient {
     });
   }
 
-  private async createCommitRequest({ owner, repo, message, tree, parentSha }: { owner: string; repo: string; message: string; tree: string; parentSha?: string }) {
+  private async createCommitRequest({
+    owner,
+    repo,
+    message,
+    tree,
+    parentSha,
+  }: {
+    owner: string;
+    repo: string;
+    message: string;
+    tree: string;
+    parentSha?: string;
+  }) {
     const params: any = {
       owner,
       repo,
       message,
       tree,
     };
-    
+
     if (parentSha) {
       params.parents = [parentSha];
     }
-    
+
     return this.octokit.request("POST /repos/{owner}/{repo}/git/commits", params);
   }
 
-  private async updateBranchRefRequest({ owner, repo, branch, sha }: { owner: string; repo: string; branch: string; sha: string }) {
+  private async updateBranchRefRequest({
+    owner,
+    repo,
+    branch,
+    sha,
+  }: {
+    owner: string;
+    repo: string;
+    branch: string;
+    sha: string;
+  }) {
     return this.octokit.request("PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}", {
       owner,
       repo,
