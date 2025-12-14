@@ -94,7 +94,7 @@ export class DeployRunner<
         destinationId: destination.guid,
       }),
       agent: DeployableAgentFromAuth(destination.RemoteAuth),
-      bundle: DeployBundleFactory(build, destination.toJSON()),
+      bundle: DeployBundleFactory(build, destination),
     });
   }
 

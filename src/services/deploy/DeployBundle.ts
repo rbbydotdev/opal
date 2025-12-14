@@ -3,18 +3,18 @@ import { AbsPath, absPath } from "@/lib/paths2";
 //
 import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { FileTree } from "@/components/filetree/Filetree";
-import { TreeNode } from "@/components/filetree/TreeNode";
+import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { DestinationJType } from "@/data/dao/DestinationDAO";
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { GithubDestinationMeta, isGithubDestination } from "@/data/DestinationSchemaMap";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { TranslateFs } from "@/data/fs/TranslateFs";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
-import { ApplicationError, BadRequestError, errF } from "@/lib/errors/errors";
+import { ApplicationError, errF } from "@/lib/errors/errors";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
-import { isGithubDestination } from "../../data/DestinationSchemaMap";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -57,13 +57,13 @@ type DeployBundleTree = DeployBundleTreeEntry[];
 
 export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
-export abstract class DeployBundle<TFile> {
+export abstract class DeployBundle<TFile, TMeta = unknown> {
   readonly disk: Disk;
   readonly buildDir = absPath("/");
 
   constructor(
     build: BuildDAO,
-    public readonly destination: DestinationJType
+    public readonly destination: DestinationDAO<TMeta>
   ) {
     this.disk = build.Disk;
     this.buildDir = build.getOutputPath();
@@ -95,11 +95,11 @@ export abstract class DeployBundle<TFile> {
           getContent: async () => Buffer.from(await translatedFs.readFile(node.path)).toString("base64"),
           encoding: "base64", // Always use base64 encoding
         });
-        console.log('Created file:', file.path, 'getContent type:', typeof file.getContent);
+        console.log("Created file:", file.path, "getContent type:", typeof file.getContent);
         return file;
       })
     );
-    console.log('All files created, count:', files.length);
+    console.log("All files created, count:", files.length);
     return files;
   };
 
@@ -158,6 +158,7 @@ export abstract class DeployBundle<TFile> {
 
 export class VercelDeployBundle extends DeployBundle<InlinedFile> {
   getFiles = async () => {
+    console.log("VercelDeployBundle.getFiles: Converting to InlinedFile format");
     return Promise.all(
       (await this.getDeployBundleFiles()).map(async (file) => ({
         encoding: file.encoding,
@@ -169,35 +170,53 @@ export class VercelDeployBundle extends DeployBundle<InlinedFile> {
   };
 }
 
-export class GithubDeployBundle extends DeployBundle<GithubInlinedFile> {
+export class GithubDeployBundle extends DeployBundle<GithubInlinedFile, GithubDestinationMeta> {
   getFiles = this.getDeployBundleFiles;
   async preDeployAction(tree: FileTree): Promise<void> {
-    if (!isGithubDestination(this.destination)) {
-      throw new BadRequestError(errF`Destination is not a GitHub destination`);
-    }
-    for (const node of tree.iterator()) {
-      if (node.isTreeFile() && node.path.endsWith(".html")) {
-        let content = (await node.read()).toString();
-        const baseUrl = this.destination.meta.baseUrl || "/";
-        if (!content.includes("<base ")) {
-          content = content.replace(/<head>/, `<head>\n<base href="${baseUrl}">\n`);
-          await node.write(content);
-        }
-      }
+    for (const node of findHtmlFilesInTree(tree)) {
+      await updateFileNodeContents(node as TreeFile, (contents) => {
+        return addBaseTagToHtmlContent(contents, this.destination.meta.baseUrl || "/");
+      });
     }
   }
 }
+
+function addBaseTagToHtmlContent(content: string, baseUrl: string): string {
+  if (content.includes("<base ")) {
+    return content; // Base tag already exists
+  }
+  return content.replace(/<head>/, `<head>\n<base href="${baseUrl}">\n`);
+}
+function updateFileNodeContents(node: TreeFile, cb: (contents: string) => string): Promise<void> {
+  return node.read().then((data) => {
+    const updatedContent = cb(data.toString());
+    return node.write(updatedContent);
+  });
+}
+function findHtmlFilesInTree(tree: FileTree): TreeNode[] {
+  const htmlFiles: TreeNode[] = [];
+  for (const node of tree.iterator()) {
+    if (node.isTreeFile() && node.path.endsWith(".html")) {
+      htmlFiles.push(node);
+    }
+  }
+  return htmlFiles;
+}
+
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
   getFiles = this.getDeployBundleFiles;
 }
 
 export function DeployBundleFactory(
   build: BuildDAO,
-  destination: DestinationJType
+  destination: DestinationDAO
 ): DeployBundle<InlinedFile | GithubInlinedFile | DeployBundleTreeEntry> {
   if (isGithubDestination(destination)) {
     return new GithubDeployBundle(build, destination);
-  } else {
+  }
+  if (destination.remoteAuth.source === "vercel") {
     return new VercelDeployBundle(build, destination);
+  } else {
+    return new AnyDeployBundle(build, destination);
   }
 }

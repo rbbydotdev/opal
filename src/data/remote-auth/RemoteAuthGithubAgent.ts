@@ -33,11 +33,15 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
   }
 
   async deployFiles(
-    bundle: DeployBundle<GithubInlinedFile>, 
+    bundle: DeployBundle<GithubInlinedFile>,
     destination: any,
     logStatus?: (status: string) => void
   ) {
+    console.log('RemoteAuthGithubAgent.deployFiles: Getting files from bundle...');
     const files = await bundle.getFiles();
+    console.log('RemoteAuthGithubAgent.deployFiles: Got files, count:', files.length);
+    console.log('RemoteAuthGithubAgent.deployFiles: First file structure:', files[0]);
+    console.log('RemoteAuthGithubAgent.deployFiles: First file getContent type:', typeof files[0]?.getContent);
     const { repository, branch } = destination.meta;
     const [owner, repo] = repository.split("/");
     return this.githubClient.deploy({

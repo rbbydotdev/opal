@@ -1,5 +1,5 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
-import { BuildDAO } from "@/data/dao/BuildDAO";
+import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
@@ -14,7 +14,6 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
-import { NULL_BUILD } from "../../data/dao/BuildDAO";
 
 type BuildLogType = BuildLogLine["type"];
 function logLine(message: string, type: BuildLogType = "info") {
