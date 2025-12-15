@@ -28,7 +28,7 @@ export interface RequestContext {
 
 // --- Route Handlers ---
 
-export const uploadImageHandler = withRequestSignal((context: RequestContext) => {
+export const uploadImageHandler = withRequestSignal(async (context: RequestContext) => {
   const { event, url, workspaceName } = context;
   const filePath = absPath(url.decodedPathname.replace("/upload-image", ""));
   logger.log(`Handling image upload for: ${url.pathname}`);

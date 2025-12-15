@@ -1,12 +1,18 @@
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import "@/polyfill/Promise";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, createRouter, redirect } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
 import "./styles/styles.css";
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  defaultNotFoundComponent: () => {
+    redirect({ to: "/" });
+    return null;
+  }
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
