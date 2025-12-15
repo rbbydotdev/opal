@@ -27,7 +27,7 @@ import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactor
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthGithubAPIAgent } from "@/data/remote-auth/RemoteAuthGithubAPIAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
-import { useAsyncEffect } from "@/hooks/useAsyncEffect";
+import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
@@ -234,8 +234,8 @@ export function GitRemoteDialog({
 }
 function useRemoteAuthForm(authId: string | undefined) {
   const [remoteAuth, setRemoteAuth] = useState<null | RemoteAuthDAO>(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useAsyncEffect(async () => {
+  // eslint-disable-next-line
+  useAsyncEffect2(async () => {
     if (authId) setRemoteAuth(await RemoteAuthDAO.GetByGuid(authId));
   }, [authId]);
   return remoteAuth;

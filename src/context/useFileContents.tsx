@@ -1,4 +1,4 @@
-import { useAsyncEffect } from "@/hooks/useAsyncEffect";
+import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
@@ -206,7 +206,7 @@ export function useFileContents({
    * Updates: Both hotContents (live state) and contents (baseline state)
    * Includes: Cancellation support for async operations
    */
-  useAsyncEffect(
+  useAsyncEffect2(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     async (signal) => {
       if (currentWorkspace && filePath) {
