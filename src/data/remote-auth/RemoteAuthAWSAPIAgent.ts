@@ -1,9 +1,14 @@
 import { AWSS3Bucket, AWSS3Client } from "@/api/aws/AWSClient";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { getMimeType } from "@/lib/mimeType";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 import type { AWSAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
+import { RemoteAuthAgentDeployableFiles } from "./AgentFromRemoteAuthFactory";
 
-export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<AWSS3Bucket> {
+export class RemoteAuthAWSAPIAgent
+  implements RemoteAuthAgent, RemoteAuthAgentSearchType<AWSS3Bucket>, RemoteAuthAgentDeployableFiles<DeployBundle>
+{
   private _s3Client!: AWSS3Client;
   private region: string = "us-east-1";
 
@@ -71,6 +76,37 @@ export class RemoteAuthAWSAPIAgent implements RemoteAuthAgent, RemoteAuthAgentSe
         msg: `AWS API test failed: ${error.message || "Unknown error"}`,
       };
     }
+  }
+
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+    const bucketName = destination.meta.bucketName;
+    logStatus?.("Starting deployment to S3...");
+
+    const files = await bundle.getFiles();
+
+    logStatus?.(`Uploading ${files.length} files to S3 bucket: ${bucketName}`);
+
+    // Upload files in parallel
+    const uploadPromises = files.map(async (file) => {
+      const contentType = getMimeType(file.path);
+      logStatus?.(`Uploading ${file.path}...`);
+      return this.s3Client.putObject(bucketName, file.path, await file.asBuffer(), contentType);
+    });
+
+    const results = await Promise.all(uploadPromises);
+    logStatus?.("All files uploaded successfully!");
+
+    return {
+      uploadedFiles: results.length,
+      bucket: bucketName,
+      region: this.region,
+    };
+  }
+
+  async getDestinationURL(destination: any) {
+    const bucketName = destination.meta.bucketName;
+    // S3 static website URL format
+    return `http://${bucketName}.s3-website.${this.region}.amazonaws.com`;
   }
 
   constructor(private remoteAuth: AWSAPIRemoteAuthDAO) {}

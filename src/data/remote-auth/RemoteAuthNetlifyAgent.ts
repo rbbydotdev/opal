@@ -2,14 +2,10 @@ import { NetlifyClient, NetlifySite } from "@/api/netlify/NetlifyClient";
 import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
-import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
 export abstract class RemoteAuthNetlifyAgent
-  implements
-    RemoteAuthAgent,
-    RemoteAuthAgentSearchType<NetlifySite>,
-    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>>
+  implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite>, RemoteAuthAgentDeployableFiles<DeployBundle>
 {
   private _netlifyClient!: NetlifyClient;
 
@@ -48,6 +44,15 @@ export abstract class RemoteAuthNetlifyAgent
         msg: `Netlify API test failed: ${error.message || "Unknown error"}`,
       };
     }
+  }
+
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+    logStatus?.("Starting deployment to Netlify...");
+    return await this.netlifyClient.deployFiles(bundle, destination, logStatus);
+  }
+
+  async getDestinationURL(destination: any) {
+    return `https://${destination.meta.subdomain || destination.meta.siteName}.netlify.app`;
   }
 
   abstract getUsername(): string;

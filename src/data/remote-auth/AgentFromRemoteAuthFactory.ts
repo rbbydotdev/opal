@@ -19,7 +19,7 @@ import { RemoteAuthNetlifyAPIAgent } from "./RemoteAuthNetlifyAPIAgent";
 import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 
-import { DeployBundle } from "@/services/deploy/DeployBundle";
+import { DeployBundle, DeployBundleBase } from "@/services/deploy/DeployBundle";
 import { useMemo } from "react";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
@@ -31,7 +31,7 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   return agent;
 }
 
-export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle<any>>(
+export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle>(
   remoteAuth: RemoteAuthDAO | null
 ): RemoteAuthAgentDeployableFiles<TBundle> | null {
   if (!remoteAuth) {
@@ -59,12 +59,6 @@ export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle<a
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
   }
-  // if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
-  //   return new RemoteAuthCloudflareAPIAgent(remoteAuth);
-  // }
-  // if (isVercelOAuthRemoteAuthDAO(remoteAuth)) {
-  //   return new RemoteAuthVercelOAuthAgent(remoteAuth);
-  // }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
   }
@@ -118,15 +112,12 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
 ) {
   return useMemo(() => AgentFromRemoteAuthFactory(remoteAuth) as T, [remoteAuth]);
 }
-export interface RemoteAuthAgentDeployableFiles<
-  TBundle extends DeployBundle<TFile>,
-  TFile = TBundle extends DeployBundle<infer U> ? U : unknown,
-> extends RemoteAuthAgent {
+export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundleBase> extends RemoteAuthAgent {
   deployFiles(bundle: TBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown>;
-  getDestinationURL(destination: any): string;
+  getDestinationURL(destination: any): Promise<string>;
 }
 
-export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeployableFiles<DeployBundle<any>> {
+export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeployableFiles<DeployBundleBase> {
   getApiToken(): string {
     return "";
   }
@@ -136,7 +127,7 @@ export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeploy
   async deployFiles(): Promise<unknown> {
     throw new Error("Cannot deploy: Remote connection is missing or invalid");
   }
-  getDestinationURL(destination: any): string {
+  async getDestinationURL(destination: any) {
     return "about:blank";
   }
   test() {

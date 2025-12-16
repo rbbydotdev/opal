@@ -1,8 +1,8 @@
 import { VercelClient, VercelProject } from "@/api/vercel/VercelClient";
+import { VercelDestination } from "@/data/DestinationSchemaMap";
 import { RefreshAuth } from "@/data/RefreshAuth";
 import { RemoteAuthAgent, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
-import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 import { RemoteAuthAgentDeployableFiles } from "./AgentFromRemoteAuthFactory";
 
@@ -13,7 +13,7 @@ export abstract class RemoteAuthVercelAgent
     RemoteAuthAgent,
     RemoteAuthAgentRefreshToken,
     RemoteAuthAgentSearchType<VercelProject>,
-    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>>
+    RemoteAuthAgentDeployableFiles<DeployBundle>
 {
   private _vercelClient!: VercelClient;
 
@@ -35,12 +35,12 @@ export abstract class RemoteAuthVercelAgent
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
     return this.vercelClient.createProject(params, { signal });
   }
-  async deployFiles(bundle: DeployBundle<InlinedFile>, destination: any, logStatus?: (status: string) => void) {
+  async deployFiles(bundle: DeployBundle, destination: VercelDestination, logStatus?: (status: string) => void) {
     const files = await bundle.getFiles();
     const projectName = destination.meta.project;
     return this.vercelClient.deploy({ projectName, files });
   }
-  getDestinationURL(destination: any): string {
+  async getDestinationURL(destination: any) {
     return `https://${destination.meta.project}.vercel.app`;
   }
 

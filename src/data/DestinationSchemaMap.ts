@@ -120,14 +120,18 @@ export type DestinationType = keyof typeof DestinationSchemaMap;
 export type DestinationSchemaTypeMap<DestinationType extends keyof typeof DestinationSchemaMap> = z.infer<
   (typeof DestinationSchemaMap)[DestinationType]
 >;
-export type GithubDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["github"]>>;
+export type GithubDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["github"]>["meta"]>;
+export type VercelDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["vercel"]>["meta"]>;
+export type NetlifyDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["netlify"]>["meta"]>;
+export type CloudflareDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["cloudflare"]>["meta"]>;
+export type AWSDestination = DestinationDAO<z.infer<(typeof DestinationSchemaMap)["aws"]>["meta"]>;
+
 export type DestinationProvider<T extends DestinationType> = DestinationDAO<z.infer<(typeof DestinationSchemaMap)[T]>>;
-// Type guards using Zod branded types
-export type CloudflareDestinationMeta = z.infer<typeof DestinationSchemaMap.cloudflare>["meta"];
-export type VercelDestinationMeta = z.infer<typeof DestinationSchemaMap.vercel>["meta"];
-export type NetlifyDestinationMeta = z.infer<typeof DestinationSchemaMap.netlify>["meta"];
-export type GithubDestinationMeta = z.infer<typeof DestinationSchemaMap.github>["meta"];
-export type AWSDestinationMeta = z.infer<typeof DestinationSchemaMap.aws>["meta"];
+export type CloudflareDestinationMeta = CloudflareDestination["meta"];
+export type VercelDestinationMeta = VercelDestination["meta"];
+export type NetlifyDestinationMeta = NetlifyDestination["meta"];
+export type GithubDestinationMeta = GithubDestination["meta"];
+export type AWSDestinationMeta = AWSDestination["meta"];
 
 export function isCloudflareDestination(dest: DestinationDAO): dest is DestinationDAO<CloudflareDestinationMeta> {
   return dest.provider === "cloudflare";

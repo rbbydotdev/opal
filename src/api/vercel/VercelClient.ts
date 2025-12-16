@@ -1,4 +1,5 @@
 import { mapToTypedError } from "@/lib/errors/errors";
+import { UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import { Vercel } from "@vercel/sdk";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { GetProjectsProjects } from "@vercel/sdk/models/getprojectsop.js";
@@ -48,29 +49,6 @@ export class VercelClient {
         { signal, mode: "cors" }
       )
       .catch(VercelClient.handleError);
-  }
-
-  async deploy({ projectName, files }: { projectName: string; files: InlinedFile[] }) {
-    const { id, url } = await this.vercel.deployments.createDeployment(
-      {
-        requestBody: {
-          name: projectName,
-          files,
-          projectSettings: {
-            framework: null,
-            buildCommand: null,
-            outputDirectory: ".",
-            installCommand: null,
-            devCommand: null,
-            rootDirectory: null,
-          },
-        },
-      },
-      {
-        mode: "cors",
-      }
-    );
-    return { deploymentId: id, deploymentUrl: url };
   }
 
   async getDeployment({ deploymentId, signal }: { deploymentId: string; signal?: AbortSignal }) {
@@ -156,5 +134,35 @@ export class VercelClient {
       logger.error("Error verifying Vercel credentials:", error);
       return false;
     }
+  }
+
+  async deploy({ projectName, files }: { projectName: string; files: UniversalDeployFile[] }) {
+    // Convert raw file objects to Vercel's InlinedFile format
+    const inlinedFiles: InlinedFile[] = await Promise.all(
+      files.map(
+        async (file): Promise<InlinedFile> => ({
+          file: file.path,
+          data: await file.asBase64(), // Vercel wants base64
+          encoding: "base64",
+        })
+      )
+    );
+
+    const deployment = await this.vercel.deployments.createDeployment({
+      requestBody: {
+        name: projectName,
+        files: inlinedFiles,
+        projectSettings: {
+          framework: null,
+          buildCommand: null,
+          outputDirectory: ".",
+          installCommand: null,
+          devCommand: null,
+          rootDirectory: null,
+        },
+      },
+    });
+
+    return deployment;
   }
 }

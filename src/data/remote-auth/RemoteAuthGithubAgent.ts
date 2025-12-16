@@ -1,4 +1,4 @@
-import { GitHubClient, GithubInlinedFile } from "@/api/github/GitHubClient";
+import { GitHubClient } from "@/api/github/GitHubClient";
 import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { relPath } from "@/lib/paths2";
@@ -12,15 +12,13 @@ export function coerceRepoToName(repoName: string): string {
   } catch {}
   return repoName;
 }
-export abstract class RemoteAuthGithubAgent
-  implements RemoteGitApiAgent, RemoteAuthAgentDeployableFiles<DeployBundle<GithubInlinedFile>>
-{
+export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, RemoteAuthAgentDeployableFiles<DeployBundle> {
   private _githubClient!: GitHubClient;
   get githubClient() {
     return this._githubClient || (this._githubClient = new GitHubClient(this.getApiToken()));
   }
 
-  getDestinationURL(destination: any): string {
+  async getDestinationURL(destination: any) {
     return `https://${destination.meta.owner}.github.io/${destination.meta.repository}`;
   }
 
@@ -42,7 +40,7 @@ export abstract class RemoteAuthGithubAgent
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(bundle: DeployBundle<GithubInlinedFile>, destination: any, logStatus?: (status: string) => void) {
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void) {
     const files = await bundle.getFiles();
     const { repository, branch } = destination.meta;
     const [owner, repo] = await this.githubClient.getFullRepoName(repository);

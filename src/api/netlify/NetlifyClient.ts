@@ -1,5 +1,5 @@
 import { mapToTypedError } from "@/lib/errors/errors";
-import { AnyInlinedFile, DeployBundle } from "@/services/deploy/DeployBundle";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 
 export class NetlifyClient {
   private accessToken: string;
@@ -67,18 +67,27 @@ export class NetlifyClient {
     });
   }
 
-  async deployFiles(bundle: DeployBundle<AnyInlinedFile>, destination: any, logStatus?: (status: string) => void) {
-    // async deployFiles(siteId: string, files: Map<string, string | Blob>): Promise<NetlifyDeploy> {
-    const formData = new FormData();
+  async deployFiles(
+    bundle: DeployBundle,
+    destination: any,
+    logStatus?: (status: string) => void
+  ): Promise<NetlifyDeploy> {
+    const siteId = destination.meta.siteId;
+    logStatus?.("Getting files from bundle...");
 
+    const formData = new FormData();
     const files = await bundle.getFiles();
-    files.forEach(({ getContent, path }) => {
-      if (typeof content === "string") {
-        formData.append(path, new Blob([content], { type: "text/plain" }), path);
-      } else {
-        formData.append(path, content, path);
-      }
-    });
+
+    logStatus?.(`Processing ${files.length} files for upload...`);
+
+    // Process files and add to form data
+    await Promise.all(
+      files.map(async (file) => {
+        formData.append(file.path, await file.asBlob(), file.path);
+      })
+    );
+
+    logStatus?.("Uploading files to Netlify...");
 
     const response = await fetch(`${this.baseUrl}/sites/${siteId}/deploys`, {
       method: "POST",
@@ -92,6 +101,7 @@ export class NetlifyClient {
       throw new Error(`Deploy failed: ${response.status} ${response.statusText}`);
     }
 
+    logStatus?.("Deploy completed successfully!");
     return response.json() as Promise<NetlifyDeploy>;
   }
 }

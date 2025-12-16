@@ -6,7 +6,7 @@ import {
   RemoteAuthAgentDeployableFiles,
 } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { AnyDeployBundle, DeployBundle, DeployBundleFactory } from "@/services/deploy/DeployBundle";
+import { DeployBundle, DeployBundleBase, DeployBundleFactory } from "@/services/deploy/DeployBundle";
 import { useSyncExternalStore } from "react";
 
 type DeployLogType = DeployLogLine["type"];
@@ -24,13 +24,10 @@ export type DeployLogLine = {
   type: "info" | "error";
 };
 
-export class DeployRunner<
-  TBundle extends DeployBundle<TFile>,
-  TFile extends { path?: string } = TBundle extends DeployBundle<infer U> ? U : unknown,
-> {
+export class DeployRunner<TBundle extends DeployBundleBase> {
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
-  readonly agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
+  readonly agent: RemoteAuthAgentDeployableFiles<TBundle>;
   private bundle: TBundle;
   private abortController: AbortController = new AbortController();
   kind = "deploy-runner";
@@ -46,7 +43,7 @@ export class DeployRunner<
     deploy,
     bundle,
   }: {
-    agent: RemoteAuthAgentDeployableFiles<TBundle, TFile>;
+    agent: RemoteAuthAgentDeployableFiles<TBundle>;
     destination: DestinationDAO;
     deploy: DeployDAO;
     bundle: TBundle;
@@ -79,8 +76,8 @@ export class DeployRunner<
   static async FromDeploy(deploy: DeployDAO) {
     const destination = await DestinationDAO.FetchDAOFromGuid(deploy.destinationId, true);
     return new DeployRunner({
-      bundle: {} as DeployBundle<any>,
-      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle<any>, any>,
+      bundle: {} as DeployBundle,
+      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle>,
       destination,
       deploy,
     });
@@ -220,19 +217,19 @@ export class DeployRunner<
   }
 }
 
-export function useDeployRunnerLogs(runner: DeployRunner<any, any>) {
+export function useDeployRunnerLogs(runner: DeployRunner<any>) {
   return useSyncExternalStore(runner.onLog, runner.getLogs);
 }
 
-export class AnyDeployRunner<TBundle extends DeployBundle<any>> extends DeployRunner<TBundle> {}
+export class AnyDeployRunner<TBundle extends DeployBundleBase<any>> extends DeployRunner<TBundle> {}
 
-export class NullDeployRunner extends DeployRunner<AnyDeployBundle> {
+export class NullDeployRunner extends DeployRunner<DeployBundle> {
   constructor() {
     super({
-      agent: {} as RemoteAuthAgentDeployableFiles<AnyDeployBundle>,
+      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle>,
       destination: {} as DestinationDAO,
       deploy: {} as DeployDAO,
-      bundle: {} as AnyDeployBundle,
+      bundle: {} as DeployBundle,
     });
   }
 

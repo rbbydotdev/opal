@@ -20,6 +20,16 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
     return [];
   }
 
+  // deployFiles, getDestinationURL
+  deployFiles(): Promise<unknown> {
+    logger.warn("RemoteAuthBasicAuthAgent.deployFiles() is not implemented");
+    return Promise.resolve();
+  }
+  async getDestinationURL() {
+    logger.warn("RemoteAuthBasicAuthAgent.getDestinationURL() is not implemented");
+    return "";
+  }
+
   hasUpdates(
     etag: string | null,
     options?: { signal?: AbortSignal }

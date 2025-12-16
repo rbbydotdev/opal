@@ -1,12 +1,11 @@
 import { Disk } from "@/data/disk/Disk";
 import { AbsPath, absPath } from "@/lib/paths2";
 //
-import { GithubInlinedFile } from "@/api/github/GitHubClient";
 import { FileTree } from "@/components/filetree/Filetree";
 import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
-import { GithubDestinationMeta, isGithubDestination } from "@/data/DestinationSchemaMap";
+import { isGithubDestination } from "@/data/DestinationSchemaMap";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { TranslateFsTransform } from "@/data/fs/TranslateFs";
 import { VirtualWriteFsTransform } from "@/data/fs/VirtualWriteFsTransform";
@@ -20,7 +19,6 @@ import {
   updateFileNodeContents,
 } from "@/services/deploy/deployHelpers";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
-import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 //
 
 type DeployBundleTreeFileContent = string | Uint8Array<ArrayBufferLike> | Buffer<ArrayBufferLike>;
@@ -35,6 +33,67 @@ export type DeployBundleTreeEntry =
       path: string;
       type: "dir";
     };
+
+export abstract class DeployFileBase<TClientFile> {
+  private _content: DeployBundleTreeFileContent | null = null;
+
+  constructor(
+    public readonly path: string,
+    private contentLoader: () => Promise<DeployBundleTreeFileContent>
+  ) {}
+
+  protected async getContent(): Promise<Buffer> {
+    if (this._content === null) {
+      this._content = await this.contentLoader();
+    }
+    return Buffer.from(this._content);
+  }
+
+  async asBase64(): Promise<string> {
+    const content = await this.getContent();
+    return content.toString("base64");
+  }
+
+  async asUtf8(): Promise<string> {
+    const content = await this.getContent();
+    return content.toString("utf8");
+  }
+  async asBuffer(): Promise<Buffer> {
+    return await this.getContent();
+  }
+  async asUint8Array(): Promise<Uint8Array> {
+    const content = await this.getContent();
+    return new Uint8Array(content);
+  }
+  async asBlob(type = "text/plain"): Promise<Blob> {
+    const content = await this.getContent();
+    return new Blob([new Uint8Array(content)], { type });
+  }
+
+  abstract asClientFile(): TClientFile | Promise<TClientFile>;
+}
+
+export class UniversalDeployFile extends DeployFileBase<Extract<DeployBundleTreeEntry, { type: "file" }>> {
+  private encoding: "base64" | "utf-8";
+
+  constructor(
+    path: string,
+    contentLoader: () => Promise<DeployBundleTreeFileContent>,
+    encoding: "base64" | "utf-8" = "base64"
+  ) {
+    super(path, contentLoader);
+    this.encoding = encoding;
+  }
+
+  asClientFile(): Extract<DeployBundleTreeEntry, { type: "file" }> {
+    return {
+      type: "file" as const,
+      path: this.path,
+      encoding: this.encoding,
+      getContent: this.encoding === "base64" ? () => this.asBase64() : () => this.asUtf8(),
+    };
+  }
+}
 
 function DeployFile(file: Omit<Extract<DeployBundleTreeEntry, { type: "file" }>, "type">) {
   return {
@@ -63,7 +122,7 @@ type DeployBundleTree = DeployBundleTreeEntry[];
 
 export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
-export abstract class DeployBundle<TFile, TMeta = unknown> {
+export abstract class DeployBundleBase<TMeta = unknown> {
   readonly disk: Disk;
   readonly buildDir = absPath("/");
 
@@ -79,7 +138,7 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
     return Promise.resolve();
   }
 
-  protected getDeployBundleFiles = async (): Promise<DeployBundleTreeFileOnly[]> => {
+  protected async getDeployFiles(): Promise<UniversalDeployFile[]> {
     await this.disk.refresh();
 
     // Create a virtual and translated filesystem, this does two things:
@@ -97,18 +156,14 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
       await scopedTree.index(); // Re-index after preDeployAction modifies files
     }
 
-    const files = await Promise.all(
-      [...scopedTree.iterator((node: TreeNode) => node.isTreeFile())].map(async (node) => {
-        const file = DeployFile({
-          path: node.path.toString().replace(/^\//, ""), // Remove leading slash for relative path
-          getContent: async () => Buffer.from(await translatedVirtualFs.readFile(node.path)).toString("base64"),
-          encoding: "base64", // Always use base64 encoding
-        });
-        return file;
-      })
-    );
+    const files = [...scopedTree.iterator((node: TreeNode) => node.isTreeFile())].map((node) => {
+      return new UniversalDeployFile(
+        node.path.toString().replace(/^\//, ""), // Remove leading slash for relative path
+        async () => await translatedVirtualFs.readFile(node.path)
+      );
+    });
     return files;
-  };
+  }
 
   protected async deployWithGit({
     ghPagesBranch = "gh-pages",
@@ -160,51 +215,37 @@ export abstract class DeployBundle<TFile, TMeta = unknown> {
       },
     });
   }
-  abstract getFiles(): Promise<TFile[]>;
+
+  abstract getFiles(): Promise<UniversalDeployFile[]>;
 }
 
-export class VercelDeployBundle extends DeployBundle<InlinedFile> {
-  getFiles = async () => {
-    return Promise.all(
-      (await this.getDeployBundleFiles()).map(async (file) => ({
-        encoding: file.encoding,
-        type: file.type,
-        file: file.path,
-        data: (await file.getContent()).toString(),
-      }))
-    );
-  };
-}
+export class DeployBundle extends DeployBundleBase {
+  // async getFiles(): Promise<DeployBundleTreeEntry[]> {
+  //   const deployFiles = await this.getDeployFiles();
+  //   return deployFiles.map((file) => file.asClientFile());
+  // }
+  // Expose raw file objects for client-specific conversion
+  async getFiles(): Promise<UniversalDeployFile[]> {
+    return this.getDeployFiles();
+  }
 
-export class GithubDeployBundle extends DeployBundle<GithubInlinedFile, GithubDestinationMeta> {
-  getFiles = this.getDeployBundleFiles;
   async preDeployAction(tree: FileTree): Promise<void> {
-    if (this.destination.meta.baseUrl === "/" || !this.destination.meta.baseUrl) {
-      return;
-    }
-    for (const node of findHtmlFilesInTree(tree)) {
-      await updateFileNodeContents(node as TreeFile, (contents) =>
-        updateAbsoluteUrlsInHtmlContent(contents, this.destination.meta.baseUrl)
-      );
+    // GitHub-specific URL rewriting
+    if (
+      isGithubDestination(this.destination) &&
+      this.destination.meta.baseUrl !== "/" &&
+      this.destination.meta.baseUrl
+    ) {
+      for (const node of findHtmlFilesInTree(tree)) {
+        const baseUrl = this.destination.meta.baseUrl;
+        await updateFileNodeContents(node as TreeFile, (contents) =>
+          updateAbsoluteUrlsInHtmlContent(contents, baseUrl)
+        );
+      }
     }
   }
 }
 
-export type AnyInlinedFile = Extract<DeployBundleTreeEntry, { type: "file" }>;
-export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
-  getFiles = this.getDeployBundleFiles;
-}
-
-export function DeployBundleFactory(
-  build: BuildDAO,
-  destination: DestinationDAO
-): DeployBundle<InlinedFile | GithubInlinedFile | DeployBundleTreeEntry> {
-  if (isGithubDestination(destination)) {
-    return new GithubDeployBundle(build, destination);
-  }
-  if (destination.remoteAuth.source === "vercel") {
-    return new VercelDeployBundle(build, destination);
-  } else {
-    return new AnyDeployBundle(build, destination);
-  }
+export function DeployBundleFactory(build: BuildDAO, destination: DestinationDAO): DeployBundle {
+  return new DeployBundle(build, destination);
 }

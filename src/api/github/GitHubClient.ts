@@ -1,6 +1,6 @@
 import { OctokitClient } from "@/auth/OctokitClient";
 import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
-import { DeployBundleTreeEntry } from "@/services/deploy/DeployBundle";
+import { DeployBundleTreeEntry, UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
 
 export interface GitHubRepo {
@@ -151,7 +151,7 @@ export class GitHubClient {
       repo: string;
       branch: string;
       message: string;
-      files: GithubInlinedFile[];
+      files: UniversalDeployFile[];
     },
     logStatus: (status: string) => void = () => {}
   ) {
@@ -226,7 +226,7 @@ export class GitHubClient {
     repo: string;
     branch: string;
     message: string;
-    files: GithubInlinedFile[];
+    files: UniversalDeployFile[];
     baseTreeSha?: string;
     parentSha?: string;
     logStatus?: (status: string) => void;
@@ -235,10 +235,10 @@ export class GitHubClient {
 
     logStatus(`Creating blobs for ${files.length} files...`);
     for (const file of files) {
-      const content = await file.getContent();
+      const content = await file.asBase64();
       const {
         data: { sha },
-      } = await this.createBlobRequest({ owner, repo, content: content.toString(), encoding: file.encoding });
+      } = await this.createBlobRequest({ owner, repo, content, encoding: "base64" });
 
       tree.push({ path: file.path, mode: "100644", type: "blob", sha });
     }
@@ -331,7 +331,7 @@ export class GitHubClient {
     owner: string;
     repo: string;
     content: string;
-    encoding: string;
+    encoding: "utf-8" | "base64";
   }) {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
       owner,
