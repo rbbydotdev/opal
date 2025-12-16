@@ -27,7 +27,7 @@ body {
 }
 
 body {
-  margin: 0;
+  margin: 2rem;
   color: var(--fgColor-default);
   background-color: var(--bgColor-default);
   font-family:

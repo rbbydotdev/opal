@@ -13,11 +13,10 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   buildId: string;
   timestamp: number;
   workspaceId: string;
-  // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-  // destinationName: string;
+  url: string | null = null;
   destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
-  logs: DeployLogLine[];
+  logs: DeployLogLine[] = [];
   meta: T;
   completedAt: number | null;
   error: string | null = null;
@@ -38,7 +37,8 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     meta,
     completedAt = null,
     error = null,
-  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs">) {
+    url = null,
+  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url">) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
@@ -52,6 +52,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.meta = meta;
     this.completedAt = completedAt;
     this.error = error;
+    this.url = url;
   }
 
   static FromJSON<T = any>(json: DeployJType) {
@@ -66,14 +67,12 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationId: this.destinationId,
-
-      // destinationType: this.destinationType,
-      // destinationName: this.destinationName,
       status: this.status,
       meta: this.meta,
       logs: this.logs,
       completedAt: this.completedAt,
       error: this.error,
+      url: this.url,
     };
   }
 
@@ -84,19 +83,13 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     meta,
     buildId,
     guid = DeployDAO.guid(),
-    // logs,
-    // destinationType,
-    // destinationName,
   }: {
     label: string;
     workspaceId: string;
     buildId: string;
     meta: T;
     destinationId: string;
-    // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-    // destinationName: string;
     guid?: string;
-    // logs?: DeployLogLine[];
   }) {
     return new DeployDAO<T>({
       guid,
@@ -105,11 +98,10 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       timestamp: Date.now(),
       buildId,
       workspaceId,
-      // destinationType,
-      // destinationName,
       destinationId,
       completedAt: null,
       error: null,
+      url: null,
       logs: [],
     });
   }
@@ -165,6 +157,8 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     if (deployment) {
       Object.assign(this, deployment);
     }
+
+    // console.log(this.toJSON());
     return this;
   }
 
@@ -181,13 +175,12 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationId: this.destinationId,
-      // destinationType: this.destinationType,
-      // destinationName: this.destinationName,
       status: this.status,
       meta: this.meta,
       logs: this.logs,
       completedAt: this.completedAt,
       error: this.error,
+      url: this.url,
     });
   }
 
@@ -235,8 +228,6 @@ export class NullDeployDAO extends DeployDAO {
       destinationId: "",
       meta: {},
       logs: [],
-      // destinationType: "netlify",
-      // destinationName: "null",
     });
   }
 }

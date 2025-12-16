@@ -30,13 +30,7 @@ export function useDeployRunner({
   }, [build, destination, label, workspaceId, deploy]);
 
   const logs = useSyncExternalStore(deployRunner.onLog, deployRunner.getLogs);
-
-  // Subscribe to deploy updates to trigger re-renders when state changes
-  const onUpdate = (callback: () => void) => {
-    return deployRunner.emitter.on("update", callback);
-  };
-  const getState = () => deployRunner.deploy;
-  useSyncExternalStore(onUpdate, getState);
-
-  return { deployRunner, logs: logs || [] };
+  const deployCompleted = useSyncExternalStore(deployRunner.onComplete, deployRunner.getComplete);
+  const deployWatch = useSyncExternalStore(deployRunner.onUpdate, deployRunner.getDeploy);
+  return { deployRunner, logs: logs ?? [], deployCompleted, deploy: deployWatch };
 }

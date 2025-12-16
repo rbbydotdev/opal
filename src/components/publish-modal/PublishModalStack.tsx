@@ -13,7 +13,7 @@ import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/da
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { ArrowLeft, ArrowUpRight, Globe, Zap } from "lucide-react";
-import { useCallback, useImperativeHandle, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 export type PublishViewType = "publish" | "destination" | "connection";
 
@@ -74,22 +74,22 @@ export function PublishModalStack({
       guid: destination?.guid,
       label,
       meta,
-      remoteAuth
+      remoteAuth,
     });
     setDestination(submitDest);
     popView();
   };
 
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-    setPreferredConnection(null);
-    setDeploy(null);
-  }, []);
+  useEffect(() => {
+    if (!isOpen) {
+      setIsOpen(false);
+      setPreferredConnection(null);
+      setDeploy(null);
+    }
+  }, [isOpen]);
 
-  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } = useViewStack<PublishViewType>(
-    "publish",
-    handleClose
-  );
+  const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
+    useViewStack<PublishViewType>("publish");
 
   const handlePointerDownOutside = useCallback(() => {
     if (currentView === "destination") {
@@ -261,7 +261,6 @@ export function PublishModalStack({
             onOpenChange={setIsOpen}
             setBuild={setBuild}
             build={build}
-            onClose={handleClose}
           />
         )}
       </DialogContent>

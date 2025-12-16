@@ -10,6 +10,7 @@ export interface DeployRecord<T = any> {
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];
   meta: T;
+  url: string | null;
   completedAt: number | null;
   error: string | null;
 }

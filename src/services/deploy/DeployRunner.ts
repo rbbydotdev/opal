@@ -126,6 +126,11 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
   };
   getComplete = () => this.isCompleted;
 
+  onUpdate = (callback: (deploy: DeployDAO) => void) => {
+    return this.emitter.on("update", callback);
+  };
+  getDeploy = () => this.deploy;
+
   tearDown() {
     this.emitter.clearListeners();
   }
@@ -182,28 +187,25 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
         });
       }
 
-      this.deploy.status = "success";
-      this.deploy.completedAt = Date.now();
       infoLog("Deployment completed successfully.");
 
       return await this.deploy.update({
         logs: this.deploy.logs,
         status: "success",
         completedAt: Date.now(),
+        url: await this.agent.getDestinationURL(this.destination),
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Deployment failed:", error);
       errorLog(`Deployment failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
-        this.deploy.status = "failed";
         this.emitter.emit("update", this.deploy);
         return await this.deploy.update({
           logs: this.deploy.logs,
           status: "failed",
         });
       } else {
-        this.deploy.status = "cancelled";
         this.emitter.emit("update", this.deploy);
         return await this.deploy.update({
           logs: this.deploy.logs,
@@ -212,7 +214,6 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
       }
     } finally {
       this.emitter.emit("complete", this.isCompleted);
-      this.emitter.emit("update", this.deploy);
     }
   }
 }

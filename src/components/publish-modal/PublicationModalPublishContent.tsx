@@ -16,7 +16,17 @@ import { useDestinations } from "@/data/dao/useDestinations";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useDeployRunner } from "@/services/deploy/useDeployRunner";
 import { Workspace } from "@/workspace/Workspace";
-import { AlertTriangle, CheckCircle, Loader, Pencil, Plus, UploadCloud, UploadCloudIcon, Zap } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpRightIcon,
+  CheckCircle,
+  Loader,
+  Pencil,
+  Plus,
+  UploadCloud,
+  UploadCloudIcon,
+  Zap,
+} from "lucide-react";
 
 export function PublicationModalPublishContent({
   build,
@@ -24,7 +34,6 @@ export function PublicationModalPublishContent({
   setBuild,
   destination,
   currentWorkspace,
-  onClose,
   onOpenChange,
   pushView,
   setDestination,
@@ -35,7 +44,6 @@ export function PublicationModalPublishContent({
   setBuild: (build: BuildDAO) => void;
   currentWorkspace: Workspace;
   destination: DestinationDAO | null;
-  onClose?: () => void;
   onOpenChange: (value: boolean) => void;
   pushView: (view: PublishViewType) => void;
   setDestination: (destination: DestinationDAO | null) => void;
@@ -45,7 +53,12 @@ export function PublicationModalPublishContent({
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
 
-  const { deployRunner, logs } = useDeployRunner({
+  const {
+    deployRunner,
+    deployCompleted,
+    deploy: liveDeploy,
+    logs,
+  } = useDeployRunner({
     label: `Deploy ${new Date().toLocaleString()}`,
     workspaceId: currentWorkspace.id,
     build,
@@ -85,12 +98,12 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
-      <BuildSelector disabled={deployRunner.isCompleted} builds={builds} build={build} setBuildId={handleBuildSelect} />
+      <BuildSelector disabled={deployCompleted} builds={builds} build={build} setBuildId={handleBuildSelect} />
       <div className="space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
-            <Select disabled={deploy?.completed} value={destination?.guid} onValueChange={handleSetDestination}>
+            <Select disabled={deployCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
@@ -183,9 +196,9 @@ export function PublicationModalPublishContent({
       {destination && (
         <div className="flex gap-2">
           <Button
-            disabled={deployRunner.isCompleted}
+            disabled={deployCompleted}
             variant="outline"
-            onClick={onClose || (() => onOpenChange(false))}
+            onClick={() => onOpenChange(false)}
             className="flex items-center gap-2"
           >
             Cancel
@@ -194,9 +207,9 @@ export function PublicationModalPublishContent({
             onClick={handleDeploy}
             className="flex items-center gap-2"
             variant="secondary"
-            disabled={deployRunner.isDeploying || deployRunner.isCompleted}
+            disabled={liveDeploy.isDeploying || deployCompleted}
           >
-            {deployRunner.isDeploying ? (
+            {liveDeploy.isDeploying ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...
@@ -211,22 +224,32 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Deploy Success Indicator */}
-      {deployRunner.isSuccessful && (
+      {liveDeploy.isSuccessful && (
         <div className="border-2 border-success bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-success justify-between">
             <div className="flex items-center gap-4">
               <CheckCircle size={20} className="text-success" />
               <span className="font-semibold uppercase">publish completed successfully</span>
             </div>
-            <Button onClick={handleOkay} className="flex items-center gap-2">
-              Okay
-            </Button>
+            <div className="flex gap-4">
+              <Button onClick={handleOkay} className="flex items-center gap-2">
+                Okay
+              </Button>
+              {liveDeploy?.url && (
+                <Button className="flex items-center gap-2" asChild>
+                  <a href={liveDeploy.url || "#"} target="_blank" rel="noopener noreferrer">
+                    <ArrowUpRightIcon size={16} />
+                    View
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Deploy Error Indicator */}
-      {deployRunner.isFailed && (
+      {liveDeploy.isFailed && (
         <div className="border-2 border-destructive bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-destructive justify-between">
             <div className="flex items-center gap-4">
