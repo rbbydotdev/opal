@@ -1,8 +1,16 @@
 import { NetlifyClient, NetlifySite } from "@/api/netlify/NetlifyClient";
+import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
+import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
 
-export abstract class RemoteAuthNetlifyAgent implements RemoteAuthAgent, RemoteAuthAgentSearchType<NetlifySite> {
+export abstract class RemoteAuthNetlifyAgent
+  implements
+    RemoteAuthAgent,
+    RemoteAuthAgentSearchType<NetlifySite>,
+    RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>>
+{
   private _netlifyClient!: NetlifyClient;
 
   get netlifyClient() {

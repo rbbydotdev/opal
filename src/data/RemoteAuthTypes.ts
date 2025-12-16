@@ -120,10 +120,10 @@ export type RemoteAuthDataFor<T extends RemoteAuthType> = T extends keyof typeof
 
 // Union of all possible data types using distributive conditional type
 // Helper type for creating type guards
-type RemoteAuthWithType<T extends RemoteAuthType> = RemoteAuthRecord & {
-  type: T;
-  data: RemoteAuthDataFor<T>;
-};
+// type RemoteAuthWithType<T extends RemoteAuthType> = RemoteAuthRecord & {
+//   type: T;
+//   data: RemoteAuthDataFor<T>;
+// };
 
 // Helper for creating source-specific types
 // Helper for creating DAO types with specific type/source combinations
@@ -135,9 +135,9 @@ export interface RemoteAuthAgent {
   test(): Promise<{ status: "error"; msg: string } | { status: "success" }>;
 }
 
-export interface RemoteAuthAgentCORS {
-  getCORSProxy(): string | undefined;
-}
+// export interface RemoteAuthAgentCORS {
+//   getCORSProxy(): string | undefined;
+// }
 
 export interface RemoteAuthAgentRefreshToken {
   checkAuth(): Promise<boolean> | boolean;
@@ -167,4 +167,3 @@ export const isRemoteAuthDeployable = <T extends RemoteAuthAgentDeployableFiles<
 ): agent is T => {
   return !!(agent as any)?.deployFiles;
 };
-

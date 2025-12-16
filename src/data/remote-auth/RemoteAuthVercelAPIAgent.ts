@@ -2,9 +2,9 @@ import { RemoteAuthVercelAgent } from "@/data/remote-auth/RemoteAuthVercelAgent"
 import type { VercelAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 
 export class RemoteAuthVercelAPIAgent extends RemoteAuthVercelAgent {
-  getCORSProxy(): string | undefined {
-    return this.remoteAuth.data.corsProxy || undefined;
-  }
+  // getCORSProxy(): string | undefined {
+  //   return this.remoteAuth.data.corsProxy || undefined;
+  // }
 
   getUsername(): string {
     return "vercel-api";

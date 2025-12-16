@@ -1,4 +1,5 @@
 import { mapToTypedError } from "@/lib/errors/errors";
+import { AnyInlinedFile, DeployBundle } from "@/services/deploy/DeployBundle";
 
 export class NetlifyClient {
   private accessToken: string;
@@ -66,10 +67,12 @@ export class NetlifyClient {
     });
   }
 
-  async deployFiles(siteId: string, files: Map<string, string | Blob>): Promise<NetlifyDeploy> {
+  async deployFiles(bundle: DeployBundle<AnyInlinedFile>, destination: any, logStatus?: (status: string) => void) {
+    // async deployFiles(siteId: string, files: Map<string, string | Blob>): Promise<NetlifyDeploy> {
     const formData = new FormData();
 
-    files.forEach((content, path) => {
+    const files = await bundle.getFiles();
+    files.forEach(({ getContent, path }) => {
       if (typeof content === "string") {
         formData.append(path, new Blob([content], { type: "text/plain" }), path);
       } else {

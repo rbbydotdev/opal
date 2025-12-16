@@ -137,7 +137,7 @@ export class BuildDAO implements BuildRecord {
       disk: new NullDisk(),
       sourceDisk: new NullDisk(),
       sourcePath: absPath("/"),
-      strategy: "static",
+      strategy: "freeform",
       status: "failed",
       workspaceId: "",
       buildPath: absPath("/"),

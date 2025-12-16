@@ -1,6 +1,6 @@
 import { VercelClient, VercelProject } from "@/api/vercel/VercelClient";
 import { RefreshAuth } from "@/data/RefreshAuth";
-import { RemoteAuthAgent, RemoteAuthAgentCORS, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
+import { RemoteAuthAgent, RemoteAuthAgentRefreshToken } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 import { InlinedFile } from "@vercel/sdk/models/createdeploymentop.js";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
@@ -11,7 +11,6 @@ export type { VercelProject };
 export abstract class RemoteAuthVercelAgent
   implements
     RemoteAuthAgent,
-    RemoteAuthAgentCORS,
     RemoteAuthAgentRefreshToken,
     RemoteAuthAgentSearchType<VercelProject>,
     RemoteAuthAgentDeployableFiles<DeployBundle<InlinedFile>>
@@ -40,6 +39,9 @@ export abstract class RemoteAuthVercelAgent
     const files = await bundle.getFiles();
     const projectName = destination.meta.project;
     return this.vercelClient.deploy({ projectName, files });
+  }
+  getDestinationURL(destination: any): string {
+    return `https://${destination.meta.project}.vercel.app`;
   }
 
   pollProjectDeploymentStatus({
@@ -103,7 +105,7 @@ export abstract class RemoteAuthVercelAgent
 
   abstract checkAuth(): Promise<boolean> | boolean;
   abstract reauth(): Promise<void> | void;
-  abstract getCORSProxy(): string | undefined;
+  // abstract getCORSProxy(): string | undefined;
   abstract getUsername(): string;
   abstract getApiToken(): string;
 }

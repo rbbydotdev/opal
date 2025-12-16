@@ -163,6 +163,22 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
   }
 }
 
+class NullRemoteAuthDAO extends RemoteAuthDAO {
+  constructor() {
+    super({
+      guid: "null-remote-auth",
+      source: "custom",
+      type: "no-auth",
+      name: "No Remote Auth",
+      data: { endpoint: "", corsProxy: undefined },
+      tags: [],
+      timestamp: Date.now(),
+    });
+  }
+}
+
+export const NullRemoteAuth = new NullRemoteAuthDAO();
+
 // Use generics to create specific DAO types
 export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {
   type: "basic-auth";

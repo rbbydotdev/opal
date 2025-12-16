@@ -5,7 +5,7 @@ import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
-import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { NullRemoteAuth, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
 export type DestinationJType<T = unknown> = ReturnType<DestinationDAO<T>["toJSON"]>;
@@ -50,9 +50,12 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   get RemoteAuth() {
-    return this.remoteAuth instanceof RemoteAuthDAO
-      ? this.remoteAuth
-      : RemoteAuthDAO.FromJSONSafe(this.remoteAuth, this.remoteAuthId);
+    if (!this.remoteAuth) {
+      return NullRemoteAuth;
+    }
+    return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
+
+    // : RemoteAuthDAO.FromJSONSafe(this.remoteAuth, this.remoteAuthId);
   }
 
   static async CreateNew<T>({

@@ -1,4 +1,5 @@
 import { GitHubClient, GithubInlinedFile } from "@/api/github/GitHubClient";
+import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { relPath } from "@/lib/paths2";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
@@ -11,10 +12,16 @@ export function coerceRepoToName(repoName: string): string {
   } catch {}
   return repoName;
 }
-export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent {
+export abstract class RemoteAuthGithubAgent
+  implements RemoteGitApiAgent, RemoteAuthAgentDeployableFiles<DeployBundle<GithubInlinedFile>>
+{
   private _githubClient!: GitHubClient;
   get githubClient() {
     return this._githubClient || (this._githubClient = new GitHubClient(this.getApiToken()));
+  }
+
+  getDestinationURL(destination: any): string {
+    return `https://${destination.meta.owner}.github.io/${destination.meta.repository}`;
   }
 
   onAuth = () => {

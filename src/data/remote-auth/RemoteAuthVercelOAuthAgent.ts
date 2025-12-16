@@ -4,9 +4,9 @@ import { TokenExpiredError } from "@/lib/errors/errors";
 import type { VercelOAuthRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 
 export class RemoteAuthVercelOAuthAgent extends RemoteAuthVercelAgent {
-  getCORSProxy(): string | undefined {
-    return this.remoteAuth.data.corsProxy || undefined;
-  }
+  // getCORSProxy(): string | undefined {
+  //   return this.remoteAuth.data.corsProxy || undefined;
+  // }
 
   getUsername(): string {
     return "vercel-oauth";

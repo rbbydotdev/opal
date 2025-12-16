@@ -1,7 +1,10 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
-import { DeployableAgentFromAuthSafe, RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import {
+  DeployableAuthAgentFromRemoteAuth,
+  RemoteAuthAgentDeployableFiles,
+} from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { AnyDeployBundle, DeployBundle, DeployBundleFactory } from "@/services/deploy/DeployBundle";
 import { useSyncExternalStore } from "react";
@@ -96,6 +99,9 @@ export class DeployRunner<
     workspaceId: string;
     label: string;
   }) {
+    if (!destination.RemoteAuth) {
+      return new NullDeployRunner();
+    }
     return new AnyDeployRunner({
       destination,
       deploy:
@@ -107,7 +113,8 @@ export class DeployRunner<
           buildId: build.guid,
           destinationId: destination.guid,
         }),
-      agent: DeployableAgentFromAuthSafe(destination.RemoteAuth),
+      agent: DeployableAuthAgentFromRemoteAuth(destination.RemoteAuth),
+
       bundle: DeployBundleFactory(build, destination),
     });
   }

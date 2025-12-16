@@ -190,6 +190,7 @@ export class GithubDeployBundle extends DeployBundle<GithubInlinedFile, GithubDe
   }
 }
 
+export type AnyInlinedFile = Extract<DeployBundleTreeEntry, { type: "file" }>;
 export class AnyDeployBundle extends DeployBundle<DeployBundleTreeEntry> {
   getFiles = this.getDeployBundleFiles;
 }
