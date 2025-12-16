@@ -280,13 +280,7 @@ function GitRemoteDialogInternal({
   // Create functionality
   const createAgent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
   const { ident, msg, request } = useRemoteGitRepo({
-    createRequest: async (name: string, options: { signal?: AbortSignal }) => {
-      if (!createAgent) {
-        throw new Error("No authentication configured for repository creation");
-      }
-      const response = await createAgent.createRepo({ repoName: name }, options);
-      return response.data;
-    },
+    agent: createAgent,
     defaultName: currentWorkspace.name,
   });
 

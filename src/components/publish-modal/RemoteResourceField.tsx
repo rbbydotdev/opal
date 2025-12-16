@@ -202,10 +202,12 @@ function RemoteResourceInputField({
   label,
   placeholder,
   children,
+  value,
 }: {
   label: string;
   placeholder: string;
   children?: React.ReactNode;
+  value?: string;
 }) {
   const { mode, setMode, control, fieldName, inputRef, onBlur } = useRemoteResourceContext();
 
@@ -292,7 +294,7 @@ function RemoteResourceCreateButton({
         ident.setName(currentValue || "");
 
         // Check if repository creation requires visibility selection
-        if (repoCapabilities?.requiresVisibilitySelection) {
+        if (repoCapabilities?.requiresOptions) {
           setMode("option");
         } else {
           setMode("create");
@@ -356,7 +358,7 @@ export function RemoteResourceInput({
   onSearchChange: (value: string) => void;
 }) {
   return (
-    <RemoteResourceInputField label={label} placeholder={placeholder}>
+    <RemoteResourceInputField value={ident.name} label={label} placeholder={placeholder}>
       <div>
         <RemoteResourceCreateButton title={createButtonTitle} ident={ident} createReset={createReset} />
       </div>

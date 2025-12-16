@@ -68,7 +68,14 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        repository: z.string().trim().min(1, "Repository is required"),
+        repository: z
+          .string()
+          .trim()
+          .min(1, "Repository is required")
+          .regex(
+            /^([^/]+|[^/]+\/[^/]+)$/,
+            "Repository must be a single string or a string in the format '<min 1 char>/<min 1 char>'"
+          ),
         branch: z.string().trim().min(1, "Branch is required"),
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),

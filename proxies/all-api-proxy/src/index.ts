@@ -2,7 +2,7 @@
 // Using itty-router for clean routing and built-in CORS support
 
 import { AutoRouter, cors } from "itty-router";
-import { getAllowedHeaders, getExposedHeaders } from "./awsHeaders";
+import { getAllowedHeaders, getExposedHeaders } from "./specialHeaders";
 
 const ALLOWED_ORIGINS = ["https://opaledx.com", "http://localhost:3000"];
 
@@ -272,7 +272,8 @@ const { preflight, corsify } = cors({
   credentials: true,
   origin: ALLOWED_ORIGINS,
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-  allowHeaders: "*", // Allow all headers - works for AWS, Cloudflare, and any other SDKs
+  // allowHeaders: "*", // Allow all headers - works for AWS, Cloudflare, and any other SDKs
+  allowHeaders: getAllowedHeaders(),
   exposeHeaders: ["etag", ...getExposedHeaders().filter((h) => h !== "etag")],
   maxAge: 86400,
 });

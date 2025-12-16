@@ -341,6 +341,14 @@ export class GitHubClient {
     });
   }
 
+  async getFullRepoName(repoName: string): Promise<[string, string]> {
+    if (repoName.includes("/")) {
+      return repoName.split("/") as [string, string];
+    }
+    const currentUser = await this.getCurrentUser();
+    return [currentUser.login, repoName];
+  }
+
   private async createTreeRequest({
     owner,
     repo,
@@ -355,7 +363,7 @@ export class GitHubClient {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/trees", {
       owner,
       repo,
-      base_tree: baseTree || null,
+      base_tree: (baseTree || null) as any,
       tree,
     });
   }

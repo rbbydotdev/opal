@@ -1,6 +1,7 @@
 import { AWSS3Bucket } from "@/api/aws/AWSClient";
 import { NetlifySite } from "@/api/netlify/NetlifyClient";
 import { Input } from "@/components/ui/input";
+import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { VercelProject } from "@/data/remote-auth/RemoteAuthVercelAgent";
 import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, useFuzzySearchQuery } from "@/data/useFuzzySearchQuery";
@@ -451,21 +452,31 @@ export function useRemoteGitRepoSearch({
   });
 }
 
-export function useRemoteGitRepo<T = { name: string }>({
-  createRequest,
+export function useRemoteGitRepo({
+  agent,
   defaultName,
   repoPrefix = "",
+  onCreate,
+  visibility = "public",
 }: {
-  createRequest: (name: string, { signal }: { signal?: AbortSignal }) => Promise<T>;
+  agent: RemoteAuthGithubAgent | null;
   defaultName?: string;
   repoPrefix?: string;
+  onCreate?: (result: Awaited<ReturnType<RemoteAuthGithubAgent["createRepo"]>>["data"]) => void;
+  visibility?: "public" | "private";
 }): {
-  request: RemoteItemType.Request<T>;
+  request: RemoteItemType.Request<any>;
   ident: RemoteItemType.Ident;
   msg: RemoteItemType.Msg;
 } {
-  const result = useRemoteResource<T>({
-    createRequest,
+  const result = useRemoteResource<any>({
+    createRequest: async (name: string, options: { signal?: AbortSignal }): Promise<any> => {
+      if (!agent) throw new Error("No agent provided");
+      const response = await agent.createRepo({ repoName: name, private: visibility === "private" }, options);
+      const createdResult = { name: response.data.full_name };
+      if (onCreate) onCreate(response.data);
+      return createdResult;
+    },
     defaultName,
     config: {
       messages: {

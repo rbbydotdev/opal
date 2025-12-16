@@ -63,19 +63,19 @@ export function GitHubDestinationForm({
     agent,
     cacheKey: String(remoteAuth?.guid),
   });
+
+  const updateBaseUrlFromRepoFullName = (fullName: string) => {
+    const repoName = coerceRepoToName(fullName);
+    form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
+  };
   const { ident, msg, request } = useRemoteGitRepo({
-    createRequest: async (name: string, options: { signal?: AbortSignal }) => {
-      const response = await agent.createRepo(
-        {
-          repoName: name,
-          private: visibility === "private",
-        },
-        options
-      );
-      clearCache();
-      return response.data;
-    },
+    agent,
     defaultName,
+    onCreate: ({ full_name }) => {
+      updateBaseUrlFromRepoFullName(full_name);
+      clearCache();
+    },
+    visibility,
   });
 
   // Choose appropriate capability factory based on auth type
@@ -88,7 +88,11 @@ export function GitHubDestinationForm({
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
         onBlur={() =>
-          flushSync(() => form.setValue("meta.repository", coerceRepoToName(form.getValues("meta.repository"))))
+          flushSync(() => {
+            const repoName = coerceRepoToName(form.getValues("meta.repository"));
+            form.setValue("meta.repository", repoName);
+            updateBaseUrlFromRepoFullName(repoName);
+          })
         }
         getValue={() => form.getValues("meta.repository")}
       >
@@ -152,9 +156,7 @@ export function GitHubDestinationForm({
               <Input
                 {...field}
                 placeholder="/"
-                onBlur={() =>
-                  flushSync(() => form.setValue("meta.baseUrl", absPath(form.getValues("meta.baseUrl"))))
-                }
+                onBlur={() => flushSync(() => form.setValue("meta.baseUrl", absPath(form.getValues("meta.baseUrl"))))}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

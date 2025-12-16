@@ -1,8 +1,8 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, ReactNode, useContext } from "react";
 
 interface RepositoryCreationCapabilities {
   canCreatePrivate: boolean;
-  requiresVisibilitySelection: boolean;
+  requiresOptions: boolean;
 }
 
 const RepositoryCreationContext = createContext<RepositoryCreationCapabilities | null>(null);
@@ -18,18 +18,14 @@ export function RepositoryCreationProvider({
   children: ReactNode;
   capabilities: RepositoryCreationCapabilities;
 }) {
-  return (
-    <RepositoryCreationContext.Provider value={capabilities}>
-      {children}
-    </RepositoryCreationContext.Provider>
-  );
+  return <RepositoryCreationContext.Provider value={capabilities}>{children}</RepositoryCreationContext.Provider>;
 }
 
 // Factory function to create GitHub-specific capabilities
 export function createGitHubCapabilities(hasPrivateScope: boolean): RepositoryCreationCapabilities {
   return {
     canCreatePrivate: hasPrivateScope,
-    requiresVisibilitySelection: hasPrivateScope, // Only ask if they can choose
+    requiresOptions: hasPrivateScope, // Only ask if they can choose
   };
 }
 
@@ -37,15 +33,15 @@ export function createGitHubCapabilities(hasPrivateScope: boolean): RepositoryCr
 export function createGitHubAPICapabilities(): RepositoryCreationCapabilities {
   return {
     canCreatePrivate: true,
-    requiresVisibilitySelection: true, // Ask user to choose since we don't know their permissions
+    requiresOptions: true, // Ask user to choose since we don't know their permissions
   };
 }
 
 // Other providers can create their own capability patterns
-// e.g., GitLab might have different visibility options  
+// e.g., GitLab might have different visibility options
 export function createGitLabCapabilities(): RepositoryCreationCapabilities {
   return {
     canCreatePrivate: true,
-    requiresVisibilitySelection: false, // Different UX pattern
+    requiresOptions: false, // Different UX pattern
   };
 }
