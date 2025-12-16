@@ -53,21 +53,5 @@ type PreviewWorkerApi = {
 };
 
 type ClassPropertiesOnly<T> = {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   [K in keyof T as T[K] extends Function ? never : K]: T[K];
 };
-
-declare module "*.md?raw" {
-  const content: string;
-  export default content;
-}
-
-declare module "*.css?raw" {
-  const content: string;
-  export default content;
-}
-
-declare module "*.svg?raw" {
-  const content: string;
-  export default content;
-}
