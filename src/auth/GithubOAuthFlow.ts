@@ -1,7 +1,7 @@
 import { OctokitClient } from "@/auth/OctokitClient";
 import { ENV } from "@/lib/env"; // still using your env
 import { mapToTypedError } from "@/lib/errors/errors";
-import { stripTrailingSlash } from "./oauth-utils";
+import { stripTrailingSlash } from "@/lib/paths2";
 
 /**
  * OAuth Types

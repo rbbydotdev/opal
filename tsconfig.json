@@ -55,6 +55,6 @@
     "scripts/build-preview.ts",
     "*.ignore.*",
     "**/*.ignore.*", // Excludes any file with `.ignore.` in its name
-    "**/_*" // Excludes any file or directory starting with `_`
+    "**/__*" // Excludes any file or directory starting with `__`
   ]
 }

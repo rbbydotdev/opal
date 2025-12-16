@@ -59,6 +59,7 @@ export default defineConfig(({ command, mode }) => {
       headers: {
         // Allow service workers to control the entire site scope
         "Service-Worker-Allowed": "/",
+        "Access-Control-Allow-Origin": "*",
       },
     },
     preview: {

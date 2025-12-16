@@ -1,4 +1,4 @@
-import { stripTrailingSlash } from "@/auth/oauth-utils";
+import { stripTrailingSlash } from "@/lib/paths2";
 import { Octokit } from "@octokit/core";
 
 export function OctokitClient(params: ConstructorParameters<typeof Octokit>[0], corsProxy?: string) {

@@ -1,15 +1,3 @@
-/**
- * Shared OAuth utility functions
- */
-
-/**
- * Utils
- */
-export const stripTrailingSlash = (path: string): string => (path.endsWith("/") ? path.slice(0, -1) : path);
-
-/**
- * PKCE Helpers
- */
 export function generateCodeVerifier(): string {
   const array = new Uint8Array(64); // 64 bytes → ~86 chars when base64url
   crypto.getRandomValues(array);
