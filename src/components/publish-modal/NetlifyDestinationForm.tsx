@@ -4,6 +4,7 @@ import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactor
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { UseFormReturn } from "react-hook-form";
+import { createValidationHelper, handleNotFoundError, updateFormData } from "./ValidationHelpers";
 import {
   RemoteResourceCreate,
   RemoteResourceInput,
@@ -66,3 +67,36 @@ export function NetlifyDestinationForm({
     </RemoteResourceRoot>
   );
 }
+const netlifyValidator = createValidationHelper<RemoteAuthNetlifyAgent>("netlify");
+
+export const NetlifyEval = async (formData: DestinationMetaType<"netlify">, remoteAuth: RemoteAuthDAO | null) => {
+  // If we already have a siteId, no validation needed
+  if (formData.meta.siteId && formData.meta.siteId.trim()) {
+    return formData;
+  }
+
+  // Validate required fields and auth
+  const siteName = netlifyValidator.validateRequired(formData.meta.siteName, "Site name");
+  const agent = netlifyValidator.validateAuthAndCreateAgent(remoteAuth);
+
+  if (!agent.netlifyClient) {
+    throw netlifyValidator.createValidationError("Failed to initialize Netlify client");
+  }
+
+  return netlifyValidator.withErrorHandling(
+    async () => {
+      // Look up site by name
+      const siteId = await agent.netlifyClient.getSiteIdByName(siteName);
+
+      if (!siteId) {
+        throw netlifyValidator.createValidationError(`Site "${siteName}" not found in your Netlify account`);
+      }
+
+      // Update form data using dot notation
+      return updateFormData(formData, {
+        "meta.siteId": siteId,
+      });
+    },
+    "validate Netlify site"
+  );
+};

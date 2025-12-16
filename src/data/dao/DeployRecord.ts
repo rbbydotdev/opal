@@ -1,11 +1,12 @@
+import { DestinationType } from "@/data/DestinationSchemaMap";
+
 export interface DeployRecord<T = any> {
   guid: string;
   label: string;
   timestamp: number;
   buildId: string;
   workspaceId: string;
-  // destinationType: "cloudflare" | "netlify" | "github" | "vercel" | "aws";
-  // destinationName: string;
+  provider: DestinationType;
   destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[];

@@ -105,6 +105,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
         deploy ||
         DeployDAO.CreateNew({
           label,
+          provider: destination.provider,
           workspaceId,
           meta: {},
           buildId: build.guid,

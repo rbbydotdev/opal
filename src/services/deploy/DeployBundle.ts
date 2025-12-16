@@ -1,5 +1,6 @@
 import { Disk } from "@/data/disk/Disk";
 import { AbsPath, absPath } from "@/lib/paths2";
+import crypto from "crypto";
 //
 import { FileTree } from "@/components/filetree/Filetree";
 import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
@@ -63,11 +64,16 @@ export abstract class DeployFileBase<TClientFile> {
   }
   async asUint8Array(): Promise<Uint8Array> {
     const content = await this.getContent();
-    return new Uint8Array(content);
+    return new Uint8Array(content) as Uint8Array;
   }
   async asBlob(type = "text/plain"): Promise<Blob> {
     const content = await this.getContent();
     return new Blob([new Uint8Array(content)], { type });
+  }
+
+  async getSHA1(): Promise<string> {
+    const content = await this.getContent();
+    return crypto.createHash("sha1").update(content).digest("hex");
   }
 
   abstract asClientFile(): TClientFile | Promise<TClientFile>;

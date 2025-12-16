@@ -25,6 +25,7 @@ import {
   RemoteResourceRoot,
   RemoteResourceSearch,
 } from "./RemoteResourceField";
+import { createValidationHelper, handleNotFoundError, updateFormData } from "./ValidationHelpers";
 
 // https://github.com/rbbydotdev/test123/settings/pages
 // should set up gear link to assist and remind user to set up github pages
@@ -171,3 +172,42 @@ export function GitHubDestinationForm({
     </RepositoryCreationProvider>
   );
 }
+
+const githubValidator = createValidationHelper<RemoteAuthGithubAgent>("github");
+
+export const GithubEval = async (formData: DestinationMetaType<"github">, remoteAuth: RemoteAuthDAO | null) => {
+  // Validate required fields and auth
+  const repository = githubValidator.validateRequired(formData.meta.repository, "Repository");
+  const agent = githubValidator.validateAuthAndCreateAgent(remoteAuth);
+
+  if (!agent.githubClient) {
+    throw githubValidator.createValidationError("Failed to initialize GitHub client");
+  }
+
+  return githubValidator.withErrorHandling(
+    async () => {
+      // Normalize the repository name (handles URLs, partial names, etc.)
+      const normalizedRepo = coerceRepoToName(repository);
+
+      // Get the full repository name (owner/repo) and validate it exists
+      const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);
+      const fullName = `${owner}/${repo}`;
+
+      // // Conditionally update baseUrl if it wasn't set or is default
+      // const baseUrl = conditionalUpdate(
+      //   formData.meta.baseUrl,
+      //   absPath(repo),
+      //   (current) => !current || current === "/" || current === absPath("/")
+      // );
+
+      // Update form data using dot notation
+      return updateFormData(formData, {
+        "meta.repository": normalizedRepo, // Keep original input for display
+        "meta.fullName": fullName, // Store resolved full name
+        // "meta.baseUrl": baseUrl,
+      });
+    },
+    "validate GitHub repository",
+    (error) => handleNotFoundError(error, "Repository", repository)
+  );
+};

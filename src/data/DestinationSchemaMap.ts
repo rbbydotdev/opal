@@ -53,6 +53,7 @@ export const DestinationSchemaMap = {
       meta: z.object({
         // implicit! accountId: z.string().trim(),
         siteName: z.string().trim().min(1, "Site Name is required"),
+        siteId: z.string().trim().optional(), // Auto-resolved from siteName
       }),
     })
 
@@ -61,6 +62,7 @@ export const DestinationSchemaMap = {
       label: RandomTag("Netlify"),
       meta: {
         siteName: "",
+        siteId: "",
       },
     })),
   github: z
@@ -76,6 +78,7 @@ export const DestinationSchemaMap = {
             /^([^/]+|[^/]+\/[^/]+)$/,
             "Repository must be a single string or a string in the format '<min 1 char>/<min 1 char>'"
           ),
+        fullName: z.string().trim().optional(), // Auto-resolved full name (owner/repo)
         branch: z.string().trim().min(1, "Branch is required"),
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
@@ -84,7 +87,7 @@ export const DestinationSchemaMap = {
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Github"),
-      meta: { repository: "", branch: "gh-pages", baseUrl: "/" },
+      meta: { repository: "", fullName: "", branch: "gh-pages", baseUrl: "/" },
     })),
   aws: z
     .object({

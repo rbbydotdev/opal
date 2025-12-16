@@ -1,6 +1,7 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployLogLine, DeployRecord } from "@/data/dao/DeployRecord";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";
 import { NotFoundError } from "@/lib/errors/errors";
 import { nanoid } from "nanoid";
@@ -14,6 +15,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   timestamp: number;
   workspaceId: string;
   url: string | null = null;
+  provider: DestinationType = "custom";
   destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
   logs: DeployLogLine[] = [];
@@ -28,8 +30,6 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     label,
     timestamp,
     workspaceId,
-    // destinationType,
-    // destinationName,
     destinationId,
     buildId,
     status = "idle",
@@ -37,6 +37,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     meta,
     completedAt = null,
     error = null,
+    provider: destinationType = "custom",
     url = null,
   }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url">) {
     this.guid = guid;
@@ -44,7 +45,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.timestamp = timestamp;
     this.buildId = buildId;
     this.workspaceId = workspaceId;
-    // this.destinationType = destinationType;
+    this.provider = destinationType;
     // this.destinationName = destinationName;
     this.destinationId = destinationId;
     this.status = status;
@@ -66,6 +67,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       timestamp: this.timestamp,
       buildId: this.buildId,
       workspaceId: this.workspaceId,
+      provider: this.provider,
       destinationId: this.destinationId,
       status: this.status,
       meta: this.meta,
@@ -79,6 +81,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   static CreateNew<T = any>({
     label,
     workspaceId,
+    provider: destinationType,
     destinationId,
     meta,
     buildId,
@@ -88,6 +91,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     workspaceId: string;
     buildId: string;
     meta: T;
+    provider: DestinationType;
     destinationId: string;
     guid?: string;
   }) {
@@ -97,6 +101,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       meta,
       timestamp: Date.now(),
       buildId,
+      provider: destinationType,
       workspaceId,
       destinationId,
       completedAt: null,
@@ -175,6 +180,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       buildId: this.buildId,
       workspaceId: this.workspaceId,
       destinationId: this.destinationId,
+      provider: this.provider,
       status: this.status,
       meta: this.meta,
       logs: this.logs,
@@ -225,6 +231,7 @@ export class NullDeployDAO extends DeployDAO {
       timestamp: Date.now(),
       buildId: "",
       workspaceId: "",
+      provider: "custom",
       destinationId: "",
       meta: {},
       logs: [],
