@@ -342,11 +342,16 @@ export class GitHubClient {
   }
 
   async getFullRepoName(repoName: string): Promise<[string, string]> {
-    if (repoName.includes("/")) {
-      return repoName.split("/") as [string, string];
+    try {
+      if (repoName.includes("/")) {
+        return repoName.split("/") as [string, string];
+      }
+      const currentUser = await this.getCurrentUser();
+      return [currentUser.login, repoName];
+    } catch (e) {
+      console.error("Error getting full repo name:", e);
+      return ["unknown", "unknown"];
     }
-    const currentUser = await this.getCurrentUser();
-    return [currentUser.login, repoName];
   }
 
   private async createTreeRequest({

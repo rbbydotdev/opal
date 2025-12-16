@@ -1,25 +1,19 @@
 import { GitHubClient } from "@/api/github/GitHubClient";
+import { GithubDestination } from "@/data/DestinationSchemaMap";
 import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
 import { relPath } from "@/lib/paths2";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 
-export function coerceRepoToName(repoName: string): string {
-  // If a full URL is provided, extract the path part
-  try {
-    const url = new URL(repoName);
-    return relPath(url.pathname.replace(/\.git$/, "")).trim();
-  } catch {}
-  return repoName;
-}
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, RemoteAuthAgentDeployableFiles<DeployBundle> {
   private _githubClient!: GitHubClient;
   get githubClient() {
     return this._githubClient || (this._githubClient = new GitHubClient(this.getApiToken()));
   }
 
-  async getDestinationURL(destination: any) {
-    return `https://${destination.meta.owner}.github.io/${destination.meta.repository}`;
+  async getDestinationURL(destination: GithubDestination) {
+    const [owner, repo] = await this.githubClient.getFullRepoName(destination.meta.repository);
+    return `https://${owner}.github.io/${repo}`;
   }
 
   onAuth = () => {
@@ -81,4 +75,13 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
 
   abstract getUsername(): string;
   abstract getApiToken(): string;
+}
+
+export function coerceRepoToName(repoName: string): string {
+  // If a full URL is provided, extract the path part
+  try {
+    const url = new URL(repoName);
+    return relPath(url.pathname.replace(/\.git$/, "")).trim();
+  } catch {}
+  return repoName;
 }

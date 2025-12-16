@@ -1,4 +1,5 @@
-import { NetlifyClient, NetlifySite } from "@/api/netlify/NetlifyClient";
+import { NetlifyClient } from "@/api/netlify/NetlifyClient";
+import { NetlifySite } from "@/api/netlify/NetlifyTypes";
 import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";

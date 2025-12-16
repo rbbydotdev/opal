@@ -1,5 +1,5 @@
 import { AWSS3Bucket } from "@/api/aws/AWSClient";
-import { NetlifySite } from "@/api/netlify/NetlifyClient";
+import { NetlifySite } from "@/api/netlify/NetlifyTypes";
 import { Input } from "@/components/ui/input";
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { VercelProject } from "@/data/remote-auth/RemoteAuthVercelAgent";

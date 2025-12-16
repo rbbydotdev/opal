@@ -31,6 +31,10 @@ export function GitAgentFromRemoteAuth(remoteAuth: RemoteAuthDAO) {
   return agent;
 }
 
+export function DeployableAuthAgentFromRemoteAuth(remoteAuth: null): null;
+export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle>(
+  remoteAuth: RemoteAuthDAO
+): RemoteAuthAgentDeployableFiles<TBundle>;
 export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle>(
   remoteAuth: RemoteAuthDAO | null
 ): RemoteAuthAgentDeployableFiles<TBundle> | null {
