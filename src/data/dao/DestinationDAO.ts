@@ -73,6 +73,34 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return new DestinationDAO<T>({ guid, remoteAuth, meta, label: uniq, timestamp });
   }
 
+  static async CreateOrUpdate<T>({
+    guid,
+    remoteAuth,
+    meta,
+    label,
+    timestamp = Date.now(),
+  }: {
+    guid?: string;
+    remoteAuth: RemoteAuthDAO | RemoteAuthJType;
+    meta: T;
+    label: string;
+    timestamp?: number;
+  }) {
+    if (guid) {
+      // Update existing destination - don't make label unique
+      const existing = await DestinationDAO.FetchDAOFromGuid(guid, false);
+      if (existing) {
+        await existing.update({ remoteAuth, meta, label, timestamp });
+        return existing;
+      }
+    }
+
+    // Create new destination with unique label
+    const newDest = await DestinationDAO.CreateNew({ guid, remoteAuth, meta, label, timestamp });
+    await newDest.save();
+    return newDest;
+  }
+
   static FetchFromGuid(guid: string) {
     return ClientDb.destinations.where("guid").equals(guid).first();
   }

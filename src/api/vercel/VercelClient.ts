@@ -56,6 +56,14 @@ export class VercelClient {
         requestBody: {
           name: projectName,
           files,
+          projectSettings: {
+            framework: null,
+            buildCommand: null,
+            outputDirectory: ".",
+            installCommand: null,
+            devCommand: null,
+            rootDirectory: null,
+          },
         },
       },
       {

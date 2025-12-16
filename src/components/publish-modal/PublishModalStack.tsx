@@ -70,8 +70,12 @@ export function PublishModalStack({
   const handleSubmit = async ({ remoteAuthId, label, meta }: AnyDestinationMetaType) => {
     const remoteAuth = remoteAuths.find((ra) => ra.guid === remoteAuthId);
     if (!remoteAuth) throw new Error("RemoteAuth not found");
-    const submitDest = await DestinationDAO.CreateNew({ ...destination?.toJSON(), label, meta, remoteAuth });
-    await submitDest.save();
+    const submitDest = await DestinationDAO.CreateOrUpdate({
+      guid: destination?.guid,
+      label,
+      meta,
+      remoteAuth
+    });
     setDestination(submitDest);
     popView();
   };
