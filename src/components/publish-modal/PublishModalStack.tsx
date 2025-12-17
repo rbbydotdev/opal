@@ -103,12 +103,15 @@ export function PublishModalStack({
   const handleEscapeKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && event.target.closest(`[data-no-escape]`)) {
+        // (window.document.activeElement as any)?.blur();
         return event.preventDefault();
       }
-      event.preventDefault();
-      popView();
+      if (canGoBack) {
+        event.preventDefault();
+        popView();
+      }
     },
-    [popView]
+    [canGoBack, popView]
   );
 
   useImperativeHandle(
@@ -266,4 +269,22 @@ export function PublishModalStack({
       </DialogContent>
     </Dialog>
   );
+}
+
+function ComponentThing() {
+  const [n, setN] = useState(0);
+
+  const doThing = useCallback(
+    function doThing() {
+      console.log(1 + n);
+    },
+    [n]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", doThing);
+    return () => {
+      window.removeEventListener("keydown", doThing);
+    };
+  }, [doThing]);
 }

@@ -44,7 +44,7 @@ export function SidebarDeploymentList() {
       <SelectableListActions />
 
       <SelectableListItems>
-        <div className="flex flex-col gap-2 mt-4 group">
+        <div className="flex flex-col gap-2 mt-4 group max-h-56 overflow-y-auto scrollbar-thin">
           {deploys.length === 0 && <EmptySidebarLabel label="no deploys" />}
           {deploys.map((deploy) => (
             <SelectableListItem key={deploy.guid} id={deploy.guid}>
