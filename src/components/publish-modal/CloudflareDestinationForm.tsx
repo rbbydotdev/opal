@@ -7,6 +7,7 @@ import {
 } from "@/components/publish-modal/RemoteResourceField";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { CloudflareAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useMemo } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";
@@ -20,7 +21,7 @@ Account → Cloudflare Pages	Read	List projects or deployments
 Account → Account Settings	Read	List account info if you use the API to discover your account_id programmatically
 */
 
-function CloudflareAccountIdSearchDropdown({
+function CloudflareAccountNameSearchDropdown({
   agent,
   form,
   cacheKey,
@@ -43,7 +44,7 @@ function CloudflareAccountIdSearchDropdown({
       searchKey: "name",
       mapResult: (account, element) => ({
         label: account.name,
-        value: account.id,
+        value: account.name,
         element,
       }),
     },
@@ -52,12 +53,12 @@ function CloudflareAccountIdSearchDropdown({
   return (
     <RemoteResourceRoot
       control={form.control}
-      fieldName="meta.accountId"
-      onValueChange={(value: string) => form.setValue("meta.accountId", value)}
-      getValue={() => form.getValues("meta.accountId")}
+      fieldName="meta.accountName"
+      onValueChange={(value: string) => form.setValue("meta.accountName", value)}
+      getValue={() => form.getValues("meta.accountName")}
     >
       <RemoteResourceSearch
-        label="Account Id (search by name)"
+        label="Account Name"
         isLoading={isLoading}
         searchValue={searchValue}
         onSearchChange={updateSearch}
@@ -65,7 +66,7 @@ function CloudflareAccountIdSearchDropdown({
         error={error}
       />
       <RemoteResourceSearchInput
-        label="Account Id"
+        label="Account Name"
         placeholder="my-account"
         searchButtonTitle="Search Accounts"
         onSearchChange={updateSearch}
@@ -84,6 +85,11 @@ function CloudflareProjectNameSearchDropdown({
   form: UseFormReturn<DestinationMetaType<"cloudflare">>;
   cacheKey: string;
 }) {
+  const { accountId, accountName } =
+    useWatch({
+      control: form.control,
+    }).meta ?? {};
+
   const {
     isLoading,
     searchValue,
@@ -96,12 +102,21 @@ function CloudflareProjectNameSearchDropdown({
     agent: agent.ProjectSearchAgent,
     config: { searchKey: "name" },
     cacheKey,
+    disabled: !accountId,
   });
-  const accountId = useWatch({
-    control: form.control,
-    name: "meta.accountId",
-  });
-  agent.setAccountId(accountId);
+
+  if (accountId) agent.setAccountId(accountId);
+  //we have to get the account id from the name
+  useAsyncEffect(
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    async (signal) => {
+      if (!accountName || accountId) return;
+      const id = await agent.fetchAccountIdByName(accountName, { signal });
+      if (id) form.setValue("meta.accountId", id);
+    },
+    [accountId, accountName, agent, form]
+  );
+
   const { ident, msg, request } = useRemoteCloudflareProject({
     createRequest: async (name: string, options: { signal?: AbortSignal }) => {
       const response = await agent.createProject({ name }, options);
@@ -125,7 +140,7 @@ function CloudflareProjectNameSearchDropdown({
         searchResults={searchResults}
         error={error}
       />
-      {accountId && (
+      {accountName && (
         <>
           <RemoteResourceCreate
             label="Project Name"
@@ -146,7 +161,7 @@ function CloudflareProjectNameSearchDropdown({
           />
         </>
       )}
-      {!accountId && <div className="text-sm text-ring bold mono mt-1">Select an account to continue</div>}
+      {!accountName && <div className="text-sm text-ring bold mono mt-1">Enter an account name to continue</div>}
     </RemoteResourceRoot>
   );
 }
@@ -162,8 +177,8 @@ export function CloudflareDestinationForm({
   if (!agent) return null;
   return (
     <>
-      <CloudflareAccountIdSearchDropdown cacheKey={String(remoteAuth?.guid)} agent={agent} form={form} />
-      <CloudflareProjectNameSearchDropdown cacheKey={String(remoteAuth?.guid)} agent={agent} form={form} />
+      <CloudflareAccountNameSearchDropdown cacheKey={String(remoteAuth?.guid) + "/account"} agent={agent} form={form} />
+      <CloudflareProjectNameSearchDropdown cacheKey={String(remoteAuth?.guid) + "/project"} agent={agent} form={form} />
     </>
   );
 }

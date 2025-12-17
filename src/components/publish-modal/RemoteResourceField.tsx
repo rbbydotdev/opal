@@ -202,12 +202,10 @@ function RemoteResourceInputField({
   label,
   placeholder,
   children,
-  value,
 }: {
   label: string;
   placeholder: string;
   children?: React.ReactNode;
-  value?: string;
 }) {
   const { mode, setMode, control, fieldName, inputRef, onBlur } = useRemoteResourceContext();
 
@@ -358,7 +356,7 @@ export function RemoteResourceInput({
   onSearchChange: (value: string) => void;
 }) {
   return (
-    <RemoteResourceInputField value={ident.name} label={label} placeholder={placeholder}>
+    <RemoteResourceInputField label={label} placeholder={placeholder}>
       <div>
         <RemoteResourceCreateButton title={createButtonTitle} ident={ident} createReset={createReset} />
       </div>

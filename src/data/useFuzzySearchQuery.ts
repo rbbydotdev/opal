@@ -5,7 +5,8 @@ export function useFuzzySearchQuery<TResult extends Record<string, any>>(
   agent: RemoteAuthAgentSearchType<TResult> | null,
   searchKey: Extract<keyof TResult, string>,
   searchTerm: string,
-  cacheKey: string | string[]
+  cacheKey: string | string[],
+  disabled: boolean = false
 ) {
   const queryClient = useQueryClient();
 
@@ -19,6 +20,7 @@ export function useFuzzySearchQuery<TResult extends Record<string, any>>(
       const data = await agent.fetchAll();
       return data;
     },
+    enabled: !disabled && !!agent,
     staleTime: 5000, // cache lifetime = 5 seconds
     refetchOnMount: false,
     refetchOnWindowFocus: false,

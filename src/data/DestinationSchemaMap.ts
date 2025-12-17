@@ -1,6 +1,7 @@
 import { handleNotFoundError } from "@/components/publish-modal/ValidationHelpers";
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
 import { AgentFromRemoteAuthFactory } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
 import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
@@ -66,15 +67,51 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        accountId: z.string().trim().min(1, "Account ID is required"),
+        accountId: z.string().trim().optional(),
+        accountName: z.string().trim().min(1, "Account Name is required"),
         projectName: z.string().trim().min(1, "Project Name is required"),
       }),
     })
+    .superRefine(async (data, ctx) => {
+      //Abort Signal ???
 
+      try {
+        if (data.meta.accountId) return;
+
+        if (!data.meta.accountName || !data.meta.accountName.trim()) return;
+
+        // Get agent using helper function
+        const agent = AgentFromRemoteAuthFactory(
+          (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
+        ) as RemoteAuthCloudflareAPIAgent;
+
+        // Look up site by name
+        const accountId = (await agent.cloudflareClient.getAccounts()).find(
+          (result) => result.name === data.meta.accountName
+        )?.id;
+        if (!accountId) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Account name "${data.meta.accountName}" not found in your Cloudflare account`,
+            path: ["meta", "accountName"],
+          });
+          return;
+        }
+
+        // Update the data with the resolved siteId
+        // data.meta.accountId = accountId;
+      } catch (error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: error instanceof Error ? error.message : "Validation failed",
+          path: ["meta", "accountName"],
+        });
+      }
+    })
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Cloudflare"),
-      meta: { accountId: "", projectName: "" },
+      meta: { accountId: "", accountName: "", projectName: "" },
     })),
   vercel: z
     .object({
@@ -140,7 +177,7 @@ export const DestinationSchemaMap = {
         }
 
         // Update the data with the resolved siteId
-        data.meta.siteId = siteId;
+        // data.meta.siteId = siteId;
       } catch (error) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

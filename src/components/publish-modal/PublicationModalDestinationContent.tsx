@@ -78,11 +78,12 @@ export function PublicationModalDestinationContent({
         opt2
       );
     },
-    // mode: "onChange",
     mode: "onBlur",
   });
 
   const formValues = useWatch({ control: form.control });
+
+  // console.log(JSON.stringify({ formValues }), null, 4);
 
   const currentRemoteAuthId = formValues.remoteAuthId;
 

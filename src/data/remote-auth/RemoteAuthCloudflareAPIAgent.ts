@@ -1,17 +1,36 @@
 import { CloudflareClient } from "@/api/cloudflare/CloudflareClient";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
+import { DeployBundle } from "@/services/deploy/DeployBundle";
 import type { CloudflareAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { optionalCORSBaseURL } from "../../lib/optionalCORSBaseURL";
 
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: CloudflareClient;
+  private _accountName: string | null = null;
   private _accountId: string | null = null;
+
   getAccountId() {
     return this._accountId;
   }
   setAccountId(accountId: string) {
     this._accountId = accountId;
   }
+
+  getAccountName() {
+    return this._accountName;
+  }
+  setAccountName(accountName: string) {
+    this._accountName = accountName;
+  }
+
+  async fetchAll() {
+    console.warn("fetchAll not implemented for RemoteAuthCloudflareAPIAgent");
+    return [];
+  }
+
+  fetchAccountIdByName = async (accountName: string, { signal }: { signal: AbortSignal }): Promise<string | null> => {
+    return (await this.cloudflareClient.getAccountByName(accountName, { signal }))?.id || null;
+  };
 
   get cloudflareClient() {
     return (
@@ -26,25 +45,31 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   getUsername(): string {
     return "cloudflare-api";
   }
-  // toProjectSearchAgent() {
-  //   return {
-  //     fetchAll: this.fetchAllProjects,
-  //     hasUpdates: this.hasUpdates,
-  //   };
-  // }
-  // toAccountSearchAgent() {
-  //   return {
-  //     fetchAll: this.fetchAllAccounts,
-  //     hasUpdates: this.hasUpdates,
-  //   };
-  // }
-
   async hasUpdates() {
     return { updated: true, newEtag: null };
   }
 
   deploy() {
     throw new Error("Method not implemented.");
+  }
+
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+    const files = await bundle.getFiles();
+    const projectName = destination.meta.project;
+    if (!this.getAccountId()) {
+      throw new Error("Account ID is required for Cloudflare Pages deployment");
+    }
+    return this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, { logStatus });
+  }
+
+  async getDestinationURL(destination: any): Promise<string> {
+    const projectName = destination.meta.project;
+    if (!projectName) {
+      return "about:blank";
+    }
+
+    // Cloudflare Pages default URL format
+    return `https://${projectName}.pages.dev`;
   }
 
   getApiToken(): string {
@@ -74,9 +99,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   };
 
   fetchAllProjects = async ({ signal }: { signal?: AbortSignal } = {}) => {
-    if (!this.getAccountId()) {
-      return [];
-    }
+    if (!this.getAccountId()) return [];
     return this.cloudflareClient.getProjects(this.getAccountId()!, { signal });
   };
   createProject({ name }: { name: string }, { signal }: { signal?: AbortSignal } = {}) {

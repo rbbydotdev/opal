@@ -1,4 +1,6 @@
 import { mapToTypedError } from "@/lib/errors/errors";
+import { getMimeType } from "@/lib/mimeType";
+import { UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import Cloudflare, { APIError } from "cloudflare";
 import { V4PagePaginationArray } from "cloudflare/pagination.mjs";
 
@@ -27,6 +29,7 @@ export class CloudflareClient {
   }
 
   private static handleError(error: any): never {
+    console.log(error.name, error);
     if (error instanceof APIError) {
       const message = error.errors.map((e) => e.message).join(", ");
       throw mapToTypedError(null, { message, code: String(error.status) });
@@ -49,6 +52,17 @@ export class CloudflareClient {
     try {
       const response = await this.cloudflare.accounts.list({ signal });
       return await CloudflareClient.exhaustPages(response, signal);
+    } catch (error) {
+      throw CloudflareClient.handleError(error);
+    }
+  }
+  async getAccountByName(
+    accountName: string,
+    { signal }: { signal?: AbortSignal } = {}
+  ): Promise<CloudflareAccount | null> {
+    try {
+      const accounts = await this.getAccounts({ signal });
+      return accounts.find((acc) => acc.name === accountName) || null;
     } catch (error) {
       throw CloudflareClient.handleError(error);
     }
@@ -94,12 +108,66 @@ export class CloudflareClient {
     }
   }
 
+  async deployToPages(
+    accountId: string,
+    projectName: string,
+    files: UniversalDeployFile[],
+    options: { logStatus?: (status: string) => void } = {}
+  ): Promise<any> {
+    const { logStatus } = options;
+
+    try {
+      logStatus?.("Creating deployment...");
+
+      // Convert files to the format expected by Cloudflare Pages API
+      const formData = new FormData();
+
+      // Add manifest
+      const manifest = Object.keys(files).reduce(
+        (acc, path) => {
+          acc[path] = {
+            hash: path, // Simple hash for now
+            contentType: getMimeType(path),
+          };
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+
+      formData.append("manifest", JSON.stringify(manifest));
+
+      // Add files
+      files.forEach(async (file) => {
+        formData.append(file.path, await file.asBlob(getMimeType(file.path)), file.path);
+      });
+
+      logStatus?.("Uploading to Cloudflare Pages...");
+
+      // Use the Cloudflare Pages API to create a deployment
+      const deployment = await this.cloudflare.pages.projects.deployments.create(
+        projectName,
+        {
+          account_id: accountId,
+        },
+        {
+          body: formData,
+        }
+      );
+
+      logStatus?.("Deployment created successfully");
+      return deployment;
+    } catch (error) {
+      logStatus?.(`Deployment failed: ${error}`);
+      throw CloudflareClient.handleError(error);
+    }
+  }
+
   async verifyCredentials(): Promise<boolean> {
     try {
       await this.getAccounts();
       return true;
     } catch (error) {
-      logger.error("Error verifying Cloudflare credentials:", error);
+      console.error("Error verifying Cloudflare credentials:", error);
       return false;
     }
   }

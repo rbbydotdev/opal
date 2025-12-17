@@ -2,6 +2,7 @@ import { isRemoteGitApiAgent, RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
+  isCloudflareAPIRemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
   isGithubOAuthRemoteAuthDAO,
@@ -12,6 +13,7 @@ import {
 } from "@/workspace/RemoteAuthDAO";
 import { RemoteAuthAWSAPIAgent } from "./RemoteAuthAWSAPIAgent";
 import { RemoteAuthBasicAuthAgent } from "./RemoteAuthBasicAuthAgent";
+import { RemoteAuthCloudflareAPIAgent } from "./RemoteAuthCloudflareAPIAgent";
 import { RemoteAuthGithubAPIAgent } from "./RemoteAuthGithubAPIAgent";
 import { RemoteAuthGithubDeviceOAuthAgent } from "./RemoteAuthGithubDeviceOAuthAgent";
 import { RemoteAuthGithubOAuthAgent } from "./RemoteAuthGithubOAuthAgent";
@@ -63,6 +65,9 @@ export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle>(
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
   }
+  if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
+    return new RemoteAuthCloudflareAPIAgent(remoteAuth);
+  }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
   }
@@ -98,12 +103,9 @@ export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   if (isVercelAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthVercelAPIAgent(remoteAuth);
   }
-  // if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
-  //   return new RemoteAuthCloudflareAPIAgent(remoteAuth);
-  // }
-  // if (isVercelOAuthRemoteAuthDAO(remoteAuth)) {
-  //   return new RemoteAuthVercelOAuthAgent(remoteAuth);
-  // }
+  if (isCloudflareAPIRemoteAuthDAO(remoteAuth)) {
+    return new RemoteAuthCloudflareAPIAgent(remoteAuth);
+  }
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
   }

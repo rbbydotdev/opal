@@ -299,11 +299,13 @@ export function useRemoteSearch<T extends Record<string, any>>({
   config,
   defaultValue = "",
   cacheKey,
+  disabled = false,
 }: {
   agent: RemoteAuthAgentSearchType<T> | null;
   config: RemoteSearchConfig<T>;
   defaultValue?: string;
   cacheKey: string;
+  disabled?: boolean;
 }) {
   const [searchValue, updateSearch] = useState(defaultValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -311,7 +313,8 @@ export function useRemoteSearch<T extends Record<string, any>>({
     agent,
     config.searchKey,
     debouncedSearchValue,
-    cacheKey
+    cacheKey,
+    disabled
   );
 
   const searchResults = useMemo(() => {

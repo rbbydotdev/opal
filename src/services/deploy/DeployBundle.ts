@@ -66,7 +66,7 @@ export abstract class DeployFileBase<TClientFile> {
     const content = await this.getContent();
     return new Uint8Array(content) as Uint8Array;
   }
-  async asBlob(type = "text/plain"): Promise<Blob> {
+  async asBlob(type: string): Promise<Blob> {
     const content = await this.getContent();
     return new Blob([new Uint8Array(content)], { type });
   }
