@@ -4,11 +4,13 @@ import {
   CreateBucketCommand,
   CreateBucketConfiguration,
   DeleteObjectCommand,
+  GetPublicAccessBlockCommand,
   ListBucketsCommand,
   ListObjectsV2Command,
   PutBucketPolicyCommand,
   PutBucketWebsiteCommand,
   PutObjectCommand,
+  PutPublicAccessBlockCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import type { StreamingBlobPayloadInputTypes } from "@smithy/types";
@@ -207,8 +209,80 @@ export class AWSS3Client {
     }
   }
 
+  async checkBlockPublicAccess(bucketName: string): Promise<boolean> {
+    try {
+      const command = new GetPublicAccessBlockCommand({
+        Bucket: bucketName,
+      });
+
+      const response = await this.s3Client.send(command);
+      const config = response.PublicAccessBlockConfiguration;
+
+      // Return true if any blocking is enabled that would prevent public policies
+      return !!(
+        config?.BlockPublicPolicy ||
+        config?.IgnorePublicAcls ||
+        config?.BlockPublicAcls ||
+        config?.RestrictPublicBuckets
+      );
+    } catch (error: any) {
+      if (error?.name === "NoSuchPublicAccessBlockConfiguration") {
+        // No block public access configuration means it's not blocked
+        return false;
+      }
+      console.error(`Error checking block public access for bucket ${bucketName}:`, error);
+      throw error;
+    }
+  }
+
+  async disableBlockPublicAccess(bucketName: string): Promise<void> {
+    try {
+      const command = new PutPublicAccessBlockCommand({
+        Bucket: bucketName,
+        PublicAccessBlockConfiguration: {
+          BlockPublicAcls: false,
+          IgnorePublicAcls: false,
+          BlockPublicPolicy: false,
+          RestrictPublicBuckets: false,
+        },
+      });
+
+      await this.s3Client.send(command);
+    } catch (error: any) {
+      console.error(`Error disabling block public access for bucket ${bucketName}:`, error);
+      throw error;
+    }
+  }
+
   async configureBucketPublicAccess(bucketName: string): Promise<void> {
     try {
+      // First, try to disable Block Public Access if it's enabled
+      const isBlocked = await this.checkBlockPublicAccess(bucketName);
+      if (isBlocked) {
+        try {
+          await this.disableBlockPublicAccess(bucketName);
+          console.log(`Disabled Block Public Access for bucket ${bucketName}`);
+        } catch (blockError: any) {
+          if (blockError?.name === "AccessDenied") {
+            const permissionError = new Error(
+              `Cannot disable Block Public Access for bucket '${bucketName}' due to insufficient permissions.\n\n` +
+              `Your AWS credentials need the following permissions:\n` +
+              `- s3:PutBucketPublicAccessBlock\n` +
+              `- s3:GetBucketPublicAccessBlock\n\n` +
+              `To fix this manually:\n` +
+              `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
+              `2. Click "Edit" under "Block public access (bucket settings)"\n` +
+              `3. Uncheck all options\n` +
+              `4. Save changes and try deploying again\n\n` +
+              `Alternatively, you can use CloudFront distribution for better security and performance.`
+            );
+            permissionError.name = "S3BlockPublicAccessError";
+            throw permissionError;
+          }
+          throw blockError;
+        }
+      }
+
       const policy = {
         Version: "2012-10-17",
         Statement: [
@@ -229,6 +303,11 @@ export class AWSS3Client {
 
       await this.s3Client.send(command);
     } catch (error: any) {
+      if (error?.name === "S3BlockPublicAccessError") {
+        // Re-throw our custom error as-is
+        throw error;
+      }
+
       if (error?.name === "AccessDenied" && error?.message?.includes("BlockPublicPolicy")) {
         const blockPublicAccessError = new Error(
           `Cannot configure public access for bucket '${bucketName}' because S3 Block Public Access is enabled.\n\n` +
