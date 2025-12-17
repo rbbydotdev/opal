@@ -80,7 +80,7 @@ export class NetlifyClient {
     destination: NetlifyDestination,
     logStatus?: (status: string) => void
   ): Promise<NetlifyDeploy> {
-    let siteId: string | null = destination.meta.siteId;
+    let siteId: string | null = destination.meta.siteId || null;
 
     // If no siteId but we have siteName, resolve it
     if (!siteId && destination.meta.siteName) {

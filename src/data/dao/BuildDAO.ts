@@ -16,6 +16,7 @@ type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
 export const BuildPath = (buildId: string) => joinPath(SpecialDirs.Build, relPath(buildId));
 
 export class BuildDAO implements BuildRecord {
+  isNull: Boolean = false;
   guid: string;
   disk: Disk | DiskJType;
   sourceDisk: Disk | DiskJType;
@@ -231,6 +232,7 @@ export class BuildDAO implements BuildRecord {
 }
 
 class NullBuildDAO extends BuildDAO {
+  isNull = true;
   constructor() {
     super({
       guid: "_null_build_",

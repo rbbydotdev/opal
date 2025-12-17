@@ -1,7 +1,64 @@
+import { handleNotFoundError } from "@/components/publish-modal/ValidationHelpers";
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
+import { AgentFromRemoteAuthFactory } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { absPath } from "@/lib/paths2";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import z from "zod";
+
+// Helper function to get GitHub agent from remoteAuth within refinement context
+async function getGithubAgent(remoteAuthId: string, allRemoteAuths: RemoteAuthDAO[]) {
+  const remoteAuth = allRemoteAuths.find((auth) => auth.guid === remoteAuthId);
+  if (!remoteAuth || remoteAuth.source !== "github") {
+    throw new Error("GitHub authentication required");
+  }
+
+  const agent = AgentFromRemoteAuthFactory(remoteAuth) as any;
+  if (!agent || !agent.githubClient) {
+    throw new Error("Failed to initialize GitHub client");
+  }
+
+  return agent;
+}
+
+// Helper function to get Netlify agent from remoteAuth within refinement context
+async function getNetlifyAgent(remoteAuthId: string, allRemoteAuths: RemoteAuthDAO[]) {
+  const remoteAuth = allRemoteAuths.find((auth) => auth.guid === remoteAuthId);
+  if (!remoteAuth || remoteAuth.source !== "netlify") {
+    throw new Error("Netlify authentication required");
+  }
+
+  const agent = AgentFromRemoteAuthFactory(remoteAuth) as any;
+  if (!agent || !agent.netlifyClient) {
+    throw new Error("Failed to initialize Netlify client");
+  }
+
+  return agent;
+}
+
+// Single factory function for all destination schemas with optional async validation
+export function DestinationSchemaMapFn(remoteAuths: RemoteAuthDAO[], destinationType: DestinationType) {
+  const baseSchema = DestinationSchemaMap[destinationType];
+
+  // If no remoteAuths, just return the base schema (no async validation)
+  if (!remoteAuths.length) {
+    return baseSchema;
+  }
+
+  // Add async validation for supported types
+  switch (destinationType) {
+    // case "github":
+    //   return baseSchema.superRefine();
+
+    // case "netlify":
+    // return baseSchema.superRefine();
+
+    default:
+      return baseSchema;
+  }
+}
 
 export const DestinationSchemaMap = {
   cloudflare: z
@@ -56,6 +113,42 @@ export const DestinationSchemaMap = {
         siteId: z.string().trim().optional(), // Auto-resolved from siteName
       }),
     })
+    .superRefine(async (data, ctx) => {
+      try {
+        // If we already have a siteId, no validation needed
+        if (data.meta.siteId && data.meta.siteId.trim()) {
+          return;
+        }
+
+        // Only validate if siteName is provided
+        if (!data.meta.siteName || !data.meta.siteName.trim()) return;
+
+        // Get agent using helper function
+        const agent = AgentFromRemoteAuthFactory(
+          (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
+        ) as RemoteAuthNetlifyAgent;
+
+        // Look up site by name
+        const siteId = await agent.netlifyClient.getSiteIdByName(data.meta.siteName);
+        if (!siteId) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Site "${data.meta.siteName}" not found in your Netlify account`,
+            path: ["meta", "siteName"],
+          });
+          return;
+        }
+
+        // Update the data with the resolved siteId
+        data.meta.siteId = siteId;
+      } catch (error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: error instanceof Error ? error.message : "Validation failed",
+          path: ["meta", "siteName"],
+        });
+      }
+    })
 
     .default(() => ({
       remoteAuthId: "",
@@ -82,6 +175,39 @@ export const DestinationSchemaMap = {
         branch: z.string().trim().min(1, "Branch is required"),
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
+    })
+    .superRefine(async (data, ctx) => {
+      try {
+        // Only validate if repository is provided
+        if (!data.meta.repository || !data.meta.repository.trim()) return;
+
+        const agent = AgentFromRemoteAuthFactory(
+          (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
+        ) as RemoteAuthGithubAgent;
+
+        // Normalize the repository name
+        const normalizedRepo = coerceRepoToName(data.meta.repository);
+
+        // Get the full repository name and validate it exists
+        const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);
+        const fullName = `${owner}/${repo}`;
+
+        // Update the data with validated values
+        data.meta.repository = normalizedRepo;
+        data.meta.fullName = fullName;
+      } catch (error) {
+        const errorMessage = handleNotFoundError(
+          error instanceof Error ? error : new Error(String(error)),
+          "Repository",
+          data.meta.repository
+        ).message;
+
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: errorMessage,
+          path: ["meta", "repository"],
+        });
+      }
     })
 
     .default(() => ({

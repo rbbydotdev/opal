@@ -2,7 +2,6 @@ import { AWSDestinationForm } from "@/components/publish-modal/AWSDestinationFor
 import { CloudflareDestinationForm } from "@/components/publish-modal/CloudflareDestinationForm";
 import { GitHubDestinationForm } from "@/components/publish-modal/GitHubDestinationForm";
 import { NetlifyDestinationForm } from "@/components/publish-modal/NetlifyDestinationForm";
-import { PreSubmitValidation } from "@/components/publish-modal/PreSubmitValidation";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { VercelDestinationForm } from "@/components/publish-modal/VercelDestinationForm";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
@@ -26,16 +25,10 @@ import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaM
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { isCloudflareAPIRemoteAuthDAO, NullRemoteAuth, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Pencil, Plus, Zap } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowLeft, Loader2, Pencil, Plus, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, UseFormReturn, useWatch } from "react-hook-form";
 import z from "zod";
-
-// Type for validation functions that take form data and return validated/transformed data
-export type ValidationFunction<T extends DestinationType> = (
-  formData: DestinationMetaType<T>,
-  remoteAuth: RemoteAuthDAO | null
-) => Promise<DestinationMetaType<T>>;
 
 export function PublicationModalDestinationContent({
   close,
@@ -63,6 +56,7 @@ export function PublicationModalDestinationContent({
   const [destinationType, setDestinationType] = useState<DestinationType>(defaultDestinationType);
   const [menuHelperOpen, setMenuHelperOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
+  const [isCompleteOkay, setIsCompleteOkay] = useState(false);
   const remoteAuthId = isRemoteAuthJType(defaultRemoteAuth) ? defaultRemoteAuth.guid : "";
   const currentSchema = DestinationSchemaMap[destinationType];
   const defaultValues = useMemo(
@@ -101,7 +95,11 @@ export function PublicationModalDestinationContent({
     [currentRemoteAuthId, remoteAuths]
   );
 
-  const isCompleteOkay = currentSchema.safeParse(formValues).success;
+  useEffect(() => {
+    void currentSchema.safeParseAsync(formValues).then((result) => {
+      setIsCompleteOkay(result.success);
+    });
+  }, [formValues, currentSchema]);
 
   const handleClose = () => {
     form.reset();
@@ -158,20 +156,9 @@ export function PublicationModalDestinationContent({
   );
 
   const handleFormSubmit = async (data: z.infer<(typeof DestinationSchemaMap)[typeof destinationType]>) => {
-    try {
-      // Run pre-submit validation for the current destination type
-      const validator = PreSubmitValidation[destinationType];
-      const validatedData = await validator(data as any, remoteAuth);
-
-      // Pass the validated/transformed data to the original handler
-      handleSubmit(validatedData);
-    } catch (error) {
-      // Set form error for validation failures
-      form.setError("root", {
-        type: "manual",
-        message: error instanceof Error ? error.message : "Validation failed",
-      });
-    }
+    // The async validation is now handled by Zod schema refinements
+    // No need for separate validation step
+    handleSubmit(data);
   };
 
   return (
@@ -318,20 +305,13 @@ export function PublicationModalDestinationContent({
           />
         )}
 
-        {/* Display validation errors */}
-        {form.formState.errors.root && (
-          <div className="text-red-500 text-sm p-3 bg-red-50 border border-red-200 rounded">
-            {form.formState.errors.root.message}
-          </div>
-        )}
-
         <div className="w-full justify-end flex gap-4">
           <Button type="button" variant="outline" onClick={handleClose}>
             <ArrowLeft /> Back
           </Button>
-          <Button type="submit" disabled={!isCompleteOkay}>
-            <Zap />
-            Save
+          <Button type="submit" disabled={!isCompleteOkay || form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? <Loader2 className="animate-spin" /> : <Zap />}
+            {form.formState.isSubmitting ? "Saving..." : "Save"}
           </Button>
         </div>
       </form>

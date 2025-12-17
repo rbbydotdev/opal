@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   ArrowUpRightIcon,
   CheckCircle,
+  Clock,
   Loader,
   Pencil,
   Plus,
@@ -27,6 +28,8 @@ import {
   UploadCloudIcon,
   Zap,
 } from "lucide-react";
+import { useState } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function PublicationModalPublishContent({
   build,
@@ -49,9 +52,16 @@ export function PublicationModalPublishContent({
   setDestination: (destination: DestinationDAO | null) => void;
   setPreferredConnection: (connection: RemoteAuthJType | PartialRemoteAuthJType) => void;
 }) {
+  const { storedValue: showTimestamps, setStoredValue: setShowTimestamps } = useLocalStorage(
+    "PublicationModalPublishContent/showTimestamps",
+    true,
+    { initializeWithValue: true }
+  );
   const { remoteAuths } = useRemoteAuths();
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
+  //use selected build but if is NullBuild try and get first build if possible
+  const tryBuild = build.isNull ? builds[0] || build : build;
 
   const {
     deployRunner,
@@ -61,7 +71,7 @@ export function PublicationModalPublishContent({
   } = useDeployRunner({
     label: `Deploy ${new Date().toLocaleString()}`,
     workspaceId: currentWorkspace.id,
-    build,
+    build: tryBuild,
     deploy,
     destination,
   });
@@ -98,7 +108,7 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
-      <BuildSelector disabled={deployCompleted} builds={builds} build={build} setBuildId={handleBuildSelect} />
+      <BuildSelector disabled={deployCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
       <div className="space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
@@ -188,7 +198,7 @@ export function PublicationModalPublishContent({
           )}
         </div>
         <div className="w-full min-h-6 h-full flex flex-col overflow-y-auto">
-          <BuildInfo build={build} destination={destination} />
+          <BuildInfo build={tryBuild} destination={destination} />
         </div>
       </div>
 
@@ -264,7 +274,17 @@ export function PublicationModalPublishContent({
       )}
       {/* Log Output */}
       <div className="flex-1 flex flex-col min-h-0">
-        <label className="text-sm font-medium mb-2">Output</label>
+        <div className="flex items-center justify-start mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTimestamps(!showTimestamps)}
+            className="flex items-center gap-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Clock size={12} />
+            {showTimestamps ? 'Hide' : 'Show'} timestamps
+          </Button>
+        </div>
         <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30 h-96">
           <div className="font-mono text-sm space-y-1">
             {logs.length === 0 ? (
@@ -275,8 +295,9 @@ export function PublicationModalPublishContent({
                   key={index}
                   className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                 >
-                  <span className="text-muted-foreground shrink-0 text-2xs">{`[${new Date(log.timestamp).toLocaleString()}]`}</span>
-
+                  {showTimestamps && (
+                    <span className="text-muted-foreground shrink-0 text-2xs">{`[${new Date(log.timestamp).toLocaleString()}]`}</span>
+                  )}
                   <span className="break-all">{log.message}</span>
                 </div>
               ))

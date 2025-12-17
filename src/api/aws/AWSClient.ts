@@ -6,6 +6,8 @@ import {
   DeleteObjectCommand,
   ListBucketsCommand,
   ListObjectsV2Command,
+  PutBucketPolicyCommand,
+  PutBucketWebsiteCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -90,7 +92,7 @@ export class AWSS3Client {
         })) || []
       );
     } catch (error) {
-      logger.error(errF`Error listing buckets: ${error}`);
+      console.error(errF`Error listing buckets: ${error}`);
       throw error;
     }
   }
@@ -116,7 +118,7 @@ export class AWSS3Client {
         location: `https://${bucketName}.s3.${this.config.region}.amazonaws.com/${key}`,
       };
     } catch (error) {
-      logger.error(`Error uploading object ${key} to bucket ${bucketName}:`, error);
+      console.error(`Error uploading object ${key} to bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -130,7 +132,7 @@ export class AWSS3Client {
 
       await this.s3Client.send(command);
     } catch (error) {
-      logger.error(`Error deleting object ${key} from bucket ${bucketName}:`, error);
+      console.error(`Error deleting object ${key} from bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -153,7 +155,7 @@ export class AWSS3Client {
         })) || []
       );
     } catch (error) {
-      logger.error(`Error listing objects in bucket ${bucketName}:`, error);
+      console.error(`Error listing objects in bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -179,7 +181,69 @@ export class AWSS3Client {
         creationDate: new Date(),
       };
     } catch (error) {
-      logger.error(`Error creating bucket ${bucketName}:`, error);
+      console.error(`Error creating bucket ${bucketName}:`, error);
+      throw error;
+    }
+  }
+
+  async configureBucketWebsite(bucketName: string, indexDocument: string = "index.html", errorDocument: string = "error.html"): Promise<void> {
+    try {
+      const command = new PutBucketWebsiteCommand({
+        Bucket: bucketName,
+        WebsiteConfiguration: {
+          IndexDocument: {
+            Suffix: indexDocument,
+          },
+          ErrorDocument: {
+            Key: errorDocument,
+          },
+        },
+      });
+
+      await this.s3Client.send(command);
+    } catch (error) {
+      console.error(`Error configuring website for bucket ${bucketName}:`, error);
+      throw error;
+    }
+  }
+
+  async configureBucketPublicAccess(bucketName: string): Promise<void> {
+    try {
+      const policy = {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Sid: "PublicReadGetObject",
+            Effect: "Allow",
+            Principal: "*",
+            Action: "s3:GetObject",
+            Resource: `arn:aws:s3:::${bucketName}/*`,
+          },
+        ],
+      };
+
+      const command = new PutBucketPolicyCommand({
+        Bucket: bucketName,
+        Policy: JSON.stringify(policy),
+      });
+
+      await this.s3Client.send(command);
+    } catch (error: any) {
+      if (error?.name === "AccessDenied" && error?.message?.includes("BlockPublicPolicy")) {
+        const blockPublicAccessError = new Error(
+          `Cannot configure public access for bucket '${bucketName}' because S3 Block Public Access is enabled.\n\n` +
+          `To fix this, you need to disable Block Public Access in your AWS S3 console:\n` +
+          `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
+          `2. Click "Edit" under "Block public access (bucket settings)"\n` +
+          `3. Uncheck "Block public policies"\n` +
+          `4. Save changes and try deploying again\n\n` +
+          `Alternatively, you can use CloudFront distribution for better security and performance.`
+        );
+        blockPublicAccessError.name = "S3BlockPublicAccessError";
+        throw blockPublicAccessError;
+      }
+
+      console.error(`Error setting public access policy for bucket ${bucketName}:`, error);
       throw error;
     }
   }
@@ -189,7 +253,7 @@ export class AWSS3Client {
       await this.listBuckets();
       return true;
     } catch (error) {
-      logger.error("Error verifying AWS credentials:", error);
+      console.error("Error verifying AWS credentials:", error);
       return false;
     }
   }

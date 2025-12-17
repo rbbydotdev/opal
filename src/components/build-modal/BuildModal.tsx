@@ -7,8 +7,9 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useBuildRunner } from "@/services/build/useBuildRunner";
 import { Workspace } from "@/workspace/Workspace";
-import { AlertTriangle, Download, Loader, UploadCloud, X } from "lucide-react";
+import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function BuildModal({
   cmdRef,
@@ -23,6 +24,11 @@ export function BuildModal({
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [isOpen, setIsOpen] = useState(false);
+  const { storedValue: showTimestamps, setStoredValue: setShowTimestamps } = useLocalStorage(
+    "BuildModal/showTimestamps",
+    true,
+    { initializeWithValue: true }
+  );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -213,7 +219,17 @@ export function BuildModal({
           )}
           {/* Log Output */}
           <div className="flex-1 flex flex-col min-h-0">
-            <label className="text-sm font-medium mb-2">Build Output</label>
+            <div className="flex items-center justify-start mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTimestamps(!showTimestamps)}
+                className="flex items-center gap-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Clock size={12} />
+                {showTimestamps ? 'Hide' : 'Show'} timestamps
+              </Button>
+            </div>
             <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
               <div className="font-mono text-sm space-y-1">
                 {logs.length === 0 ? (
@@ -224,9 +240,11 @@ export function BuildModal({
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
                     >
-                      <span className="text-muted-foreground shrink-0 text-2xs">
-                        {`[${new Date(log.timestamp).toLocaleString()}]`}
-                      </span>
+                      {showTimestamps && (
+                        <span className="text-muted-foreground shrink-0 text-2xs">
+                          {`[${new Date(log.timestamp).toLocaleString()}]`}
+                        </span>
+                      )}
                       <span className="break-all">{log.message}</span>
                     </div>
                   ))

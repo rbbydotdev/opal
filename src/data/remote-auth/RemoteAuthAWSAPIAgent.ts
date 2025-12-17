@@ -59,7 +59,24 @@ export class RemoteAuthAWSAPIAgent
   }
 
   createBucket = async (bucketName: string, { signal }: { signal?: AbortSignal } = {}) => {
-    return this.s3Client.createBucket(bucketName);
+    const bucket = await this.s3Client.createBucket(bucketName);
+
+    try {
+      // Configure bucket for static website hosting
+      await this.s3Client.configureBucketWebsite(bucketName);
+      await this.s3Client.configureBucketPublicAccess(bucketName);
+    } catch (error: any) {
+      if (error?.name === "S3BlockPublicAccessError") {
+        // Let the user know about the Block Public Access issue but don't fail bucket creation
+        console.warn(`Bucket '${bucketName}' created but couldn't configure for public website hosting:`, error.message);
+        // Still return the bucket since it was successfully created
+      } else {
+        // For other configuration errors, log and continue
+        console.warn("Website configuration failed:", error?.message || error);
+      }
+    }
+
+    return bucket;
   };
 
   async test(): Promise<{ status: "error"; msg: string } | { status: "success" }> {
@@ -81,6 +98,24 @@ export class RemoteAuthAWSAPIAgent
   async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
     const bucketName = destination.meta.bucketName;
     logStatus?.("Starting deployment to S3...");
+
+    // Ensure bucket is configured for website hosting
+    try {
+      logStatus?.("Configuring bucket for static website hosting...");
+      await this.s3Client.configureBucketWebsite(bucketName);
+      await this.s3Client.configureBucketPublicAccess(bucketName);
+      logStatus?.("Bucket configured for website hosting");
+    } catch (error: any) {
+      if (error?.name === "S3BlockPublicAccessError") {
+        // Surface the specific Block Public Access error to the user
+        throw error;
+      }
+
+      // For other errors, log but continue with deployment
+      // The bucket might already be configured or have other permission issues
+      logStatus?.("Note: Could not configure website hosting (bucket may already be configured)");
+      console.warn("Website configuration failed:", error?.message || error);
+    }
 
     const files = await bundle.getFiles();
 
