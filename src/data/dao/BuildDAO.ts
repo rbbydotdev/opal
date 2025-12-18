@@ -153,7 +153,7 @@ export class BuildDAO implements BuildRecord {
   }
 
   static async all() {
-    return (await ClientDb.builds.orderBy("timestamp").toArray()).map(BuildDAO.FromJSON);
+    return (await ClientDb.builds.orderBy("timestamp").toArray()).reverse().map(BuildDAO.FromJSON);
   }
 
   static async allForWorkspace(workspaceId: string) {

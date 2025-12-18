@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 
 type BuildCreationContextType = {
   openNew: () => BuildDAO;
-  openEdit: (options: { buildId: string }) => void;
+  openEdit: ({ buildId }: { buildId: string }) => void;
   close: () => void;
 };
 export const BuildCreationContext = createContext<BuildCreationContextType | undefined>(undefined);

@@ -44,7 +44,6 @@ export class ClientIndexedDb extends Dexie {
       },
       clearAllTables
     );
-    // === DESTINATIONS ===
     this.destinations.hook("creating", (_primaryKey, obj) => {
       obj.remoteAuthGuid = obj.remoteAuth?.guid ?? null;
     });
@@ -55,7 +54,6 @@ export class ClientIndexedDb extends Dexie {
       }
     });
 
-    // === REMOTEAUTHS ===
     this.remoteAuths.hook("deleting", (primaryKey, remoteAuth, tx) => {
       // Wait until this transaction finishes, then do cleanup.
       tx.on("complete", async () =>
@@ -66,7 +64,6 @@ export class ClientIndexedDb extends Dexie {
       );
     });
 
-    // === BUILDS ===
     this.builds.hook("deleting", (primaryKey, build, tx) => {
       // Delete related deployments when build is deleted
       tx.on("complete", async () => {
@@ -77,7 +74,6 @@ export class ClientIndexedDb extends Dexie {
       });
     });
 
-    // === WORKSPACES ===
     this.workspaces.hook("deleting", (_primaryKey, workspace, tx) => {
       // Avoid nested transaction error — wait until after the workspace delete finishes.
       tx.on("complete", async () => {
@@ -97,7 +93,7 @@ export class ClientIndexedDb extends Dexie {
   private attachTimestampHooks(tables: Table<any, any>[] = this.tables) {
     for (const table of tables) {
       table.hook("creating", (_pk, obj) => {
-        obj.timestamp = new Date();
+        obj.timestamp = Date.now();
       });
     }
   }

@@ -140,7 +140,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 
   static async all() {
-    return (await ClientDb.deployments.orderBy("timestamp").toArray()).map(DeployDAO.FromJSON);
+    return (await ClientDb.deployments.orderBy("timestamp").toArray()).reverse().map(DeployDAO.FromJSON);
   }
 
   static async allForWorkspace(workspaceId: string) {
@@ -153,8 +153,8 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 
   static async allForBuild(buildId: string) {
-    const deployments = await ClientDb.deployments.where("buildId").equals(buildId).reverse().sortBy("timestamp");
-    return deployments.map((deployment) => DeployDAO.FromJSON(deployment));
+    const deployments = await ClientDb.deployments.where("buildId").equals(buildId).sortBy("timestamp");
+    return deployments.reverse().map((deployment) => DeployDAO.FromJSON(deployment));
   }
 
   async hydrate() {

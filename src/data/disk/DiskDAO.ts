@@ -63,7 +63,7 @@ export class DiskDAO {
 
   static async all() {
     const disks = await ClientDb.disks.orderBy("timestamp").toArray();
-    return disks.map((disk) => DiskDAO.FromJSON(disk));
+    return disks.reverse().map((disk) => DiskDAO.FromJSON(disk));
   }
 
   updateIndexCache(indexCache: TreeDirRoot) {

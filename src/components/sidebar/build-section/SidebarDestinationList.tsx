@@ -28,15 +28,11 @@ export function SidebarDestinationList() {
     }
   };
 
-  const handleView = (destinationId: string) => {
-    openDestinationFlow(destinationId);
-  };
-
   return (
     <SelectableListSimple
       data={destinations}
       getItemId={(build) => build.guid}
-      onClick={handleView}
+      onClick={(destinationId) => openDestinationFlow(destinationId, "publish")}
       onDelete={handleDelete}
       emptyLabel="no destinations found"
       showGrip={false}
@@ -58,7 +54,7 @@ export function SidebarDestinationList() {
               <DestinationLabel destination={destination} />
               <SelectableListItemMenu>
                 <SelectableListItemAction
-                  onSelect={() => handleView(destination.guid)}
+                  onSelect={() => openDestinationFlow(destination.guid)}
                   icon={<Eye className="w-4 h-4" />}
                 >
                   View

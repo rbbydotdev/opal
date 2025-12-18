@@ -25,7 +25,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
     return ClientDb.remoteAuths
       .orderBy("timestamp")
       .toArray()
-      .then((records) => records.map((record) => RemoteAuthDAO.FromJSON(record)));
+      .then((records) => records.reverse().map((record) => RemoteAuthDAO.FromJSON(record)));
   }
 
   delete() {

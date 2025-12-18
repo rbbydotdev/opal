@@ -156,7 +156,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
 
   static async all() {
     const destinations = await ClientDb.destinations.orderBy("timestamp").toArray();
-    return destinations.map((destination) => DestinationDAO.FromJSON(destination));
+    return destinations.reverse().map((destination) => DestinationDAO.FromJSON(destination));
   }
 
   async save() {

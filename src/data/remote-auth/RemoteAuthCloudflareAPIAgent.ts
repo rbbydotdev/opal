@@ -1,4 +1,5 @@
 import { CloudflareClient } from "@/api/cloudflare/CloudflareClient";
+import { CloudflareDestination } from "@/data/DestinationSchemaMap";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 import type { CloudflareAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
@@ -53,17 +54,22 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     throw new Error("Method not implemented.");
   }
 
-  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+  async deployFiles(
+    bundle: DeployBundle,
+    destination: CloudflareDestination,
+    logStatus?: (status: string) => void
+  ): Promise<unknown> {
     const files = await bundle.getFiles();
-    const projectName = destination.meta.project;
+    const projectName = destination.meta.projectName;
+    if (destination.meta.accountId) this.setAccountId(destination.meta.accountId);
     if (!this.getAccountId()) {
       throw new Error("Account ID is required for Cloudflare Pages deployment");
     }
     return this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, { logStatus });
   }
 
-  async getDestinationURL(destination: any): Promise<string> {
-    const projectName = destination.meta.project;
+  async getDestinationURL(destination: CloudflareDestination): Promise<string> {
+    const projectName = destination.meta.projectName;
     if (!projectName) {
       return "about:blank";
     }

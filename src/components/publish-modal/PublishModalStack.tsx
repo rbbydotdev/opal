@@ -132,7 +132,7 @@ export function PublishModalStack({
         replaceView("publish");
         setIsOpen(true);
       },
-      openDestinationFlow: async (destinationId) => {
+      openDestinationFlow: async (destinationId, view?: PublishViewType) => {
         if (destinationId) {
           const destination = await DestinationDAO.FetchDAOFromGuid(destinationId, true);
           setPreferredConnection(destination.remoteAuth);
@@ -143,7 +143,7 @@ export function PublishModalStack({
         }
         setBuild(NULL_BUILD); // Set a null build for destination-only mode
         setIsOpen(true);
-        replaceView("destination");
+        replaceView(view ?? "destination");
       },
     }),
     [replaceView]

@@ -66,7 +66,7 @@ export class WorkspaceDAO {
   }
   static async all() {
     const workspaceRecords = await ClientDb.workspaces.orderBy("timestamp").toArray();
-    return workspaceRecords.map((ws) => new WorkspaceDAO(ws));
+    return workspaceRecords.reverse().map((ws) => new WorkspaceDAO(ws));
   }
   static async nameExists(name: string) {
     const result = await WorkspaceDAO.FetchFromName(name, {

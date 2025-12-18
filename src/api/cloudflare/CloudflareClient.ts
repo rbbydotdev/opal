@@ -1,8 +1,8 @@
 import { mapToTypedError } from "@/lib/errors/errors";
-import { getMimeType } from "@/lib/mimeType";
 import { UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import Cloudflare, { APIError } from "cloudflare";
 import { V4PagePaginationArray } from "cloudflare/pagination.mjs";
+import crypto from "crypto";
 
 export interface CloudflareAccount {
   id: string;
@@ -20,6 +20,7 @@ export interface CloudflareProject {
 
 export class CloudflareClient {
   private cloudflare: Cloudflare;
+  private fetchClient: FetchClient;
 
   constructor(apiToken: string, baseURL?: string) {
     this.cloudflare = new Cloudflare({
@@ -29,7 +30,6 @@ export class CloudflareClient {
   }
 
   private static handleError(error: any): never {
-    console.log(error.name, error);
     if (error instanceof APIError) {
       const message = error.errors.map((e) => e.message).join(", ");
       throw mapToTypedError(null, { message, code: String(error.status) });
@@ -108,56 +108,70 @@ export class CloudflareClient {
     }
   }
 
+  private getUploadToken({ accountId, projectName }: { accountId: string; projectName: string }) {
+    // await fetchResult<{ jwt: string }>(
+    //   COMPLIANCE_REGION_CONFIG_PUBLIC,
+    //   `/accounts/${args.accountId}/pages/projects/${args.projectName}/upload-token`
+    // );
+  }
+
+  async deployToPages2(
+    accountId: string,
+    projectName: string,
+    files: UniversalDeployFile[],
+    options: { logStatus?: (status: string) => void } = {}
+  ): Promise<any> {}
+
   async deployToPages(
     accountId: string,
     projectName: string,
     files: UniversalDeployFile[],
     options: { logStatus?: (status: string) => void } = {}
   ): Promise<any> {
-    const { logStatus } = options;
+    const logStatus = options?.logStatus || (() => {});
 
     try {
-      logStatus?.("Creating deployment...");
+      logStatus("Creating deployment...");
 
       // Convert files to the format expected by Cloudflare Pages API
       const formData = new FormData();
 
-      // Add manifest
-      const manifest = Object.keys(files).reduce(
-        (acc, path) => {
-          acc[path] = {
-            hash: path, // Simple hash for now
-            contentType: getMimeType(path),
-          };
-          return acc;
-        },
-        {} as Record<string, any>
-      );
+      // Create manifest mapping file paths to content hashes
+      const manifest: Record<string, string> = {};
+      for (const file of files) {
+        const buffer = await file.asBuffer();
+        manifest[file.path] = crypto.createHash("sha1").update(buffer).digest("hex");
+      }
 
+      // Add required fields for Pages deployment
+      // formData.append("branch", "main");
+      // formData.append("commit_hash", "0000000000000000000000000000000000000000");
+      // formData.append("commit_dirty", "false");
+      // formData.append("commit_message", "Deployment from web editor");
+      console.log(manifest);
       formData.append("manifest", JSON.stringify(manifest));
 
       // Add files
-      files.forEach(async (file) => {
-        formData.append(file.path, await file.asBlob(getMimeType(file.path)), file.path);
-      });
+      // for (const file of files) {
+      //   formData.append(file.path, await file.asBlob(getMimeType(file.path)), file.path);
+      // }
 
-      logStatus?.("Uploading to Cloudflare Pages...");
+      logStatus("Uploading to Cloudflare Pages...");
 
       // Use the Cloudflare Pages API to create a deployment
-      const deployment = await this.cloudflare.pages.projects.deployments.create(
-        projectName,
-        {
-          account_id: accountId,
-        },
-        {
-          body: formData,
-        }
-      );
+      const deployment = await this.cloudflare.pages.projects.deployments.create(projectName, {
+        account_id: accountId,
+        branch: "main",
+        //@ts-ignore
+        manifest: JSON.stringify(manifest),
+      });
+      // console.log(deployment);
+      this.cloudflare.asset;
 
-      logStatus?.("Deployment created successfully");
+      logStatus("Deployment created successfully");
       return deployment;
     } catch (error) {
-      logStatus?.(`Deployment failed: ${error}`);
+      logStatus(`Deployment failed: ${error}`);
       throw CloudflareClient.handleError(error);
     }
   }
