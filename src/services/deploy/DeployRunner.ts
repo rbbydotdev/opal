@@ -190,11 +190,25 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
 
       infoLog("Deployment completed successfully.");
 
+      // Get the destination URL (main app URL)
+      const destinationUrl = await this.agent.getDestinationURL(this.destination);
+
+      // For deployment-specific URLs, check if agent provides one, otherwise fallback to destination URL
+      const deploymentUrl = typeof this.agent.getDeploymentURL === 'function'
+        ? await this.agent.getDeploymentURL(this.destination)
+        : destinationUrl;
+
+      // Update destination with main URL if not already set
+      if (!this.destination.destinationUrl && destinationUrl) {
+        await this.destination.update({ destinationUrl });
+      }
+
       return await this.deploy.update({
         logs: this.deploy.logs,
         status: "success",
         completedAt: Date.now(),
-        url: await this.agent.getDestinationURL(this.destination),
+        url: destinationUrl, // Keep for backward compatibility
+        deploymentUrl: deploymentUrl,
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

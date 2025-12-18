@@ -22,17 +22,19 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   remoteAuth: RemoteAuthDAO | RemoteAuthJType;
   meta: DestinationData<T>;
   timestamp?: number;
+  destinationUrl?: string | null;
   get provider() {
     return this.remoteAuth?.source || "custom";
   }
   static guid = () => "__dest__" + nanoid();
 
-  constructor({ guid, remoteAuth, meta, label, timestamp }: DestinationRecord<T>) {
+  constructor({ guid, remoteAuth, meta, label, timestamp, destinationUrl }: DestinationRecord<T>) {
     this.guid = guid;
     this.remoteAuth = remoteAuth;
     this.meta = meta;
     this.label = label;
     this.timestamp = timestamp;
+    this.destinationUrl = destinationUrl;
   }
 
   static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp">) {
@@ -46,6 +48,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
       meta: this.meta,
       label: this.label,
       timestamp: this.timestamp,
+      destinationUrl: this.destinationUrl,
     };
   }
 
@@ -64,16 +67,18 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     meta,
     label,
     timestamp = Date.now(),
+    destinationUrl = null,
   }: {
     guid?: string;
     remoteAuth: RemoteAuthDAO | RemoteAuthJType;
     meta: T;
     label: string;
     timestamp?: number;
+    destinationUrl?: string | null;
   }) {
     const existingNames = (await DestinationDAO.all()).map((rad) => rad.label);
     const uniq = getUniqueSlug(label, existingNames);
-    return new DestinationDAO<T>({ guid, remoteAuth, meta, label: uniq, timestamp });
+    return new DestinationDAO<T>({ guid, remoteAuth, meta, label: uniq, timestamp, destinationUrl });
   }
 
   static async CreateOrUpdate<T>({
@@ -82,24 +87,26 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     meta,
     label,
     timestamp = Date.now(),
+    destinationUrl = null,
   }: {
     guid?: string;
     remoteAuth: RemoteAuthDAO | RemoteAuthJType;
     meta: T;
     label: string;
     timestamp?: number;
+    destinationUrl?: string | null;
   }) {
     if (guid) {
       // Update existing destination - don't make label unique
       const existing = await DestinationDAO.FetchDAOFromGuid(guid, false);
       if (existing) {
-        await existing.update({ remoteAuth, meta, label, timestamp });
+        await existing.update({ remoteAuth, meta, label, timestamp, destinationUrl });
         return existing;
       }
     }
 
     // Create new destination with unique label
-    const newDest = await DestinationDAO.CreateNew({ guid, remoteAuth, meta, label, timestamp });
+    const newDest = await DestinationDAO.CreateNew({ guid, remoteAuth, meta, label, timestamp, destinationUrl });
     await newDest.save();
     return newDest;
   }
@@ -133,6 +140,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
       },
       meta: {},
       timestamp: Date.now(),
+      destinationUrl: null,
     });
   }
 
@@ -173,6 +181,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
       meta: this.meta,
       label: this.label,
       timestamp: this.timestamp,
+      destinationUrl: this.destinationUrl,
     });
   }
 

@@ -13,7 +13,7 @@ import { DeployDAO } from "@/data/dao/DeployDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
-import { Delete, Eye } from "lucide-react";
+import { ArrowUpRightIcon, Delete, Eye } from "lucide-react";
 
 export function SidebarDeploymentList() {
   const errorToss = useErrorToss();
@@ -30,6 +30,12 @@ export function SidebarDeploymentList() {
 
   const handleView = (deploymentId: string) => {
     openDeployment(deploymentId);
+  };
+
+  const handleViewDeployment = (deploy: DeployDAO) => {
+    if (deploy.effectiveUrl) {
+      window.open(deploy.effectiveUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -53,6 +59,14 @@ export function SidebarDeploymentList() {
                 <SelectableListItemAction onSelect={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
                   View
                 </SelectableListItemAction>
+                {deploy.isSuccessful && deploy.effectiveUrl && (
+                  <SelectableListItemAction
+                    onSelect={() => handleViewDeployment(deploy)}
+                    icon={<ArrowUpRightIcon className="w-4 h-4" />}
+                  >
+                    View Deployment
+                  </SelectableListItemAction>
+                )}
                 <SelectableListItemAction
                   onSelect={() => handleDelete(deploy.guid)}
                   icon={<Delete className="w-4 h-4" />}

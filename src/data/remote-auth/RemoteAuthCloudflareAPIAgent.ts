@@ -54,6 +54,8 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     throw new Error("Method not implemented.");
   }
 
+  private lastDeploymentResult: any = null;
+
   async deployFiles(
     bundle: DeployBundle,
     destination: CloudflareDestination,
@@ -65,7 +67,8 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     if (!this.getAccountId()) {
       throw new Error("Account ID is required for Cloudflare Pages deployment");
     }
-    return this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, { logStatus });
+    this.lastDeploymentResult = await this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, { logStatus });
+    return this.lastDeploymentResult;
   }
 
   async getDestinationURL(destination: CloudflareDestination): Promise<string> {
@@ -76,6 +79,16 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
 
     // Cloudflare Pages default URL format
     return `https://${projectName}.pages.dev`;
+  }
+
+  async getDeploymentURL(destination: CloudflareDestination): Promise<string> {
+    if (this.lastDeploymentResult?.result?.url) {
+      return this.lastDeploymentResult.result.url;
+    } else if (this.lastDeploymentResult?.url) {
+      return this.lastDeploymentResult.url;
+    }
+    // Fallback to destination URL if no deployment-specific URL available
+    return this.getDestinationURL(destination);
   }
 
   getApiToken(): string {

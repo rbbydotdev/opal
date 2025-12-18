@@ -294,7 +294,7 @@ export class CloudflareClient {
 
       logStatus("Deployment created, waiting for completion...");
 
-      // Poll deployment status until complete (following Wrangler's approach)
+      // Poll deplyment status until complete (following Wrangler's approach)
       const MAX_DEPLOYMENT_STATUS_ATTEMPTS = 5;
       let attempts = 0;
       let latestDeploymentStage = deploymentResult.latest_stage;
@@ -323,16 +323,19 @@ export class CloudflareClient {
         }
       }
 
-      // Check final status
-      if (latestDeploymentStage?.name === "deploy" && latestDeploymentStage?.status === "success") {
-        logStatus("Deployment completed successfully!");
-      } else if (latestDeploymentStage?.status === "failure") {
+      if (latestDeploymentStage?.status === "failure") {
         logStatus("Deployment failed - check Cloudflare dashboard for details");
         throw new Error(`Deployment failed in stage: ${latestDeploymentStage?.name}`);
+      }
+
+      // Check final status
+      if (latestDeploymentStage?.name === "deploy" && latestDeploymentStage?.status === "success") {
+        console.log(">>>>> deployment", deployment);
+        console.log(">>>>> deploymentResult.url", deploymentResult.url);
+        //save deployment preview url, which is different from project url in that its specific to the deployment
       } else {
         logStatus("Deployment status unknown - check Cloudflare dashboard for details");
       }
-
       return deployment;
     } catch (error) {
       logStatus(`Deployment failed: ${error}`);

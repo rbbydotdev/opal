@@ -12,6 +12,7 @@ export interface DeployRecord<T = any> {
   logs: DeployLogLine[];
   meta: T;
   url: string | null;
+  deploymentUrl?: string | null;
   completedAt: number | null;
   error: string | null;
 }

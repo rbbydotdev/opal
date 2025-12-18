@@ -245,9 +245,25 @@ export function PublicationModalPublishContent({
               <Button onClick={handleOkay} className="flex items-center gap-2">
                 Okay
               </Button>
-              {liveDeploy?.url && (
+              {destination?.destinationUrl && (
+                <Button className="flex items-center gap-2" asChild variant="outline">
+                  <a href={destination.destinationUrl} target="_blank" rel="noopener noreferrer">
+                    <ArrowUpRightIcon size={16} />
+                    View
+                  </a>
+                </Button>
+              )}
+              {liveDeploy?.deploymentUrl && liveDeploy.deploymentUrl !== destination?.destinationUrl && (
                 <Button className="flex items-center gap-2" asChild>
-                  <a href={liveDeploy.url || "#"} target="_blank" rel="noopener noreferrer">
+                  <a href={liveDeploy.deploymentUrl} target="_blank" rel="noopener noreferrer">
+                    <ArrowUpRightIcon size={16} />
+                    View Deploy
+                  </a>
+                </Button>
+              )}
+              {!destination?.destinationUrl && liveDeploy?.effectiveUrl && (
+                <Button className="flex items-center gap-2" asChild>
+                  <a href={liveDeploy.effectiveUrl || "#"} target="_blank" rel="noopener noreferrer">
                     <ArrowUpRightIcon size={16} />
                     View
                   </a>

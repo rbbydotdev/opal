@@ -35,13 +35,24 @@ export abstract class RemoteAuthVercelAgent
   async createProject(params: { name: string; teamId?: string }, { signal }: { signal?: AbortSignal } = {}) {
     return this.vercelClient.createProject(params, { signal });
   }
+  private lastDeploymentResult: any = null;
+
   async deployFiles(bundle: DeployBundle, destination: VercelDestination, logStatus?: (status: string) => void) {
     const files = await bundle.getFiles();
     const projectName = destination.meta.project;
-    return this.vercelClient.deploy({ projectName, files });
+    this.lastDeploymentResult = await this.vercelClient.deploy({ projectName, files });
+    return this.lastDeploymentResult;
   }
   async getDestinationURL(destination: any) {
     return `https://${destination.meta.project}.vercel.app`;
+  }
+
+  async getDeploymentURL(destination: any) {
+    if (this.lastDeploymentResult?.url) {
+      return `https://${this.lastDeploymentResult.url}`;
+    }
+    // Fallback to destination URL if no deployment-specific URL available
+    return this.getDestinationURL(destination);
   }
 
   pollProjectDeploymentStatus({

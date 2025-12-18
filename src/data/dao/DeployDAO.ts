@@ -15,6 +15,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   timestamp: number;
   workspaceId: string;
   url: string | null = null;
+  deploymentUrl?: string | null = null;
   provider: DestinationType = "custom";
   destinationId: string;
   status: "idle" | "pending" | "success" | "failed" | "cancelled";
@@ -39,7 +40,8 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     error = null,
     provider: destinationType = "custom",
     url = null,
-  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url">) {
+    deploymentUrl = null,
+  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url" | "deploymentUrl">) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
@@ -54,6 +56,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.completedAt = completedAt;
     this.error = error;
     this.url = url;
+    this.deploymentUrl = deploymentUrl;
   }
 
   static FromJSON<T = any>(json: DeployJType) {
@@ -75,6 +78,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       completedAt: this.completedAt,
       error: this.error,
       url: this.url,
+      deploymentUrl: this.deploymentUrl,
     };
   }
 
@@ -107,6 +111,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       completedAt: null,
       error: null,
       url: null,
+      deploymentUrl: null,
       logs: [],
     });
   }
@@ -187,6 +192,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       completedAt: this.completedAt,
       error: this.error,
       url: this.url,
+      deploymentUrl: this.deploymentUrl,
     });
   }
 
@@ -214,6 +220,10 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     return this.status === "idle";
   }
 
+  get effectiveUrl(): string | null {
+    return this.deploymentUrl || this.url;
+  }
+
   async delete() {
     return DeployDAO.delete(this.guid);
   }
@@ -235,6 +245,8 @@ export class NullDeployDAO extends DeployDAO {
       destinationId: "",
       meta: {},
       logs: [],
+      url: null,
+      deploymentUrl: null,
     });
   }
 }
@@ -242,6 +254,10 @@ export class NullDeployDAO extends DeployDAO {
 export class DeployModel extends DeployDAO {
   Build!: BuildDAO;
   Destination!: DestinationDAO;
+
+  get finalUrl(): string | null {
+    return this.deploymentUrl || this.Destination?.destinationUrl || this.url;
+  }
   private constructor(...args: ConstructorParameters<typeof DeployDAO>) {
     super(...args);
   }
