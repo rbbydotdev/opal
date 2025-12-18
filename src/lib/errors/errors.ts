@@ -182,6 +182,14 @@ export class BadRequestError extends ApplicationError {
   }
 }
 
+export class UnprocessableContentError extends ApplicationError {
+  name = "UnprocessableEntityError";
+  constructor(errorOrMessage: Error | string = "unprocessable content") {
+    super(errorOrMessage, 422);
+    Object.setPrototypeOf(this, UnprocessableContentError.prototype);
+  }
+}
+
 class ForbiddenError extends ApplicationError {
   name = "ForbiddenError";
   constructor(errorOrMessage: Error | string = "forbidden") {
@@ -282,7 +290,13 @@ type ErrorMappingOptions = {
 export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {}): ApplicationError {
   // Try to extract code, name, message from error or options
   const err = toErrorWithMessage(error);
-  const code = options.code ?? (typeof (error as any)?.code === "number" ? (error as any).code : undefined);
+  const code =
+    options.code ??
+    (typeof (error as any)?.code === "number"
+      ? (error as any).code
+      : typeof (error as any)?.status === "number"
+        ? (error as any).status
+        : undefined);
   const name = options.name ?? (typeof (error as any)?.name === "string" ? (error as any).name : undefined);
   const message = options.message ?? err.message ?? name;
 
@@ -298,6 +312,8 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
       return new NotFoundError(message, options.path);
     case 409:
       return new ConflictError(message);
+    case 422:
+      return new UnprocessableContentError(message);
     case 500:
       return new InternalServerError(message);
     case 501:
@@ -322,6 +338,9 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
       return new UnauthorizedError(message);
     case "BadRequestError":
       return new BadRequestError(message);
+
+    case "UnprocessableContentError":
+      return new UnprocessableContentError(message);
     case "ForbiddenError":
       return new ForbiddenError(message);
     case "InternalServerError":

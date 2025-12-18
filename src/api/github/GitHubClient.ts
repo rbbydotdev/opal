@@ -155,23 +155,63 @@ export class GitHubClient {
     },
     logStatus: (status: string) => void = () => {}
   ) {
+    // Check if repo is empty first
+    const { exists, reason } = await this.checkGetBranchRefRequest({ owner, repo, branch });
+
+    if (!exists && reason === "unknown") {
+      throw new Error("Unable to determine repository status");
+    }
+
+    // Handle empty repo case - use Contents API for first file
+    if (!exists && reason === "emptyrepo") {
+      if (files.length === 0) {
+        throw new Error("Cannot deploy to empty repository with no files");
+      }
+
+      const firstFile = files[0]!;
+      const firstFileContent = await firstFile.asBase64();
+
+      logStatus(`Repository is empty. Creating first file '${firstFile.path}'...`);
+      await this.createFileRequest({
+        owner,
+        repo,
+        path: firstFile.path,
+        message,
+        content: firstFileContent,
+        branch,
+      });
+
+      // If only one file, we're done
+      if (files.length === 1) {
+        logStatus(`Deploy completed successfully!`);
+        return;
+      }
+
+      // Continue with remaining files using normal flow
+      files = files.slice(1);
+      logStatus(`Continuing with remaining ${files.length} files...`);
+    }
+
+    // Normal Git API flow (works for all cases now that repo has history)
     const { latestCommitSha, baseTreeSha, isOrphan } = await this.resolveBranchForDeploy({
       owner,
       repo,
       branch,
       logStatus,
     });
-    const newCommitSha = await this.createDeployCommit({
+
+    const { newCommitSha } = await this.createDeployCommit({
       owner,
       repo,
-      branch,
-      message,
+      message: files.length < 3 ? message : `${message} (${files.length} files)`,
       files,
-      baseTreeSha: isOrphan ? undefined : (baseTreeSha ?? undefined),
-      parentSha: isOrphan ? undefined : (latestCommitSha ?? undefined),
+      baseTreeSha: isOrphan ? undefined : baseTreeSha,
+      parentSha: isOrphan ? undefined : latestCommitSha,
       logStatus,
     });
-    return newCommitSha;
+
+    await this.updateOrCreateBranchRef({ owner, repo, branch, newCommitSha }, logStatus);
+    logStatus(`Deploy completed successfully!`);
   }
 
   private async resolveBranchForDeploy({
@@ -215,7 +255,6 @@ export class GitHubClient {
   private async createDeployCommit({
     owner,
     repo,
-    branch,
     message,
     files,
     baseTreeSha,
@@ -224,13 +263,12 @@ export class GitHubClient {
   }: {
     owner: string;
     repo: string;
-    branch: string;
     message: string;
     files: UniversalDeployFile[];
     baseTreeSha?: string;
     parentSha?: string;
     logStatus?: (status: string) => void;
-  }) {
+  }): Promise<{ newCommitSha: string }> {
     const tree: GithubTreeItem[] = [];
 
     logStatus(`Creating blobs for ${files.length} files...`);
@@ -269,6 +307,23 @@ export class GitHubClient {
       data: { sha: newCommitSha },
     } = await this.createCommitRequest(commitParams);
 
+    return { newCommitSha };
+  }
+
+  private async updateOrCreateBranchRef(
+    {
+      owner,
+      repo,
+      branch,
+      newCommitSha,
+    }: {
+      owner: string;
+      repo: string;
+      branch: string;
+      newCommitSha: string;
+    },
+    logStatus: (status: string) => void = () => {}
+  ) {
     try {
       logStatus(`Updating branch '${branch}' (force push)...`);
       await this.updateBranchRefRequest({ owner, repo, branch, sha: newCommitSha });
@@ -281,10 +336,6 @@ export class GitHubClient {
         throw error;
       }
     }
-
-    logStatus(`Deploy completed successfully!`);
-
-    return newCommitSha;
   }
 
   private async getBranchRefRequest({ owner, repo, branch }: { owner: string; repo: string; branch: string }) {
@@ -398,6 +449,63 @@ export class GitHubClient {
     }
 
     return this.octokit.request("POST /repos/{owner}/{repo}/git/commits", params);
+  }
+
+  private async createFileRequest({
+    owner,
+    repo,
+    path,
+    message,
+    content,
+    branch,
+  }: {
+    owner: string;
+    repo: string;
+    path: string;
+    message: string;
+    content: string;
+    branch: string;
+  }) {
+    return this.octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
+      owner,
+      repo,
+      path,
+      message,
+      content,
+      branch,
+    });
+  }
+
+  private async checkGetBranchRefRequest({ owner, repo, branch }: { owner: string; repo: string; branch: string }) {
+    try {
+      await this.getBranchRefRequest({ owner, repo, branch });
+      return {
+        exists: true,
+        error: null,
+        reason: null,
+      } as const;
+    } catch (e: any) {
+      const error = mapToTypedError(e);
+      if (e.status === 422) {
+        return {
+          exists: false,
+          error,
+          reason: "nobranch",
+        } as const;
+      }
+      if (e.status === 409) {
+        return {
+          exists: false,
+          error,
+          reason: "emptyrepo",
+        } as const;
+      }
+      return {
+        exists: false,
+        error,
+        reason: "unknown",
+      } as const;
+    }
   }
 
   private async updateBranchRefRequest({

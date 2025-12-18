@@ -23,6 +23,7 @@ import {
 } from "@/data/dao/DestinationDAO";
 import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { useDebounce } from "@/hooks/useDebounce";
 import { isCloudflareAPIRemoteAuthDAO, NullRemoteAuth, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, Pencil, Plus, Zap } from "lucide-react";
@@ -83,8 +84,6 @@ export function PublicationModalDestinationContent({
 
   const formValues = useWatch({ control: form.control });
 
-  // console.log(JSON.stringify({ formValues }), null, 4);
-
   const currentRemoteAuthId = formValues.remoteAuthId;
 
   const remoteAuth = useMemo(
@@ -96,11 +95,12 @@ export function PublicationModalDestinationContent({
     [currentRemoteAuthId, remoteAuths]
   );
 
+  const debouncedFormValues = useDebounce(formValues, 500);
   useEffect(() => {
-    void currentSchema.safeParseAsync(formValues).then((result) => {
+    void currentSchema.safeParseAsync(debouncedFormValues).then((result) => {
       setIsCompleteOkay(result.success);
     });
-  }, [formValues, currentSchema]);
+  }, [debouncedFormValues, currentSchema]);
 
   const handleClose = () => {
     form.reset();

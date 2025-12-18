@@ -14,6 +14,7 @@ import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useDeployRunner } from "@/services/deploy/useDeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import {
@@ -21,6 +22,7 @@ import {
   ArrowUpRightIcon,
   CheckCircle,
   Clock,
+  Globe,
   Loader,
   Pencil,
   Plus,
@@ -28,8 +30,6 @@ import {
   UploadCloudIcon,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export function PublicationModalPublishContent({
   build,
@@ -248,7 +248,7 @@ export function PublicationModalPublishContent({
               {destination?.destinationUrl && (
                 <Button className="flex items-center gap-2" asChild variant="outline">
                   <a href={destination.destinationUrl} target="_blank" rel="noopener noreferrer">
-                    <ArrowUpRightIcon size={16} />
+                    <Globe size={16} />
                     View
                   </a>
                 </Button>
@@ -256,7 +256,7 @@ export function PublicationModalPublishContent({
               {liveDeploy?.deploymentUrl && liveDeploy.deploymentUrl !== destination?.destinationUrl && (
                 <Button className="flex items-center gap-2" asChild>
                   <a href={liveDeploy.deploymentUrl} target="_blank" rel="noopener noreferrer">
-                    <ArrowUpRightIcon size={16} />
+                    <Globe size={16} />
                     View Deploy
                   </a>
                 </Button>
@@ -298,7 +298,7 @@ export function PublicationModalPublishContent({
             className="flex items-center gap-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
           >
             <Clock size={12} />
-            {showTimestamps ? 'Hide' : 'Show'} timestamps
+            {showTimestamps ? "Hide" : "Show"} timestamps
           </Button>
         </div>
         <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30 h-96">

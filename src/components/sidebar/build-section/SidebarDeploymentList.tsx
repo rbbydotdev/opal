@@ -13,7 +13,7 @@ import { DeployDAO } from "@/data/dao/DeployDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
-import { ArrowUpRightIcon, Delete, Eye } from "lucide-react";
+import { Delete, Eye, Globe } from "lucide-react";
 
 export function SidebarDeploymentList() {
   const errorToss = useErrorToss();
@@ -34,7 +34,7 @@ export function SidebarDeploymentList() {
 
   const handleViewDeployment = (deploy: DeployDAO) => {
     if (deploy.effectiveUrl) {
-      window.open(deploy.effectiveUrl, '_blank', 'noopener,noreferrer');
+      window.open(deploy.effectiveUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -50,23 +50,32 @@ export function SidebarDeploymentList() {
       <SelectableListActions />
 
       <SelectableListItems>
-        <div className="flex flex-col gap-2 mt-4 group max-h-56 overflow-y-auto scrollbar-thin">
+        <div className="flex flex-col gap-2 mt-4 group max-h-56 overflow-y-auto no-scrollbar">
           {deploys.length === 0 && <EmptySidebarLabel label="no deploys" />}
           {deploys.map((deploy) => (
             <SelectableListItem key={deploy.guid} id={deploy.guid}>
               <DeployLabel deploy={deploy} />
               <SelectableListItemMenu>
                 <SelectableListItemAction onSelect={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
-                  View
+                  Show
                 </SelectableListItemAction>
                 {deploy.isSuccessful && deploy.effectiveUrl && (
                   <SelectableListItemAction
                     onSelect={() => handleViewDeployment(deploy)}
-                    icon={<ArrowUpRightIcon className="w-4 h-4" />}
+                    icon={<Globe className="w-4 h-4" />}
                   >
-                    View Deployment
+                    View Deploy
                   </SelectableListItemAction>
                 )}
+                {deploy.url && (
+                  <SelectableListItemAction
+                    onSelect={() => handleViewDeployment(deploy)}
+                    icon={<Globe className="w-4 h-4" />}
+                  >
+                    View
+                  </SelectableListItemAction>
+                )}
+
                 <SelectableListItemAction
                   onSelect={() => handleDelete(deploy.guid)}
                   icon={<Delete className="w-4 h-4" />}
