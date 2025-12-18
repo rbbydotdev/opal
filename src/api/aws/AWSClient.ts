@@ -188,7 +188,11 @@ export class AWSS3Client {
     }
   }
 
-  async configureBucketWebsite(bucketName: string, indexDocument: string = "index.html", errorDocument: string = "error.html"): Promise<void> {
+  async configureBucketWebsite(
+    bucketName: string,
+    indexDocument: string = "index.html",
+    errorDocument: string = "error.html"
+  ): Promise<void> {
     try {
       const command = new PutBucketWebsiteCommand({
         Bucket: bucketName,
@@ -261,20 +265,19 @@ export class AWSS3Client {
       if (isBlocked) {
         try {
           await this.disableBlockPublicAccess(bucketName);
-          console.log(`Disabled Block Public Access for bucket ${bucketName}`);
         } catch (blockError: any) {
           if (blockError?.name === "AccessDenied") {
             const permissionError = new Error(
               `Cannot disable Block Public Access for bucket '${bucketName}' due to insufficient permissions.\n\n` +
-              `Your AWS credentials need the following permissions:\n` +
-              `- s3:PutBucketPublicAccessBlock\n` +
-              `- s3:GetBucketPublicAccessBlock\n\n` +
-              `To fix this manually:\n` +
-              `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
-              `2. Click "Edit" under "Block public access (bucket settings)"\n` +
-              `3. Uncheck all options\n` +
-              `4. Save changes and try deploying again\n\n` +
-              `Alternatively, you can use CloudFront distribution for better security and performance.`
+                `Your AWS credentials need the following permissions:\n` +
+                `- s3:PutBucketPublicAccessBlock\n` +
+                `- s3:GetBucketPublicAccessBlock\n\n` +
+                `To fix this manually:\n` +
+                `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
+                `2. Click "Edit" under "Block public access (bucket settings)"\n` +
+                `3. Uncheck all options\n` +
+                `4. Save changes and try deploying again\n\n` +
+                `Alternatively, you can use CloudFront distribution for better security and performance.`
             );
             permissionError.name = "S3BlockPublicAccessError";
             throw permissionError;
@@ -311,12 +314,12 @@ export class AWSS3Client {
       if (error?.name === "AccessDenied" && error?.message?.includes("BlockPublicPolicy")) {
         const blockPublicAccessError = new Error(
           `Cannot configure public access for bucket '${bucketName}' because S3 Block Public Access is enabled.\n\n` +
-          `To fix this, you need to disable Block Public Access in your AWS S3 console:\n` +
-          `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
-          `2. Click "Edit" under "Block public access (bucket settings)"\n` +
-          `3. Uncheck "Block public policies"\n` +
-          `4. Save changes and try deploying again\n\n` +
-          `Alternatively, you can use CloudFront distribution for better security and performance.`
+            `To fix this, you need to disable Block Public Access in your AWS S3 console:\n` +
+            `1. Go to https://console.aws.amazon.com/s3/bucket/${bucketName}/permissions\n` +
+            `2. Click "Edit" under "Block public access (bucket settings)"\n` +
+            `3. Uncheck "Block public policies"\n` +
+            `4. Save changes and try deploying again\n\n` +
+            `Alternatively, you can use CloudFront distribution for better security and performance.`
         );
         blockPublicAccessError.name = "S3BlockPublicAccessError";
         throw blockPublicAccessError;

@@ -1,32 +1,21 @@
+import { createBearerTokenClient, FetchClient } from "@/api/FetchClient";
 import { CreateSiteData, NetlifyDeploy, NetlifySite, NetlifyUser } from "@/api/netlify/NetlifyTypes";
 import { NetlifyDestination } from "@/data/DestinationSchemaMap";
 import { mapToTypedError } from "@/lib/errors/errors";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 
 export class NetlifyClient {
+  private fetchClient: FetchClient;
   private accessToken: string;
-  private baseUrl = "https://api.netlify.com/api/v1";
 
   constructor(accessToken: string) {
     this.accessToken = accessToken;
+    this.fetchClient = createBearerTokenClient(accessToken, "https://api.netlify.com/api/v1");
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        ...options,
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Netlify API error: ${response.status} ${response.statusText}`);
-      }
-
-      return response.json() as Promise<T>;
+      return await this.fetchClient.json<T>(endpoint, options);
     } catch (e) {
       throw mapToTypedError(e);
     }
@@ -143,10 +132,9 @@ export class NetlifyClient {
             logStatus?.(`Uploading ${file.path}...`);
             const fileContent = await file.asUint8Array();
 
-            await fetch(`${this.baseUrl}/deploys/${deploy.id}/files/${file.path}`, {
+            await this.fetchClient.fetch(`/deploys/${deploy.id}/files/${file.path}`, {
               method: "PUT",
               headers: {
-                Authorization: `Bearer ${this.accessToken}`,
                 "Content-Type": "application/octet-stream",
               },
               body: fileContent as BodyInit,

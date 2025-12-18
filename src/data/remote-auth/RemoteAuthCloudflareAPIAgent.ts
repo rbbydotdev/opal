@@ -36,10 +36,10 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   get cloudflareClient() {
     return (
       this._cloudflareClient ||
-      (this._cloudflareClient = new CloudflareClient(
-        this.getApiToken(),
-        optionalCORSBaseURL(this.remoteAuth.data.corsProxy, "https://api.cloudflare.com/client/v4")
-      ))
+      (this._cloudflareClient = new CloudflareClient({
+        apiToken: this.getApiToken(),
+        corsProxy: this.remoteAuth.data.corsProxy
+      }))
     );
   }
 

@@ -305,6 +305,10 @@ export const stripTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path.slice(0, -1) : path;
 };
 
+export const stripLeadingSlash = (path: string): string => {
+  return path.startsWith("/") ? path.slice(1) : path;
+};
+
 export const addTrailingSlash = (path: string): string => {
   return path.endsWith("/") ? path : path + "/";
 };
