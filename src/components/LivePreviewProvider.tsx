@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Printer } from "lucide-react";
@@ -7,9 +8,6 @@ import { createContext, ReactNode, useContext, useRef, useState } from "react";
 interface LivePreviewDialogContextType {
   showDialog: (show: boolean) => void;
   extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
-  onRenderBodyReadyRef: React.MutableRefObject<
-    ((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null
-  >;
 }
 
 const LivePreviewDialogContext = createContext<LivePreviewDialogContextType | undefined>(undefined);
@@ -19,26 +17,24 @@ interface LivePreviewDialogProviderProps {
 }
 
 export function LivePreviewDialogProvider({ children }: LivePreviewDialogProviderProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, showDialog] = useState(false);
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
+
+  const context = useWindowContextProvider();
   const extPreviewCtrl = useRef<WindowPreviewHandler | null>(null);
-  const onRenderBodyReadyRef = useRef<
-    ((el: HTMLElement, context: { document: Document; window: Window; ready: true }) => void) | null
-  >(null);
 
-  const showDialog = (show: boolean) => {
-    setIsDialogOpen(show);
-  };
-
-  const handleRenderBodyReady = (el: HTMLElement, context: { document: Document; window: Window; ready: true }) => {
-    if (onRenderBodyReadyRef.current) {
-      onRenderBodyReadyRef.current(el, context);
-    }
+  const handleRenderBodyReady = () => {
+    if (!context.window) return;
+    context.window.addEventListener("afterprint", () => context.window.close());
+    context.window.print();
+    setTimeout(() => {
+      showDialog(false);
+    }, 0);
   };
 
   return (
-    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl, onRenderBodyReadyRef }}>
+    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl }}>
       {children}
       <WindowPreviewComponent
         path={path!}
