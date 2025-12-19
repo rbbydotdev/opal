@@ -41,7 +41,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     provider: destinationType = "custom",
     url = null,
     deploymentUrl = null,
-  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url" | "deploymentUrl">) {
+  }: Optional<DeployRecord, "status" | "completedAt" | "error" | "logs" | "url"> & { deploymentUrl?: string | null }) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
@@ -59,8 +59,15 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
     this.deploymentUrl = deploymentUrl;
   }
 
-  static FromJSON<T = any>(json: DeployJType) {
-    return new DeployDAO<T>(json);
+  static FromJSON<T = any>(json: DeployJType | DeployRecord<any>) {
+    return new DeployDAO<T>({
+      ...json,
+      deploymentUrl: json.deploymentUrl ?? null,
+      url: json.url ?? null,
+      logs: json.logs ?? [],
+      completedAt: json.completedAt ?? null,
+      error: json.error ?? null,
+    });
   }
 
   toJSON() {
@@ -154,12 +161,12 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       .equals(workspaceId)
       .reverse()
       .sortBy("timestamp");
-    return deployments.map((deployment) => DeployDAO.FromJSON(deployment));
+    return deployments.map(DeployDAO.FromJSON);
   }
 
   static async allForBuild(buildId: string) {
     const deployments = await ClientDb.deployments.where("buildId").equals(buildId).sortBy("timestamp");
-    return deployments.reverse().map((deployment) => DeployDAO.FromJSON(deployment));
+    return deployments.reverse().map(DeployDAO.FromJSON);
   }
 
   async hydrate() {

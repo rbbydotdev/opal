@@ -1,88 +1,13 @@
 import { useLiveFileContent } from "@/context/useFileContents";
-import { ExtCtxReadyContext, PreviewContext } from "@/features/live-preview/IframeContextProvider";
+import { PreviewContext } from "@/features/live-preview/IframeContextProvider";
+import { useRenderBodyCallback } from "@/features/live-preview/useRenderBodyCallback";
 import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, isTemplateType, prefix, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
-import { useEffect, useRef, useState } from "react";
-
-// Reusable hook for render body callback
-function useRenderBodyCallback(onRenderBodyReady?: (element: HTMLElement) => void, trigger?: any) {
-  const renderBodyRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!renderBodyRef.current || !onRenderBodyReady || !trigger) return;
-
-    const element = renderBodyRef.current;
-    const images = element.querySelectorAll("img");
-
-    let imagesLoaded = false;
-    let cssLoaded = false;
-
-    const checkAllReady = () => {
-      if (imagesLoaded && cssLoaded) {
-        onRenderBodyReady(element);
-      }
-    };
-
-    // Handle image loading
-    let loadedImageCount = 0;
-    const totalImages = images.length;
-
-    const checkImagesComplete = () => {
-      loadedImageCount++;
-      if (loadedImageCount === totalImages) {
-        imagesLoaded = true;
-        checkAllReady();
-      }
-    };
-
-    // Listen for image loads
-    if (totalImages > 0) {
-      images.forEach((img) => {
-        if (img.complete) {
-          checkImagesComplete();
-        } else {
-          img.addEventListener("load", checkImagesComplete, { once: true });
-          img.addEventListener("error", checkImagesComplete, { once: true });
-        }
-      });
-    } else {
-      imagesLoaded = true;
-    }
-
-    // Listen for CSS loading
-    const handleCssLoaded = () => {
-      cssLoaded = true;
-      checkAllReady();
-    };
-
-    // Get the window context for listening to CSS events
-    const targetWindow = element.ownerDocument?.defaultView || window;
-
-    // Check if there are any CSS files to wait for
-    const cssLinks = targetWindow.document?.querySelectorAll("link[data-preview-css]") || [];
-
-    if (cssLinks.length === 0) {
-      // No CSS files to wait for
-      cssLoaded = true;
-    } else {
-      // Wait for CSS loading event
-      targetWindow.addEventListener("cssLoaded", handleCssLoaded, { once: true });
-    }
-
-    // Initial check in case everything is already loaded
-    checkAllReady();
-
-    return () => {
-      targetWindow.removeEventListener("cssLoaded", handleCssLoaded);
-    };
-  }, [trigger, onRenderBodyReady]);
-
-  return renderBodyRef;
-}
+import { useEffect, useState } from "react";
 
 // Reusable component for render body container
 function RenderBodyContainer({
@@ -104,94 +29,7 @@ function RenderBodyContainer({
   );
 }
 
-const getBaseHref = (href: string): string => href.split("?")[0]!;
-
-// Shared CSS injection logic with smooth transitions
-export function injectCssFiles(context: ExtCtxReadyContext, cssFiles: string[], onAllLoaded?: () => void): void {
-  const head = context.document.head;
-
-  const newBaseHrefs = new Set(cssFiles.map(getBaseHref));
-  let pendingLoads = 0;
-
-  const checkAllLoaded = () => {
-    if (pendingLoads === 0) {
-      // Emit event in the context window
-      context.window.dispatchEvent(new CustomEvent("cssLoaded"));
-      if (onAllLoaded) {
-        onAllLoaded();
-      }
-    }
-  };
-
-  // Step 1: Add or swap links with smooth transitions
-  cssFiles.forEach((newHref) => {
-    const baseHref = getBaseHref(newHref);
-    // Find ALL links for this base href (there might be multiple cache-busted versions)
-    const existingLinks = head.querySelectorAll<HTMLLinkElement>(`link[data-preview-css="${baseHref}"]`);
-
-    // Check if we already have this exact href
-    const exactMatch = Array.from(existingLinks).find((link) => link.href === newHref);
-
-    if (exactMatch) {
-      // We already have this exact CSS file, no need to do anything
-      return;
-    }
-
-    if (existingLinks.length === 0) {
-      // New CSS file - just add it
-      const newLink = context.document.createElement("link");
-      newLink.rel = "stylesheet";
-      newLink.href = newHref;
-      newLink.setAttribute("data-preview-css", baseHref);
-
-      pendingLoads++;
-      const handleLoadOrError = () => {
-        pendingLoads--;
-        newLink.removeEventListener("load", handleLoadOrError);
-        newLink.removeEventListener("error", handleLoadOrError);
-        checkAllLoaded();
-      };
-      newLink.addEventListener("load", handleLoadOrError);
-      newLink.addEventListener("error", handleLoadOrError);
-
-      head.appendChild(newLink);
-    } else {
-      // CSS file changed - smooth transition and remove ALL old versions
-      const newLink = context.document.createElement("link");
-      newLink.rel = "stylesheet";
-      newLink.href = newHref;
-      newLink.setAttribute("data-preview-css", baseHref);
-
-      pendingLoads++;
-      const handleLoadOrError = () => {
-        pendingLoads--;
-        // Remove ALL old versions of this CSS file
-        existingLinks.forEach((oldLink) => {
-          oldLink.remove();
-        });
-        newLink.removeEventListener("load", handleLoadOrError);
-        newLink.removeEventListener("error", handleLoadOrError);
-        checkAllLoaded();
-      };
-
-      newLink.addEventListener("load", handleLoadOrError);
-      newLink.addEventListener("error", handleLoadOrError);
-      head.appendChild(newLink);
-    }
-  });
-
-  // Step 2: Clean up links for CSS files that are no longer needed
-  const existingLinks = head.querySelectorAll<HTMLLinkElement>("link[data-preview-css]");
-  existingLinks.forEach((link) => {
-    const managedHref = link.getAttribute("data-preview-css");
-    if (managedHref && !newBaseHrefs.has(managedHref)) {
-      link.remove();
-    }
-  });
-
-  // If no CSS files were added, call callback immediately
-  checkAllLoaded();
-}
+export const getBaseHref = (href: string): string => href.split("?")[0]!;
 
 export function PreviewContent({
   path,
@@ -314,7 +152,7 @@ function TemplateRenderer({
         const err = error as Error;
         const message = err.message || String(err);
         const stack = err.stack || "";
-        setHtml(`<div style="color: rgb(220, 38, 38); padding: 16px; border: 1px solid rgb(252, 165, 165); border-radius: 8px;">
+        setHtml(/*html*/ `<div style="color: rgb(220, 38, 38); padding: 16px; border: 1px solid rgb(252, 165, 165); border-radius: 8px;">
           <div><strong>Template Render Error:</strong> ${message}</div>
           ${stack ? `<pre style="margin-top: 8px; white-space: pre-wrap; font-size: 14px;">${stack}</pre>` : ""}
         </div>`);

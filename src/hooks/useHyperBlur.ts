@@ -50,10 +50,8 @@ export function handleHyperBlur({
       handleClose();
     }
   };
-  window.addEventListener("focusin", handleFocusIn, { passive: true });
-  window.addEventListener("focusout", handleFocusOut, { passive: true });
-  return () => {
-    window.removeEventListener("focusin", handleFocusIn);
-    window.removeEventListener("focusout", handleFocusOut);
-  };
+  const controller = new AbortController();
+  window.addEventListener("focusin", handleFocusIn, { passive: true, signal: controller.signal });
+  window.addEventListener("focusout", handleFocusOut, { passive: true, signal: controller.signal });
+  return () => controller.abort();
 }

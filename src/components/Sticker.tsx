@@ -49,8 +49,9 @@ export const Sticker = memo(function Sticker({ enabled }: { enabled?: boolean })
 
   useEffect(() => {
     if (config.pointer && enabled) {
-      window.addEventListener("pointermove", handlePointerMove);
-      return () => window.removeEventListener("pointermove", handlePointerMove);
+      const controller = new AbortController();
+      window.addEventListener("pointermove", handlePointerMove, { signal: controller.signal });
+      return () => controller.abort();
     }
   }, [config.pointer, enabled, handlePointerMove]);
 

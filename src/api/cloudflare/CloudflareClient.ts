@@ -330,8 +330,7 @@ export class CloudflareClient {
 
       // Check final status
       if (latestDeploymentStage?.name === "deploy" && latestDeploymentStage?.status === "success") {
-        console.log(">>>>> deployment", deployment);
-        console.log(">>>>> deploymentResult.url", deploymentResult.url);
+        logStatus("successful deploy...");
         //save deployment preview url, which is different from project url in that its specific to the deployment
       } else {
         logStatus("Deployment status unknown - check Cloudflare dashboard for details");

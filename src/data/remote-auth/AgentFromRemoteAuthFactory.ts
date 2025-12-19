@@ -121,6 +121,7 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
 export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundleBase> extends RemoteAuthAgent {
   deployFiles(bundle: TBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown>;
   getDestinationURL(destination: any): Promise<string>;
+  getDeploymentURL?(destination: any): Promise<string>;
 }
 
 export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeployableFiles<DeployBundleBase> {

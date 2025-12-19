@@ -176,7 +176,9 @@ export function SidebarFileMenuBuild({
                   )}
                 </div>
                 <div>{activeTab === "destinations" && <SidebarDestinationList />}</div>
-                <div>{activeTab === "deployments" && <SidebarDeploymentList />}</div>
+                <div>
+                  {activeTab === "deployments" && <SidebarDeploymentList workspaceId={currentWorkspace.guid} />}
+                </div>
               </div>
             </div>
           </CollapsibleContent>

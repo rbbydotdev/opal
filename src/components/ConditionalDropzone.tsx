@@ -39,16 +39,13 @@ export function ConditionalDropzone({
   }, []);
 
   useEffect(() => {
-    window.addEventListener("dragenter", handleDragEnter);
-    window.addEventListener("dragleave", handleDragLeave);
-    window.addEventListener("dragend", handleDrop);
-    window.addEventListener("drop", handleDrop); // Use capture to ensure we catch drops before they bubble up
-
+    const controller = new AbortController();
+    window.addEventListener("dragenter", handleDragEnter, { signal: controller.signal });
+    window.addEventListener("dragleave", handleDragLeave, { signal: controller.signal });
+    window.addEventListener("dragend", handleDrop, { signal: controller.signal });
+    window.addEventListener("drop", handleDrop, { signal: controller.signal });
     return () => {
-      window.removeEventListener("dragenter", handleDragEnter);
-      window.removeEventListener("dragleave", handleDragLeave);
-      window.removeEventListener("dragend", handleDrop);
-      window.removeEventListener("drop", handleDrop);
+      controller.abort();
     };
   }, [handleDragEnter, handleDragLeave, handleDrop]);
 

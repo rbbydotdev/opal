@@ -28,7 +28,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
   static guid = () => "__dest__" + nanoid();
 
-  constructor({ guid, remoteAuth, meta, label, timestamp, destinationUrl }: DestinationRecord<T>) {
+  constructor({ guid, remoteAuth, meta, label, timestamp, destinationUrl }: DestinationRecord<T> & { destinationUrl?: string | null }) {
     this.guid = guid;
     this.remoteAuth = remoteAuth;
     this.meta = meta;
@@ -37,8 +37,12 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     this.destinationUrl = destinationUrl;
   }
 
-  static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp">) {
-    return new DestinationDAO<T>(json);
+  static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp"> | DestinationRecord<T>) {
+    return new DestinationDAO<T>({
+      ...json,
+      destinationUrl: json.destinationUrl ?? null,
+      timestamp: json.timestamp ?? Date.now(),
+    });
   }
 
   toJSON() {
@@ -164,7 +168,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
 
   static async all() {
     const destinations = await ClientDb.destinations.orderBy("timestamp").toArray();
-    return destinations.reverse().map((destination) => DestinationDAO.FromJSON(destination));
+    return destinations.reverse().map(DestinationDAO.FromJSON);
   }
 
   async save() {

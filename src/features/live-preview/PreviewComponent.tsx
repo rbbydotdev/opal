@@ -1,6 +1,6 @@
 import { useLiveCssFiles } from "@/editor/useLiveCssFiles";
 import { useIframeContextProvider, useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
-import { injectCssFiles, PreviewContent } from "@/features/live-preview/PreviewContent";
+import { PreviewContent } from "@/features/live-preview/PreviewContent";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { BrowserDetection } from "@/lib/BrowserDetection";
@@ -8,6 +8,7 @@ import { AbsPath, prefix, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { injectCssFiles } from "./injectCssFiles";
 
 function getScrollElement(context: any, renderBodyElement: HTMLElement | null): HTMLElement | null {
   if (BrowserDetection.isFirefox()) {

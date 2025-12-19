@@ -15,9 +15,9 @@ import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { Delete, Eye, Globe } from "lucide-react";
 
-export function SidebarDeploymentList() {
+export function SidebarDeploymentList({ workspaceId }: { workspaceId: string }) {
   const errorToss = useErrorToss();
-  const { deploys } = useDeploys();
+  const { deploys } = useDeploys({ workspaceId });
   const { openDeployment } = useBuildPublisher();
 
   const handleDelete = async (destId: string) => {
