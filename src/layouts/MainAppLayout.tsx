@@ -12,7 +12,6 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { usePreserveViewModeURL } from "@/editor/view-mode/usePreserveViewModeURL";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";
@@ -50,7 +49,6 @@ const Background = ({ children }: { children: React.ReactNode }) => {
 };
 
 export function MainAppLayout({ children }: MainAppLayoutProps) {
-  usePreserveViewModeURL();
   useZoom();
   return (
     <NuqsAdapter>

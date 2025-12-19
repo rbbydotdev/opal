@@ -17,7 +17,7 @@ import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitP
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
 import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/WorkspaceCorruptionModal";
-import { useUrlParam } from "@/hooks/useUrlParam";
+import { useQueryState } from "nuqs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { OpalMimeType } from "@/lib/fileType";
@@ -71,12 +71,10 @@ function isRecognizedFileType(mimeType: string): boolean {
 export function useCurrentFilepath() {
   const { currentWorkspace } = useWorkspaceContext();
   const { path: filePath } = useWorkspaceRoute();
-  const viewMode = useWatchViewMode("hash+search");
-  const [editOverride] = useUrlParam({
-    key: "editOverride",
-    paramType: "hash+search",
-    parser: (value) => value === "true",
-    serializer: (value) => String(value),
+  const [viewMode] = useWatchViewMode();
+  const [editOverride] = useQueryState("editOverride", {
+    parse: (value: string) => value === "true",
+    serialize: (value: boolean) => String(value),
   });
 
   if (filePath === null || currentWorkspace.isNull) {
@@ -120,12 +118,12 @@ export function useCurrentFilepath() {
     buildId: isBuildPath ? resolveFromRoot(SpecialDirs.Build, filePath).split("/")[0] : null,
 
     inTrash: filePath.startsWith(SpecialDirs.Trash),
-    isRecognized: isRecognizedFileType(mimeType) || editOverride,
-    isSourceView: viewMode === "source",
-    isRichView: viewMode === "rich-text",
-    isDiffView: viewMode === "diff",
+    isRecognized: isRecognizedFileType(mimeType) || (editOverride || false),
+    isSourceView: (viewMode === "source") as boolean,
+    isRichView: (viewMode === "rich-text") as boolean,
+    isDiffView: (viewMode === "diff") as boolean,
     viewMode: viewMode,
-    hasEditOverride: editOverride,
+    hasEditOverride: editOverride || false,
   };
 }
 

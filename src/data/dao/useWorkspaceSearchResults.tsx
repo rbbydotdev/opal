@@ -1,6 +1,5 @@
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { WorkspaceSearchItem } from "@/workspace/WorkspaceScannable";
-// import { DiskSearchResultData } from "@/features/search/SearchResults";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SEARCH_DEBOUNCE_MS = 250;
@@ -30,7 +29,6 @@ async function* fetchQuerySearch({
   if (mode) {
     url.searchParams.set("mode", mode);
   }
-  console.debug(`query search url = ${url.toString()}, regexp param: ${regexp}, regexp value: ${regexpValue}`);
 
   let res = null;
   try {
@@ -76,13 +74,6 @@ async function* fetchQuerySearch({
     throw err;
   }
 }
-
-/**
- * A custom hook to perform a debounced, streaming search within a workspace.
- * It handles loading states, errors, and aborting previous requests.
- *
- * @returns The search state including results, loading status, error, and a submit function.
- */
 export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   const [hidden, setHidden] = useState<string[]>([]);
   const [ctx, setCtx] = useState<{

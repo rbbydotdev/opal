@@ -11,23 +11,12 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
   return `${workspaceId}/${editId}`;
 }
 
-async function generateHtmlPreview(edit: HistoryDocRecord, workspaceId: string): Promise<Blob> {
+export async function generateHtmlPreview(edit: HistoryDocRecord): Promise<Blob> {
   const historyDAO = new HistoryDAO();
   try {
     const reconstructedContent = (await historyDAO.reconstructDocumentFromEdit(edit)) ?? "";
-
-    // // Add back the document ID and workspace info as frontmatter
-    // const frontMatter = {
-    //   documentId: edit.id,
-    //   workspaceId: edit.workspaceId,
-    // };
-
-    // Combine frontmatter with content, then strip for HTML rendering
-    const markdownWithFrontMatter = `---\ndocumentId: ${edit.id}\nworkspaceId: ${edit.workspaceId}\n---\n\n${reconstructedContent}`;
-    const htmlContent = stripFrontmatter(markdownWithFrontMatter);
-    const html = renderMarkdownToHtml(htmlContent);
+    const html = renderMarkdownToHtml(stripFrontmatter(reconstructedContent));
     const blob = new Blob([html], { type: "text/html" });
-
     // Store the HTML blob in the database
     await historyDAO.updatePreviewForEditId(edit.edit_id, blob);
 
@@ -37,13 +26,12 @@ async function generateHtmlPreview(edit: HistoryDocRecord, workspaceId: string):
   }
 }
 
-export function useIframeImagePooledImperitiveWorker({ workspaceId }: { workspaceId: string }) {
+export function useHtmlPreviewGenerator() {
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
-  return function previewForEdit(edit: HistoryDocRecord) {
+  return function generatePreview(edit: HistoryDocRecord) {
     if (!isHistoryImageGenerationEnabled) return;
-    // Generate HTML preview directly in main thread
-    void generateHtmlPreview(edit, workspaceId);
+    void generateHtmlPreview(edit);
   };
 }
 
@@ -59,7 +47,7 @@ function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDocRecord; wor
 
     if (edit.preview === null) {
       // Generate HTML preview directly in main thread
-      generateHtmlPreview(edit, workspaceId)
+      generateHtmlPreview(edit)
         .then(async (blob) => {
           const html = await blob.text();
           setHtmlContent(html);

@@ -44,7 +44,8 @@ export class HistoryDAO implements HistoryStorageInterface {
   }>();
 
   private unsubUpdateListener = liveQuery(() => ClientDb.historyDocs.toArray()).subscribe((edits) => {
-    void this.emitter.emit("edits", edits);
+    console.log("Emitting edits update", edits);
+    this.emitter.emit("edits", edits);
   });
 
   private dmp: diff_match_patch = new diff_match_patch();

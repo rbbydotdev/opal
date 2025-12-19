@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQueryState } from "nuqs";
 import { Edit, FileQuestion } from "lucide-react";
 
 interface UnrecognizedFileCardProps {
@@ -8,12 +9,13 @@ interface UnrecognizedFileCardProps {
 }
 
 export function UnrecognizedFileCard({ fileName, mimeType }: UnrecognizedFileCardProps) {
+  const [, setEditOverride] = useQueryState("editOverride", {
+    parse: (value: string) => value === "true",
+    serialize: (value: boolean) => String(value),
+  });
+
   const handleEditAnyway = () => {
-    const url = new URL(window.location.href);
-    const qp = new URLSearchParams(url.hash.replace(/^#/, ""));
-    qp.set("editOverride", "true");
-    url.hash = `#${qp.toString()}`;
-    window.location.href = url.toString();
+    setEditOverride(true);
   };
 
   return (

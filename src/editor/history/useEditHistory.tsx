@@ -42,10 +42,10 @@ export function useEditHistoryPlugin({
     [documentId, historyStorage, rootMarkdown, workspaceId, enabled]
   );
 
-  const [infoState, setInfoState] = useState(() =>
+  const [{ edits, selectedEdit, selectedEditMd }, setInfoState] = useState(() =>
     history ? history.getState() : { edits: [], selectedEdit: null, selectedEditMd: null }
   );
-  const { edits, selectedEdit, selectedEditMd } = infoState;
+
   const unsubs = useRef<(() => void)[]>([]);
   const isRestoreState = selectedEdit !== null;
 

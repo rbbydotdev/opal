@@ -8,7 +8,7 @@ function MdxEditorInFocus() {
   return Boolean(document.activeElement?.closest(MdxEditorSelector));
 }
 
-export function useEditorHistoryPlugin2WithRealm({
+export function useEditorHistoryPluginWithRealm({
   workspaceId,
   documentId,
   historyStorage,

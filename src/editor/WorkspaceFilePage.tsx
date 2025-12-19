@@ -5,7 +5,7 @@ import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContent
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
 import { useFileContents } from "@/context/useFileContents";
 import { Editor, Editors } from "@/editor/Editors";
-import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
+import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors/errors";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
@@ -71,7 +71,8 @@ function getEditor({
 function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
   // Get file contents to check for conflicts (only for non-image files)
 
-  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
+  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized, hasEditOverride } = useCurrentFilepath();
+  const [, setViewMode] = useWatchViewMode();
   const { contents, updateDebounce, error, hotContents } = useFileContents({
     currentWorkspace,
   });
@@ -132,10 +133,10 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
         if (isSourceView) {
           // Don't allow switching to rich text if conflicts exist
           if (!hasConflicts) {
-            setViewMode("rich-text", "hash");
+            setViewMode("rich-text");
           }
         } else {
-          setViewMode("source", "hash");
+          setViewMode("source");
         }
       }
     };

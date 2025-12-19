@@ -288,7 +288,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 whitespace-nowrap"
           onClick={toggleDevMode}
         >
-          {!devMode ? <Check size={12} /> : <div className="w-4" />}
+          {devMode ? <Check size={12} /> : <div className="w-4" />}
           <span className="pr-4">Dev Mode</span>
         </ContextMenuItem>
 

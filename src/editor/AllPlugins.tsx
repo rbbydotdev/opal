@@ -1,8 +1,10 @@
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useFileContents } from "@/context/useFileContents";
 import { useSnapHistoryDB } from "@/data/dao/HistorySnapDBContext";
 import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
 import { EditHistoryMenu } from "@/editor/history/EditHistoryMenu";
-import { useEditorHistoryPlugin2WithRealm } from "@/editor/history/useEditorHistoryPlugin2WithRealm";
+import { useEditorHistoryPluginWithRealm } from "@/editor/history/useEditorHistoryPluginWithRealm";
 import { useWorkspaceDocumentId } from "@/editor/history/useWorkspaceDocumentId";
 import { LivePreviewButtons } from "@/editor/LivePreviewButton";
 import { MdxSearchToolbar } from "@/editor/MdxSeachToolbar";
@@ -14,8 +16,6 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -196,7 +196,7 @@ function EditHistoryMenuEnabled({
     clearAll,
     rebaseHistory,
     resetAndRestore,
-  } = useEditorHistoryPlugin2WithRealm({
+  } = useEditorHistoryPluginWithRealm({
     workspaceId: currentWorkspace.id,
     documentId,
     historyStorage: historyDB,

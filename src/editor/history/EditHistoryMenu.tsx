@@ -213,7 +213,6 @@ export function EditHistoryMenu({
               "h-18": !Boolean(edits.length),
             })}
           >
-            {/* <div></div> */}
             <div className="p-1 font-mono">
               {edits.length === 0 && (
                 <div className="flex h-full flex-col items-center justify-center gap-4 p-4">

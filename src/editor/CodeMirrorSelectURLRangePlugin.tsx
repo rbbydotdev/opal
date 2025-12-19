@@ -1,6 +1,29 @@
-import { useLocation } from "@tanstack/react-router";
+import { useQueryState } from "nuqs";
 
 const RANGE_KEY = "hlRanges";
+
+const rangesParser = {
+  parse: (value: string): [start: number, end: number][] | null => {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item: any) => {
+          if (Array.isArray(item) && item.length >= 2) {
+            return [parseInt(String(item[0])), parseInt(String(item[1]))];
+          }
+          return [0, 0]; // fallback
+        });
+      }
+    } catch {
+      console.warn(`Invalid range format: ${value}`);
+    }
+    return null;
+  },
+  serialize: (value: [start: number, end: number][] | null): string => {
+    return value ? JSON.stringify(value) : "";
+  },
+};
+
 function rangesToSearchParams(ranges: [start: number, end: number][], meta?: Record<string, unknown>): string {
   const params = new URLSearchParams();
   params.set(RANGE_KEY, JSON.stringify(ranges));
@@ -19,43 +42,11 @@ export function useHashURLRanges():
       end: null;
       hasRanges: false;
     } {
-  // const hash = window.location.hash;
-  const hash = useLocation().hash;
-  const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
-  const [start, end] = parseParamsToRanges(params).ranges?.at(0) ?? [];
+  const [ranges] = useQueryState(RANGE_KEY, rangesParser);
+  const [start, end] = ranges?.at(0) ?? [];
   if (start === undefined || end === undefined) {
     return { start: null, end: null, hasRanges: false };
   }
   return { start, end, hasRanges: true };
 }
 
-function parseParamsToRanges(params: URLSearchParams): {
-  ranges: [start: number, end: number][] | null;
-  meta: Record<string, unknown>;
-} {
-  let ranges: Array<[startStr: string, endStr: string]> | null = null;
-  const meta: Record<string, unknown> = {};
-  try {
-    const rangeParam = params.get(RANGE_KEY);
-    if (rangeParam) {
-      const parsed = JSON.parse(rangeParam);
-      if (Array.isArray(parsed)) {
-        ranges = parsed as Array<[startStr: string, endStr: string]>;
-      }
-    }
-    for (const [key, value] of params.entries()) {
-      if (key === RANGE_KEY) continue;
-      try {
-        meta[key] = JSON.parse(value);
-      } catch {
-        meta[key] = value;
-      }
-    }
-  } catch (_e) {
-    console.warn(`Invalid range format in params ${params.toString()}`);
-  }
-  return {
-    ranges: ranges ? ranges.map(([s, e]) => [parseInt(s), parseInt(e)]) : null,
-    meta,
-  };
-}

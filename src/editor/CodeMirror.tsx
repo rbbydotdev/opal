@@ -9,7 +9,7 @@ import { gitConflictEnhancedPlugin } from "@/editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/editor/markdownHighlighting";
 import { canPrettifyMime, prettifyMime } from "@/editor/prettifyMime";
-import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
+import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -69,17 +69,19 @@ const getLanguageExtension = (
   }
 };
 
-const createValidatedSelection = (hasRanges: boolean, start: number, end: number, docLength: number): EditorSelection | undefined => {
+const createValidatedSelection = (
+  hasRanges: boolean,
+  start: number,
+  end: number,
+  docLength: number
+): EditorSelection | undefined => {
   if (!hasRanges) return undefined;
 
   const validStart = Math.min(Math.max(0, start), docLength);
   const validEnd = Math.min(Math.max(0, end), docLength);
 
   if (validStart <= docLength && validEnd <= docLength) {
-    return EditorSelection.create([
-      EditorSelection.range(validStart, validEnd),
-      EditorSelection.cursor(validStart)
-    ]);
+    return EditorSelection.create([EditorSelection.range(validStart, validEnd), EditorSelection.cursor(validStart)]);
   }
 
   return undefined;
@@ -162,7 +164,7 @@ export const CodeMirrorEditor = ({
     const state = EditorState.create({
       doc: value,
       extensions,
-      selection: createValidatedSelection(hasRanges, start, end, value.length),
+      selection: createValidatedSelection(hasRanges, start || 0, end || 0, value.length),
     });
 
     viewRef.current = new EditorView({
@@ -337,6 +339,7 @@ const CodeMirrorToolbar = ({
   const { left } = useSidebarPanes();
   const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const router = useRouter();
+  const [, setViewMode] = useWatchViewMode();
 
   const handlePrettify = async () => {
     if (!editorView || !mimeType) return;
@@ -366,7 +369,7 @@ const CodeMirrorToolbar = ({
       {!hasEditOverride && (
         <>
           {isMarkdown && !hasConflicts && isSourceView && (
-            <RichButton onClick={() => setViewMode("rich-text", "hash+search")} />
+            <RichButton onClick={() => setViewMode("rich-text")} />
           )}
           {!isMarkdown && previewNode?.isMarkdownFile() && (
             <RichButton

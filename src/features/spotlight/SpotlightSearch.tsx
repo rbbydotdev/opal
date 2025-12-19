@@ -5,7 +5,7 @@ import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
-import { setViewMode } from "@/editor/view-mode/handleUrlParamViewMode";
+import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
@@ -179,8 +179,32 @@ function SpotlightSearchInternal({
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [, setViewMode] = useWatchViewMode();
   const [deferredSearch, setDeferredSearch] = useState("");
   const [_isPending, startTransition] = useTransition();
+
+  // Extend cmdMap with view mode commands
+  const extendedCmdMap = useMemo(() => ({
+    ...cmdMap,
+    "Source View": [
+      NewCmdExec(async () => {
+        setViewMode("source");
+      }),
+    ],
+    "Rich Text View": [
+      NewCmdExec(async () => {
+        setViewMode("rich-text");
+      }),
+    ],
+  } as CmdMap), [cmdMap, setViewMode]);
+
+  // Extend commands list
+  const extendedCommands = useMemo(() => {
+    const baseCommands = new Set(commands);
+    baseCommands.add("Source View");
+    baseCommands.add("Rich Text View");
+    return Array.from(baseCommands);
+  }, [commands]);
 
   const [state, setState] = useState<"spotlight" | "prompt" | "select">("spotlight");
 
@@ -244,7 +268,7 @@ function SpotlightSearchInternal({
 
   const navigate = useNavigate();
   const handleCommandSelect = (cmd: string) => {
-    const members = cmdMap[cmd];
+    const members = extendedCmdMap[cmd];
     if (!members) return;
     execQueue.current = [...members];
     execContext.current = {};
@@ -291,8 +315,8 @@ function SpotlightSearchInternal({
   }, [files]);
 
   const commandList = useMemo(() => {
-    return commands.map((cmd) => `${commandPrefix} ${cmd}`);
-  }, [commandPrefix, commands]);
+    return extendedCommands.map((cmd) => `${commandPrefix} ${cmd}`);
+  }, [commandPrefix, extendedCommands]);
 
   // Calculate sorted list using useMemo instead of useState
   const sortedList = useMemo(() => {
@@ -1003,19 +1027,6 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
           }),
         ],
 
-        //
-        // MARK: View Mode Commands ---
-        //
-        "Source View": [
-          NewCmdExec(async () => {
-            setViewMode("source", "hash");
-          }),
-        ],
-        "Rich Text View": [
-          NewCmdExec(async () => {
-            setViewMode("rich-text", "hash");
-          }),
-        ],
 
         //
         // MARK: Git Commands
