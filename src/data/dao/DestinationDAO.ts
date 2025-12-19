@@ -28,7 +28,14 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
   static guid = () => "__dest__" + nanoid();
 
-  constructor({ guid, remoteAuth, meta, label, timestamp, destinationUrl }: DestinationRecord<T> & { destinationUrl?: string | null }) {
+  constructor({
+    guid,
+    remoteAuth,
+    meta,
+    label,
+    timestamp,
+    destinationUrl,
+  }: DestinationRecord<T> & { destinationUrl?: string | null }) {
     this.guid = guid;
     this.remoteAuth = remoteAuth;
     this.meta = meta;
@@ -172,13 +179,6 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   async save() {
-    // logger.log({
-    //   remoteAuth: this.RemoteAuth.toJSON(),
-    //   guid: this.guid,
-    //   meta: this.meta,
-    //   label: this.label,
-    //   timestamp: this.timestamp,
-    // });
     return ClientDb.destinations.put({
       remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,

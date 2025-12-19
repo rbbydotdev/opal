@@ -27,6 +27,7 @@ import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog"
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useZoom } from "@/hooks/useZoom";
 import { useLeftCollapsed } from "@/layouts/EditorSidebarLayout";
+import { useDevMode } from "@/layouts/useDevMode";
 import { clearAllCaches } from "@/lib/clearAllCaches";
 import { IS_MAC } from "@/lib/isMac";
 import { useRequestSignals } from "@/lib/RequestSignals";
@@ -85,6 +86,8 @@ function BigButton({
 } & React.ComponentProps<typeof Link>) {
   const location = useLocation();
   const isActive = active ?? location.pathname === restProps.to;
+
+  // const { devMode, toggleDevMode } = useDevMode();
 
   const isSmall = variant === "sm";
 
@@ -146,6 +149,7 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
   const router = useRouter();
   const { open } = useConfirm();
+  const { devMode, toggleDevMode } = useDevMode();
   const keepMenuOpen = (fn: () => void) => (e: React.MouseEvent) => {
     if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault();
     fn();
@@ -279,27 +283,36 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
         )}
 
         <ContextMenuSeparator />
-
-        {/* Delete All Workspaces */}
+        {/* set dev mode */}
         <ContextMenuItem
-          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 text-destructive"
-          onClick={keepMenuOpen(() =>
-            open(
-              async () =>
-                Promise.all([
-                  ...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => Workspace.FromDAO(ws).destroy()))),
-                ]).then(() => {
-                  void router.navigate({ to: "/newWorkspace" });
-                }),
-              "Delete all workspaces",
-              "This will delete all workspaces and cannot be undone. Are you sure you want to continue?"
-            )
-          )}
+          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 whitespace-nowrap"
+          onClick={toggleDevMode}
         >
-          <X size={12} className="text-destructive" />
-          <span className="col-span-2 pr-4 text-3xs uppercase">Delete all workspaces</span>
+          {!devMode ? <Check size={12} /> : <div className="w-4" />}
+          <span className="pr-4">Dev Mode</span>
         </ContextMenuItem>
 
+        {/* Delete All Workspaces */}
+        {devMode && (
+          <ContextMenuItem
+            className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2 text-destructive"
+            onClick={keepMenuOpen(() =>
+              open(
+                async () =>
+                  Promise.all([
+                    ...(await WorkspaceDAO.all().then((wss) => wss.map((ws) => Workspace.FromDAO(ws).destroy()))),
+                  ]).then(() => {
+                    void router.navigate({ to: "/newWorkspace" });
+                  }),
+                "Delete all workspaces",
+                "This will delete all workspaces and cannot be undone. Are you sure you want to continue?"
+              )
+            )}
+          >
+            <X size={12} className="text-destructive" />
+            <span className="col-span-2 pr-4 text-3xs uppercase">Delete all workspaces</span>
+          </ContextMenuItem>
+        )}
         <ContextMenuSeparator />
         <ContextMenuLabel className="py-2 text-2xs w-full text-muted-foreground font-thin justify-center flex gap-2">
           {IS_MAC ? "⌘ cmd" : "ctrl"} + click / multi-select
@@ -318,6 +331,8 @@ export function WorkspaceButtonBar() {
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
   const variant: ButtonVariant = shrink ? "sm" : "lg";
+
+  const { devMode } = useDevMode();
 
   return (
     <div className="flex relative">
@@ -348,7 +363,7 @@ export function WorkspaceButtonBar() {
           })}
         >
           <div className="w-full flex flex-col gap-4">
-            {process.env.NODE_ENV === "development" ? (
+            {devMode ? (
               <>
                 <BigButton
                   variant={variant}

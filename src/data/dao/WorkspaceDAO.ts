@@ -25,7 +25,7 @@ export class WorkspaceDAO {
   code: WorkspaceStatusCode;
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
-  timestamp?: number;
+  timestamp: number;
 
   toJSON() {
     return {
@@ -51,6 +51,7 @@ export class WorkspaceDAO {
       name: json.name,
       guid: json.guid,
       disk: json.disk,
+      timestamp: json.timestamp,
       thumbs: json.thumbs,
       remoteAuths: json.remoteAuths,
       code: json.code,
@@ -65,8 +66,7 @@ export class WorkspaceDAO {
     return ClientDb.workspaces.toArray();
   }
   static async all() {
-    const workspaceRecords = await ClientDb.workspaces.orderBy("timestamp").toArray();
-    return workspaceRecords.reverse().map((ws) => new WorkspaceDAO(ws));
+    return (await ClientDb.workspaces.orderBy("timestamp").reverse().toArray()).map((ws) => new WorkspaceDAO(ws));
   }
   static async nameExists(name: string) {
     const result = await WorkspaceDAO.FetchFromName(name, {
@@ -90,14 +90,15 @@ export class WorkspaceDAO {
   }
 
   save = async () => {
+    console.log(this.timestamp);
     return ClientDb.workspaces.put({
       guid: this.guid,
       name: this.name,
-      disk: this.disk,
-      remoteAuths: this.remoteAuths,
+      disk: this.disk.toJSON(),
+      remoteAuths: this.remoteAuths.map((ra) => ra.toJSON()),
       thumbs: this.thumbs,
       code: this.code,
-      timestamp: this.timestamp,
+      timestamp: this.timestamp || Date.now(),
     });
   };
   static async CreateNewWithDiskType({
@@ -205,10 +206,8 @@ export class WorkspaceDAO {
     return WorkspaceDAO.FromJSON(ws);
   }
 
-  // Moved ToModelFromGuid to Workspace.FromGuid() to avoid circular dependency
-  // Moved toModel() to Workspace.FromDAO() to avoid circular dependency
   rename(name: string) {
-    return ClientDb.transaction("rw", ClientDb.workspaces, async () => {
+    return ClientDb.transaction("rw", "workspaces", async () => {
       const all = await WorkspaceDAO.all();
       const newName = getUniqueSlug(
         name,
@@ -245,7 +244,7 @@ export class WorkspaceDAO {
     thumbs: DiskDAO | DiskJType;
     remoteAuths: RemoteAuthJType[];
     code: WorkspaceStatusCode;
-    timestamp?: number;
+    timestamp: number;
   }) {
     this.guid = guid;
     this.name = name;

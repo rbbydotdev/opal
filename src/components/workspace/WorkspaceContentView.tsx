@@ -3,6 +3,7 @@ import { HistorySnapDBProvider } from "@/data/dao/HistorySnapDBContext";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
@@ -86,7 +87,16 @@ function EditorWithPlugins(
     mimeType: props.mimeType,
   });
 
+  const { storedValue: spellCheck } = useLocalStorage("Editor/spellcheck", true);
+
   return (
-    <MDXEditor {...props} plugins={plugins} ref={props.editorRef} onChange={props.onChange} markdown={props.markdown} />
+    <MDXEditor
+      {...props}
+      plugins={plugins}
+      ref={props.editorRef}
+      onChange={props.onChange}
+      markdown={props.markdown}
+      spellCheck={spellCheck}
+    />
   );
 }

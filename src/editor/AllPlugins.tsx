@@ -10,9 +10,12 @@ import { MdxToolbar } from "@/editor/MdxToolbar";
 import { searchPlugin } from "@/editor/searchPlugin";
 import { SourceEditorButton } from "@/editor/SourceEditorButton";
 import { useImagesPlugin } from "@/editor/useImagesPlugin";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -34,6 +37,23 @@ import {
 } from "@mdxeditor/editor";
 import { useEffect, useMemo } from "react";
 import { useToggleEditHistory } from "./history/useToggleEditHistory";
+
+function SpellCheckSwitch() {
+  const { storedValue: spellCheck, setStoredValue: setSpellCheck } = useLocalStorage("Editor/spellcheck", true);
+
+  return (
+    <Label htmlFor="mdxSpellCheck" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
+      <span className="text-sm whitespace-nowrap truncate">Spellcheck</span>
+      <Switch
+        id="mdxSpellCheck"
+        className="ml-1"
+        checked={spellCheck}
+        onCheckedChange={(checked) => setSpellCheck(checked)}
+        aria-label="Enable spellcheck"
+      />
+    </Label>
+  );
+}
 
 export function useAllPlugins({
   currentWorkspace,
@@ -85,6 +105,10 @@ export function useAllPlugins({
 
                 <div className="flex-grow flex justify-start ml-2">
                   <MdxToolbar />
+                </div>
+
+                <div className="ml-auto">
+                  <SpellCheckSwitch />
                 </div>
               </div>
             );

@@ -9,5 +9,5 @@ export class WorkspaceRecord {
   thumbs!: DiskJType;
   code!: WorkspaceStatusCode;
   remoteAuths!: RemoteAuthRecord[];
-  timestamp?: number;
+  timestamp!: number;
 }

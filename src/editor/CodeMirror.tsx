@@ -89,6 +89,7 @@ export const CodeMirrorEditor = ({
   enableConflictResolution?: boolean;
 }) => {
   const { storedValue: vimMode, setStoredValue: setVimMode } = useLocalStorage("CodeMirrorEditor/vimMode", false);
+  const { storedValue: spellCheck, setStoredValue: setSpellCheck } = useLocalStorage("Editor/spellcheck", true);
   const { storedValue: globalConflictResolution, setStoredValue: setGlobalConflictResolution } = useLocalStorage(
     "SourceEditor/enableGitConflictResolution",
     true
@@ -106,6 +107,7 @@ export const CodeMirrorEditor = ({
   const editableCompartment = useRef(new Compartment()).current;
   const conflictCompartment = useRef(new Compartment()).current;
   const basicSetupCompartment = useRef(new Compartment()).current;
+  const spellCheckCompartment = useRef(new Compartment()).current;
 
   // const [start, end] = parseParamsToRanges(new URLSearchParams(location.hash)).ranges?.at(0) ?? [null, null];
 
@@ -116,6 +118,7 @@ export const CodeMirrorEditor = ({
     const extensions: Extension[] = [
       autocompletion(),
       EditorView.lineWrapping,
+      spellCheckCompartment.of(EditorView.contentAttributes.of({ spellcheck: spellCheck ? "true" : "false" })),
       keymap.of([indentWithTab]),
 
       // compartments (start with initial config)
@@ -224,6 +227,17 @@ export const CodeMirrorEditor = ({
     }
   }, [conflictCompartment, value, enableConflictResolution]);
 
+  // Reconfigure spellcheck
+  useEffect(() => {
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        effects: spellCheckCompartment.reconfigure(
+          EditorView.contentAttributes.of({ spellcheck: spellCheck ? "true" : "false" })
+        ),
+      });
+    }
+  }, [spellCheckCompartment, spellCheck]);
+
   // external prop value pushes into editor
   useEffect(() => {
     if (viewRef.current && value !== viewRef.current.state.doc.toString()) {
@@ -252,6 +266,8 @@ export const CodeMirrorEditor = ({
           key={path}
           setVimMode={setVimMode}
           vimMode={vimMode}
+          spellCheck={spellCheck}
+          setSpellCheck={setSpellCheck}
           currentWorkspace={currentWorkspace}
           path={path}
           conflictResolution={globalConflictResolution}
@@ -281,6 +297,8 @@ const CodeMirrorToolbar = ({
   currentWorkspace,
   vimMode,
   setVimMode,
+  spellCheck,
+  setSpellCheck,
   conflictResolution = true,
   setConflictResolution,
   hasConflicts = false,
@@ -292,6 +310,8 @@ const CodeMirrorToolbar = ({
   currentWorkspace: Workspace;
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
+  spellCheck: boolean;
+  setSpellCheck: (value: boolean) => void;
   conflictResolution?: boolean;
   setConflictResolution?: (value: boolean) => void;
   hasConflicts?: boolean;
@@ -370,6 +390,17 @@ const CodeMirrorToolbar = ({
             Git Conflicts Editor
           </Button>
         )}
+
+        <Label htmlFor="spellCheck" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
+          <span className="text-sm whitespace-nowrap truncate">Spellcheck</span>
+          <Switch
+            id="spellCheck"
+            className="ml-1"
+            checked={spellCheck}
+            onCheckedChange={(checked) => setSpellCheck(checked)}
+            aria-label="Enable spellcheck"
+          />
+        </Label>
 
         <Label htmlFor="vimMode" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
           <span className="text-sm whitespace-nowrap truncate">Vim Mode</span>
