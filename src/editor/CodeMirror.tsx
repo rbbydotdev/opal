@@ -69,6 +69,22 @@ const getLanguageExtension = (
   }
 };
 
+const createValidatedSelection = (hasRanges: boolean, start: number, end: number, docLength: number): EditorSelection | undefined => {
+  if (!hasRanges) return undefined;
+
+  const validStart = Math.min(Math.max(0, start), docLength);
+  const validEnd = Math.min(Math.max(0, end), docLength);
+
+  if (validStart <= docLength && validEnd <= docLength) {
+    return EditorSelection.create([
+      EditorSelection.range(validStart, validEnd),
+      EditorSelection.cursor(validStart)
+    ]);
+  }
+
+  return undefined;
+};
+
 export const CodeMirrorEditor = ({
   hasConflicts,
   mimeType,
@@ -146,9 +162,7 @@ export const CodeMirrorEditor = ({
     const state = EditorState.create({
       doc: value,
       extensions,
-      selection: hasRanges
-        ? EditorSelection.create([EditorSelection.range(start, end), EditorSelection.cursor(start)])
-        : undefined,
+      selection: createValidatedSelection(hasRanges, start, end, value.length),
     });
 
     viewRef.current = new EditorView({

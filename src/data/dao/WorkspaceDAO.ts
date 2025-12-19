@@ -90,7 +90,6 @@ export class WorkspaceDAO {
   }
 
   save = async () => {
-    console.log(this.timestamp);
     return ClientDb.workspaces.put({
       guid: this.guid,
       name: this.name,

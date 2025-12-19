@@ -50,7 +50,7 @@ export const workspaceSearchHandler = withRequestSignal(async (context: RequestC
   const workspaceName = params.workspaceName;
   const searchTerm = searchParams.searchTerm as string | null;
   const regexpParam = searchParams.regexp;
-  const regexp = regexpParam === null ? true : regexpParam === "1";
+  const regexp = regexpParam === null ? true : regexpParam === "1" || regexpParam === 1;
 
   if (!workspaceName) {
     return new Response("Workspace name parameter is required.", { status: 400 });
