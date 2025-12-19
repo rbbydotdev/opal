@@ -53,7 +53,7 @@ export class ProxyFetchHandler extends FetchHttpHandler {
       body: request.body,
     });
 
-    // logger.debug("🔄 ProxyFetchHandler:", {
+    // console.debug("🔄 ProxyFetchHandler:", {
     //   original: `${request.protocol}//${request.hostname}${request.path}`,
     //   proxied: `${modifiedRequest.protocol}//${modifiedRequest.hostname}:${modifiedRequest.port}${modifiedRequest.path}`,
     //   hostHeader: modifiedRequest.headers["Host"],

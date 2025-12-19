@@ -67,9 +67,9 @@ export class DirectoryHandleIDB {
         directoryName: handle.name,
         lastAccessed: new Date(),
       };
-      logger.log("Storing directory handle record:", record);
+      console.log("Storing directory handle record:", record);
       await promisifyHandler(store.put(record));
-      logger.log("Directory handle stored successfully for diskId:", diskId);
+      console.log("Directory handle stored successfully for diskId:", diskId);
     } catch (error) {
       throw error;
     }

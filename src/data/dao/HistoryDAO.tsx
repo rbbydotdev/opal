@@ -26,7 +26,7 @@ export function useSnapHistoryPendingSave({ historyDB }: { historyDB: HistorySto
   return pendingSave;
 }
 
-export class HistoryDAO implements HistoryStorageInterface {
+export class HistoryStore {
   TIME_NORMALIZATION_MS = 5000; // normalize to 5 seconds
   CHANGE_NORMALIZATION_CHARS = 300; // normalize to 300 changed chars
   TIME_WEIGHT = 0.4;
@@ -44,7 +44,6 @@ export class HistoryDAO implements HistoryStorageInterface {
   }>();
 
   private unsubUpdateListener = liveQuery(() => ClientDb.historyDocs.toArray()).subscribe((edits) => {
-    console.log("Emitting edits update", edits);
     this.emitter.emit("edits", edits);
   });
 
@@ -151,20 +150,21 @@ export class HistoryDAO implements HistoryStorageInterface {
     return Math.min(finalScore, 1.0);
   }
 
-  public async saveEdit(
-    workspaceId: string,
-    id: string,
-    newText: string,
-    filePath?: string,
-    abortForNewlines = false
-  ): Promise<HistoryDocRecord | null> {
+  public async saveEdit({
+    workspaceId,
+    documentId,
+    markdown,
+  }: {
+    workspaceId: string;
+    documentId: string;
+    markdown: string;
+  }): Promise<HistoryDocRecord | null> {
     console.debug("save edit");
-    const latestEdit = await this.getLatestEdit(id);
+    const latestEdit = await this.getLatestEdit(documentId);
     const parentText = latestEdit ? await this.reconstructDocument(latestEdit.edit_id!) : "";
-    const diffs: Diff[] = this.dmp.diff_main(parentText || "", newText);
+    const diffs: Diff[] = this.dmp.diff_main(parentText || "", markdown);
     //check if the diff is only whitespace
     if (
-      abortForNewlines &&
       diffs
         .filter(([operation, _text]) => operation !== 0)
         .every(([_operation, text]) => text.replace("\n\n", "") === "")
@@ -177,17 +177,16 @@ export class HistoryDAO implements HistoryStorageInterface {
     const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
     // Calculate CRC32 for the new content and get parent's CRC32
-    const newContentCrc32 = CRC32.str(newText);
+    const newContentCrc32 = CRC32.str(markdown);
     const parentCrc32 = latestEdit?.crc32 ?? undefined;
 
     const newDoc = new HistoryDocRecord(
       workspaceId,
-      id,
+      documentId,
       patch,
       Date.now(),
       latestEdit ? latestEdit.edit_id! : null,
       null,
-      filePath,
       newContentCrc32,
       parentCrc32
     );
@@ -197,27 +196,21 @@ export class HistoryDAO implements HistoryStorageInterface {
   }
 
   public async reconstructDocument(edit_id: number): Promise<string | null> {
-    if (this.cache.has(edit_id)) {
-      return this.cache.get(edit_id)!;
-    }
+    if (this.cache.has(edit_id)) return this.cache.get(edit_id)!;
 
     let current = await this.getEditByEditId(edit_id);
     if (!current) return null;
-
     let text = "";
     const patches = [];
-
     while (current) {
       patches.unshift(current.change);
       current = current.parent !== null ? await this.getEditByEditId(current.parent) : null;
     }
-
     for (const patchText of patches) {
       const patch = this.dmp.patch_fromText(patchText);
-      [text] = this.dmp.patch_apply(patch, text);
+      text = this.dmp.patch_apply(patch, text)[0];
     }
-
-    this.cache.set(edit_id, text);
+    this.cache.set(edit_id, text).get(edit_id);
     return text;
   }
   public async clearAllEdits(id: string) {

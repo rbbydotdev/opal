@@ -7,7 +7,7 @@ export const useNodeResolver = (fileTree: FileTree, nodeOrPath: TreeNode | AbsPa
     const rn = fileTree.nodeFromPath(nodeOrPath);
     if (!rn) {
       if (defaultNode) return defaultNode;
-      logger.error(new Error("Invalid path provided to useNodeResolver " + nodeOrPath));
+      console.error(new Error("Invalid path provided to useNodeResolver " + nodeOrPath));
       return ROOT_NODE;
     }
     return rn;

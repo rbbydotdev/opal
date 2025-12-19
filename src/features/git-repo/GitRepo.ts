@@ -726,7 +726,7 @@ export class GitRepo {
       };
     } catch (e) {
       if (!(e instanceof GIT.Errors.NotFoundError)) {
-        logger.warn(e);
+        console.warn(e);
       }
       return RepoDefaultInfo;
     }
@@ -797,7 +797,7 @@ export class GitRepo {
       const matrix = await this.mutex.runExclusive(() => this.git.statusMatrix({ fs: this.fs, dir: this.dir }));
       return matrix.some(([, head, workdir, stage]) => head !== workdir || workdir !== stage);
     } catch (error) {
-      logger.error("Error checking for changes:", error);
+      console.error("Error checking for changes:", error);
       return true;
     }
   };
@@ -902,7 +902,7 @@ export class GitRepo {
 
       return commits;
     } catch (error) {
-      logger.error("Error fetching commit history:", error);
+      console.error("Error fetching commit history:", error);
       return [];
     }
   };
@@ -938,9 +938,9 @@ export class GitRepo {
       })
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
-          // logger.log("Merge conflict detected:", e);
+          // console.log("Merge conflict detected:", e);
           await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
-          // logger.log((await this.fs.readFile("/.git/HEAD")).toString());
+          // console.log((await this.fs.readFile("/.git/HEAD")).toString());
 
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
 
@@ -951,7 +951,7 @@ export class GitRepo {
       });
 
     if (!isMergeConflict(result)) {
-      logger.log("Merge successful, checking out", into);
+      console.log("Merge successful, checking out", into);
       await this.git.checkout({
         fs: this.fs,
         dir: this.dir,
@@ -1091,7 +1091,7 @@ export class GitRepo {
     const uniqueBranchName = getUniqueSlug(branchName, branches);
     const isMerging = await this.isMerging();
     if (isMerging) {
-      logger.warn("Creating branch while merging, will not checkout.");
+      console.warn("Creating branch while merging, will not checkout.");
     }
 
     await this.git.branch({

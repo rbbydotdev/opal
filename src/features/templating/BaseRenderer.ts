@@ -42,7 +42,7 @@ export abstract class BaseRenderer {
     const stack = err.stack || "";
 
     // Log the error to console for debugging
-    logger.error(`${this.getRendererName()} Template Render Error:`, {
+    console.error(`${this.getRendererName()} Template Render Error:`, {
       message,
       stack,
       error: err,

@@ -16,17 +16,17 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
     };
   }
   async fetchAll(): Promise<Repo[]> {
-    logger.warn("RemoteAuthBasicAuthAgent.fetchAll() is not implemented");
+    console.warn("RemoteAuthBasicAuthAgent.fetchAll() is not implemented");
     return [];
   }
 
   // deployFiles, getDestinationURL
   deployFiles(): Promise<unknown> {
-    logger.warn("RemoteAuthBasicAuthAgent.deployFiles() is not implemented");
+    console.warn("RemoteAuthBasicAuthAgent.deployFiles() is not implemented");
     return Promise.resolve();
   }
   async getDestinationURL() {
-    logger.warn("RemoteAuthBasicAuthAgent.getDestinationURL() is not implemented");
+    console.warn("RemoteAuthBasicAuthAgent.getDestinationURL() is not implemented");
     return "";
   }
 
@@ -34,7 +34,7 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
     etag: string | null,
     options?: { signal?: AbortSignal }
   ): Promise<{ updated: boolean; newEtag: string | null }> {
-    logger.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
+    console.warn("RemoteAuthBasicAuthAgent.hasUpdates() is not implemented");
     return Promise.resolve({ updated: false, newEtag: etag });
   }
 

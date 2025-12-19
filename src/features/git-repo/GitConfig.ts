@@ -47,7 +47,7 @@ export class GitConfig {
         return { ...DEFAULT_GIT_CONFIG, ...parsed };
       }
     } catch (_error) {
-      logger.warn(`could not read git config from localStorage`);
+      console.warn(`could not read git config from localStorage`);
     }
     return DEFAULT_GIT_CONFIG;
   }
@@ -60,7 +60,7 @@ export class GitConfig {
       // Dispatch storage event for React hooks to pick up the change
       window.dispatchEvent(new StorageEvent("storage", { key: GIT_CONFIG_KEY }));
     } catch (error) {
-      logger.warn(`Error setting git config in localStorage:`, error);
+      console.warn(`Error setting git config in localStorage:`, error);
     }
   }
 

@@ -1,5 +1,5 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { HistoryDAO } from "@/data/dao/HistoryDAO";
+import { HistoryStore } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/HistoryTypes";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
@@ -12,7 +12,7 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
 }
 
 export async function generateHtmlPreview(edit: HistoryDocRecord): Promise<Blob> {
-  const historyDAO = new HistoryDAO();
+  const historyDAO = new HistoryStore();
   try {
     const reconstructedContent = (await historyDAO.reconstructDocumentFromEdit(edit)) ?? "";
     const html = renderMarkdownToHtml(stripFrontmatter(reconstructedContent));

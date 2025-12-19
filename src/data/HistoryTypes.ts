@@ -6,7 +6,6 @@ export class HistoryDocRecord {
   edit_id!: number;
   preview: Blob | null;
   workspaceId: string;
-  filePath?: string;
   crc32?: number;
   parentCrc32?: number;
 
@@ -17,7 +16,6 @@ export class HistoryDocRecord {
     timestamp: number,
     parent: number | null,
     preview: Blob | null = null,
-    filePath?: string,
     crc32?: number,
     parentCrc32?: number
   ) {
@@ -27,7 +25,6 @@ export class HistoryDocRecord {
     this.timestamp = timestamp;
     this.parent = parent;
     this.preview = preview;
-    this.filePath = filePath;
     this.crc32 = crc32;
     this.parentCrc32 = parentCrc32;
   }
@@ -50,7 +47,6 @@ export class HistoryDocRecord {
       json.timestamp,
       json.parent,
       json.preview ?? null,
-      json.filePath,
       json.crc32,
       json.parentCrc32
     );

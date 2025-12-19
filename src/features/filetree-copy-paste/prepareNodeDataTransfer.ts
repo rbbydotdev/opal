@@ -47,7 +47,7 @@ export const prepareNodeDataTransfer = <T extends MetaDataTransfer | DataTransfe
       });
     }
   } catch (e) {
-    logger.error("Error preparing node data for drag and drop:", e);
+    console.error("Error preparing node data for drag and drop:", e);
   }
   return dt;
 };

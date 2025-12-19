@@ -1,7 +1,10 @@
+import { HistoryStore } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
+import { ClientDb } from "@/data/instance";
 import { debounce } from "@/lib/debounce";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { Mutex } from "async-mutex";
+import { useLiveQuery } from "dexie-react-hooks";
 
 const HistoryEvents = {
   INSIDE_MARKDOWN: "inside-markdown",
@@ -24,7 +27,7 @@ function timeout$(ms: number, warnMsg?: string): [Promise<void>, () => void] {
   return [
     new Promise((resolve) => {
       timeoutId = setTimeout(() => {
-        if (warnMsg) logger.warn(warnMsg);
+        if (warnMsg) console.warn(warnMsg);
         resolve(void 0);
       }, ms);
     }),
@@ -52,20 +55,20 @@ export class HistoryPlugin2 {
   private shouldTrigger: (() => boolean) | undefined;
 
   set $edits(edits: HistoryDocRecord[]) {
-    // logger.debug(`Setting edits for ${this.documentId}`, edits.length);
+    // console.debug(`Setting edits for ${this.documentId}`, edits.length);
     this.edits = edits;
     this.updateState();
     this.events.emit(HistoryEvents.EDITS, edits);
   }
 
   set $selectedEdit(edit: HistoryDocRecord | null) {
-    // logger.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
+    // console.debug(`Setting selected edit for ${this.documentId}`, edit?.id ?? "null");
     this.selectedEdit = edit;
     this.updateState();
     this.events.emit(HistoryEvents.SELECTED_EDIT, edit);
   }
   set $selectedEditMd(md: string | null) {
-    // logger.debug(`Setting selected edit markdown for ${this.documentId}`, md?.length ?? "null");
+    // console.debug(`Setting selected edit markdown for ${this.documentId}`, md?.length ?? "null");
     this.selectedEditMd = md;
     this.updateState();
     this.events.emit(HistoryEvents.SELECTED_EDIT_MD, md);
@@ -148,7 +151,7 @@ export class HistoryPlugin2 {
     const debouncedMdUpdate = debounce(async (md: string) => {
       const saveScore = await this.historyStorage.getSaveThreshold(this.documentId, md);
       if (saveScore < this.saveThreshold) {
-        return logger.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
+        return console.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
       }
       return this.saveNewEdit(md);
     }, this.debounceMs);
@@ -165,7 +168,7 @@ export class HistoryPlugin2 {
   setSelectedEdit = async (edit: HistoryDocRecord) => {
     const editDoc = await this.historyStorage.reconstructDocumentFromEdit(edit);
     if (typeof editDoc !== "string") {
-      logger.error("Reconstructed history document is not a string");
+      console.error("Reconstructed history document is not a string");
       return;
     }
     this.$selectedEdit = edit;
@@ -196,7 +199,7 @@ export class HistoryPlugin2 {
           edits.unshift(newEdit); //Assuming ascending
           this.$edits = edits;
         } else {
-          logger.error("Failed to save initial edit");
+          console.error("Failed to save initial edit");
         }
       }
       this.latestMarkdown = newMarkdown; //not $latestMarkdown to avoid loop
@@ -204,7 +207,7 @@ export class HistoryPlugin2 {
       if (headEdit) {
         const headEditDoc = await this.historyStorage.reconstructDocumentFromEdit(headEdit);
         if (headEditDoc === newMarkdown) {
-          return logger.debug("Skipping redundant edit save");
+          return console.debug("Skipping redundant edit save");
         }
       }
       const newEdit = await this.historyStorage.saveEdit(this.workspaceId, this.documentId, newMarkdown);
@@ -212,7 +215,7 @@ export class HistoryPlugin2 {
         edits.unshift(newEdit);
         this.$edits = edits;
       } else {
-        logger.error("Failed to save new edit");
+        console.error("Failed to save new edit");
       }
     });
   }
@@ -253,7 +256,7 @@ export class HistoryPlugin2 {
     if (this.outsideMarkdown) {
       await this.saveNewEdit(this.outsideMarkdown);
     } else {
-      logger.warn("No latest markdown to save");
+      console.warn("No latest markdown to save");
     }
   };
   setMarkdown = (md: string) => {
@@ -267,4 +270,56 @@ export class HistoryPlugin2 {
     this.events.on(HistoryEvents.SELECTED_EDIT, callback);
     return () => this.events.removeListener(HistoryEvents.SELECTED_EDIT, callback);
   };
+}
+
+export class HistoryPlugin3 {
+  private debounceMs = 2_000;
+  private saveThreshold = 0.7;
+  historyStore = new HistoryStore();
+  mutex = new Mutex();
+  private muteChange = false;
+  //hooks into editor on change
+  onChange = (md: string) => {
+    if (!this.muteChange) {
+      //handle change
+    }
+  };
+
+  saveNewEdit = this.historyStore.saveEdit;
+
+  onChangeDebounce = debounce(
+    async ({ documentId, markdown, workspaceId }: { workspaceId: string; documentId: string; markdown: string }) => {
+      const saveScore = await this.historyStore.getSaveThreshold(documentId, markdown);
+      if (saveScore < this.saveThreshold) {
+        return console.debug(`Skipping save for ${documentId} due to low score: ${saveScore}`);
+      }
+      return this.saveNewEdit({ markdown, documentId, workspaceId });
+    },
+    this.debounceMs
+  );
+  getTextForEdit = async (editId: number): Promise<string | null> => {
+    return this.historyStore.reconstructDocument(editId);
+  };
+  mute() {
+    this.muteChange = true;
+  }
+  unmute() {
+    this.muteChange = false;
+  }
+  tearDown() {
+    this.historyStore.tearDown();
+  }
+
+  private async transaction(fn: () => void) {
+    return this.mutex.runExclusive(async () => {
+      this.muteChange = true;
+      await fn();
+      this.muteChange = false;
+    });
+  }
+  constructor() {}
+}
+
+export function useHistoryEdits({ documentId }: { documentId: string }) {
+  useLiveQuery(async () => ClientDb.historyDocs.where("id").equals(documentId).sortBy("timestamp"), [documentId]);
 }

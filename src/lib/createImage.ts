@@ -135,7 +135,7 @@ export const createImage = async ({
 
     return new File([blob], resultImageName, { type: mimeType });
   } catch (e) {
-    logger.error(e);
+    console.error(e);
     throw errF`Failed to create image from input. It may not be a supported image format. Error: ${e}`;
   }
 };

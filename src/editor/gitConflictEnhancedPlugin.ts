@@ -78,12 +78,12 @@ function createEnhancedConflictDecorations(
     ];
 
     // // Debug: log positions to see if they're valid
-    // logger.log('Conflict region positions:', positions);
+    // console.log('Conflict region positions:', positions);
 
     // Only add decorations if positions are valid and sorted
     const isValid = positions.every((pos, i) => i === 0 || pos >= positions[i - 1]!);
     if (!isValid) {
-      logger.warn("Invalid conflict region positions, skipping decoration");
+      console.warn("Invalid conflict region positions, skipping decoration");
       return;
     }
 
@@ -167,7 +167,7 @@ function createEnhancedConflictDecorations(
           builder.add(from, to, decoration);
         });
     } catch (error) {
-      logger.warn("Failed to add conflict decorations:", error);
+      console.warn("Failed to add conflict decorations:", error);
     }
   });
 
@@ -285,7 +285,7 @@ const enhancedConflictDetectionPlugin = ViewPlugin.fromClass(
         });
       } catch (error) {
         // Silently ignore if view is being destroyed or in an invalid state
-        logger.debug("Failed to update conflicts:", error);
+        console.debug("Failed to update conflicts:", error);
       }
     }
 

@@ -20,14 +20,14 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     this.emitter = new SuperEmitter<EventData>();
   }
   init() {
-    logger.debug("channel setup");
+    console.debug("channel setup");
     if (ChannelSet.has(this.channelName)) {
-      logger.warn("Channel already exists:" + this.channelName + " ... removing");
+      console.warn("Channel already exists:" + this.channelName + " ... removing");
       try {
         const ch = ChannelSet.get(this.channelName);
         if (ch) ch.tearDown();
       } catch (e) {
-        logger.error("Error during channel tearDown:", e);
+        console.error("Error during channel tearDown:", e);
       }
       ChannelSet.delete(this.channelName);
     }
@@ -42,7 +42,7 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
       const { eventData, eventName, senderId } = event.data;
       // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
       if (!eventName || senderId === this.contextId) return; // Ignore messages from the same context
-      if (DEBUG_CHANNELS) logger.debug("bcast incoming:", eventName);
+      if (DEBUG_CHANNELS) console.debug("bcast incoming:", eventName);
       this.emitter.emit(eventName, eventData);
     };
     return () => {
@@ -58,15 +58,15 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
   ): void {
     // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
     const message = JSON.stringify({ eventName, eventData, senderId: contextId });
-    if (DEBUG_CHANNELS) logger.debug("broadcast outgoing:", eventName);
+    if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {
       if (this.channel) {
         this.channel.postMessage(JSON.parse(message));
       } else {
-        logger.warn("Channel is not initialized or has been closed.");
+        console.warn("Channel is not initialized or has been closed.");
       }
     } catch (e) {
-      logger.error("Error during postMessage:", e);
+      console.error("Error during postMessage:", e);
     }
   }
 
@@ -100,9 +100,9 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
 
   tearDown = () => {
     if (typeof window !== "undefined" && window.location) {
-      if (DEBUG_CHANNELS) logger.debug("channel tearDown in " + window.location.href); //TODO:
+      if (DEBUG_CHANNELS) console.debug("channel tearDown in " + window.location.href); //TODO:
     } else {
-      if (DEBUG_CHANNELS) logger.debug("channel tearDown (window not available)");
+      if (DEBUG_CHANNELS) console.debug("channel tearDown (window not available)");
     }
     ChannelSet.delete(this.channelName);
     if (this.channel) {

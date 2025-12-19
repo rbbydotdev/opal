@@ -603,7 +603,7 @@ export const enhancedMarkdownExtension = (
 // Debug utility to check color contrast for a given theme
 const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
   if (typeof window === "undefined") {
-    logger.log("Contrast debugging only available in browser");
+    console.log("Contrast debugging only available in browser");
     return;
   }
 
@@ -621,8 +621,8 @@ const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
     { name: "border", var: "--border" },
   ];
 
-  logger.log(`\n🎨 CodeMirror Contrast Analysis (Background: ${bgColor})`);
-  logger.log("=".repeat(60));
+  console.log(`\n🎨 CodeMirror Contrast Analysis (Background: ${bgColor})`);
+  console.log("=".repeat(60));
 
   colors.forEach(({ name, var: cssVar }) => {
     const color = getCSSVariableColor(cssVar);
@@ -637,14 +637,14 @@ const debugContrastRatios = (codeMirrorBackground: string = "--background") => {
       const status = contrast >= 2.8 ? "✅ OK" : "⚠️  Low";
       const adjustment = adjustedColor !== color ? ` → ${adjustedColor} (${adjustedContrast.toFixed(2)}:1)` : "";
 
-      logger.log(`${name.padEnd(16)} ${color} ${contrast.toFixed(2)}:1 ${status}${adjustment}`);
+      console.log(`${name.padEnd(16)} ${color} ${contrast.toFixed(2)}:1 ${status}${adjustment}`);
     } else {
-      logger.log(`${name.padEnd(16)} ${color} → Non-hex color (assumed OK)`);
+      console.log(`${name.padEnd(16)} ${color} → Non-hex color (assumed OK)`);
     }
   });
 
-  logger.log("\n📝 Legend:");
-  logger.log("✅ OK     = 2.8:1+ (good contrast for syntax highlighting)");
-  logger.log("⚠️  Low    = <2.8:1 (will be automatically adjusted)");
-  logger.log("Adjusted colors are shown with → new_color (new_ratio)");
+  console.log("\n📝 Legend:");
+  console.log("✅ OK     = 2.8:1+ (good contrast for syntax highlighting)");
+  console.log("⚠️  Low    = <2.8:1 (will be automatically adjusted)");
+  console.log("Adjusted colors are shown with → new_color (new_ratio)");
 };

@@ -101,7 +101,7 @@ export class MetaDataTransfer {
       // The 'as Partial<T>' cast is safe here because the caller provides the generic type.
       return JSON.parse(rawData) as Partial<T>;
     } catch (error) {
-      logger.warn(`[MetaDataTransfer] Failed to parse JSON for type "${type}". Returning empty object.`, {
+      console.warn(`[MetaDataTransfer] Failed to parse JSON for type "${type}". Returning empty object.`, {
         rawData,
         error,
       });

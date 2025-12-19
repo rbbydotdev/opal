@@ -200,7 +200,7 @@ export abstract class DeployBundleBase<TMeta = unknown> {
     } catch (error) {
       throw new ApplicationError(errF`Failed to deploy bundle via git: ${error}`);
     } finally {
-      await repo?.dispose().catch((e) => logger.error("Failed to dispose git repo after deploy", e));
+      await repo?.dispose().catch((e) => console.error("Failed to dispose git repo after deploy", e));
     }
   }
 
@@ -214,9 +214,9 @@ export abstract class DeployBundleBase<TMeta = unknown> {
         throw new ApplicationError(errF`Failed to add file to zip: ${filePath} ${error}`);
       },
       onFileProcessed: (filePath, fileCount, total) => {
-        logger.debug(`Processed file: ${filePath}. Remaining: ${fileCount}/${total}`);
+        console.debug(`Processed file: ${filePath}. Remaining: ${fileCount}/${total}`);
         if (fileCount === 0) {
-          logger.debug(`All files processed`);
+          console.debug(`All files processed`);
         }
       },
     });

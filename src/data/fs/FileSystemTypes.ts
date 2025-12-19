@@ -38,7 +38,7 @@ export async function mkdirRecursive(this: CommonFileSystem, filePath: string): 
       await this.mkdir(dirPath, { recursive: true, mode: 0o777 });
     } catch (err: any) {
       if (err?.code !== "EEXIST") {
-        logger.error(`Error creating directory ${dirPath}:`, err);
+        console.error(`Error creating directory ${dirPath}:`, err);
       }
     }
   }

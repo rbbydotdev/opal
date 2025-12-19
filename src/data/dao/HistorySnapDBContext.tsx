@@ -1,4 +1,4 @@
-import { HistoryDAO } from "@/data/dao/HistoryDAO";
+import { HistoryStore } from "@/data/dao/HistoryDAO";
 import { NullHistoryDAO } from "@/data/dao/NullHistoryDAO";
 import { HistoryStorageInterface } from "@/data/HistoryTypes";
 import { useToggleHistoryImageGeneration } from "@/editor/history/useToggleHistoryImageGeneration";
@@ -16,7 +16,7 @@ interface HistorySnapDBProviderProps {
 const NULL_HISTORY_DAO = new NullHistoryDAO();
 
 export function HistorySnapDBProvider({ documentId, children }: HistorySnapDBProviderProps) {
-  const historyDB = useResource<HistoryStorageInterface>(() => new HistoryDAO(), [], NULL_HISTORY_DAO);
+  const historyDB = useResource<HistoryStorageInterface>(() => new HistoryStore(), [], NULL_HISTORY_DAO);
   const { isHistoryImageGenerationEnabled, handleEditPreview } = useToggleHistoryImageGeneration();
 
   useEffect(() => {

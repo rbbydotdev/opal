@@ -162,7 +162,7 @@ Use \`#\`, \`##\`, \`###\` for different header levels.
 
 ### Code
 \`\`\`javascript
-logger.log("Code blocks work great!");
+console.log("Code blocks work great!");
 \`\`\`
 
 ### Links

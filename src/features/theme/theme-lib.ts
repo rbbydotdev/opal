@@ -111,7 +111,7 @@ function themePrefersMode(theme: ThemeRegistryItem): "light" | "dark" {
 export function getThemeModePrefers(themeName: string): "light" | "dark" | null {
   const themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
-    logger.warn(`Theme "${themeName}" not found in registry`);
+    console.warn(`Theme "${themeName}" not found in registry`);
     return null;
   }
   return themePrefersMode(themeItem);
@@ -123,10 +123,10 @@ export function applyTheme(options: ApplyThemeOptions): void {
   const defaultTheme = registry.items.find((item) => item.name === DEFAULT_THEME_STATE.themeName);
   let themeItem = registry.items.find((item) => item.name === themeName);
   if (!themeItem) {
-    logger.warn(`Theme "${themeName}" not found in registry`);
+    console.warn(`Theme "${themeName}" not found in registry`);
     themeItem = defaultTheme;
     if (!themeItem) {
-      logger.warn(`Theme ${DEFAULT_THEME_STATE.themeName} not found in registry`);
+      console.warn(`Theme ${DEFAULT_THEME_STATE.themeName} not found in registry`);
       return;
     }
   }

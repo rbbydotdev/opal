@@ -40,7 +40,7 @@ export async function analyzeWorkspaceError(workspaceName: string, error: Error)
     workspaceId = workspaceDAO?.guid ?? workspaceId;
     workspaceForRecovery = workspaceDAO ? Workspace.FromDAO(workspaceDAO) : null;
   } catch (e) {
-    logger.debug("Could not fetch workspace for recovery check:", e);
+    console.debug("Could not fetch workspace for recovery check:", e);
   }
 
   const isServiceUnavailable = error instanceof ServiceUnavailableError;
