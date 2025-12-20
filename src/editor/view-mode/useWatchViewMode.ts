@@ -1,5 +1,5 @@
-import { useQueryState } from "nuqs";
 import { ViewMode } from "@mdxeditor/editor";
+import { useQueryState } from "nuqs";
 
 const viewModeParser = {
   parse: (value: string): ViewMode | null => {

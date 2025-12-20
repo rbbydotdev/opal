@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
-import { useHashURLRanges } from "@/editor/CodeMirrorSelectURLRangePlugin";
+import { useURLRanges } from "@/editor/CodeMirrorSelectURLRangePlugin";
 import { createCustomBasicSetup } from "@/editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/editor/gitConflictEnhancedPlugin";
 import { LivePreviewButtons } from "@/editor/LivePreviewButton";
@@ -71,20 +71,14 @@ const getLanguageExtension = (
 
 const createValidatedSelection = (
   hasRanges: boolean,
-  start: number,
-  end: number,
-  docLength: number
+  start: number | null | undefined,
+  end: number | null | undefined,
+  docLength?: number | undefined
 ): EditorSelection | undefined => {
-  if (!hasRanges) return undefined;
-
+  if (!hasRanges || start == null || end == null || docLength == null) return undefined;
   const validStart = Math.min(Math.max(0, start), docLength);
   const validEnd = Math.min(Math.max(0, end), docLength);
-
-  if (validStart <= docLength && validEnd <= docLength) {
-    return EditorSelection.create([EditorSelection.range(validStart, validEnd), EditorSelection.cursor(validStart)]);
-  }
-
-  return undefined;
+  return EditorSelection.create([EditorSelection.range(validStart, validEnd), EditorSelection.cursor(validStart)]);
 };
 
 export const CodeMirrorEditor = ({
@@ -112,14 +106,12 @@ export const CodeMirrorEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
-  const { start, end, hasRanges } = useHashURLRanges();
+  const { start, end, hasRanges } = useURLRanges();
 
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  const onChangeRef = useRef(onChange).current;
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
 
-  // Compartments for dynamic configuration
   const languageCompartment = useRef(new Compartment()).current;
   const vimCompartment = useRef(new Compartment()).current;
   const editableCompartment = useRef(new Compartment()).current;
@@ -127,9 +119,6 @@ export const CodeMirrorEditor = ({
   const basicSetupCompartment = useRef(new Compartment()).current;
   const spellCheckCompartment = useRef(new Compartment()).current;
 
-  // const [start, end] = parseParamsToRanges(new URLSearchParams(location.hash)).ranges?.at(0) ?? [null, null];
-
-  // initial setup
   useEffect(() => {
     if (!editorRef.current) return;
 
@@ -148,7 +137,7 @@ export const CodeMirrorEditor = ({
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const docStr = update.state.doc.toString();
-          onChangeRef.current(docStr);
+          onChangeRef(docStr);
         }
       }),
 
@@ -164,7 +153,7 @@ export const CodeMirrorEditor = ({
     const state = EditorState.create({
       doc: value,
       extensions,
-      selection: createValidatedSelection(hasRanges, start || 0, end || 0, value.length),
+      selection: createValidatedSelection(hasRanges, start, end, value.length),
     });
 
     viewRef.current = new EditorView({
@@ -180,9 +169,7 @@ export const CodeMirrorEditor = ({
       effects: [
         languageCompartment.reconfigure(getLanguageExtension(mimeType) ?? []),
         editableCompartment.reconfigure(EditorView.editable.of(!readOnly)),
-        conflictCompartment.reconfigure(
-          enableConflictResolution && hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []
-        ),
+        conflictCompartment.reconfigure(hasConflicts ? gitConflictEnhancedPlugin(getLanguageExtension) : []),
       ],
     });
 
@@ -196,10 +183,9 @@ export const CodeMirrorEditor = ({
   // Reconfigure language when mimeType/conflicts change
   useEffect(() => {
     if (viewRef.current) {
-      const ext =
-        hasConflicts && globalConflictResolution
-          ? [] // disable highlighting if conflicts enabled
-          : (getLanguageExtension(mimeType) ?? []);
+      const ext = hasConflicts
+        ? [] // disable highlighting if conflicts enabled
+        : (getLanguageExtension(mimeType) ?? []);
       viewRef.current.dispatch({
         effects: languageCompartment.reconfigure(ext),
       });
@@ -267,6 +253,15 @@ export const CodeMirrorEditor = ({
     }
   }, [value]);
 
+  useEffect(() => {
+    if (hasRanges && viewRef.current) {
+      viewRef.current.dispatch({
+        selection: createValidatedSelection(hasRanges, start, end, viewRef.current.state.doc.length),
+        scrollIntoView: true, // optional if you want to scroll focus to the selection
+      });
+    }
+  }, [end, hasRanges, start]);
+
   const { path } = useWorkspaceRoute();
 
   const cmScroller = useWatchElement(".cm-scroller");
@@ -291,7 +286,7 @@ export const CodeMirrorEditor = ({
           hasConflicts={hasConflicts}
           mimeType={mimeType}
           editorView={viewRef.current}
-        ></CodeMirrorToolbar>
+        />
         <div className={cn("code-mirror-source-editor bg-background min-h-0", className)} ref={editorRef} />
       </ScrollSync>
     </>
@@ -357,7 +352,7 @@ const CodeMirrorToolbar = ({
     }
   };
 
-  const canPrettify = canPrettifyMime(mimeType);
+  const canPrettify = canPrettifyMime(mimeType) && !hasConflicts;
 
   return (
     <div
@@ -368,9 +363,7 @@ const CodeMirrorToolbar = ({
     >
       {!hasEditOverride && (
         <>
-          {isMarkdown && !hasConflicts && isSourceView && (
-            <RichButton onClick={() => setViewMode("rich-text")} />
-          )}
+          {isMarkdown && !hasConflicts && isSourceView && <RichButton onClick={() => setViewMode("rich-text")} />}
           {!isMarkdown && previewNode?.isMarkdownFile() && (
             <RichButton
               onClick={() =>

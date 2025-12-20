@@ -24,18 +24,7 @@ const rangesParser = {
   },
 };
 
-function rangesToSearchParams(ranges: [start: number, end: number][], meta?: Record<string, unknown>): string {
-  const params = new URLSearchParams();
-  params.set(RANGE_KEY, JSON.stringify(ranges));
-  if (meta) {
-    for (const [key, value] of Object.entries(meta)) {
-      params.set(key, JSON.stringify(value));
-    }
-  }
-  return params.toString();
-}
-
-export function useHashURLRanges():
+export function useURLRanges():
   | { start: number; end: number; hasRanges: true }
   | {
       start: null;
@@ -44,9 +33,9 @@ export function useHashURLRanges():
     } {
   const [ranges] = useQueryState(RANGE_KEY, rangesParser);
   const [start, end] = ranges?.at(0) ?? [];
+  console.log("URL Ranges:", { start, end });
   if (start === undefined || end === undefined) {
     return { start: null, end: null, hasRanges: false };
   }
   return { start, end, hasRanges: true };
 }
-

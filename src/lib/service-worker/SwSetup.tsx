@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from "react";
 
-export const ServiceWorker = ({ children }: { children: React.ReactNode }) => {
+export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {

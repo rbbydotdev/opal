@@ -179,24 +179,27 @@ function SpotlightSearchInternal({
   //MARK: State / hooks
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [, setViewMode] = useWatchViewMode();
   const [deferredSearch, setDeferredSearch] = useState("");
   const [_isPending, startTransition] = useTransition();
 
   // Extend cmdMap with view mode commands
-  const extendedCmdMap = useMemo(() => ({
-    ...cmdMap,
-    "Source View": [
-      NewCmdExec(async () => {
-        setViewMode("source");
-      }),
-    ],
-    "Rich Text View": [
-      NewCmdExec(async () => {
-        setViewMode("rich-text");
-      }),
-    ],
-  } as CmdMap), [cmdMap, setViewMode]);
+  // const extendedCmdMap = useMemo(
+  //   () =>
+  //     ({
+  //       ...cmdMap,
+  //       "Source View": [
+  //         NewCmdExec(async () => {
+  //           setViewMode("source");
+  //         }),
+  //       ],
+  //       "Rich Text View": [
+  //         NewCmdExec(async () => {
+  //           setViewMode("rich-text");
+  //         }),
+  //       ],
+  //     }) as CmdMap,
+  //   [cmdMap, setViewMode]
+  // );
 
   // Extend commands list
   const extendedCommands = useMemo(() => {
@@ -268,7 +271,7 @@ function SpotlightSearchInternal({
 
   const navigate = useNavigate();
   const handleCommandSelect = (cmd: string) => {
-    const members = extendedCmdMap[cmd];
+    const members = cmdMap[cmd];
     if (!members) return;
     execQueue.current = [...members];
     execContext.current = {};
@@ -838,14 +841,12 @@ function isCmdSelect(cmd: CmdMapMember): cmd is CmdSelect {
 
 function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const { newFile, newDir, renameDirOrFile, trashFile } = useWorkspaceFileMgmt(currentWorkspace);
-  // const { repo, playbook } = useMemo(
-  //   () => ({ repo: currentWorkspace.repo, playbook: currentWorkspace.playbook }),
-  //   [currentWorkspace]
-  // );
   const { repo, playbook } = useWorkspaceGitRepo({ currentWorkspace });
   const { focused } = useFileTreeMenuCtx();
   const { path: currentPath, name: workspaceName } = useWorkspaceRoute();
   const { isMarkdown } = useCurrentFilepath();
+
+  const [, setViewMode] = useWatchViewMode();
   const navigate = useNavigate();
 
   const { open: openPreview } = useWindowContextProvider();
@@ -855,7 +856,18 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
 
   const cmdMap = useMemo(
     () =>
+      //MARK: View Mode
       ({
+        "Source View": [
+          NewCmdExec(async () => {
+            setViewMode("source");
+          }),
+        ],
+        "Rich Text View": [
+          NewCmdExec(async () => {
+            setViewMode("rich-text");
+          }),
+        ],
         //MARK: Navigation Commands
         "New Workspace": [
           NewCmdExec(() => {
@@ -1026,7 +1038,6 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             }
           }),
         ],
-
 
         //
         // MARK: Git Commands

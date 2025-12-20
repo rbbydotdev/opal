@@ -1,6 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryStore } from "@/data/dao/HistoryDAO";
-import { HistoryDocRecord } from "@/data/HistoryTypes";
+import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,8 @@ export function useHtmlPreviewGenerator() {
 }
 
 function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
+  console.warn("EditViewImage needs given an actual edit maybeee lol");
+  return "<div>preview</div>";
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
 

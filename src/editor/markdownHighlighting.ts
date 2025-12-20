@@ -411,7 +411,7 @@ const createContrastSafeHighlightStyle = () => {
 };
 
 // Export the contrast-safe highlight style
-const markdownHighlightStyle = createContrastSafeHighlightStyle();
+// const markdownHighlightStyle = createContrastSafeHighlightStyle();
 
 // Enhanced markdown extension with comprehensive highlighting
 export const enhancedMarkdownExtension = (

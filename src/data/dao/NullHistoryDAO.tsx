@@ -1,4 +1,4 @@
-import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/data/dao/HistoryDocRecord";
 
 export class NullHistoryDAO implements HistoryStorageInterface {
   onNewEdit(documentId: string, cb: (edit: HistoryDocRecord) => void) {
@@ -8,7 +8,12 @@ export class NullHistoryDAO implements HistoryStorageInterface {
     return () => {};
   }
   clear(docId: string) {}
-  async saveEdit(workspaceId: string, id: string, newText: string, filePath?: string): Promise<HistoryDocRecord | null> {
+  async saveEdit(
+    workspaceId: string,
+    id: string,
+    newText: string,
+    filePath?: string
+  ): Promise<HistoryDocRecord | null> {
     return null;
   }
 

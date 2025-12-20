@@ -1,4 +1,4 @@
-import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/data/dao/HistoryDocRecord";
 import { ClientDb } from "@/data/instance";
 
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
@@ -48,7 +48,7 @@ export class HistoryStore {
   });
 
   private dmp: diff_match_patch = new diff_match_patch();
-  private cache: Map<number, string> = new Map();
+  public cache: Map<number, string> = new Map();
 
   onUpdate(documentId: string | "*", cb: (edits: HistoryDocRecord[]) => void) {
     const unsub = this.emitter.on("edits", (edits) =>

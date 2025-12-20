@@ -83,8 +83,6 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleOpenChange]);
 
-  // const renderSearchResults = useMemo(, [error, handleOpenChange, hasResults, hideResult, isSearching, searchTerm, workspaceResults]);
-
   const handleWorkspaceChange = (workspaceId: string) => {
     setOptionsValue((prev) => ({ ...prev, workspace: workspaceId }));
     resetSearch();
@@ -323,8 +321,9 @@ function SearchFile({
       <Link
         onClick={onNavigate}
         title={`${workspaceName}/${filePath}`}
-        to={href.toString()}
+        href={href.toString()}
         className="sticky top-0 z-10 flex h-8 w-full items-center rounded-t border-sidebar-border bg-sidebar font-mono text-xs text-sidebar-foreground hover:bg-sidebar-primary"
+        to={"."}
       >
         <div className="ml-1 flex h-full items-center justify-center gap-2 ">
           <FileTextIcon size={12} className="h-4 text-sidebar-ring" />
@@ -392,10 +391,9 @@ function SearchFile({
 }
 
 function SearchLine({ match, href, onClick }: { match: SearchResult; href: string; onClick?: () => void }) {
-  const ranges = [[match.start, match.end]];
-  const viewMode = "source";
+  const ranges = JSON.stringify([[match.start, match.end]]);
   return (
-    <Link to={href} search={{ hlRanges: ranges, viewMode }} onClick={onClick}>
+    <Link to={href} search={{ hlRanges: ranges, viewMode: "source" }} onClick={onClick}>
       <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (

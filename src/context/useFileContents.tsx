@@ -1,10 +1,12 @@
 import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
+import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { useNavigate } from "@tanstack/react-router";
+import matter from "gray-matter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -97,7 +99,7 @@ export function useFileContents({
   path?: AbsPath | null;
 }) {
   // Live content state - immediate updates from editor, shows current editor state
-  const [hotContents, setHotContents] = useState<string | null>("");
+  const [hotContents, setHotContents] = useState<string | null>(null);
 
   const onContentChangeRef = useRef(onContentChange);
   const { path: currentRoutePath } = useWorkspaceRoute();
@@ -124,14 +126,23 @@ export function useFileContents({
   /**
    * Writes content to disk without triggering OUTSIDE_WRITE events
    * Used for: Editor changes, debounced updates, cleanup flushes
-   * NOTE: Does NOT emit OUTSIDE_WRITE to avoid editor text corruption
+   * NOTE: Does NOT emit local OUTSIDE_WRITE to avoid editor text corruption
    * INSIDE_WRITE events are handled elsewhere in the editor chain
    */
   const writeFileContents = useCallback(
-    (updates: string) => {
+    (
+      updates: string,
+      {
+        outsideWrite,
+      }: {
+        outsideWrite?: boolean;
+      } = { outsideWrite: false }
+    ) => {
       if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates);
-        // DO NOT EMIT OUTSIDE_WRITE - causes text-md-text corruption in editor
+        void currentWorkspace?.disk.writeFile(filePath, updates, {
+          outsideWrite,
+        });
+        // LOCAL OUTSIDE_WRITE OPTIONAL, if writeFileContents is triggered by editor changes, could cause loops
         // INSIDE_WRITE events are emitted by the disk write operation itself
       }
     },
@@ -283,6 +294,25 @@ export function useFileContents({
     }
   }, [currentWorkspace, filePath]);
 
+  function updateImmediate(
+    content: string,
+    {
+      outsideWrite = false,
+    }: {
+      outsideWrite?: boolean;
+    } = { outsideWrite: false }
+  ) {
+    setHotContents(content);
+    writeFileContents(content, {
+      outsideWrite,
+    });
+  }
+  const documentData = useMemo(() => {
+    return matter(hotContents || "").data as Record<string, any>;
+  }, [hotContents]);
+
+  const hasConflicts = hasGitConflictMarkers(hotContents || "");
+
   /**
    * RETURN VALUES:
    * - contents: Baseline content from disk (for editor initialization)
@@ -300,11 +330,42 @@ export function useFileContents({
   return {
     contentEmitter,
     error,
+    hasConflicts,
     hotContents,
     filePath,
+    documentData,
     contents: contents !== null ? String(contents) : null,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     writeFileContents,
     updateDebounce,
+    updateImmediate,
   };
+}
+
+export function useWatchFileContents({
+  currentWorkspace,
+  path,
+  onChange,
+}: {
+  currentWorkspace: Workspace;
+  path: AbsPath | null;
+  onChange: (content: string) => void;
+}) {
+  const onChangeRef = useRef(onChange).current;
+  useEffect(() => {
+    if (!path || !currentWorkspace) return;
+
+    const unsubscribeInside = currentWorkspace.disk.insideWriteListener(path, (content) => {
+      onChangeRef(String(content));
+    });
+
+    const unsubscribeOutside = currentWorkspace.disk.outsideWriteListener(path, (content) => {
+      onChangeRef(String(content));
+    });
+
+    return () => {
+      unsubscribeInside?.();
+      unsubscribeOutside?.();
+    };
+  }, [currentWorkspace, onChangeRef, path]);
 }

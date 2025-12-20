@@ -139,6 +139,7 @@ export class Workspace {
       disk: this.disk.toJSON(),
       thumbs: this.thumbs.toJSON(),
       code: this.connector.code,
+      timestamp: this.connector.timestamp,
     };
   }
   static FromJSON(json: WorkspaceJType) {

@@ -5,28 +5,27 @@ import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContent
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
 import { useFileContents } from "@/context/useFileContents";
 import { Editor, Editors } from "@/editor/Editors";
+import { useEditorKey } from "@/editor/useEditorKey";
 import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors/errors";
-import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { SourceEditor } from "@/source-editor/SourceEditor";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { isSourceMimeType, SourceMimeType } from "../source-editor/SourceMimeType";
 
 export function WorkspaceFilePage() {
   const { workspaceName } = useParams({ strict: false });
   const { filePath, isImage: isImage } = useCurrentFilepath();
   const { currentWorkspace } = useWorkspaceContext();
+  const editorKey = useEditorKey();
   const navigate = useNavigate();
   useEffect(() => {
-    if (workspaceName) {
-      document.title = workspaceName;
-    }
+    if (workspaceName) document.title = workspaceName;
   }, [workspaceName]);
   useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
 
@@ -43,7 +42,8 @@ export function WorkspaceFilePage() {
   if (isImage) {
     return <ImageViewer filePath={filePath} currentWorkspace={currentWorkspace} />;
   }
-  return <TextEditor filePath={filePath} currentWorkspace={currentWorkspace} />;
+  console.log(editorKey);
+  return <TextEditor key={editorKey} filePath={filePath} currentWorkspace={currentWorkspace} />;
 }
 
 function getEditor({
@@ -69,29 +69,12 @@ function getEditor({
 }
 
 function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
-  // Get file contents to check for conflicts (only for non-image files)
-
-  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized, hasEditOverride } = useCurrentFilepath();
+  const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
   const [, setViewMode] = useWatchViewMode();
-  const { contents, updateDebounce, error, hotContents } = useFileContents({
+  const { error, hasConflicts } = useFileContents({
     currentWorkspace,
   });
-
-  if (error) {
-    throw error;
-  }
-
-  const [hasConflicts, setHasConflicts] = useState(false);
-
-  useEffect(() => {
-    setHasConflicts(hasGitConflictMarkers(String(contents)));
-  }, [contents]);
-
-  const handleSourceContentChange = (newContent: string) => {
-    const hasConflictsNow = hasGitConflictMarkers(newContent);
-    if (hasConflicts !== hasConflictsNow) setHasConflicts(hasConflictsNow);
-    updateDebounce(newContent);
-  };
+  if (error) throw error;
 
   useEffect(() => {
     const handleCmdE = (e: KeyboardEvent) => {
@@ -140,15 +123,18 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
         }
       }
     };
-    window.addEventListener("keydown", handleCmdE);
-    window.addEventListener("keydown", handleCmdSemicolon);
-    window.addEventListener("keydown", handleEscEsc);
-    return () => {
-      window.removeEventListener("keydown", handleCmdSemicolon);
-      window.removeEventListener("keydown", handleCmdE);
-      window.removeEventListener("keydown", handleEscEsc);
-    };
-  }, [isMarkdown, isSourceView, hasConflicts]);
+    const controller = new AbortController();
+    window.addEventListener("keydown", handleCmdE, {
+      signal: controller.signal,
+    });
+    window.addEventListener("keydown", handleCmdSemicolon, {
+      signal: controller.signal,
+    });
+    window.addEventListener("keydown", handleEscEsc, {
+      signal: controller.signal,
+    });
+    return () => controller.abort();
+  }, [isMarkdown, isSourceView, hasConflicts, setViewMode]);
 
   if (!filePath) return null;
 
@@ -157,19 +143,13 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       <Editors selected={getEditor({ isRecognized, isMarkdown, isSourceView, hasConflicts, mimeType })}>
         <Editor id="unrecognized">
-          <UnrecognizedFileCard key={filePath} fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
+          <UnrecognizedFileCard fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
         </Editor>
         <Editor id="source">
-          <SourceEditor
-            onChange={handleSourceContentChange}
-            hasConflicts={hasConflicts}
-            mimeType={mimeType as SourceMimeType}
-            currentWorkspace={currentWorkspace}
-            key={filePath}
-          />
+          <SourceEditor mimeType={mimeType as SourceMimeType} currentWorkspace={currentWorkspace} />
         </Editor>
         <Editor id="markdown">
-          <WorkspaceMarkdownEditor contents={hotContents} path={filePath} currentWorkspace={currentWorkspace} />
+          <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
         </Editor>
       </Editors>
     </>

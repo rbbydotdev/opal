@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQueryState } from "nuqs";
 import { Edit, FileQuestion } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 interface UnrecognizedFileCardProps {
   fileName: string;
@@ -15,7 +15,7 @@ export function UnrecognizedFileCard({ fileName, mimeType }: UnrecognizedFileCar
   });
 
   const handleEditAnyway = () => {
-    setEditOverride(true);
+    void setEditOverride(true);
   };
 
   return (

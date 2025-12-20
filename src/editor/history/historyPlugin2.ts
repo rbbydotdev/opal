@@ -1,10 +1,7 @@
-import { HistoryStore } from "@/data/dao/HistoryDAO";
-import { HistoryDocRecord, HistoryStorageInterface } from "@/data/HistoryTypes";
-import { ClientDb } from "@/data/instance";
+import { HistoryDocRecord, HistoryStorageInterface } from "@/data/dao/HistoryDocRecord";
 import { debounce } from "@/lib/debounce";
 import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { Mutex } from "async-mutex";
-import { useLiveQuery } from "dexie-react-hooks";
 
 const HistoryEvents = {
   INSIDE_MARKDOWN: "inside-markdown",
@@ -270,56 +267,4 @@ export class HistoryPlugin2 {
     this.events.on(HistoryEvents.SELECTED_EDIT, callback);
     return () => this.events.removeListener(HistoryEvents.SELECTED_EDIT, callback);
   };
-}
-
-export class HistoryPlugin3 {
-  private debounceMs = 2_000;
-  private saveThreshold = 0.7;
-  historyStore = new HistoryStore();
-  mutex = new Mutex();
-  private muteChange = false;
-  //hooks into editor on change
-  onChange = (md: string) => {
-    if (!this.muteChange) {
-      //handle change
-    }
-  };
-
-  saveNewEdit = this.historyStore.saveEdit;
-
-  onChangeDebounce = debounce(
-    async ({ documentId, markdown, workspaceId }: { workspaceId: string; documentId: string; markdown: string }) => {
-      const saveScore = await this.historyStore.getSaveThreshold(documentId, markdown);
-      if (saveScore < this.saveThreshold) {
-        return console.debug(`Skipping save for ${documentId} due to low score: ${saveScore}`);
-      }
-      return this.saveNewEdit({ markdown, documentId, workspaceId });
-    },
-    this.debounceMs
-  );
-  getTextForEdit = async (editId: number): Promise<string | null> => {
-    return this.historyStore.reconstructDocument(editId);
-  };
-  mute() {
-    this.muteChange = true;
-  }
-  unmute() {
-    this.muteChange = false;
-  }
-  tearDown() {
-    this.historyStore.tearDown();
-  }
-
-  private async transaction(fn: () => void) {
-    return this.mutex.runExclusive(async () => {
-      this.muteChange = true;
-      await fn();
-      this.muteChange = false;
-    });
-  }
-  constructor() {}
-}
-
-export function useHistoryEdits({ documentId }: { documentId: string }) {
-  useLiveQuery(async () => ClientDb.historyDocs.where("id").equals(documentId).sortBy("timestamp"), [documentId]);
 }

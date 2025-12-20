@@ -1,4 +1,4 @@
-import { HistoryStorageInterface } from "@/data/HistoryTypes";
+import { HistoryStorageInterface } from "@/data/dao/HistoryDocRecord";
 import { MdxEditorSelector, setMarkdownOnly$ } from "@/editor/EditorConst";
 import { useEditHistoryPlugin } from "@/editor/history/useEditHistory";
 import { Cell, markdown$, Realm } from "@mdxeditor/editor";

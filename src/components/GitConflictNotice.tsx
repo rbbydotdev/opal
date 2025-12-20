@@ -14,7 +14,6 @@ export function GitConflictNotice({ className }: GitConflictNoticeProps) {
       <TooltipTrigger asChild>
         <div
           onClick={toggleOpen}
-          // title={"Git conflicts detected"}
           className={cn(
             "cursor-pointer inline-flex items-center justify-center h-full gap-1.5 px-2 py-1 rounded text-xs font-medium border border-destructive bg-destructive/10 text-destructive",
             className

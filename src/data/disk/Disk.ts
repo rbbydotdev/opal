@@ -784,13 +784,23 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     }
   }
 
-  async writeFile<T extends string | Uint8Array>(filePath: AbsPath, contents: T | Promise<T>) {
+  async writeFile<T extends string | Uint8Array>(
+    filePath: AbsPath,
+    contents: T | Promise<T>,
+    //outside write will trigger watchers,
+    //this should not be used for live edits in editors
+    //, as it would cause a loop
+    { outsideWrite = false }: { outsideWrite?: boolean } = { outsideWrite: false }
+  ) {
     //TODO: should use TreeNode.write() ?
     await this.ready;
     const awaitedContents = contents instanceof Promise ? await contents : contents;
     await this.fs.writeFile(filePath, awaitedContents, { encoding: "utf8", mode: 0o777 });
     void this.remote.emit(DiskEvents.OUTSIDE_WRITE, { filePaths: [filePath] });
     void this.local.emit(DiskEvents.INSIDE_WRITE, { filePaths: [filePath] });
+    if (outsideWrite) {
+      void this.local.emit(DiskEvents.OUTSIDE_WRITE, { filePaths: [filePath] });
+    }
     return;
   }
   async readFile(filePath: AbsPath) {

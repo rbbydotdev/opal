@@ -8,30 +8,23 @@ import { cn } from "@/lib/utils";
 import "@/source-editor/code-mirror-source-editor.css";
 import { SourceMimeType } from "@/source-editor/SourceMimeType";
 import { Workspace } from "@/workspace/Workspace";
-import { useLocation } from "@tanstack/react-router";
 
 export const SourceEditor = ({
-  hasConflicts,
   currentWorkspace,
   className,
   mimeType = "text/plain",
-  onChange,
 }: {
-  hasConflicts: boolean;
   currentWorkspace: Workspace;
   className?: string;
   mimeType?: SourceMimeType;
-  onChange: (newContent: string) => void;
 }) => {
+  const { contents, updateDebounce, hasConflicts } = useFileContents({
+    currentWorkspace,
+  });
   const { storedValue: enableGitConflictResolution } = useLocalStorage(
     "SourceEditor/enableGitConflictResolution",
     true
   );
-  const { contents } = useFileContents({
-    currentWorkspace,
-  });
-
-  const locationHash = useLocation().hash;
 
   if (contents === null) return null;
 
@@ -47,12 +40,11 @@ export const SourceEditor = ({
       }
     >
       <CodeMirrorEditor
-        key={locationHash}
         hasConflicts={hasConflicts}
         currentWorkspace={currentWorkspace}
         mimeType={mimeType}
         value={String(contents)}
-        onChange={onChange}
+        onChange={updateDebounce}
         readOnly={false}
         className={cn("h-full flex-grow", className)}
         enableConflictResolution={enableGitConflictResolution}

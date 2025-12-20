@@ -266,21 +266,10 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
           className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
           onClick={keepMenuOpen(toggleEditHistory)}
         >
-          {isEditHistoryEnabled ? <Check size={12} /> : <div className="w-4" />}
+          {isEditHistoryEnabled ? <Check size={12} /> : <div className="w-2" />}
           <Clock size={12} />
           <span className="pr-4">Use Editor History</span>
         </ContextMenuItem>
-
-        {isEditHistoryEnabled && (
-          <ContextMenuItem
-            className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-            onClick={keepMenuOpen(toggleHistoryImageGeneration)}
-          >
-            {isHistoryImageGenerationEnabled ? <Check size={12} /> : <div className="w-4" />}
-            <span className="font-mono text-lg">{"└"}</span>
-            <span className="pr-4">Use History Images</span>
-          </ContextMenuItem>
-        )}
 
         <ContextMenuSeparator />
         {/* set dev mode */}

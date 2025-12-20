@@ -1,56 +1,31 @@
 import { useFileContents } from "@/context/useFileContents";
-import { HistorySnapDBProvider } from "@/data/dao/HistorySnapDBContext";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
+import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import { default as graymatter, default as matter } from "gray-matter";
 import { ComponentProps, useMemo, useRef } from "react";
-import { useToggleEditHistory } from "../../editor/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "../../editor/history/useToggleHistoryImageGeneration";
-import { useWorkspaceDocumentId } from "../../editor/history/useWorkspaceDocumentId";
 
-export function WorkspaceMarkdownEditor({
-  currentWorkspace,
-  contents,
-  // extPreviewCtrl,
-  path,
-}: {
-  currentWorkspace: Workspace;
-  contents: string | null;
-  path: AbsPath;
-  // extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
-}) {
+export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
-  const { updateDebounce, error } = useFileContents({
-    path,
+  const { mimeType } = useCurrentFilepath();
+  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
+  const { contents, updateDebounce } = useFileContents({
     currentWorkspace,
+    path,
     onContentChange: (c) => {
-      //for external changes
-      editorRef.current?.setMarkdown(graymatter(c).content);
+      //outside edits
+      editorRef.current?.setMarkdown(stripFrontmatter(c));
     },
   });
-  if (error) throw error;
-
-  const { mimeType } = useCurrentFilepath();
-
-  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
-  const { isEditHistoryEnabled } = useToggleEditHistory();
-  const documentId = isEditHistoryEnabled ? useWorkspaceDocumentId(contents) : "";
-
-  const markdown = String(contents || "");
-  const { data, content } = useMemo(() => {
-    const md = matter(markdown);
-    const frontmatter = isEditHistoryEnabled && documentId ? { documentId, ...(md.data ?? {}) } : (md.data ?? {});
-    return { data: frontmatter, content: md.content };
-  }, [documentId, markdown, isEditHistoryEnabled]);
-  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
+  const bodyOnly = useMemo(() => stripFrontmatter(contents || ""), [contents]);
   if (contents === null || !currentWorkspace) return null;
+
   return (
     <div className="flex flex-col h-full relative">
       <ScrollSync
@@ -58,17 +33,15 @@ export function WorkspaceMarkdownEditor({
         path={path}
         workspaceName={currentWorkspace.name}
       >
-        <HistorySnapDBProvider documentId={documentId} workspaceId={currentWorkspace.id}>
-          <EditorWithPlugins
-            mimeType={mimeType}
-            currentWorkspace={currentWorkspace}
-            editorRef={editorRef}
-            onChange={(md) => updateDebounce(matter.stringify(md, data))}
-            markdown={content}
-            className={"bg-background flex-grow flex-col h-full "}
-            contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
-          />
-        </HistorySnapDBProvider>
+        <EditorWithPlugins
+          mimeType={mimeType}
+          currentWorkspace={currentWorkspace}
+          editorRef={editorRef}
+          onChange={updateDebounce}
+          markdown={bodyOnly}
+          className={"bg-background flex-grow flex-col h-full "}
+          contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
+        />
       </ScrollSync>
     </div>
   );

@@ -12,6 +12,7 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DocHistoryProvider } from "@/editor/history/HistoryPlugin3";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";
@@ -21,7 +22,6 @@ import { WorkspaceButtonBar } from "@/layouts/WorkspaceButtonBar";
 import { ServiceWorker } from "@/lib/service-worker/SwSetup";
 import { WorkspaceProvider } from "@/workspace/WorkspaceContext";
 import { RemoteMDXEditorRealmProvider } from "@mdxeditor/editor";
-import { NuqsAdapter } from "nuqs/adapters/react";
 import { Toaster } from "sonner";
 import { useThemeContext } from "./ThemeContext";
 
@@ -51,56 +51,55 @@ const Background = ({ children }: { children: React.ReactNode }) => {
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   useZoom();
   return (
-    <NuqsAdapter>
-      <CustomQueryClientProvider>
-        <ThemeProvider>
-          <Background>
-            <ServiceWorker>
-              <Toaster />
-              <CompatibilityAlert />
-
-              <AsyncWindowErrorBoundary>
-                <ErrorPopper>
-                  <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
-                    <WorkspaceProvider>
-                      <TooltipProvider delayDuration={1000}>
-                        <WindowContextProviderComponent>
-                          <LivePreviewDialogProvider>
-                            <GitStatusProvider>
-                              <PublicationModalProvider>
-                                <SidebarProvider>
-                                  <BuildCreationProvider>
-                                    <PromptProvider>
-                                      <ConfirmProvider>
-                                        <RemoteMDXEditorRealmProvider>
-                                          <div className="w-full flex">
-                                            <ErrorBoundary fallback={ErrorPlaque}>
-                                              <div id={WS_BUTTON_BAR_ID} className="bg-muted">
-                                                <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                                  <WorkspaceButtonBar />
-                                                </ErrorBoundary>
-                                              </div>
-                                              <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                            </ErrorBoundary>
-                                          </div>
-                                        </RemoteMDXEditorRealmProvider>
-                                      </ConfirmProvider>
-                                    </PromptProvider>
-                                  </BuildCreationProvider>
-                                </SidebarProvider>
-                              </PublicationModalProvider>
-                            </GitStatusProvider>
-                          </LivePreviewDialogProvider>
-                        </WindowContextProviderComponent>
-                      </TooltipProvider>
-                    </WorkspaceProvider>
-                  </ErrorBoundary>
-                </ErrorPopper>
-              </AsyncWindowErrorBoundary>
-            </ServiceWorker>
-          </Background>
-        </ThemeProvider>
-      </CustomQueryClientProvider>
-    </NuqsAdapter>
+    <CustomQueryClientProvider>
+      <ThemeProvider>
+        <Background>
+          <ServiceWorker />
+          <Toaster />
+          <CompatibilityAlert />
+          <AsyncWindowErrorBoundary>
+            <ErrorPopper>
+              <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
+                <WorkspaceProvider>
+                  <DocHistoryProvider>
+                    <TooltipProvider delayDuration={1000}>
+                      <WindowContextProviderComponent>
+                        <LivePreviewDialogProvider>
+                          <GitStatusProvider>
+                            <PublicationModalProvider>
+                              <SidebarProvider>
+                                <BuildCreationProvider>
+                                  <PromptProvider>
+                                    <ConfirmProvider>
+                                      <RemoteMDXEditorRealmProvider>
+                                        <div className="w-full flex">
+                                          <ErrorBoundary fallback={ErrorPlaque}>
+                                            <div id={WS_BUTTON_BAR_ID} className="bg-muted">
+                                              <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                <WorkspaceButtonBar />
+                                              </ErrorBoundary>
+                                            </div>
+                                            <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                          </ErrorBoundary>
+                                        </div>
+                                      </RemoteMDXEditorRealmProvider>
+                                    </ConfirmProvider>
+                                  </PromptProvider>
+                                </BuildCreationProvider>
+                              </SidebarProvider>
+                            </PublicationModalProvider>
+                          </GitStatusProvider>
+                        </LivePreviewDialogProvider>
+                      </WindowContextProviderComponent>
+                    </TooltipProvider>
+                  </DocHistoryProvider>
+                </WorkspaceProvider>
+              </ErrorBoundary>
+            </ErrorPopper>
+          </AsyncWindowErrorBoundary>
+          {/* </ServiceWorker> */}
+        </Background>
+      </ThemeProvider>
+    </CustomQueryClientProvider>
   );
 }
