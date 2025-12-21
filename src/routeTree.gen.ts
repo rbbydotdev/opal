@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PreviewRouteImport } from './routes/preview'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as AllSettingsRouteImport } from './routes/all-settings'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as NotfoundRouteImport } from './routes/$notfound'
@@ -29,6 +30,11 @@ import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_ap
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
   path: '/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AllSettingsRoute = AllSettingsRouteImport.update({
@@ -113,6 +119,7 @@ const AppWorkspaceWorkspaceNameSplatRoute =
 export interface FileRoutesByFullPath {
   '/$notfound': typeof NotfoundRoute
   '/all-settings': typeof AllSettingsRoute
+  '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/$notfound': typeof NotfoundRoute
   '/all-settings': typeof AllSettingsRoute
+  '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/$notfound': typeof NotfoundRoute
   '/_app': typeof AppRouteWithChildren
   '/all-settings': typeof AllSettingsRoute
+  '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/$notfound'
     | '/all-settings'
+    | '/playground'
     | '/preview'
     | '/newWorkspace'
     | '/settings'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
   to:
     | '/$notfound'
     | '/all-settings'
+    | '/playground'
     | '/preview'
     | '/newWorkspace'
     | '/settings'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/$notfound'
     | '/_app'
     | '/all-settings'
+    | '/playground'
     | '/preview'
     | '/_app/newWorkspace'
     | '/_app/settings'
@@ -220,6 +232,7 @@ export interface RootRouteChildren {
   NotfoundRoute: typeof NotfoundRoute
   AppRoute: typeof AppRouteWithChildren
   AllSettingsRoute: typeof AllSettingsRoute
+  PlaygroundRoute: typeof PlaygroundRoute
   PreviewRoute: typeof PreviewRoute
   AuthGithubRoute: typeof AuthGithubRoute
   AuthNetlifyRoute: typeof AuthNetlifyRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/preview'
       fullPath: '/preview'
       preLoaderRoute: typeof PreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/all-settings': {
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotfoundRoute: NotfoundRoute,
   AppRoute: AppRouteWithChildren,
   AllSettingsRoute: AllSettingsRoute,
+  PlaygroundRoute: PlaygroundRoute,
   PreviewRoute: PreviewRoute,
   AuthGithubRoute: AuthGithubRoute,
   AuthNetlifyRoute: AuthNetlifyRoute,

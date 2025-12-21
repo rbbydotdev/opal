@@ -6,20 +6,21 @@ type TeardownableResource = {
 };
 
 export function useResource<T extends TeardownableResource>(setup: () => T, deps: any[] = [], initialObj?: T) {
-  const resource = useRef(initialObj ?? setup());
+  const [resource, setResource] = useState(initialObj ?? setup);
 
   useEffect(() => {
     // Create new resource (previous one will be cleaned by prior effect cleanup)
     // (On first run there is no prior cleanup; we replace the eager one to keep semantics)
-    if (resource.current) {
-      resource.current.tearDown(); // tear down the eager (or previous) instance before replacing
+    if (resource) {
+      resource.tearDown(); // tear down the eager (or previous) instance before replacing
     }
-    resource.current = setup();
+    const newResource = setup();
+    setResource(newResource);
 
     const unsubs: Array<() => void> = [];
 
-    if (resource.current.init) {
-      const maybeUnsub = resource.current.init();
+    if (newResource.init) {
+      const maybeUnsub = newResource.init();
       if (typeof maybeUnsub === "function") {
         unsubs.push(maybeUnsub);
       }
@@ -27,7 +28,7 @@ export function useResource<T extends TeardownableResource>(setup: () => T, deps
 
     // Always add teardown as a final unsubscribe
     unsubs.push(() => {
-      resource.current?.tearDown();
+      newResource?.tearDown();
     });
 
     return () => {
@@ -41,7 +42,7 @@ export function useResource<T extends TeardownableResource>(setup: () => T, deps
     };
   }, deps);
 
-  return resource.current!;
+  return resource;
 }
 
 export function useRemoteResource<T extends TeardownableResource>(
@@ -49,23 +50,21 @@ export function useRemoteResource<T extends TeardownableResource>(
   deps: any[] = [],
   initialObj?: T
 ) {
-  const resourceRef = useRef<T | undefined>(initialObj);
+  const [resource, setResource] = useState<T | undefined>(initialObj);
   const generationRef = useRef(0);
-  const [, forceRender] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     const generation = ++generationRef.current;
 
     // Tear down any current (eager or previous) resource immediately (mirror useResource)
-    if (resourceRef.current) {
+    if (resource) {
       try {
-        resourceRef.current.tearDown();
+        resource.tearDown();
       } catch {
         /* swallow */
       }
-      resourceRef.current = undefined;
-      forceRender((v) => v + 1);
+      setResource(undefined);
     }
 
     let initUnsub: (() => void) | undefined;
@@ -91,7 +90,7 @@ export function useRemoteResource<T extends TeardownableResource>(
       }
 
       resolvedResource = next;
-      resourceRef.current = next;
+      setResource(next);
 
       try {
         if (next.init) {
@@ -103,8 +102,6 @@ export function useRemoteResource<T extends TeardownableResource>(
       } catch {
         // If init throws, still allow tearDown in cleanup
       }
-
-      forceRender((v) => v + 1);
     })();
 
     return () => {
@@ -127,13 +124,13 @@ export function useRemoteResource<T extends TeardownableResource>(
           /* swallow */
         }
         // Clear only if the current resource is still the one resolved by this effect
-        if (resourceRef.current === resolvedResource) {
-          resourceRef.current = undefined;
+        if (resource === resolvedResource) {
+          setResource(undefined);
         }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return resourceRef.current;
+  return resource;
 }

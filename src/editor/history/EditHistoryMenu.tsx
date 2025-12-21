@@ -14,7 +14,7 @@ import { useDocHistory, useDocHistoryEdits } from "@/editor/history/HistoryPlugi
 import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
-import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
+import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
 import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
@@ -44,15 +44,9 @@ export function EditHistoryMenu({
 }) {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
-  const { path: filePath } = useWorkspaceRoute();
   const disabled = false;
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
-  // const { updateImmediate } = useFileContents({
-  //   currentWorkspace,
-  //   path: filePath,
-  // });
-  /////////// Mode: "edit" | "propose"
   const [selectedEdit, selectEdit] = useState<HistoryDocRecord | null>(null);
   const [mode, setMode] = useState<"edit" | "propose">("edit");
   const baseContent = useRef(editorMarkdown);
@@ -61,6 +55,8 @@ export function EditHistoryMenu({
 
   const { docHistory } = useDocHistory();
   const pending = useSyncExternalStore(docHistory.onChangeIncoming, docHistory.getChangeIncoming);
+
+  const edits = useDocHistoryEdits();
 
   const isSelectedEdit = (edit: HistoryDocRecord) => {
     return selectedEdit !== null && selectedEdit.edit_id === edit.edit_id;
@@ -123,8 +119,6 @@ export function EditHistoryMenu({
   }, [editorMarkdown, mode]);
 
   /////////
-
-  const edits = useDocHistoryEdits();
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 

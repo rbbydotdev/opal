@@ -5,6 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noImplicitThis": true,
     "noUncheckedIndexedAccess": true,
     "types": [],
@@ -29,32 +30,25 @@
     }
   },
   "include": [
-    "../tailwind.config.ts",
+    "./tailwind.config.ts",
     "./src/**/*.ts",
     "./src/**/*.tsx",
     "./src/**/*.d.ts",
-    "./playwrite-tests/**/*.ts",
     "*.ts",
     "*.d.ts"
   ],
   "exclude": [
-    // "**/*.test.ts",
-    "proxies/**/*.ts",
+    "node_modules",
+    "dist",
     "proxies",
     "patches",
-    "./git-protocol-proxy/**/*.ts",
-    "./node_modules",
     "tools.ignore",
-    "./src/dist",
-    "./dist/**",
-    "dist",
-    "src/dist/**",
-    "src/app/sand/**",
-    "node_modules",
-    "node_modules/**/*",
+    "playwrite-tests",
     "scripts/build-preview.ts",
     "*.ignore.*",
-    "**/*.ignore.*", // Excludes any file with `.ignore.` in its name
-    "**/__*" // Excludes any file or directory starting with `__`
+    "**/*.ignore.*",
+    "**/__*",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

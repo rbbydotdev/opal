@@ -6,7 +6,6 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
-import { debounce } from "@/lib/debounce";
 import { BadRequestError } from "@/lib/errors/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
@@ -37,6 +36,7 @@ import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
 import { reduceLineage } from "@/lib/paths2";
+import debounce from "debounce";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
 

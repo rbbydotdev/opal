@@ -3,7 +3,8 @@ import { DiskJType } from "@/data/disk/DiskType";
 import { GitConfig, GitRepoAuthor, OPAL_AUTHOR } from "@/features/git-repo/GitConfig";
 import { WatchPromiseMembers } from "@/features/git-repo/WatchPromiseMembers";
 import { Channel } from "@/lib/channel";
-import { debounce } from "@/lib/debounce";
+import debounce from "debounce";
+
 import { deepEqual } from "@/lib/deepEqual";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
