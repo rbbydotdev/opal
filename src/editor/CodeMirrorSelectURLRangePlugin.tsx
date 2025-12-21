@@ -33,7 +33,6 @@ export function useURLRanges():
     } {
   const [ranges] = useQueryState(RANGE_KEY, rangesParser);
   const [start, end] = ranges?.at(0) ?? [];
-  console.log("URL Ranges:", { start, end });
   if (start === undefined || end === undefined) {
     return { start: null, end: null, hasRanges: false };
   }

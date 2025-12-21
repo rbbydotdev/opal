@@ -35,14 +35,12 @@ export function WorkspaceFilePage() {
     }
   }, [currentWorkspace, filePath, navigate]);
 
-  if (!filePath) return null;
   if (!currentWorkspace.isNull && currentWorkspace.nodeFromPath(filePath) === null) {
     return <FileError error={new NotFoundError("File not found: " + filePath)} />;
   }
   if (isImage) {
     return <ImageViewer filePath={filePath} currentWorkspace={currentWorkspace} />;
   }
-  console.log(editorKey);
   return <TextEditor key={editorKey} filePath={filePath} currentWorkspace={currentWorkspace} />;
 }
 
@@ -68,7 +66,7 @@ function getEditor({
   return "source";
 }
 
-function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath }) {
+function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath | null }) {
   const { inTrash, isSourceView, mimeType, isMarkdown, isRecognized } = useCurrentFilepath();
   const [, setViewMode] = useWatchViewMode();
   const { error, hasConflicts } = useFileContents({
@@ -143,7 +141,7 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
       <Editors selected={getEditor({ isRecognized, isMarkdown, isSourceView, hasConflicts, mimeType })}>
         <Editor id="unrecognized">
-          <UnrecognizedFileCard fileName={filePath?.split("/").pop() || ""} mimeType={mimeType} />
+          <UnrecognizedFileCard fileName={filePath?.split("/").pop() || null} mimeType={mimeType} />
         </Editor>
         <Editor id="source">
           <SourceEditor mimeType={mimeType as SourceMimeType} currentWorkspace={currentWorkspace} />
@@ -156,6 +154,6 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
   );
 }
 
-function ImageViewer({ filePath, currentWorkspace }: { filePath: string; currentWorkspace: Workspace }) {
+function ImageViewer({ filePath, currentWorkspace }: { filePath: string | null; currentWorkspace: Workspace }) {
   return <WorkspaceImageView currentWorkspace={currentWorkspace} key={filePath} />;
 }

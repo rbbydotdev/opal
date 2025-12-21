@@ -1,5 +1,4 @@
 import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
-import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath } from "@/lib/paths2";
@@ -51,29 +50,6 @@ export function useLiveFileContent(currentWorkspace: Workspace, path: AbsPath | 
   return content;
 }
 
-const ContentEvents = {
-  UPDATE: "update",
-} as const;
-
-type ContentEventMap = {
-  [ContentEvents.UPDATE]: string;
-};
-
-/**
- * Creates a singleton content emitter for programmatic content updates
- * Used when components need to push content changes without going through the editor
- * Cleanup: Removes all listeners on unmount to prevent memory leaks
- */
-function useContentEmitter() {
-  const emitter = useMemo(() => CreateTypedEmitter<ContentEventMap>(), []);
-  useEffect(() => {
-    return () => {
-      emitter.removeAllListeners();
-    };
-  }, [emitter]);
-  return emitter;
-}
-
 /**
  * Main hook for managing file content state with multiple update sources
  *
@@ -89,26 +65,22 @@ function useContentEmitter() {
  */
 export function useFileContents({
   currentWorkspace,
-  onContentChange,
   debounceMs = 250,
   path,
 }: {
   currentWorkspace: Workspace;
-  onContentChange?: (content: string) => void;
   debounceMs?: number;
   path?: AbsPath | null;
 }) {
   // Live content state - immediate updates from editor, shows current editor state
   const [hotContents, setHotContents] = useState<string | null>(null);
 
-  const onContentChangeRef = useRef(onContentChange);
   const { path: currentRoutePath } = useWorkspaceRoute();
 
   // Baseline content from disk - only updated on file read or outside writes
   const [contents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const navigate = useNavigate();
-  const contentEmitter = useContentEmitter();
 
   // Simplified debounce management
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -139,7 +111,7 @@ export function useFileContents({
       } = { outsideWrite: false }
     ) => {
       if (filePath && currentWorkspace) {
-        void currentWorkspace?.disk.writeFile(filePath, updates, {
+        return currentWorkspace.disk.writeFile(filePath, updates, {
           outsideWrite,
         });
         // LOCAL OUTSIDE_WRITE OPTIONAL, if writeFileContents is triggered by editor changes, could cause loops
@@ -166,7 +138,7 @@ export function useFileContents({
     }
     debounceRef.current = setTimeout(() => {
       if (pendingContentRef.current !== null) {
-        writeFileContents(String(pendingContentRef.current));
+        void writeFileContents(String(pendingContentRef.current));
         pendingContentRef.current = null;
         debounceRef.current = null;
       }
@@ -203,7 +175,7 @@ export function useFileContents({
         currentWorkspace &&
         previousFilePathRef.current
       ) {
-        console.log("FINAL CLEANUP - FLUSHING CHANGES");
+        console.debug("FINAL CLEANUP - FLUSHING CHANGES");
         void currentWorkspace.disk.writeFile(previousFilePathRef.current, String(pendingContentRef.current));
         clearTimeout(debounceRef.current);
         debounceRef.current = null;
@@ -240,30 +212,6 @@ export function useFileContents({
     },
     [currentWorkspace, filePath, navigate]
   );
-
-  /**
-   * CONTENT CHANGE CALLBACK: Notifies parent components when baseline content changes
-   * Triggered by: contents state changes (file loads, outside writes)
-   * Purpose: Allows parent components to react to content updates
-   */
-  useEffect(() => {
-    return onContentChangeRef.current?.(String(contents ?? ""));
-  }, [contents]);
-
-  /**
-   * CONTENT EMITTER LISTENER: Handles programmatic content updates
-   * Triggered by: contentEmitter.emit(ContentEvents.UPDATE, content)
-   * Updates: hotContents (immediate) and calls onContentChange callback
-   * Used for: Components that need to programmatically update content
-   */
-  useEffect(() => {
-    return contentEmitter.listen(ContentEvents.UPDATE, (c) => {
-      if (c !== pendingContentRef.current) {
-        setHotContents(c.toString());
-        onContentChangeRef.current?.(String(c ?? ""));
-      }
-    });
-  });
 
   /**
    * INSIDE WRITE LISTENER: Handles writes from within the current editor instance
@@ -303,9 +251,21 @@ export function useFileContents({
     } = { outsideWrite: false }
   ) {
     setHotContents(content);
-    writeFileContents(content, {
-      outsideWrite,
-    });
+    //rigamarole to keep sequencing consistent
+    const promise = outsideWrite
+      ? new Promise((rs) => {
+          const unsub = currentWorkspace.disk.outsideWriteListener(filePath!, () => {
+            rs(void 0);
+            unsub();
+          });
+        })
+      : Promise.resolve();
+    return Promise.all([
+      writeFileContents(content, {
+        outsideWrite,
+      }),
+      promise,
+    ]);
   }
   const documentData = useMemo(() => {
     return matter(hotContents || "").data as Record<string, any>;
@@ -319,16 +279,13 @@ export function useFileContents({
    * - hotContents: Live content state (for display, includes unsaved changes)
    * - writeFileContents: Direct file write function (used by debounce)
    * - updateDebounce: Debounced write function (used by editor onChange)
-   * - contentEmitter: For programmatic content updates
    *
    * USAGE PATTERN:
    * - Editor initializes with 'contents'
    * - Editor displays 'hotContents'
    * - Editor calls 'updateDebounce' on changes
-   * - External updates use 'contentEmitter'
    */
   return {
-    contentEmitter,
     error,
     hasConflicts,
     hotContents,
@@ -351,21 +308,20 @@ export function useWatchFileContents({
   path: AbsPath | null;
   onChange: (content: string) => void;
 }) {
-  const onChangeRef = useRef(onChange).current;
   useEffect(() => {
     if (!path || !currentWorkspace) return;
 
     const unsubscribeInside = currentWorkspace.disk.insideWriteListener(path, (content) => {
-      onChangeRef(String(content));
+      onChange(String(content));
     });
 
     const unsubscribeOutside = currentWorkspace.disk.outsideWriteListener(path, (content) => {
-      onChangeRef(String(content));
+      onChange(String(content));
     });
 
     return () => {
       unsubscribeInside?.();
       unsubscribeOutside?.();
     };
-  }, [currentWorkspace, onChangeRef, path]);
+  }, [currentWorkspace, onChange, path]);
 }

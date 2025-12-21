@@ -3,12 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, FileQuestion } from "lucide-react";
 import { useQueryState } from "nuqs";
 
-interface UnrecognizedFileCardProps {
-  fileName: string;
-  mimeType: string;
-}
-
-export function UnrecognizedFileCard({ fileName, mimeType }: UnrecognizedFileCardProps) {
+export function UnrecognizedFileCard({ fileName, mimeType }: { fileName: string | null; mimeType: string }) {
+  if (!fileName === null) return null;
   const [, setEditOverride] = useQueryState("editOverride", {
     parse: (value: string) => value === "true",
     serialize: (value: boolean) => String(value),

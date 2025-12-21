@@ -10,100 +10,121 @@ import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref"
 import { Separator } from "@/components/ui/separator";
 import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
 import { EditViewImage } from "@/editor/history/EditViewImage";
-import { useDocHistoryEdits } from "@/editor/history/HistoryPlugin3";
+import { useDocHistory, useDocHistoryEdits } from "@/editor/history/HistoryPlugin3";
 import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
-import { useToggleEditHistory } from "@/editor/history/useToggleEditHistory";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
-import { Check, CheckCircle2, ChevronDown, Circle, Clock, History, X } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
+import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 import { timeAgo } from "short-time-ago";
-import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
 
-function HistoryStatus({ selectedEdit, pendingSave }: { selectedEdit: HistoryDocRecord | null; pendingSave: boolean }) {
-  if (selectedEdit !== null) {
+function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDocRecord | null; pending: boolean }) {
+  if (selectedEdit !== null || pending) {
     return (
-      <div key={selectedEdit.edit_id} className="_animate-spin _animation-iteration-once ">
-        <History size={16} className="-scale-x-100 inline-block !text-ring" />
+      <div key={selectedEdit?.edit_id} className="animate-spin animation-iteration-once ">
+        <History size={20} className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
   }
-  if (pendingSave) {
-    return (
-      <div className="_animate-spin _animation-iteration-once ">
-        <History size={16} className="-scale-x-100 inline-block !text-success" />
-      </div>
-    );
-  }
-
   return (
     <div>
-      <History size={16} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
+      <History size={20} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
     </div>
   );
 }
 
-export function EditHistoryMenu() {
+export function EditHistoryMenu({
+  editorMarkdown,
+  setEditorMarkdown,
+}: {
+  editorMarkdown: string | null;
+  setEditorMarkdown: (md: string) => void;
+}) {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
   const { path: filePath } = useWorkspaceRoute();
-
   const disabled = false;
-  const selectedEditMd = null;
-  const pendingSave = false;
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
-  const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
-  const { isHistoryImageGenerationEnabled, toggleHistoryImageGeneration } = useToggleHistoryImageGeneration();
+  // const { updateImmediate } = useFileContents({
+  //   currentWorkspace,
+  //   path: filePath,
+  // });
+  /////////// Mode: "edit" | "propose"
+  const [selectedEdit, selectEdit] = useState<HistoryDocRecord | null>(null);
+  const [mode, setMode] = useState<"edit" | "propose">("edit");
+  const baseContent = useRef(editorMarkdown);
+  const proposedContent = useRef<string | null>(null);
+  if (baseContent.current === null) baseContent.current = editorMarkdown;
+
+  const { docHistory } = useDocHistory();
+  const pending = useSyncExternalStore(docHistory.onChangeIncoming, docHistory.getChangeIncoming);
+
+  const isSelectedEdit = (edit: HistoryDocRecord) => {
+    return selectedEdit !== null && selectedEdit.edit_id === edit.edit_id;
+  };
+
+  const restore = useCallback(
+    (oldText: string) => {
+      flushSync(() => {
+        setMode("edit");
+        selectEdit(null);
+        setEditorMarkdown(oldText);
+        proposedContent.current = null;
+      });
+    },
+    [setEditorMarkdown]
+  );
+
+  const clearHistory = useCallback(async () => {
+    if (selectedEdit) {
+      await restore(baseContent.current!);
+    }
+    await docHistory.clearAll();
+  }, [docHistory, restore, selectedEdit]);
+  const accept = useCallback(
+    async (newText: string) => {
+      await docHistory.transaction(async () => {
+        await flushSync(async () => {
+          setMode("edit");
+          selectEdit(null);
+          proposedContent.current = null;
+          baseContent.current = newText;
+        });
+      });
+    },
+    [docHistory]
+  );
+  const propose = useCallback(
+    async (edit: HistoryDocRecord) => {
+      await docHistory.transaction(async () => {
+        await flushSync(async () => {
+          const editText = await docHistory.getTextForEdit(edit);
+          setMode("propose");
+          proposedContent.current = editText;
+          selectEdit(edit);
+          setEditorMarkdown(editText);
+        });
+      });
+    },
+    [docHistory, setEditorMarkdown]
+  );
+
+  useEffect(() => {
+    //markdown has changed externally while in propose mode
+    if (editorMarkdown !== null && mode === "propose" && proposedContent.current !== editorMarkdown) {
+      setMode("edit");
+      selectEdit(null);
+      proposedContent.current = null;
+      baseContent.current = editorMarkdown;
+    }
+  }, [editorMarkdown, mode]);
+
+  /////////
 
   const edits = useDocHistoryEdits();
-
-  const selectedEdit: HistoryDocRecord = {
-    edit_id: 0,
-    id: "example_id",
-    timestamp: Date.now() - 60000, // 1 minute ago
-    change: "example_change",
-    parent: 0,
-    preview: new Blob([], { type: "text/html" }),
-    workspaceId: "example_workspace_id",
-  };
-
-  const finalizeRestore = (md: string) => {
-    console.log("Finalizing restore with md:", md);
-  };
-
-  const resetAndRestore = async () => {
-    console.log("Resetting and restoring");
-  };
-
-  const clearAll = async () => {
-    console.log("Clearing all history");
-  };
-
-  const setEdit = async (edit: HistoryDocRecord) => {
-    console.log("Setting edit:", edit);
-  };
-
-  const rebaseHistory = (md: string) => {
-    console.log("Rebasing history with md:", md);
-  };
-
-  const triggerSave = () => {
-    console.log("Triggering save");
-  };
-
-  const isRestoreState = false;
-
-  const finalizeAndRestore = () => {
-    if (selectedEditMd) {
-      console.debug("Finalizing restore with edit:", selectedEditMd.length);
-      finalizeRestore(selectedEditMd);
-      rebaseHistory(selectedEditMd);
-    } else {
-      console.warn("No edit selected to restore");
-    }
-  };
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
@@ -119,8 +140,11 @@ export function EditHistoryMenu() {
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
         <div className="h-full absolute left-4 flex justify-center items-center ">
-          <button className="fill-primary-foreground text-4xl leading-4 group" onClick={triggerSave}>
-            <HistoryStatus selectedEdit={selectedEdit} pendingSave={pendingSave} />
+          <button
+            onClick={() => {}}
+            className="fill-primary-foreground text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
+          >
+            <HistoryStatus selectedEdit={selectedEdit} pending={pending} />
           </button>
         </div>
         <DropdownMenuTrigger asChild disabled={disabled}>
@@ -136,14 +160,7 @@ export function EditHistoryMenu() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-background p-0">
-          <HistoryMenuToolbar
-            edits={[]}
-            clearAll={clearAll}
-            toggleEditHistory={toggleEditHistory}
-            setOpen={setOpen}
-            isHistoryImageGenerationEnabled={false}
-            toggleHistoryImageGeneration={toggleHistoryImageGeneration}
-          />
+          <HistoryMenuToolbar edits={edits} clearAll={clearHistory} setOpen={setOpen} />
 
           <ScrollAreaViewportRef
             viewportRef={(ref) => {
@@ -162,31 +179,25 @@ export function EditHistoryMenu() {
                   </div>
                 </div>
               )}
-              {edits.map((EDIT, index) => (
-                <Fragment key={EDIT.edit_id}>
+              {edits.map((edit, index) => (
+                <Fragment key={edit.edit_id}>
                   <DropdownMenuItem
-                    ref={selectedEdit?.edit_id === EDIT.edit_id ? updateSelectedItemRef : null}
-                    onSelect={() => setEdit(EDIT)}
+                    ref={isSelectedEdit(edit) ? updateSelectedItemRef : null}
+                    onSelect={() => propose(edit)}
                     className={cn("p-1 py-2 h-auto cursor-pointer focus:bg-sidebar-accent", {
-                      "bg-sidebar-accent": selectedEdit && selectedEdit.edit_id === EDIT.edit_id,
+                      "bg-sidebar-accent": isSelectedEdit(edit),
                     })}
                   >
                     <div className={cn("text-sm flex w-full items-center justify-start text-left")}>
-                      {workspaceId && filePath && isHistoryImageGenerationEnabled ? (
-                        <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={EDIT} />
-                      ) : null}
+                      <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={edit} />
                       <div className={"ml-4"}>
-                        {!selectedEdit || selectedEdit.edit_id !== EDIT.edit_id ? (
-                          <Circle className="inline-block mr-2 text-primary" size={16} strokeWidth={2} />
-                        ) : (
+                        {isSelectedEdit(edit) ? (
                           <CheckCircle2 className="inline-block mr-2 text-ring" size={16} strokeWidth={2} />
+                        ) : (
+                          <Circle className="inline-block mr-2 text-primary" size={16} strokeWidth={2} />
                         )}
-
-                        {new Date(EDIT.timestamp).toLocaleString()}
-                        <span className="text-primary">
-                          &nbsp;
-                          <span>{`- ${timeAgo(new Date(EDIT.timestamp))}`}</span>
-                        </span>
+                        {new Date(edit.timestamp).toLocaleString()}
+                        <span className="pl-2 text-primary">{`- ${timeAgo(new Date(edit.timestamp))}`}</span>
                       </div>
                     </div>
                   </DropdownMenuItem>
@@ -198,10 +209,12 @@ export function EditHistoryMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {isRestoreState && (
+      {mode === "propose" && (
         <>
-          <Button onClick={finalizeAndRestore}>OK</Button>
-          <Button onClick={resetAndRestore}>CANCEL</Button>
+          <Button onClick={() => accept(editorMarkdown ?? "")}>OK</Button>
+          <Button onClick={() => restore(baseContent.current!)} variant="outline">
+            CANCEL
+          </Button>
         </>
       )}
     </div>
@@ -209,18 +222,12 @@ export function EditHistoryMenu() {
 }
 
 function HistoryMenuToolbar({
-  edits = [],
+  edits,
   clearAll = async () => {},
-  toggleEditHistory = () => {},
-  isHistoryImageGenerationEnabled = false,
-  toggleHistoryImageGeneration = () => {},
   setOpen = (open: boolean) => {},
 }: {
   edits: HistoryDocRecord[];
   clearAll: () => Promise<void>;
-  toggleEditHistory: () => void;
-  isHistoryImageGenerationEnabled: boolean;
-  toggleHistoryImageGeneration: () => void;
   setOpen: (open: boolean) => void;
 }) {
   return (
@@ -238,39 +245,6 @@ function HistoryMenuToolbar({
           clear
         </Button>
       ) : null}
-      <Button
-        variant={"secondary"}
-        size="default"
-        onClick={() => {
-          toggleEditHistory();
-          setOpen(false);
-        }}
-        className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
-      >
-        <X className="w-3 h-3" strokeWidth={4} />
-        disable
-      </Button>
-      <Button
-        variant={"secondary"}
-        size="default"
-        onClick={() => {
-          toggleHistoryImageGeneration();
-          setOpen(false);
-        }}
-        className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
-      >
-        {isHistoryImageGenerationEnabled ? (
-          <>
-            <X className="w-3 h-3" strokeWidth={4} />
-            disable preview
-          </>
-        ) : (
-          <>
-            <Check className="w-3 h-3" strokeWidth={4} />
-            enable preview
-          </>
-        )}
-      </Button>
     </div>
   );
 }

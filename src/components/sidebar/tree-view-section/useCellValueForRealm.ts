@@ -11,3 +11,13 @@ export function useCellValueForRealm<T>(cell: NodeRef<T>, realm: Realm | undefin
     () => realm?.getValue(cell) ?? null
   );
 }
+
+export function usePublisherForRealm<T>(cell: NodeRef<T>, realm: Realm | undefined) {
+  realm?.register(cell);
+  return React.useCallback(
+    (value: T) => {
+      realm?.pub(cell, value);
+    },
+    [realm, cell]
+  );
+}

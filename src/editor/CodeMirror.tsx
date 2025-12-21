@@ -6,6 +6,7 @@ import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
 import { useURLRanges } from "@/editor/CodeMirrorSelectURLRangePlugin";
 import { createCustomBasicSetup } from "@/editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/editor/gitConflictEnhancedPlugin";
+import { EditHistoryMenu } from "@/editor/history/EditHistoryMenu";
 import { LivePreviewButtons } from "@/editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/editor/markdownHighlighting";
 import { canPrettifyMime, prettifyMime } from "@/editor/prettifyMime";
@@ -266,6 +267,19 @@ export const CodeMirrorEditor = ({
 
   const cmScroller = useWatchElement(".cm-scroller");
 
+  const setEditorMarkdown = (md: string) => {
+    if (viewRef.current && md !== viewRef.current.state.doc.toString()) {
+      viewRef.current.dispatch({
+        changes: {
+          from: 0,
+          to: viewRef.current.state.doc.length,
+          insert: md,
+        },
+      });
+    }
+  };
+  const editorMarkdown = viewRef.current?.state.doc.toString() ?? "";
+
   return (
     <>
       <ScrollSync
@@ -276,6 +290,8 @@ export const CodeMirrorEditor = ({
         <CodeMirrorToolbar
           key={path}
           setVimMode={setVimMode}
+          editorMarkdown={editorMarkdown}
+          setEditorMarkdown={setEditorMarkdown}
           vimMode={vimMode}
           spellCheck={spellCheck}
           setSpellCheck={setSpellCheck}
@@ -309,6 +325,8 @@ const CodeMirrorToolbar = ({
   vimMode,
   setVimMode,
   spellCheck,
+  editorMarkdown,
+  setEditorMarkdown,
   setSpellCheck,
   conflictResolution = true,
   setConflictResolution,
@@ -318,6 +336,8 @@ const CodeMirrorToolbar = ({
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
+  editorMarkdown: string;
+  setEditorMarkdown: (md: string) => void;
   currentWorkspace: Workspace;
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
@@ -385,6 +405,8 @@ const CodeMirrorToolbar = ({
           )}
         </>
       )}
+
+      <EditHistoryMenu setEditorMarkdown={setEditorMarkdown} editorMarkdown={editorMarkdown} />
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
         {setConflictResolution && hasConflicts && (

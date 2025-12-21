@@ -9,7 +9,7 @@ import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import { ComponentProps, useMemo, useRef } from "react";
+import { ComponentProps, useEffect, useMemo, useRef } from "react";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
@@ -18,11 +18,10 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
   const { contents, updateDebounce } = useFileContents({
     currentWorkspace,
     path,
-    onContentChange: (c) => {
-      //outside edits
-      editorRef.current?.setMarkdown(stripFrontmatter(c));
-    },
   });
+  useEffect(() => {
+    if (contents !== null) editorRef.current?.setMarkdown(stripFrontmatter(contents));
+  }, [contents]);
   const bodyOnly = useMemo(() => stripFrontmatter(contents || ""), [contents]);
   if (contents === null || !currentWorkspace) return null;
 

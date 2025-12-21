@@ -1,3 +1,7 @@
+import {
+  useCellValueForRealm,
+  usePublisherForRealm,
+} from "@/components/sidebar/tree-view-section/useCellValueForRealm";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
@@ -22,9 +26,11 @@ import {
   linkDialogPlugin,
   linkPlugin,
   listsPlugin,
+  markdown$,
   markdownShortcutPlugin,
   quotePlugin,
   remoteRealmPlugin,
+  setMarkdown$,
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
@@ -60,7 +66,6 @@ export function useAllPlugins({
 }) {
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
 
-  const realm = useRemoteMDXEditorRealm(realmId);
   useEffect(() => {
     if (mimeType === "text/markdown") return;
     document.body.classList.add("hide-rich-text");
@@ -74,7 +79,10 @@ export function useAllPlugins({
       [
         toolbarPlugin({
           toolbarContents: () => {
+            const editorRealm = useRemoteMDXEditorRealm(realmId);
             const { left } = useSidebarPanes();
+            const setEditorMarkdown = usePublisherForRealm(setMarkdown$, editorRealm);
+            const editorMarkdown = useCellValueForRealm(markdown$, editorRealm);
             return (
               <div
                 className={cn("flex gap-1 w-full", {
@@ -83,7 +91,7 @@ export function useAllPlugins({
                 })}
               >
                 <SourceEditorButton />
-                <EditHistoryMenu />
+                <EditHistoryMenu setEditorMarkdown={setEditorMarkdown} editorMarkdown={editorMarkdown} />
                 <LivePreviewButtons />
                 <MdxSearchToolbar />
 
@@ -121,6 +129,6 @@ export function useAllPlugins({
         markdownShortcutPlugin(),
       ].filter(Boolean),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentWorkspace, realm, realmId, workspaceImagesPlugin]
+    [currentWorkspace, realmId, workspaceImagesPlugin]
   );
 }

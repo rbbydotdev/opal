@@ -36,7 +36,7 @@ export function useHtmlPreviewGenerator() {
 }
 
 function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
-  console.warn("EditViewImage needs given an actual edit maybeee lol");
+  // console.warn("EditViewImage needs given an actual edit maybeee lol");
   return "<div>preview</div>";
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
   const [htmlContent, setHtmlContent] = useState<string | null>(null);

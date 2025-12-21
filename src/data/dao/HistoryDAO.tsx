@@ -100,7 +100,7 @@ export class HistoryStore {
     }
 
     // Reconstruct parent text and get diffs
-    const parentText = await this.reconstructDocument(latestEdit.edit_id);
+    const parentText = await this.reconstructDocument({ edit_id: latestEdit.edit_id });
     if (parentText === null) {
       return 1.0;
     }
@@ -161,7 +161,7 @@ export class HistoryStore {
   }): Promise<HistoryDocRecord | null> {
     console.debug("save edit");
     const latestEdit = await this.getLatestEdit(documentId);
-    const parentText = latestEdit ? await this.reconstructDocument(latestEdit.edit_id!) : "";
+    const parentText = latestEdit ? await this.reconstructDocument({ edit_id: latestEdit.edit_id! }) : "";
     const diffs: Diff[] = this.dmp.diff_main(parentText || "", markdown);
     //check if the diff is only whitespace
     if (
@@ -169,7 +169,7 @@ export class HistoryStore {
         .filter(([operation, _text]) => operation !== 0)
         .every(([_operation, text]) => text.replace("\n\n", "") === "")
     ) {
-      console.log("Aborting edit due to newlines only");
+      console.debug("Aborting edit due to newlines only");
       return null;
     }
 
@@ -195,11 +195,11 @@ export class HistoryStore {
     return newDoc;
   }
 
-  public async reconstructDocument(edit_id: number): Promise<string | null> {
+  reconstructDocument = async ({ edit_id }: { edit_id: number }): Promise<string> => {
     if (this.cache.has(edit_id)) return this.cache.get(edit_id)!;
 
     let current = await this.getEditByEditId(edit_id);
-    if (!current) return null;
+    if (!current) throw new Error(`Edit with ID ${edit_id} not found for reconstruction.`);
     let text = "";
     const patches = [];
     while (current) {
@@ -212,7 +212,7 @@ export class HistoryStore {
     }
     this.cache.set(edit_id, text).get(edit_id);
     return text;
-  }
+  };
   public async clearAllEdits(id: string) {
     return ClientDb.historyDocs.where("id").equals(id).delete();
   }

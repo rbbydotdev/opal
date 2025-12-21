@@ -3,16 +3,16 @@ import { HistoryStore } from "@/data/dao/HistoryDAO";
 import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
 import { ClientDb } from "@/data/instance";
 import { useResource } from "@/hooks/useResource";
-import { debounce } from "@/lib/debounce";
+import { debouncePromise } from "@/lib/debounce";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
+import { getMimeType } from "@/lib/mimeType";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Mutex } from "async-mutex";
 import { liveQuery, Subscription } from "dexie";
-import { useLiveQuery } from "dexie-react-hooks";
 import { createContext, useContext, useState, useSyncExternalStore } from "react";
 
 export class HistoryPlugin3 {
-  constructor({ documentId, workspaceId }: { documentId?: string; workspaceId?: string } = {}) {
+  constructor({ documentId, workspaceId }: { documentId?: string | null; workspaceId?: string | null } = {}) {
     this.setDocument({ documentId, workspaceId });
   }
   private debounceMs = 2_000;
@@ -26,31 +26,38 @@ export class HistoryPlugin3 {
 
   private emitter = CreateSuperTypedEmitter<{
     edits: HistoryDocRecord[];
+    change_incoming: boolean;
   }>();
 
   private _edits: HistoryDocRecord[] = [];
+  private _changeIncoming = false;
 
   private documentId: string | null = null;
 
   private workspaceId: string | null = null;
 
-  saveNewEdit = async (markdown: string) => {
-    if (!this.documentId || !this.workspaceId) return null;
-    return this.historyStore.saveEdit({
-      documentId: this.documentId!,
-      workspaceId: this.workspaceId!,
-      markdown,
-    });
-  };
+  // saveNewEdit = async (markdown: string) => {
+  // if (!this.documentId || !this.workspaceId) return null;
+  // };
 
   getEdits = () => {
+    console.log("getEdits called", this._edits.length);
     return this._edits;
   };
   watchEdits = (cb: (edits: HistoryDocRecord[]) => void) => {
-    return this.emitter.on("edits", cb);
+    return this.emitter.on("edits", (e) => {
+      console.log("emitting edits to watcher", e.length);
+      cb(e);
+    });
   };
 
-  setDocument({ documentId, workspaceId }: { documentId?: string | null; workspaceId?: string | null }) {
+  set edits(edits: HistoryDocRecord[]) {
+    this._edits = [...edits];
+    console.log("emitting edits", edits.length);
+    this.emitter.emit("edits", edits);
+  }
+
+  setDocument = ({ documentId, workspaceId }: { documentId?: string | null; workspaceId?: string | null }) => {
     if (!documentId || !workspaceId) {
       this._watchEditsUnsub();
       this._edits = [];
@@ -60,23 +67,58 @@ export class HistoryPlugin3 {
     this.documentId = documentId;
     this.workspaceId = workspaceId;
     this._watchEditsUnsub();
-    const watch = liveQuery(() => ClientDb.historyDocs.where("id").equals(documentId).sortBy("timestamp")).subscribe(
-      (edits) => {
-        this._edits = edits;
-        this.emitter.emit("edits", edits);
-      }
-    );
-    this._watchEditsUnsub = () => watch.unsubscribe();
+
+    this._watchEditsUnsub = liveQuery(async () => {
+      const r = await ClientDb.historyDocs.where("id").equals(documentId).reverse().sortBy("timestamp");
+      return r;
+    }).subscribe((edits) => {
+      console.log("liveQuery emitted edits", edits.length);
+      console.log(this.documentId, this.workspaceId);
+      this.edits = edits;
+    }).unsubscribe;
+  };
+  onChange = async (markdown: string) => {
+    if (this.muteChange) {
+      return;
+    }
+    await this.transaction(async () => {
+      this.changeIncoming = true;
+      await this.onChangeDebounce(markdown);
+      this.changeIncoming = false;
+    });
+  };
+
+  set changeIncoming(value: boolean) {
+    this._changeIncoming = value;
+    this.emitter.emit("change_incoming", value);
   }
 
-  onChangeDebounce = debounce(async (text: string) => {
+  clearAll = async () => {
     if (!this.documentId) return;
-    const saveScore = await this.historyStore.getSaveThreshold(this.documentId, text);
+    await this.historyStore.clearAllEdits(this.documentId);
+  };
+
+  getChangeIncoming = () => this._changeIncoming;
+  onChangeIncoming = (cb: (change: boolean) => void) => {
+    return this.emitter.on("change_incoming", cb);
+  };
+
+  private onChangeDebounce = debouncePromise(async (markdown: string) => {
+    if (!this.documentId || !this.workspaceId) return;
+    const documentId = this.documentId;
+    const workspaceId = this.workspaceId;
+    const saveScore = await this.historyStore.getSaveThreshold(documentId, markdown);
     if (saveScore < this.saveThreshold) {
       return console.debug(`Skipping save for ${this.documentId} due to low score: ${saveScore}`);
     }
-    return this.saveNewEdit(text);
+    console.log("saving edit for", this.documentId, "score:", saveScore);
+    return this.historyStore.saveEdit({
+      documentId,
+      workspaceId,
+      markdown,
+    });
   }, this.debounceMs);
+
   updatePreviewForEditId = this.historyStore.updatePreviewForEditId;
 
   getTextForEdit = this.historyStore.reconstructDocument;
@@ -85,22 +127,20 @@ export class HistoryPlugin3 {
 
   unmute = () => (this.muteChange = false);
 
+  isMuted = () => this.muteChange;
+
   tearDown = () => {
     this.historyStore.tearDown();
     this._watchEditsUnsub();
   };
 
-  private async transaction(fn: () => void) {
-    return this.mutex.runExclusive(async () => {
+  async transaction(fn: () => void) {
+    await this.mutex.runExclusive(async () => {
       this.muteChange = true;
       await fn();
       this.muteChange = false;
     });
   }
-}
-
-export function useHistoryEdits({ documentId }: { documentId: string }) {
-  useLiveQuery(() => ClientDb.historyDocs.where("id").equals(documentId).sortBy("timestamp"), [documentId]);
 }
 
 const defaultDocHistory = {
@@ -112,17 +152,25 @@ const defaultDocHistory = {
 const DocHistoryContext = createContext(defaultDocHistory);
 
 export function DocHistoryProvider({ children }: { children: React.ReactNode }) {
+  const { path } = useWorkspaceRoute();
+  if (path === null || getMimeType(path) !== "text/markdown") return <>{children}</>;
+  return <DocHistoryProviderInternal>{children}</DocHistoryProviderInternal>;
+}
+function DocHistoryProviderInternal({ children }: { children: React.ReactNode }) {
   const [historyEnabled, setHistoryEnabled] = useState(false);
-  const docHistory = useResource(() => new HistoryPlugin3());
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  docHistory.setDocument({
-    documentId: path,
-    workspaceId: currentWorkspace.id,
-  });
+  const docHistory = useResource(
+    () =>
+      new HistoryPlugin3({
+        documentId: path,
+        workspaceId: currentWorkspace.id,
+      }),
+    [path, currentWorkspace]
+  );
   useWatchFileContents({
     currentWorkspace,
-    onChange: docHistory.onChangeDebounce,
+    onChange: docHistory.onChange,
     path,
   });
 
@@ -148,5 +196,7 @@ export function useDocHistory() {
 }
 export function useDocHistoryEdits() {
   const { docHistory } = useDocHistory();
-  return useSyncExternalStore(docHistory.watchEdits, docHistory.getEdits);
+  const edits = useSyncExternalStore(docHistory.watchEdits, docHistory.getEdits);
+  console.log(edits.length);
+  return edits;
 }
