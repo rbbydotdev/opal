@@ -1,7 +1,3 @@
-import {
-  useCellValueForRealm,
-  usePublisherForRealm,
-} from "@/components/sidebar/tree-view-section/useCellValueForRealm";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { customCodeMirrorTheme } from "@/editor/codeMirrorCustomTheme";
@@ -26,17 +22,14 @@ import {
   linkDialogPlugin,
   linkPlugin,
   listsPlugin,
-  markdown$,
   markdownShortcutPlugin,
   quotePlugin,
   remoteRealmPlugin,
-  setMarkdown$,
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
-  useRemoteMDXEditorRealm,
 } from "@mdxeditor/editor";
-import { useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 
 function SpellCheckSwitch() {
   const { storedValue: spellCheck, setStoredValue: setSpellCheck } = useLocalStorage("Editor/spellcheck", true);
@@ -78,33 +71,7 @@ export function useAllPlugins({
     () =>
       [
         toolbarPlugin({
-          toolbarContents: () => {
-            const editorRealm = useRemoteMDXEditorRealm(realmId);
-            const { left } = useSidebarPanes();
-            const setEditorMarkdown = usePublisherForRealm(setMarkdown$, editorRealm);
-            const editorMarkdown = useCellValueForRealm(markdown$, editorRealm);
-            return (
-              <div
-                className={cn("flex gap-1 w-full", {
-                  "ml-0": !left.isCollapsed,
-                  "ml-16": left.isCollapsed,
-                })}
-              >
-                <SourceEditorButton />
-                <EditHistoryMenu setEditorMarkdown={setEditorMarkdown} editorMarkdown={editorMarkdown} />
-                <LivePreviewButtons />
-                <MdxSearchToolbar />
-
-                <div className="flex-grow flex justify-start ml-2">
-                  <MdxToolbar />
-                </div>
-
-                <div className="ml-auto">
-                  <SpellCheckSwitch />
-                </div>
-              </div>
-            );
-          },
+          toolbarContents: () => <EditorToolbar />,
         }),
         remoteRealmPlugin({ editorId: realmId }),
         listsPlugin(),
@@ -128,7 +95,30 @@ export function useAllPlugins({
         directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
         markdownShortcutPlugin(),
       ].filter(Boolean),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentWorkspace, realmId, workspaceImagesPlugin]
+    [realmId, workspaceImagesPlugin]
   );
 }
+const EditorToolbar = memo(function EditorToolbar() {
+  const { left } = useSidebarPanes();
+  return (
+    <div
+      className={cn("flex gap-1 w-full", {
+        "ml-0": !left.isCollapsed,
+        "ml-16": left.isCollapsed,
+      })}
+    >
+      <SourceEditorButton />
+      <EditHistoryMenu />
+      <LivePreviewButtons />
+      <MdxSearchToolbar />
+
+      <div className="flex-grow flex justify-start ml-2">
+        <MdxToolbar />
+      </div>
+
+      <div className="ml-auto">
+        <SpellCheckSwitch />
+      </div>
+    </div>
+  );
+});

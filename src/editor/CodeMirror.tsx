@@ -36,7 +36,7 @@ import { vim } from "@replit/codemirror-vim";
 import { useRouter } from "@tanstack/react-router";
 import { ejs } from "codemirror-lang-ejs";
 import { Check, ChevronLeftIcon, FileText, Sparkles, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 const getLanguageExtension = (
   language:
@@ -335,143 +335,160 @@ export const CodeMirrorEditor = ({
   );
 };
 
-const RichButton = ({ onClick }: { onClick: () => void }) => (
+const RichButton = memo(({ onClick }: { onClick: () => void }) => (
   <Button variant="outline" size="sm" onClick={onClick}>
     <span className="text-xs flex justify-center items-center gap-1">
       <ChevronLeftIcon size={12} />
       <FileText size={12} /> Rich Text
     </span>
   </Button>
-);
+));
 
-const CodeMirrorToolbar = ({
-  children,
-  path,
-  currentWorkspace,
-  vimMode,
-  setVimMode,
-  spellCheck,
-  // editorMarkdown,
-  // setEditorMarkdown,
-  setSpellCheck,
-  conflictResolution = true,
-  setConflictResolution,
-  hasConflicts = false,
-  mimeType,
-  editorView,
-}: {
-  children?: React.ReactNode;
-  path: AbsPath | null;
-  // editorMarkdown: string;
-  // setEditorMarkdown: (md: string) => void;
-  currentWorkspace: Workspace;
-  vimMode: boolean;
-  setVimMode: (value: boolean) => void;
-  spellCheck: boolean;
-  setSpellCheck: (value: boolean) => void;
-  conflictResolution?: boolean;
-  setConflictResolution?: (value: boolean) => void;
-  hasConflicts?: boolean;
-  mimeType?: OpalMimeType;
-  editorView?: EditorView | null;
-}) => {
-  const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile } = useCurrentFilepath();
+const CodeMirrorToolbar = memo(
+  ({
+    children,
+    path,
+    currentWorkspace,
+    vimMode,
+    setVimMode,
+    spellCheck,
+    setSpellCheck,
+    conflictResolution = true,
+    setConflictResolution,
+    hasConflicts = false,
+    mimeType,
+    editorView,
+  }: {
+    children?: React.ReactNode;
+    path: AbsPath | null;
+    currentWorkspace: Workspace;
+    vimMode: boolean;
+    setVimMode: (value: boolean) => void;
+    spellCheck: boolean;
+    setSpellCheck: (value: boolean) => void;
+    conflictResolution?: boolean;
+    setConflictResolution?: (value: boolean) => void;
+    hasConflicts?: boolean;
+    mimeType?: OpalMimeType;
+    editorView?: EditorView | null;
+  }) => {
+    const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile } = useCurrentFilepath();
 
-  const { left } = useSidebarPanes();
-  const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
-  const router = useRouter();
-  const [, setViewMode] = useWatchViewMode();
+    const { left } = useSidebarPanes();
+    const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
+    const router = useRouter();
+    const [, setViewMode] = useWatchViewMode();
 
-  const handlePrettify = async () => {
-    if (!editorView || !mimeType) return;
-    try {
-      const currentContent = editorView.state.doc.toString();
-      editorView.dispatch({
-        changes: {
-          from: 0,
-          to: editorView.state.doc.length,
-          insert: await prettifyMime(mimeType, currentContent),
-        },
+    const handlePrettify = useCallback(async () => {
+      if (!editorView || !mimeType) return;
+      try {
+        const currentContent = editorView.state.doc.toString();
+        editorView.dispatch({
+          changes: {
+            from: 0,
+            to: editorView.state.doc.length,
+            insert: await prettifyMime(mimeType, currentContent),
+          },
+        });
+      } catch (error) {
+        console.error("Prettify failed:", error);
+      }
+    }, [editorView, mimeType]);
+
+    const canPrettify = useMemo(() => canPrettifyMime(mimeType) && !hasConflicts, [mimeType, hasConflicts]);
+
+    const handleRichTextMode = useCallback(() => setViewMode("rich-text"), [setViewMode]);
+
+    const handleNavigateToPreview = useCallback(() => {
+      if (!previewNode) return;
+      void router.navigate({
+        to: currentWorkspace.resolveFileUrl(previewNode.path),
       });
-    } catch (error) {
-      console.error("Prettify failed:", error);
-    }
-  };
+    }, [router, currentWorkspace, previewNode]);
 
-  const canPrettify = canPrettifyMime(mimeType) && !hasConflicts;
+    const handleToggleConflictResolution = useCallback(() => {
+      setConflictResolution?.(!conflictResolution);
+    }, [setConflictResolution, conflictResolution]);
 
-  return (
-    <div
-      className={cn("flex items-center justify-start p-2 bg-card h-12 gap-2", {
-        "pl-10": !left.isCollapsed,
-        "pl-16": left.isCollapsed,
-      })}
-    >
-      {!hasEditOverride && (
-        <>
-          {isMarkdown && !hasConflicts && isSourceView && <RichButton onClick={() => setViewMode("rich-text")} />}
-          {!isMarkdown && previewNode?.isMarkdownFile() && (
-            <RichButton
-              onClick={() =>
-                router.navigate({
-                  to: currentWorkspace.resolveFileUrl(previewNode.path),
-                })
-              }
-            />
-          )}
-          {(isMarkdown || isCssFile || isHtml) && <LivePreviewButtons />}
+    const handleSpellCheckChange = useCallback(
+      (checked: boolean) => {
+        setSpellCheck(checked);
+      },
+      [setSpellCheck]
+    );
 
-          {canPrettify && (
-            <Button variant="outline" size="sm" onClick={handlePrettify}>
-              <span className="text-xs flex justify-center items-center gap-1">
-                <Sparkles size={12} />
-                Prettify
-              </span>
-            </Button>
-          )}
-        </>
-      )}
+    const handleVimModeChange = useCallback(
+      (checked: boolean) => {
+        setVimMode(checked);
+      },
+      [setVimMode]
+    );
 
-      <EditHistoryMenu />
-      {hasConflicts && isMarkdown && <GitConflictNotice />}
-      <div className="ml-auto flex items-center gap-4">
-        {setConflictResolution && hasConflicts && (
-          <Button
-            variant={conflictResolution ? "default" : "outline"}
-            size="sm"
-            onClick={() => setConflictResolution?.(!conflictResolution)}
-            aria-pressed={conflictResolution}
-            aria-label="Toggle git conflict resolution"
-          >
-            <Check strokeWidth={4} className={cn("mr-1 h-4 w-4", !conflictResolution && "hidden")} />
-            <X strokeWidth={4} className={cn("mr-1 h-4 w-4", conflictResolution && "hidden")} />
-            Git Conflicts Editor
-          </Button>
+    return (
+      <div
+        className={cn("flex items-center justify-start p-2 bg-card h-12 gap-2", {
+          "pl-10": !left.isCollapsed,
+          "pl-16": left.isCollapsed,
+        })}
+      >
+        {!hasEditOverride && (
+          <>
+            {isMarkdown && !hasConflicts && isSourceView && <RichButton onClick={handleRichTextMode} />}
+            {!isMarkdown && previewNode?.isMarkdownFile() && <RichButton onClick={handleNavigateToPreview} />}
+            {(isMarkdown || isCssFile || isHtml) && <LivePreviewButtons />}
+
+            {canPrettify && (
+              <Button variant="outline" size="sm" onClick={handlePrettify}>
+                <span className="text-xs flex justify-center items-center gap-1">
+                  <Sparkles size={12} />
+                  Prettify
+                </span>
+              </Button>
+            )}
+          </>
         )}
 
-        <Label htmlFor="spellCheck" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
-          <span className="text-sm whitespace-nowrap truncate">Spellcheck</span>
-          <Switch
-            id="spellCheck"
-            className="ml-1"
-            checked={spellCheck}
-            onCheckedChange={(checked) => setSpellCheck(checked)}
-            aria-label="Enable spellcheck"
-          />
-        </Label>
+        <EditHistoryMenu />
+        {hasConflicts && isMarkdown && <GitConflictNotice />}
+        <div className="ml-auto flex items-center gap-4">
+          {setConflictResolution && hasConflicts && (
+            <Button
+              variant={conflictResolution ? "default" : "outline"}
+              size="sm"
+              onClick={handleToggleConflictResolution}
+              aria-pressed={conflictResolution}
+              aria-label="Toggle git conflict resolution"
+            >
+              <Check strokeWidth={4} className={cn("mr-1 h-4 w-4", !conflictResolution && "hidden")} />
+              <X strokeWidth={4} className={cn("mr-1 h-4 w-4", conflictResolution && "hidden")} />
+              Git Conflicts Editor
+            </Button>
+          )}
 
-        <Label htmlFor="vimMode" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
-          <span className="text-sm whitespace-nowrap truncate">Vim Mode</span>
-          <Switch
-            id="vimMode"
-            className="ml-1"
-            checked={vimMode}
-            onCheckedChange={(checked) => setVimMode(checked)}
-            aria-label="Enable Vim mode"
-          />
-        </Label>
+          <Label htmlFor="spellCheck" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
+            <span className="text-sm whitespace-nowrap truncate">Spellcheck</span>
+            <Switch
+              id="spellCheck"
+              className="ml-1"
+              checked={spellCheck}
+              onCheckedChange={handleSpellCheckChange}
+              aria-label="Enable spellcheck"
+            />
+          </Label>
+
+          <Label htmlFor="vimMode" className="p-2 border bg-accent rounded flex items-center gap-1 select-none">
+            <span className="text-sm whitespace-nowrap truncate">Vim Mode</span>
+            <Switch
+              id="vimMode"
+              className="ml-1"
+              checked={vimMode}
+              onCheckedChange={handleVimModeChange}
+              aria-label="Enable Vim mode"
+            />
+          </Label>
+        </div>
+        {children}
       </div>
-      {children}
-    </div>
-  );
-};
+    );
+  }
+);

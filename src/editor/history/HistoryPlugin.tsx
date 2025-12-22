@@ -4,7 +4,7 @@ import { EditStorage } from "@/editor/history/EditStorage";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
 
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
+import { CreateScheduledEmitter } from "@/lib/events/CreateScheduledEmitterClass";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { liveQuery, Subscription } from "dexie";
 import { createContext, useContext, useState, useSyncExternalStore } from "react";
@@ -31,7 +31,7 @@ export class HistoryPlugin {
   private debounceMs = 2_000;
 
   editStorage = new EditStorage();
-  private emitter = CreateSuperTypedEmitter<{
+  private emitter = CreateScheduledEmitter<{
     editorDoc: string | null;
     edits: HistoryDAO[];
     pending: boolean;
@@ -39,7 +39,9 @@ export class HistoryPlugin {
     edit: HistoryDAO | null;
     baseDoc: string | null;
     proposedDoc: string | null;
-  }>();
+  }>({
+    defaultPriority: "idle",
+  });
 
   private documentId: string | null = null;
   private workspaceId: string | null = null;
