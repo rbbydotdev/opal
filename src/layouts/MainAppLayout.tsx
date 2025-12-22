@@ -12,7 +12,7 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DocHistoryProvider } from "@/editor/history/HistoryPlugin3";
+import { DocHistoryProvider } from "@/editor/history/HistoryPlugin";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";

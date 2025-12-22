@@ -3,7 +3,7 @@ import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
 import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContentView";
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
-import { useFileContents } from "@/context/useFileContents";
+import { useFileContents } from "@/data/useFileContents";
 import { Editor, Editors } from "@/editor/Editors";
 import { useEditorKey } from "@/editor/useEditorKey";
 import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";

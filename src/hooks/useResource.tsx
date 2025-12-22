@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 type TeardownableResource = {
   tearDown: () => void;
-  init?: () => () => void | void;
+  init?: () => (() => void) | Array<() => void> | void;
 };
 
 export function useResource<T extends TeardownableResource>(setup: () => T, deps: any[] = [], initialObj?: T) {
@@ -23,6 +23,9 @@ export function useResource<T extends TeardownableResource>(setup: () => T, deps
       const maybeUnsub = newResource.init();
       if (typeof maybeUnsub === "function") {
         unsubs.push(maybeUnsub);
+      }
+      if (Array.isArray(maybeUnsub) && maybeUnsub.every((v) => typeof v === "function")) {
+        unsubs.push(...(maybeUnsub as Array<() => void>));
       }
     }
 

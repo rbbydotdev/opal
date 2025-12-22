@@ -1,7 +1,7 @@
 import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath } from "@/lib/paths2";
+import { AbsPath, isStringish } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { DEFAULT_MIME_TYPE, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { useNavigate } from "@tanstack/react-router";
@@ -267,9 +267,13 @@ export function useFileContents({
       promise,
     ]);
   }
-  const documentData = useMemo(() => {
-    return matter(hotContents || "").data as Record<string, any>;
+  const { data: hotData, content: hotBody } = useMemo(() => {
+    return matter(hotContents || "") as Record<string, any>;
   }, [hotContents]);
+
+  const { data: contentsData, content: contentsBody } = useMemo(() => {
+    return matter(contents !== null ? String(contents) : "") as Record<string, any>;
+  }, [contents]);
 
   const hasConflicts = hasGitConflictMarkers(hotContents || "");
 
@@ -290,8 +294,11 @@ export function useFileContents({
     hasConflicts,
     hotContents,
     filePath,
-    documentData,
+    hotData,
+    hotBody,
     contents: contents !== null ? String(contents) : null,
+    contentsData,
+    contentsBody,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     writeFileContents,
     updateDebounce,
@@ -299,7 +306,7 @@ export function useFileContents({
   };
 }
 
-export function useWatchFileContents({
+export function useWatchTextFileContents({
   currentWorkspace,
   path,
   onChange,
@@ -309,7 +316,7 @@ export function useWatchFileContents({
   onChange: (content: string) => void;
 }) {
   useEffect(() => {
-    if (!path || !currentWorkspace) return;
+    if (!path || !currentWorkspace || !isStringish(path)) return;
 
     const unsubscribeInside = currentWorkspace.disk.insideWriteListener(path, (content) => {
       onChange(String(content));

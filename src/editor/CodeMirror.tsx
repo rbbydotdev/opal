@@ -7,6 +7,7 @@ import { useURLRanges } from "@/editor/CodeMirrorSelectURLRangePlugin";
 import { createCustomBasicSetup } from "@/editor/customBasicSetup";
 import { gitConflictEnhancedPlugin } from "@/editor/gitConflictEnhancedPlugin";
 import { EditHistoryMenu } from "@/editor/history/EditHistoryMenu";
+import { useDocHistory } from "@/editor/history/HistoryPlugin";
 import { LivePreviewButtons } from "@/editor/LivePreviewButton";
 import { enhancedMarkdownExtension } from "@/editor/markdownHighlighting";
 import { canPrettifyMime, prettifyMime } from "@/editor/prettifyMime";
@@ -29,7 +30,7 @@ import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
-import { Compartment, EditorSelection, EditorState, Extension } from "@codemirror/state";
+import { Compartment, EditorSelection, EditorState, Extension, Transaction } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
 import { useRouter } from "@tanstack/react-router";
@@ -107,9 +108,12 @@ export const CodeMirrorEditor = ({
     "SourceEditor/enableGitConflictResolution",
     true
   );
+
+  const { path } = useWorkspaceRoute();
+  const cmScroller = useWatchElement(".cm-scroller");
+
   const { start, end, hasRanges } = useURLRanges();
 
-  const onChangeRef = useRef(onChange).current;
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -119,11 +123,25 @@ export const CodeMirrorEditor = ({
   const conflictCompartment = useRef(new Compartment()).current;
   const basicSetupCompartment = useRef(new Compartment()).current;
   const spellCheckCompartment = useRef(new Compartment()).current;
+  const updateCompartment = useRef(new Compartment()).current;
+
+  const setEditorMarkdown = (md: string) => {
+    if (viewRef.current && md !== viewRef.current.state.doc.toString()) {
+      viewRef.current.dispatch({
+        changes: {
+          from: 0,
+          to: viewRef.current.state.doc.length,
+          insert: md,
+        },
+      });
+    }
+  };
 
   useEffect(() => {
     if (!editorRef.current) return;
 
     const extensions: Extension[] = [
+      updateCompartment.of([]),
       autocompletion(),
       EditorView.lineWrapping,
       spellCheckCompartment.of(EditorView.contentAttributes.of({ spellcheck: spellCheck ? "true" : "false" })),
@@ -134,13 +152,6 @@ export const CodeMirrorEditor = ({
       vimCompartment.of([]),
       editableCompartment.of(EditorView.editable.of(false)),
       conflictCompartment.of([]),
-
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
-          const docStr = update.state.doc.toString();
-          onChangeRef(docStr);
-        }
-      }),
 
       EditorView.theme({
         "&": { height: "100%" },
@@ -263,22 +274,28 @@ export const CodeMirrorEditor = ({
     }
   }, [end, hasRanges, start]);
 
-  const { path } = useWorkspaceRoute();
+  const { DocHistory } = useDocHistory({
+    editorMarkdown: value,
+    setEditorMarkdown,
+  });
 
-  const cmScroller = useWatchElement(".cm-scroller");
-
-  const setEditorMarkdown = (md: string) => {
-    if (viewRef.current && md !== viewRef.current.state.doc.toString()) {
-      viewRef.current.dispatch({
-        changes: {
-          from: 0,
-          to: viewRef.current.state.doc.length,
-          insert: md,
-        },
-      });
-    }
-  };
-  const editorMarkdown = viewRef.current?.state.doc.toString() ?? "";
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: updateCompartment.reconfigure([
+        EditorView.updateListener.of((update) => {
+          for (const tr of update.transactions) {
+            const userEvent = tr.annotation(Transaction.userEvent);
+            if (userEvent && ["input", "delete", "undo", "redo"].some((prefix) => userEvent.includes(prefix))) {
+              const newDoc = update.state.doc.toString();
+              void DocHistory.saveEdit(newDoc);
+              onChange(newDoc);
+            }
+          }
+        }),
+      ]),
+    });
+  }, [DocHistory, onChange, updateCompartment]);
 
   return (
     <>
@@ -290,8 +307,8 @@ export const CodeMirrorEditor = ({
         <CodeMirrorToolbar
           key={path}
           setVimMode={setVimMode}
-          editorMarkdown={editorMarkdown}
-          setEditorMarkdown={setEditorMarkdown}
+          // editorMarkdown={editorMarkdown}
+          // setEditorMarkdown={setEditorMarkdown}
           vimMode={vimMode}
           spellCheck={spellCheck}
           setSpellCheck={setSpellCheck}
@@ -325,8 +342,8 @@ const CodeMirrorToolbar = ({
   vimMode,
   setVimMode,
   spellCheck,
-  editorMarkdown,
-  setEditorMarkdown,
+  // editorMarkdown,
+  // setEditorMarkdown,
   setSpellCheck,
   conflictResolution = true,
   setConflictResolution,
@@ -336,8 +353,8 @@ const CodeMirrorToolbar = ({
 }: {
   children?: React.ReactNode;
   path: AbsPath | null;
-  editorMarkdown: string;
-  setEditorMarkdown: (md: string) => void;
+  // editorMarkdown: string;
+  // setEditorMarkdown: (md: string) => void;
   currentWorkspace: Workspace;
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
@@ -406,7 +423,7 @@ const CodeMirrorToolbar = ({
         </>
       )}
 
-      <EditHistoryMenu setEditorMarkdown={setEditorMarkdown} editorMarkdown={editorMarkdown} />
+      <EditHistoryMenu />
       {hasConflicts && isMarkdown && <GitConflictNotice />}
       <div className="ml-auto flex items-center gap-4">
         {setConflictResolution && hasConflicts && (

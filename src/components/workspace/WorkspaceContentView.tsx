@@ -1,28 +1,37 @@
-import { useFileContents } from "@/context/useFileContents";
+import { useFileContents } from "@/data/useFileContents";
 import { useAllPlugins } from "@/editor/AllPlugins";
 import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
+import { useDocHistory } from "@/editor/history/HistoryPlugin";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
-import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
-import { ComponentProps, useEffect, useMemo, useRef } from "react";
+import { ComponentProps, useRef } from "react";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { mimeType } = useCurrentFilepath();
-  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
-  const { contents, updateDebounce } = useFileContents({
+  const { contents, hotContents, contentsBody, updateImmediate, updateDebounce } = useFileContents({
     currentWorkspace,
     path,
   });
-  useEffect(() => {
-    if (contents !== null) editorRef.current?.setMarkdown(stripFrontmatter(contents));
-  }, [contents]);
-  const bodyOnly = useMemo(() => stripFrontmatter(contents || ""), [contents]);
+  const { DocHistory } = useDocHistory({
+    editorMarkdown: hotContents,
+    setEditorMarkdown: editorRef.current?.setMarkdown,
+    writeMarkdown: updateImmediate,
+  });
+  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
+
+  const handleChange = (md: string, initialMarkdownNormalize: boolean) => {
+    if (!initialMarkdownNormalize) {
+      void DocHistory.saveEdit(md);
+      updateDebounce(md);
+    }
+  };
+
   if (contents === null || !currentWorkspace) return null;
 
   return (
@@ -36,8 +45,8 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
           mimeType={mimeType}
           currentWorkspace={currentWorkspace}
           editorRef={editorRef}
-          onChange={updateDebounce}
-          markdown={bodyOnly}
+          onChange={handleChange}
+          markdown={contentsBody}
           className={"bg-background flex-grow flex-col h-full "}
           contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
         />
@@ -66,7 +75,10 @@ function EditorWithPlugins(
       {...props}
       plugins={plugins}
       ref={props.editorRef}
-      onChange={props.onChange}
+      trim={false}
+      onChange={(markdown: string, initialMarkdownNormalize: boolean) => {
+        props.onChange?.(markdown, initialMarkdownNormalize);
+      }}
       markdown={props.markdown}
       spellCheck={spellCheck}
     />

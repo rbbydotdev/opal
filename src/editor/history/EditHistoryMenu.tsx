@@ -10,20 +10,19 @@ import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref"
 import { Separator } from "@/components/ui/separator";
 import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
 import { EditViewImage } from "@/editor/history/EditViewImage";
-import { useDocHistory, useDocHistoryEdits } from "@/editor/history/HistoryPlugin3";
+import { useDocHistory } from "@/editor/history/HistoryPlugin";
 import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
-import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { flushSync } from "react-dom";
+import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDocRecord | null; pending: boolean }) {
   if (selectedEdit !== null || pending) {
     return (
-      <div key={selectedEdit?.edit_id} className="animate-spin animation-iteration-once ">
+      <div key={selectedEdit?.edit_id} className="animate-pulse animation-iteration-once ">
         <History size={20} className="-scale-x-100 inline-block !text-ring" />
       </div>
     );
@@ -35,94 +34,21 @@ function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDocReco
   );
 }
 
-export function EditHistoryMenu({
-  editorMarkdown,
-  setEditorMarkdown,
-}: {
-  editorMarkdown: string | null;
-  setEditorMarkdown: (md: string) => void;
-}) {
+export function EditHistoryMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
   const disabled = false;
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
-  const [selectedEdit, selectEdit] = useState<HistoryDocRecord | null>(null);
-  const [mode, setMode] = useState<"edit" | "propose">("edit");
-  const baseContent = useRef(editorMarkdown);
-  const proposedContent = useRef<string | null>(null);
-  if (baseContent.current === null) baseContent.current = editorMarkdown;
 
-  const { docHistory } = useDocHistory();
-  const pending = useSyncExternalStore(docHistory.onChangeIncoming, docHistory.getChangeIncoming);
-
-  const edits = useDocHistoryEdits();
+  const { edits, pending, mode, edit: selectedEdit, accept, propose, restore, clearAll } = useDocHistory();
 
   const isSelectedEdit = (edit: HistoryDocRecord) => {
     return selectedEdit !== null && selectedEdit.edit_id === edit.edit_id;
   };
 
-  const restore = useCallback(
-    (oldText: string) => {
-      flushSync(() => {
-        setMode("edit");
-        selectEdit(null);
-        setEditorMarkdown(oldText);
-        proposedContent.current = null;
-      });
-    },
-    [setEditorMarkdown]
-  );
-
-  const clearHistory = useCallback(async () => {
-    if (selectedEdit) {
-      await restore(baseContent.current!);
-    }
-    await docHistory.clearAll();
-  }, [docHistory, restore, selectedEdit]);
-  const accept = useCallback(
-    async (newText: string) => {
-      await docHistory.transaction(async () => {
-        await flushSync(async () => {
-          setMode("edit");
-          selectEdit(null);
-          proposedContent.current = null;
-          baseContent.current = newText;
-        });
-      });
-    },
-    [docHistory]
-  );
-  const propose = useCallback(
-    async (edit: HistoryDocRecord) => {
-      await docHistory.transaction(async () => {
-        await flushSync(async () => {
-          const editText = await docHistory.getTextForEdit(edit);
-          setMode("propose");
-          proposedContent.current = editText;
-          selectEdit(edit);
-          setEditorMarkdown(editText);
-        });
-      });
-    },
-    [docHistory, setEditorMarkdown]
-  );
-
-  useEffect(() => {
-    //markdown has changed externally while in propose mode
-    if (editorMarkdown !== null && mode === "propose" && proposedContent.current !== editorMarkdown) {
-      setMode("edit");
-      selectEdit(null);
-      proposedContent.current = null;
-      baseContent.current = editorMarkdown;
-    }
-  }, [editorMarkdown, mode]);
-
-  /////////
-
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
-  // When disabled, show minimal UI with just the toggle
   if (disabled) {
     <EditHistoryMenuDisabled />;
   }
@@ -154,7 +80,7 @@ export function EditHistoryMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-background p-0">
-          <HistoryMenuToolbar edits={edits} clearAll={clearHistory} setOpen={setOpen} />
+          <HistoryMenuToolbar edits={edits} clearAll={clearAll} setOpen={setOpen} />
 
           <ScrollAreaViewportRef
             viewportRef={(ref) => {
@@ -205,8 +131,8 @@ export function EditHistoryMenu({
 
       {mode === "propose" && (
         <>
-          <Button onClick={() => accept(editorMarkdown ?? "")}>OK</Button>
-          <Button onClick={() => restore(baseContent.current!)} variant="outline">
+          <Button onClick={accept}>OK</Button>
+          <Button onClick={restore} variant="outline">
             CANCEL
           </Button>
         </>
@@ -221,7 +147,7 @@ function HistoryMenuToolbar({
   setOpen = (open: boolean) => {},
 }: {
   edits: HistoryDocRecord[];
-  clearAll: () => Promise<void>;
+  clearAll: () => void;
   setOpen: (open: boolean) => void;
 }) {
   return (
@@ -287,3 +213,50 @@ function EditHistoryMenuDisabled() {
     </div>
   );
 }
+
+// const restore = useCallback(
+//   (oldText: string) => {
+//     flushSync(() => {
+//       setMode("edit");
+//       selectEdit(null);
+//       setEditorMarkdown(oldText);
+//       proposedContent.current = null;
+//     });
+//   },
+//   [setEditorMarkdown]
+// );
+
+// const accept = useCallback(
+//   async (newText: string) => {
+//     await docHistory.transaction(async () => {
+//       await flushSync(async () => {
+//         setMode("edit");
+//         selectEdit(null);
+//         proposedContent.current = null;
+//         baseContent.current = newText;
+//       });
+//     });
+//   },
+//   [docHistory]
+// );
+// const propose = useCallback(
+//   async (edit: HistoryDocRecord) => {
+//     await docHistory.transaction(async () => {
+//       await flushSync(async () => {
+//         const editText = await docHistory.getTextForEdit(edit);
+//         setMode("propose");
+//         proposedContent.current = editText;
+//         selectEdit(edit);
+//         setEditorMarkdown(editText);
+//       });
+//     });
+//   },
+//   [docHistory, setEditorMarkdown]
+// );
+
+// const clearHistory = useCallback(async () => {
+//   if (selectedEdit) {
+//     await restore(baseContent.current!);
+//   }
+//   await docHistory.clearAll();
+// }, [docHistory, restore, selectedEdit]);

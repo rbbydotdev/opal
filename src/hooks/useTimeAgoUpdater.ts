@@ -8,7 +8,7 @@ export function useTimeAgoUpdater({ date, delay }: { date?: Date | null; delay?:
       if (date) setTimeAgoStr(timeAgo(date));
       else setTimeAgoStr("");
     };
-    const intervalTimer = setInterval(updateTimeAgo, delay || 1000);
+    const intervalTimer = setInterval(updateTimeAgo, delay || 10_000);
     updateTimeAgo();
 
     return () => clearInterval(intervalTimer);

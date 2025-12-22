@@ -1,4 +1,4 @@
-import { useLiveFileContent } from "@/context/useFileContents";
+import { useLiveFileContent } from "@/data/useFileContents";
 import { PreviewContext } from "@/features/live-preview/IframeContextProvider";
 import { useRenderBodyCallback } from "@/features/live-preview/useRenderBodyCallback";
 import { TemplateManager } from "@/features/templating";
