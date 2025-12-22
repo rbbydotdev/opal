@@ -1,10 +1,10 @@
 import { FileError } from "@/components/filetree/FileError";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
-import { MarkdownEditor } from "@/components/workspace/MarkdownEditor";
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
 import { useFileContents } from "@/data/useFileContents";
 import { Editor, EditorSelector, getEditor } from "@/editors/EditorSelector";
+import { MarkdownEditor } from "@/editors/markdown/MarkdownEditor";
 import { useEditorKey } from "@/editors/useEditorKey";
 import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import useFavicon from "@/hooks/useFavicon";

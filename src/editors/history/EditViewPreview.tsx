@@ -1,6 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { EditStorage } from "@/editors/history/EditStorage";
+import { HistoryDB } from "@/editors/history/HistoryDB";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtmlAsync } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
 }
 
 export async function generateHtmlPreview(edit: HistoryDAO): Promise<Blob> {
-  const editStore = new EditStorage();
+  const editStore = new HistoryDB();
   try {
     const reconstructedContent = (await editStore.reconstructDocument(edit)) ?? "";
     const html = await renderMarkdownToHtmlAsync(stripFrontmatter(reconstructedContent));
@@ -118,7 +118,7 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
   );
 }
 
-export const EditViewImage = ({
+export const EditViewPreview = ({
   workspaceId,
   edit,
   className,

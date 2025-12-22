@@ -9,7 +9,7 @@ import {
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { EditViewImage } from "@/editors/history/EditViewImage";
+import { EditViewPreview } from "@/editors/history/EditViewPreview";
 import { useDocHistory } from "@/editors/history/HistoryPlugin";
 import { useSelectedItemScroll } from "@/editors/history/useSelectedItemScroll";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
@@ -108,7 +108,7 @@ export function EditHistoryMenu() {
                     })}
                   >
                     <div className={cn("text-sm flex w-full items-center justify-start text-left")}>
-                      <EditViewImage className="w-12 h-12" workspaceId={workspaceId} edit={edit} />
+                      <EditViewPreview className="w-12 h-12" workspaceId={workspaceId} edit={edit} />
                       <div className={"ml-4"}>
                         {isSelectedEdit(edit) ? (
                           <CheckCircle2 className="inline-block mr-2 text-ring" size={16} strokeWidth={2} />

@@ -1,12 +1,12 @@
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { ClientDb } from "@/data/instance";
-import { EditStorage } from "@/editors/history/EditStorage";
+import { HistoryDB } from "@/editors/history/HistoryDB";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
 
 import { CreateScheduledEmitter } from "@/lib/events/CreateScheduledEmitterClass";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
-import { liveQuery, Subscription } from "dexie";
+import { liveQuery } from "dexie";
 import { createContext, useContext, useState, useSyncExternalStore } from "react";
 
 export class HistoryPlugin {
@@ -30,7 +30,8 @@ export class HistoryPlugin {
 
   private debounceMs = 2_000;
 
-  editStorage = new EditStorage();
+  editStorage = new HistoryDB();
+
   private emitter = CreateScheduledEmitter<{
     editorDoc: string | null;
     edits: HistoryDAO[];
@@ -45,12 +46,12 @@ export class HistoryPlugin {
 
   private documentId: string | null = null;
   private workspaceId: string | null = null;
-  private releaseLiveQuerySubscription: Subscription["unsubscribe"] = () => {};
+  private unsubs: Array<() => void> = [];
+
   private setEditorMarkdown: (doc: string) => void = () => {};
   private writeMarkdown: (doc: string) => void = () => {};
   private updates: (() => void)[] = [];
   private flushUpdates = () => {
-    console.log(this.updates.length);
     while (this.updates.length > 0) {
       const cb = this.updates.shift()!;
       cb();
@@ -194,14 +195,33 @@ export class HistoryPlugin {
   };
 
   init() {
-    return [
-      this.$watchEditorMarkdown((doc) => {
-        if (this.$mode === "propose" && this.$proposedDoc !== doc) this.backoff();
-      }),
-      this.$watchEditorMarkdown((doc) => {
-        if (this.$mode === "edit") this.$baseDoc = doc;
-      }),
-    ];
+    if (!this.documentId || !this.workspaceId) return;
+    this.editStorage = new HistoryDB();
+    this.unsubs.push(
+      ...[
+        () => this.editStorage.tearDown(),
+        //
+        liveQuery(() =>
+          ClientDb.historyDocs
+            .where({
+              id: this.documentId,
+              workspaceId: this.workspaceId,
+            })
+            .reverse()
+            .sortBy("timestamp")
+        ).subscribe((edits) => (this.$edits = edits)).unsubscribe,
+        //
+        this.editStorage.initPreviewLFU({ workspaceId: this.workspaceId, documentId: this.documentId }),
+        //
+        this.$watchEditorMarkdown((doc) => {
+          if (this.$mode === "propose" && this.$proposedDoc !== doc) this.backoff();
+        }),
+        //
+        this.$watchEditorMarkdown((doc) => {
+          if (this.$mode === "edit") this.$baseDoc = doc;
+        }),
+      ]
+    );
   }
 
   propose = async (edit: HistoryDAO) => {
@@ -247,18 +267,12 @@ export class HistoryPlugin {
   };
 
   setDocument = ({ documentId, workspaceId }: { documentId?: string | null; workspaceId?: string | null }) => {
-    this.releaseLiveQuerySubscription();
-    if (!documentId || !workspaceId) {
-      this.$edits = [];
-      return;
-    }
+    this.tearDown();
+    if (!documentId || !workspaceId) return;
     if (this.documentId === documentId && this.workspaceId == workspaceId) return;
     this.documentId = documentId;
     this.workspaceId = workspaceId;
-
-    this.releaseLiveQuerySubscription = liveQuery(() =>
-      ClientDb.historyDocs.where("id").equals(documentId).reverse().sortBy("timestamp")
-    ).subscribe((edits) => (this.$edits = edits)).unsubscribe;
+    this.init();
   };
 
   private onChangeDebounce = pDebounce(async (markdown: string) => {
@@ -273,8 +287,7 @@ export class HistoryPlugin {
   }, this.debounceMs);
 
   tearDown = () => {
-    this.editStorage.tearDown();
-    this.releaseLiveQuerySubscription();
+    while (this.unsubs.length) this.unsubs.pop()!();
   };
 }
 

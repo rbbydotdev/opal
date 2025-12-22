@@ -3,9 +3,68 @@ import { ClientDb } from "@/data/instance";
 import * as CRC32 from "crc-32";
 import diff_match_patch, { Diff } from "diff-match-patch";
 
-export class EditStorage {
+export class HistoryDB {
   private dmp: diff_match_patch = new diff_match_patch();
   private cache: Map<number, string> = new Map();
+
+  private backprocessController: AbortController = new AbortController();
+
+  initPreviewLFU = ({ workspaceId, documentId }: { workspaceId: string | null; documentId: string | null }) => {
+    if (!documentId || !workspaceId) return () => {};
+
+    void (async () => {
+      while (!this.backprocessController.signal.aborted) {
+        await new Promise((resolve) => {
+          const timeout = setTimeout(resolve, 10_000);
+          this.backprocessController.signal.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(timeout);
+            },
+            {
+              once: true,
+            }
+          );
+        });
+
+        const MAX_PREVIEW_CACHE_SIZE = 5 * 1024 * 1024; // 5 MB
+        let currentCacheSize = 0;
+        let cutoffTimestamp: number | null = null;
+
+        const edits = await ClientDb.historyDocs.where({ workspaceId, id: documentId }).reverse().sortBy("timestamp");
+
+        for (const edit of edits) {
+          if (this.backprocessController.signal.aborted) break;
+
+          if (edit.preview) {
+            const previewSize = edit.preview.size;
+            if (currentCacheSize + previewSize <= MAX_PREVIEW_CACHE_SIZE) {
+              currentCacheSize += previewSize;
+            } else {
+              // Mark the first record that exceeds our limit
+              cutoffTimestamp = edit.timestamp;
+              break;
+            }
+          }
+
+          // yield to stay responsive
+          await new Promise((rs) => queueMicrotask(() => rs(void 0)));
+        }
+        if (this.backprocessController.signal.aborted) break;
+
+        // After loop: clear previews older than cutoffTimestamp
+        if (cutoffTimestamp) {
+          await ClientDb.historyDocs
+            .where({ workspaceId, id: documentId })
+            .and((e) => e.timestamp <= cutoffTimestamp && e.preview !== null)
+            .modify({ preview: null });
+        }
+      }
+    })();
+    return () => {
+      this.backprocessController.abort();
+    };
+  };
 
   async clearAllEdits(documentId: string): Promise<number> {
     return ClientDb.historyDocs.where("id").equals(documentId).delete();
@@ -104,6 +163,7 @@ export class EditStorage {
 
   tearDown(): void {
     this.cache.clear();
+    this.backprocessController.abort();
   }
 
   private async getEditByEditId(edit_id: number): Promise<HistoryDAO | null> {

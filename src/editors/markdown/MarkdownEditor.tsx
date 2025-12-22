@@ -22,7 +22,7 @@ export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: W
   });
   const { DocHistory } = useDocHistory({
     markdownSync: hotContents,
-    setEditorMarkdown: editorRef.current?.setMarkdown,
+    setEditorMarkdown: (md) => editorRef.current?.setMarkdown(graymatter(md).content),
     writeMarkdown: updateImmediate,
   });
 

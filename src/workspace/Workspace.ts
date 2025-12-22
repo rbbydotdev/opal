@@ -39,7 +39,7 @@ import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
 import { DefaultTemplate, WorkspaceTemplate } from "@/data/WorkspaceTemplates";
-import { EditStorage } from "@/editors/history/EditStorage";
+import { HistoryDB } from "@/editors/history/HistoryDB";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
@@ -609,7 +609,7 @@ export class Workspace {
       if (filePathChanges.length > 0) {
         await this.adjustThumbAndCachePaths(filePathChanges);
         await this.renameMdImages(filePathChanges);
-        await EditStorage.MoveEdits({
+        await HistoryDB.MoveEdits({
           workspaceId: this.id,
           changeSet: filePathChanges,
         });
