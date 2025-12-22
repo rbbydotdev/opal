@@ -1,7 +1,7 @@
 import { ConditionalDropzone } from "@/components/ConditionalDropzone";
 import { ROOT_NODE } from "@/components/filetree/TreeNode";
 import { useFileContents } from "@/data/useFileContents";
-import { CodeMirrorEditor } from "@/editor/CodeMirror";
+import { CodeMirrorEditor } from "@/editors/source/CodeMirror";
 import { handleDropFilesEventForNode, isExternalFileDrop } from "@/hooks/useFileTreeDragDrop";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";

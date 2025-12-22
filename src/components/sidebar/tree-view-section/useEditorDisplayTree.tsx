@@ -3,7 +3,7 @@ import {
   lexicalToTreeView,
 } from "@/components/sidebar/tree-view-section/treeViewDisplayNodesLexical";
 import { useCellValueForRealm } from "@/components/sidebar/tree-view-section/useCellValueForRealm";
-import { MainEditorRealmId } from "@/editor/EditorConst";
+import { MainEditorRealmId } from "@/editors/EditorConst";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
 import debounce from "debounce";
 import { useCallback, useEffect, useState } from "react";

@@ -5,7 +5,7 @@ import { toast } from "@/components/ui/sonner";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { FilterOutSpecialDirs } from "@/data/SpecialDirs";
 import { Thumb } from "@/data/Thumb";
-import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
+import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import { useRepoInfo } from "@/features/git-repo/useRepoInfo";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";

@@ -1,6 +1,6 @@
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { ClientDb } from "@/data/instance";
-import { EditStorage } from "@/editor/history/EditStorage";
+import { EditStorage } from "@/editors/history/EditStorage";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
 
@@ -48,6 +48,25 @@ export class HistoryPlugin {
   private releaseLiveQuerySubscription: Subscription["unsubscribe"] = () => {};
   private setEditorMarkdown: (doc: string) => void = () => {};
   private writeMarkdown: (doc: string) => void = () => {};
+  private updates: (() => void)[] = [];
+  private flushUpdates = () => {
+    console.log(this.updates.length);
+    while (this.updates.length > 0) {
+      const cb = this.updates.shift()!;
+      cb();
+    }
+  };
+  private isBatching = false;
+  private scheduleUpdate = (cb: () => void) => {
+    this.updates.push(cb);
+    if (!this.isBatching) {
+      this.isBatching = true;
+      setTimeout(() => {
+        this.isBatching = false;
+        this.flushUpdates();
+      }, 0);
+    }
+  };
 
   private state = HistoryPlugin.defaultState;
 
@@ -112,7 +131,7 @@ export class HistoryPlugin {
 
   set $edit(edit: HistoryDAO | null) {
     this.state.edit = edit;
-    this.emitter.emit("edit", edit!);
+    this.scheduleUpdate(() => this.emitter.emit("edit", edit!));
   }
   get $edit() {
     return this.state.edit;
@@ -120,19 +139,19 @@ export class HistoryPlugin {
 
   set $edits(edits: HistoryDAO[]) {
     this.state.edits = [...edits];
-    this.emitter.emit("edits", edits);
+    this.scheduleUpdate(() => this.emitter.emit("edits", edits));
   }
 
   set $mode(mode: "edit" | "propose") {
     this.state.mode = mode;
-    this.emitter.emit("mode", mode);
+    this.scheduleUpdate(() => this.emitter.emit("mode", mode));
   }
   get $mode() {
     return this.state.mode;
   }
   set $pending(pending: boolean) {
     this.state.pending = pending;
-    this.emitter.emit("pending", pending);
+    this.scheduleUpdate(() => this.emitter.emit("pending", pending));
   }
   get $pending() {
     return this.state.pending;
@@ -140,7 +159,7 @@ export class HistoryPlugin {
 
   set $proposedDoc(doc: string | null) {
     this.state.proposedDoc = doc;
-    this.emitter.emit("proposedDoc", doc!);
+    this.scheduleUpdate(() => this.emitter.emit("proposedDoc", doc!));
   }
   get $proposedDoc() {
     return this.state.proposedDoc;
@@ -150,12 +169,12 @@ export class HistoryPlugin {
   }
   set $editorMarkdown(doc: string | null) {
     this.state.editorDoc = doc;
-    this.emitter.emit("editorDoc", doc!);
+    this.scheduleUpdate(() => this.emitter.emit("editorDoc", doc!));
   }
 
   set $baseDoc(doc: string | null) {
     this.state.baseDoc = doc;
-    this.emitter.emit("baseDoc", doc!);
+    this.scheduleUpdate(() => this.emitter.emit("baseDoc", doc!));
   }
   get $baseDoc() {
     return this.state.baseDoc;
@@ -188,39 +207,31 @@ export class HistoryPlugin {
   propose = async (edit: HistoryDAO) => {
     const editText = await this.getTextForEdit(edit);
     this.setEditorMarkdown(editText);
-    return this.$$batchSet({
-      mode: "propose",
-      proposedDoc: editText,
-      edit: edit,
-    });
+    this.$mode = "propose";
+    this.$proposedDoc = editText;
+    this.$edit = edit;
   };
   accept = async () => {
     const proposedDoc = this.$proposedDoc!;
     this.writeMarkdown(proposedDoc);
-    this.$$batchSet({
-      mode: "edit",
-      edit: null,
-      baseDoc: proposedDoc,
-      proposedDoc: null,
-      editorDoc: proposedDoc,
-    });
+    this.$mode = "edit";
+    this.$edit = null;
+    this.$baseDoc = proposedDoc;
+    this.$proposedDoc = null;
+    this.$editorMarkdown = proposedDoc;
   };
   restore = () => {
     const baseDoc = this.$baseDoc!;
     this.setEditorMarkdown(this.$baseDoc!);
-    return this.$$batchSet({
-      mode: "edit",
-      edit: null,
-      proposedDoc: null,
-      editorDoc: baseDoc,
-    });
+    this.$mode = "edit";
+    this.$edit = null;
+    this.$proposedDoc = null;
+    this.$editorMarkdown = baseDoc;
   };
   backoff = () => {
-    return this.$$batchSet({
-      mode: "edit",
-      edit: null,
-      proposedDoc: null,
-    });
+    this.$mode = "edit";
+    this.$edit = null;
+    this.$proposedDoc = null;
   };
 
   clearAll = () => {

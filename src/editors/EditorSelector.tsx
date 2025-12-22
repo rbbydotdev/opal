@@ -1,3 +1,4 @@
+import { isSourceMimeType } from "@/source-editor/SourceMimeType";
 import React from "react";
 
 type EditorProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -8,7 +9,7 @@ export function Editor({ children, id, ...props }: EditorProps) {
   return <React.Fragment {...props}>{children}</React.Fragment>;
 }
 
-export function Editors({
+export function EditorSelector({
   children,
   selected,
 }: {
@@ -22,4 +23,25 @@ export function Editors({
   const selectedEditor = editorChildren.find((child) => child.props.id === selected);
 
   return selectedEditor || null;
+}
+export function getEditor({
+  isRecognized,
+  isMarkdown,
+  isSourceView,
+  hasConflicts,
+  mimeType,
+}: {
+  isRecognized: boolean;
+  isMarkdown: boolean;
+  isSourceView: boolean;
+  hasConflicts: boolean;
+  mimeType: string;
+}) {
+  if (!isRecognized) {
+    return "unrecognized";
+  }
+  if (isMarkdown && !isSourceView && !hasConflicts && isSourceMimeType(mimeType)) {
+    return "markdown";
+  }
+  return "source";
 }

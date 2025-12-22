@@ -1,4 +1,4 @@
-import { WorkspaceFilePage } from "@/editor/WorkspaceFilePage";
+import { WorkspaceFilePage } from "@/editors/EditorLayout";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/workspace/$workspaceName/$")({

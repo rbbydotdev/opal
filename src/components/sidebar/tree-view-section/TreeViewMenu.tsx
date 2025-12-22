@@ -9,9 +9,9 @@ import { useCellValueForRealm } from "@/components/sidebar/tree-view-section/use
 import { useGetNodeFromEditor } from "@/components/sidebar/tree-view-section/useGetNodeFromEditor";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { MainEditorRealmId } from "@/editor/EditorConst";
-import { highlightMdxElement } from "@/editor/highlightMdxElement";
-import { scrollToEditorElement } from "@/editor/scrollToEditorElement";
+import { MainEditorRealmId } from "@/editors/EditorConst";
+import { highlightMdxElement } from "@/editors/markdown/highlightMdxElement";
+import { scrollToEditorElement } from "@/editors/scrollToEditorElement";
 import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";

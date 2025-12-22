@@ -3,7 +3,7 @@ import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
-import { prettifyMime } from "@/editor/prettifyMime";
+import { prettifyMime } from "@/editors/prettifyMime";
 import { TemplateManager } from "@/features/templating/TemplateManager";
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";

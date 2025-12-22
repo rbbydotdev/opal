@@ -1,12 +1,12 @@
 import { FileError } from "@/components/filetree/FileError";
 import { TrashBanner } from "@/components/TrashBanner";
 import { UnrecognizedFileCard } from "@/components/UnrecognizedFileCard";
-import { WorkspaceMarkdownEditor } from "@/components/workspace/WorkspaceContentView";
+import { MarkdownEditor } from "@/components/workspace/MarkdownEditor";
 import { WorkspaceImageView } from "@/components/workspace/WorkspaceImageView";
 import { useFileContents } from "@/data/useFileContents";
-import { Editor, Editors } from "@/editor/Editors";
-import { useEditorKey } from "@/editor/useEditorKey";
-import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
+import { Editor, EditorSelector, getEditor } from "@/editors/EditorSelector";
+import { useEditorKey } from "@/editors/useEditorKey";
+import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import useFavicon from "@/hooks/useFavicon";
 import { NotFoundError } from "@/lib/errors/errors";
 import { AbsPath } from "@/lib/paths2";
@@ -16,7 +16,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { isSourceMimeType, SourceMimeType } from "../source-editor/SourceMimeType";
+import { SourceMimeType } from "../source-editor/SourceMimeType";
 
 export function WorkspaceFilePage() {
   const { workspaceName } = useParams({ strict: false });
@@ -42,28 +42,6 @@ export function WorkspaceFilePage() {
     return <ImageViewer filePath={filePath} currentWorkspace={currentWorkspace} />;
   }
   return <TextEditor key={editorKey} filePath={filePath} currentWorkspace={currentWorkspace} />;
-}
-
-function getEditor({
-  isRecognized,
-  isMarkdown,
-  isSourceView,
-  hasConflicts,
-  mimeType,
-}: {
-  isRecognized: boolean;
-  isMarkdown: boolean;
-  isSourceView: boolean;
-  hasConflicts: boolean;
-  mimeType: string;
-}) {
-  if (!isRecognized) {
-    return "unrecognized";
-  }
-  if (isMarkdown && !isSourceView && !hasConflicts && isSourceMimeType(mimeType)) {
-    return "markdown";
-  }
-  return "source";
 }
 
 function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspace; filePath: AbsPath | null }) {
@@ -139,7 +117,7 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
   return (
     <>
       {inTrash && <TrashBanner filePath={filePath} className={cn({ "top-2": isSourceView || hasConflicts })} />}
-      <Editors selected={getEditor({ isRecognized, isMarkdown, isSourceView, hasConflicts, mimeType })}>
+      <EditorSelector selected={getEditor({ isRecognized, isMarkdown, isSourceView, hasConflicts, mimeType })}>
         <Editor id="unrecognized">
           <UnrecognizedFileCard fileName={filePath?.split("/").pop() || null} mimeType={mimeType} />
         </Editor>
@@ -147,9 +125,9 @@ function TextEditor({ currentWorkspace, filePath }: { currentWorkspace: Workspac
           <SourceEditor mimeType={mimeType as SourceMimeType} currentWorkspace={currentWorkspace} />
         </Editor>
         <Editor id="markdown">
-          <WorkspaceMarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
+          <MarkdownEditor path={filePath} currentWorkspace={currentWorkspace} />
         </Editor>
-      </Editors>
+      </EditorSelector>
     </>
   );
 }

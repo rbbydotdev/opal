@@ -1,4 +1,4 @@
-import { generateHtmlPreview } from "@/editor/history/EditViewImage";
+import { generateHtmlPreview } from "@/editors/history/EditViewImage";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCallback } from "react";
 

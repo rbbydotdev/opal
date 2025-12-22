@@ -1,4 +1,5 @@
 /* beware: vibe coded */
+import { getContrastSafeColor } from "@/editors/markdown/markdownHighlighting";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -99,7 +100,6 @@ const customTheme = EditorView.theme(
 );
 
 // Import contrast utilities from markdown highlighting
-import { getContrastSafeColor } from "./markdownHighlighting";
 
 // Create a contrast-safe version of the highlighting style
 const createContrastSafeGeneralHighlightStyle = (codeMirrorBackground: string = "--background") => {

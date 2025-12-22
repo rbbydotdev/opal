@@ -39,7 +39,7 @@ import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
 import { DefaultTemplate, WorkspaceTemplate } from "@/data/WorkspaceTemplates";
-import { EditStorage } from "@/editor/history/EditStorage";
+import { EditStorage } from "@/editors/history/EditStorage";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";

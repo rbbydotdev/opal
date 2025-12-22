@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
+import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import { ChevronRightIcon, FileText } from "lucide-react";
 
 export const SourceEditorButton = () => {

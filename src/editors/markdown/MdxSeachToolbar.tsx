@@ -1,4 +1,4 @@
-import { useEditorSearch } from "@/editor/searchPlugin";
+import { useEditorSearch } from "@/editors/markdown/searchPlugin";
 import { EditorSearchBar } from "@/features/editor-search/EditorSearchBar";
 import { useEditorSearchTool } from "@/features/editor-search/useEditorSearch";
 import { editorRootElementRef$, useRealm } from "@mdxeditor/editor";

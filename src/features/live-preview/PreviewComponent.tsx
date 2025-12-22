@@ -1,4 +1,4 @@
-import { useLiveCssFiles } from "@/editor/useLiveCssFiles";
+import { useLiveCssFiles } from "@/editors/useLiveCssFiles";
 import { useIframeContextProvider, useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { PreviewContent } from "@/features/live-preview/PreviewContent";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";

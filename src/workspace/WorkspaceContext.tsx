@@ -12,12 +12,11 @@ import {
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
 import { SpecialDirs } from "@/data/SpecialDirs";
-import { useWatchViewMode } from "@/editor/view-mode/useWatchViewMode";
+import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import { GitPlaybook, NullGitPlaybook, NullRepo } from "@/features/git-repo/GitPlaybook";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { useWorkspaceCorruption } from "@/features/workspace-corruption/useWorkspaceCorruption";
 import { WorkspaceCorruptionModal } from "@/features/workspace-corruption/WorkspaceCorruptionModal";
-import { useQueryState } from "nuqs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { OpalMimeType } from "@/lib/fileType";
@@ -40,6 +39,7 @@ import { useWorkspaces } from "@/workspace/useWorkspaces";
 import { Workspace } from "@/workspace/Workspace";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
+import { useQueryState } from "nuqs";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 const NULL_WORKSPACE = new NullWorkspace();
@@ -118,7 +118,7 @@ export function useCurrentFilepath() {
     buildId: isBuildPath ? resolveFromRoot(SpecialDirs.Build, filePath).split("/")[0] : null,
 
     inTrash: filePath.startsWith(SpecialDirs.Trash),
-    isRecognized: isRecognizedFileType(mimeType) || (editOverride || false),
+    isRecognized: isRecognizedFileType(mimeType) || editOverride || false,
     isSourceView: (viewMode === "source") as boolean,
     isRichView: (viewMode === "rich-text") as boolean,
     isDiffView: (viewMode === "diff") as boolean,

@@ -7,8 +7,8 @@
 import { invertColor } from "@/lib/colorUtils";
 
 // Import registry.json and type it as ThemeRegistry
-import { MDX_TREE_HIGHLIGHT_NAME } from "@/editor/highlightMdxElement";
-import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editor/searchPlugin";
+import { MDX_TREE_HIGHLIGHT_NAME } from "@/editors/markdown/highlightMdxElement";
+import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editors/markdown/searchPlugin";
 import { DEFAULT_THEME_STATE } from "@/features/theme/theme-constants";
 import registryJson from "./themes.json";
 

@@ -1,7 +1,7 @@
 import { useFileContents } from "@/data/useFileContents";
-import { useAllPlugins } from "@/editor/AllPlugins";
-import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editor/EditorConst";
-import { useDocHistory } from "@/editor/history/HistoryPlugin";
+import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editors/EditorConst";
+import { useDocHistory } from "@/editors/history/HistoryPlugin";
+import { useAllPlugins } from "@/editors/markdown/AllPlugins";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
@@ -12,7 +12,7 @@ import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
 import graymatter from "gray-matter";
 import { ComponentProps, useRef } from "react";
 
-export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
+export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { mimeType } = useCurrentFilepath();
   const { lazyContents, hotContents, hotData, lazyContentsBody, updateImmediate, updateDebounce } = useFileContents({

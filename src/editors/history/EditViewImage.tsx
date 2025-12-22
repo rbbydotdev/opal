@@ -1,6 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { EditStorage } from "@/editor/history/EditStorage";
+import { EditStorage } from "@/editors/history/EditStorage";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtmlAsync } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";

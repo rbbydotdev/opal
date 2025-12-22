@@ -1,6 +1,6 @@
 import { LexicalTreeViewNode } from "@/components/sidebar/tree-view-section/treeViewDisplayNodesLexical";
 import { useEditorDisplayTree } from "@/components/sidebar/tree-view-section/useEditorDisplayTree";
-import { MainEditorRealmId } from "@/editor/EditorConst";
+import { MainEditorRealmId } from "@/editors/EditorConst";
 import React, { useContext } from "react";
 
 const DisplayTreeContext = React.createContext<{
