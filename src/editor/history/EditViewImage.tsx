@@ -2,7 +2,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { EditStorage } from "@/editor/history/EditStorage";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
-import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
+import { renderMarkdownToHtmlAsync } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
@@ -15,9 +15,8 @@ export async function generateHtmlPreview(edit: HistoryDAO): Promise<Blob> {
   const editStore = new EditStorage();
   try {
     const reconstructedContent = (await editStore.reconstructDocument(edit)) ?? "";
-    const html = renderMarkdownToHtml(stripFrontmatter(reconstructedContent));
+    const html = await renderMarkdownToHtmlAsync(stripFrontmatter(reconstructedContent));
     const blob = new Blob([html], { type: "text/html" });
-    // Store the HTML blob in the database
     await editStore.updatePreviewForEditId(edit.edit_id, blob);
 
     return blob;
@@ -36,19 +35,9 @@ export function useHtmlPreviewGenerator() {
 }
 
 function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDAO; workspaceId: string; id: string }) {
-  // console.warn("EditViewImage needs given an actual edit maybeee lol");
-  return "<div>preview</div>";
-  const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
-
   useEffect(() => {
-    if (!isHistoryImageGenerationEnabled) {
-      setHtmlContent(null);
-      return;
-    }
-
     if (edit.preview === null) {
-      // Generate HTML preview directly in main thread
       generateHtmlPreview(edit)
         .then(async (blob) => {
           const html = await blob.text();
@@ -58,7 +47,7 @@ function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDAO; workspace
     } else {
       edit.preview.text().then(setHtmlContent).catch(console.error);
     }
-  }, [edit, id, workspaceId, isHistoryImageGenerationEnabled]);
+  }, [edit, id, workspaceId]);
 
   return htmlContent;
 }
@@ -140,9 +129,10 @@ export const EditViewImage = ({
 }) => {
   const id = previewId({ workspaceId, editId: edit.id });
   const htmlContent = useHtmlPreview({ edit, workspaceId, id });
+  const [open, setOpen] = useState(false);
 
   return htmlContent !== null ? (
-    <HoverCard>
+    <HoverCard onOpenChange={setOpen} open={open}>
       <HoverCardTrigger asChild>
         <div className={cn("w-12 h-12 border border-border bg-white cursor-pointer overflow-hidden", className)}>
           <div style={{ transform: "scale(0.1)", transformOrigin: "top left", width: "400px", height: "400px" }}>

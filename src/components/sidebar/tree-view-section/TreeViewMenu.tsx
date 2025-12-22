@@ -44,7 +44,14 @@ export function SidebarTreeViewMenu() {
   if (!displayTree || !Boolean(displayTree.children?.length)) {
     return <EmptySidebarLabel label="empty" />;
   }
-  return <SidebarTreeViewMenuContent getLexicalNode={getLexicalNode} getDOMNode={getDOMNode} parent={displayTree} />;
+  return (
+    <SidebarTreeViewMenuContent
+      getLexicalNode={getLexicalNode}
+      getDOMNode={getDOMNode}
+      parent={displayTree}
+      className="max-h-[30vh] overflow-y-auto scrollbar-thin"
+    />
+  );
 }
 
 function HighlightNodeSelector({
@@ -92,11 +99,13 @@ function SidebarTreeViewMenuContent({
   getDOMNode,
   parent,
   depth = 0,
+  className,
 }: {
   getLexicalNode: (id: string) => Promise<lexical.LexicalNode | null>;
   getDOMNode: (id: string) => Promise<HTMLElement | null>;
 
   parent: LexicalTreeViewNode;
+  className?: string;
   depth?: number;
 }) {
   const { isExpanded, expandSingle } = useTreeExpanderContext();
@@ -386,7 +395,7 @@ function SidebarTreeViewMenuContent({
   };
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className={className}>
       {(parent.children ?? []).map((displayNode, index) => (
         <SidebarMenuItem key={displayNode.id}>
           <div
