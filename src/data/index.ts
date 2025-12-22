@@ -1,7 +1,7 @@
 import { BuildRecord } from "@/data/dao/BuildRecord";
 import { DeployRecord } from "@/data/dao/DeployRecord";
 import { DestinationRecord } from "@/data/dao/DestinationRecord";
-import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
+import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { SettingsRecord } from "@/data/dao/SettingsRecord";
 import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
@@ -19,7 +19,7 @@ export class ClientIndexedDb extends Dexie {
   builds!: EntityTable<BuildRecord, "guid">;
   deployments!: EntityTable<DeployRecord, "guid">;
 
-  historyDocs!: EntityTable<HistoryDocRecord, "edit_id">; // Auto-increment edit_id
+  historyDocs!: EntityTable<HistoryDAO, "edit_id">; // Auto-increment edit_id
 
   constructor() {
     super("ClientIndexedDb");

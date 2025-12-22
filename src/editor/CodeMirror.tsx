@@ -114,6 +114,15 @@ export const CodeMirrorEditor = ({
 
   const { start, end, hasRanges } = useURLRanges();
 
+  // const {
+  //   updateDebounce: onChange,
+  //   lazyContents,
+  //   hasConflicts,
+  // } = useFileContents({
+  //   currentWorkspace,
+  // });
+  // const value = String(lazyContents ?? "");
+
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -275,7 +284,7 @@ export const CodeMirrorEditor = ({
   }, [end, hasRanges, start]);
 
   const { DocHistory } = useDocHistory({
-    editorMarkdown: value,
+    markdownSync: value,
     setEditorMarkdown,
   });
 

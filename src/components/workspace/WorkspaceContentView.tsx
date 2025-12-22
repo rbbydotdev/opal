@@ -9,30 +9,34 @@ import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import { MDXEditor, MDXEditorMethods } from "@mdxeditor/editor";
+import graymatter from "gray-matter";
 import { ComponentProps, useRef } from "react";
 
 export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
   const { mimeType } = useCurrentFilepath();
-  const { contents, hotContents, contentsBody, updateImmediate, updateDebounce } = useFileContents({
+  const { lazyContents, hotContents, hotData, lazyContentsBody, updateImmediate, updateDebounce } = useFileContents({
     currentWorkspace,
     path,
+    onLazyBodyContentsChange: editorRef.current?.setMarkdown,
   });
   const { DocHistory } = useDocHistory({
-    editorMarkdown: hotContents,
+    markdownSync: hotContents,
     setEditorMarkdown: editorRef.current?.setMarkdown,
     writeMarkdown: updateImmediate,
   });
+
   const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
 
   const handleChange = (md: string, initialMarkdownNormalize: boolean) => {
     if (!initialMarkdownNormalize) {
-      void DocHistory.saveEdit(md);
-      updateDebounce(md);
+      const fullDoc = graymatter.stringify(md, hotData);
+      void DocHistory.saveEdit(fullDoc);
+      updateDebounce(fullDoc);
     }
   };
 
-  if (contents === null || !currentWorkspace) return null;
+  if (lazyContents === null || !currentWorkspace) return null;
 
   return (
     <div className="flex flex-col h-full relative">
@@ -46,7 +50,7 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
           currentWorkspace={currentWorkspace}
           editorRef={editorRef}
           onChange={handleChange}
-          markdown={contentsBody}
+          markdown={lazyContentsBody}
           className={"bg-background flex-grow flex-col h-full "}
           contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
         />
@@ -55,17 +59,22 @@ export function WorkspaceMarkdownEditor({ currentWorkspace, path }: { currentWor
   );
 }
 
-function EditorWithPlugins(
-  props: ComponentProps<typeof MDXEditor> & {
-    currentWorkspace: Workspace;
-    mimeType: string;
-    editorRef: React.RefObject<MDXEditorMethods | null>;
-  }
-) {
+function EditorWithPlugins({
+  currentWorkspace,
+  mimeType,
+  editorRef,
+  markdown,
+  onChange,
+  ...props
+}: ComponentProps<typeof MDXEditor> & {
+  currentWorkspace: Workspace;
+  mimeType: string;
+  editorRef: React.RefObject<MDXEditorMethods | null>;
+}) {
   const plugins = useAllPlugins({
-    currentWorkspace: props.currentWorkspace,
+    currentWorkspace,
     realmId: MainEditorRealmId,
-    mimeType: props.mimeType,
+    mimeType: mimeType,
   });
 
   const { storedValue: spellCheck } = useLocalStorage("Editor/spellcheck", true);
@@ -74,12 +83,10 @@ function EditorWithPlugins(
     <MDXEditor
       {...props}
       plugins={plugins}
-      ref={props.editorRef}
+      ref={editorRef}
       trim={false}
-      onChange={(markdown: string, initialMarkdownNormalize: boolean) => {
-        props.onChange?.(markdown, initialMarkdownNormalize);
-      }}
-      markdown={props.markdown}
+      onChange={onChange}
+      markdown={markdown}
       spellCheck={spellCheck}
     />
   );

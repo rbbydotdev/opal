@@ -1,7 +1,7 @@
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export function useAsyncEffect(
+export function OLD___useAsyncEffect(
   effect: (signal: AbortSignal) => Promise<void | (() => void)>,
   deps: React.DependencyList
 ): void {

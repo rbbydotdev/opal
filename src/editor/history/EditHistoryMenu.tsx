@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
-import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
+import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { EditViewImage } from "@/editor/history/EditViewImage";
 import { useDocHistory } from "@/editor/history/HistoryPlugin";
 import { useSelectedItemScroll } from "@/editor/history/useSelectedItemScroll";
@@ -19,7 +19,7 @@ import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
-function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDocRecord | null; pending: boolean }) {
+function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | null; pending: boolean }) {
   if (selectedEdit !== null || pending) {
     return (
       <div key={selectedEdit?.edit_id} className="animate-pulse animation-iteration-once ">
@@ -42,8 +42,7 @@ export function EditHistoryMenu() {
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
 
   const { edits, pending, mode, edit: selectedEdit, accept, propose, restore, clearAll } = useDocHistory();
-
-  const isSelectedEdit = (edit: HistoryDocRecord) => {
+  const isSelectedEdit = (edit: HistoryDAO) => {
     return selectedEdit !== null && selectedEdit.edit_id === edit.edit_id;
   };
 
@@ -146,7 +145,7 @@ function HistoryMenuToolbar({
   clearAll = async () => {},
   setOpen = (open: boolean) => {},
 }: {
-  edits: HistoryDocRecord[];
+  edits: HistoryDAO[];
   clearAll: () => void;
   setOpen: (open: boolean) => void;
 }) {

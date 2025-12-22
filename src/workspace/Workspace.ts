@@ -1,6 +1,13 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Disk } from "@/data/disk/Disk";
-import { CreateDetails, DeleteDetails, DiskEvents, IndexTrigger, RenameDetails } from "@/data/disk/DiskEvents";
+import {
+  CreateDetails,
+  DeleteDetails,
+  DiskEvents,
+  IndexTrigger,
+  RenameDetails,
+  RenameDetailsToChangeSet,
+} from "@/data/disk/DiskEvents";
 import { ImageCache } from "@/data/ImageCache";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
@@ -32,6 +39,7 @@ import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
 import { DefaultTemplate, WorkspaceTemplate } from "@/data/WorkspaceTemplates";
+import { EditStorage } from "@/editor/history/EditStorage";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
@@ -309,21 +317,25 @@ export class Workspace {
     return this.disk.removeFile(filePath);
   }
 
-  private async adjustThumbAndCachePath(oldNode: TreeNode, newPath: AbsPath) {
-    if (isImage(oldNode.path)) {
-      await this.imageCache.getCache().then(async (c) => {
-        const res = await c.match(oldNode.path);
-        if (res) {
-          await c.delete(oldNode.path);
-          await c.put(newPath, res);
+  private async adjustThumbAndCachePaths(filePathChanges: [oldNode: AbsPath | TreeNode, newPath: AbsPath][]) {
+    return Promise.all(
+      filePathChanges.map(async ([oldNode, newPath]) => {
+        if (isImage(String(oldNode))) {
+          await this.imageCache.getCache().then(async (c) => {
+            const res = await c.match(String(oldNode));
+            if (res) {
+              await c.delete(String(oldNode));
+              await c.put(newPath, res);
+            }
+          });
+          const oldThumb = this.NewThumb(String(oldNode) as AbsPath);
+          const newThumb = this.NewThumb(newPath);
+          await oldThumb.move(oldThumb.path, newThumb.path).catch(async (_e) => {
+            console.warn(`error moving thumb from ${oldThumb.path} to ${newThumb.path}`);
+          });
         }
-      });
-      const oldThumb = this.NewThumb(oldNode.path);
-      const newThumb = this.NewThumb(newPath);
-      await oldThumb.move(oldThumb.path, newThumb.path).catch(async (_e) => {
-        console.warn(`error moving thumb from ${oldThumb.path} to ${newThumb.path}`);
-      });
-    }
+      })
+    );
   }
   async renameSingle(from: TreeNode, to: TreeNode | AbsPath) {
     return this.renameMultiple([[from, to]] as [TreeNode, TreeNode | AbsPath][]).then((result) => {
@@ -590,41 +602,17 @@ export class Workspace {
     return this.nodeFromPath(path) ?? this.nodeFromPath(absPath("/"))!;
   }
 
-  private async initImageFileListeners() {
-    return this.renameListener(async (nodes) => {
-      await Promise.all(
-        nodes.map(({ oldPath, newPath, fileType }) =>
-          this.adjustThumbAndCachePath(TreeNode.FromPath(oldPath, fileType), absPath(newPath))
-        )
-      );
-
-      // Collect all file path changes for markdown replacement
-      const filePathChanges: [string, string][] = [];
-
-      for (const { oldPath, newPath, fileType } of nodes) {
-        if (oldPath === newPath) continue;
-
-        if (fileType === "file") {
-          // Direct file rename - include all files that might be referenced
-          filePathChanges.push([oldPath, newPath]);
-        } else if (fileType === "dir") {
-          // Directory rename - find all file children recursively
-          const newDirNode = this.nodeFromPath(newPath);
-          if (newDirNode?.isTreeDir()) {
-            // Walk through all children to find all files (not just images)
-            newDirNode.walk((child) => {
-              if (child.isTreeFile()) {
-                // Calculate what the old path would have been
-                const oldFilePath = absPath(child.path.replace(newPath, oldPath));
-                filePathChanges.push([oldFilePath, child.path]);
-              }
-            });
-          }
-        }
-      }
-
+  private async initFileRenameListener() {
+    return this.renameListener(async (pathChanges) => {
+      const filePathChanges: [AbsPath, AbsPath][] = RenameDetailsToChangeSet(pathChanges, this.nodeFromPath);
+      console.table(filePathChanges);
       if (filePathChanges.length > 0) {
+        await this.adjustThumbAndCachePaths(filePathChanges);
         await this.renameMdImages(filePathChanges);
+        await EditStorage.MoveEdits({
+          workspaceId: this.id,
+          changeSet: filePathChanges,
+        });
       }
     });
   }
@@ -641,7 +629,7 @@ export class Workspace {
       unsubs.push(await this.initRepo({ skipListeners }));
       if (!skipListeners) {
         unsubs.push(this.remote.init());
-        unsubs.push(await this.initImageFileListeners());
+        unsubs.push(await this.initFileRenameListener());
         this.remote.on(WorkspaceEvents.RENAME, (payload) => this.local.emit(WorkspaceEvents.RENAME, payload));
         this.remote.on(WorkspaceEvents.DELETE, (payload) => this.local.emit(WorkspaceEvents.DELETE, payload));
       }

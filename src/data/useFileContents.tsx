@@ -67,10 +67,12 @@ export function useFileContents({
   currentWorkspace,
   debounceMs = 250,
   path,
+  onLazyBodyContentsChange,
 }: {
   currentWorkspace: Workspace;
   debounceMs?: number;
   path?: AbsPath | null;
+  onLazyBodyContentsChange?: (md: string) => void;
 }) {
   // Live content state - immediate updates from editor, shows current editor state
   const [hotContents, setHotContents] = useState<string | null>(null);
@@ -78,15 +80,25 @@ export function useFileContents({
   const { path: currentRoutePath } = useWorkspaceRoute();
 
   // Baseline content from disk - only updated on file read or outside writes
-  const [contents, setInitialContents] = useState<Uint8Array<ArrayBufferLike> | string | null>(null);
+  const [lazyContents, setLazyContents] = useState<string | null>(null);
   const [error, setError] = useState<null | Error>(null);
   const navigate = useNavigate();
 
   // Simplified debounce management
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingContentRef = useRef<string | null>(null);
-  const previousFilePathRef = useRef<AbsPath | null>(null);
-  pendingContentRef.current = hotContents;
+
+  const { data: hotData, content: hotBody } = useMemo(() => {
+    return matter(hotContents || "") as Record<string, any>;
+  }, [hotContents]);
+
+  const { data: lazyContentsData, content: lazyContentsBody } = useMemo(() => {
+    return matter(lazyContents !== null ? String(lazyContents) : "") as Record<string, any>;
+  }, [lazyContents]);
+
+  useEffect(() => {
+    onLazyBodyContentsChange?.(lazyContentsBody);
+  }, [lazyContentsBody, onLazyBodyContentsChange]);
 
   // Determine current file path from props or route
   const filePath = useMemo(() => {
@@ -149,6 +161,9 @@ export function useFileContents({
    * CLEANUP EFFECT: Flushes pending debounced changes when filePath changes
    * This ensures pending changes are saved to the file they originated from
    */
+
+  const previousFilePathRef = useRef<AbsPath | null>(null);
+  pendingContentRef.current = hotContents;
   useEffect(() => {
     // If filePath changed and we have pending changes, flush them to the previous file
     if (previousFilePathRef.current !== filePath && debounceRef.current && pendingContentRef.current !== null) {
@@ -200,7 +215,7 @@ export function useFileContents({
           if (signal.aborted) return;
 
           setHotContents(fileContents.toString());
-          setInitialContents(fileContents);
+          setLazyContents(fileContents.toString());
           setError(null);
         } catch (error) {
           // Only set error if operation wasn't cancelled
@@ -235,9 +250,9 @@ export function useFileContents({
    */
   useEffect(() => {
     if (filePath) {
-      return currentWorkspace.disk.outsideWriteListener(filePath, (c) => {
-        setHotContents(c);
-        setInitialContents(c);
+      return currentWorkspace.disk.outsideWriteListener(filePath, (content) => {
+        setHotContents(content);
+        setLazyContents(content);
       });
     }
   }, [currentWorkspace, filePath]);
@@ -267,13 +282,6 @@ export function useFileContents({
       promise,
     ]);
   }
-  const { data: hotData, content: hotBody } = useMemo(() => {
-    return matter(hotContents || "") as Record<string, any>;
-  }, [hotContents]);
-
-  const { data: contentsData, content: contentsBody } = useMemo(() => {
-    return matter(contents !== null ? String(contents) : "") as Record<string, any>;
-  }, [contents]);
 
   const hasConflicts = hasGitConflictMarkers(hotContents || "");
 
@@ -296,9 +304,9 @@ export function useFileContents({
     filePath,
     hotData,
     hotBody,
-    contents: contents !== null ? String(contents) : null,
-    contentsData,
-    contentsBody,
+    lazyContents: lazyContents ?? null,
+    lazyContentsData,
+    lazyContentsBody,
     mimeType: getMimeType(filePath ?? "") ?? DEFAULT_MIME_TYPE,
     writeFileContents,
     updateDebounce,

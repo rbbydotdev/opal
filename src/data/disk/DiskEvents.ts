@@ -1,3 +1,4 @@
+import { SourceTreeNode, TreeNode } from "@/components/filetree/TreeNode";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
 import { AbsPath, RelPath, absPath, relPath } from "@/lib/paths2";
@@ -17,6 +18,22 @@ export type FilePathsType = {
 export type CreateDetails = FilePathsType;
 export type DeleteDetails = FilePathsType;
 export type RenameDetails = RemoteRenameFileType;
+
+//changes come in as a collapsed tree,
+//we must rehydrate the tree with all of its depth
+export function RenameDetailsToChangeSet(
+  changes: RenameDetails[],
+  nodeResolver: (path: AbsPath) => TreeNode | null
+): [oldPath: AbsPath, newPath: AbsPath][] {
+  const filePathChanges: [AbsPath, AbsPath][] = [];
+  for (const change of changes) {
+    const sourceTree = SourceTreeNode.New(nodeResolver(change.newPath)!, change.oldPath);
+    for (const node of sourceTree.iterator((n) => n.isTreeFile())) {
+      filePathChanges.push([node.source!, node.path]);
+    }
+  }
+  return filePathChanges;
+}
 
 export class RenameFileType {
   oldPath: AbsPath;

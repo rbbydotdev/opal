@@ -454,6 +454,7 @@ export class TreeNode {
     basename: string;
     path: string;
     depth: number;
+    source?: string;
   } {
     return {
       type: this.type,
@@ -461,6 +462,7 @@ export class TreeNode {
       basename: this.basename,
       path: this.path,
       depth: this.depth,
+      source: this.source,
     };
   }
 }
@@ -771,11 +773,11 @@ export class SourceTreeDirRoot extends TreeDirRoot {
 }
 
 export class SourceTreeNode extends TreeNode {
-  static New(node: TreeNode, source: AbsPath): SourceDirTreeNode | SourceFileTreeNode {
+  static New(node: TreeNode, source?: AbsPath): SourceDirTreeNode | SourceFileTreeNode {
     if (isTreeDir(node)) {
-      return new SourceDirTreeNode(node, source);
+      return new SourceDirTreeNode(node, source ?? node.path);
     }
-    return new SourceFileTreeNode(node, source);
+    return new SourceFileTreeNode(node, source ?? node.path);
   }
   constructor(
     props: ConstructorParameters<typeof TreeNode>[0],

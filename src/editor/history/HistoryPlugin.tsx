@@ -1,4 +1,4 @@
-import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
+import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { ClientDb } from "@/data/instance";
 import { EditStorage } from "@/editor/history/EditStorage";
 import { useResource } from "@/hooks/useResource";
@@ -6,7 +6,6 @@ import pDebounce from "p-debounce";
 
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
-import { Mutex } from "async-mutex";
 import { liveQuery, Subscription } from "dexie";
 import { createContext, useContext, useState, useSyncExternalStore } from "react";
 
@@ -15,8 +14,8 @@ export class HistoryPlugin {
     editorDoc: string | null;
     baseDoc: string | null;
     proposedDoc: string | null;
-    edit: HistoryDocRecord | null;
-    edits: HistoryDocRecord[];
+    edit: HistoryDAO | null;
+    edits: HistoryDAO[];
     mode: "edit" | "propose";
     pending: boolean;
   } = {
@@ -34,16 +33,14 @@ export class HistoryPlugin {
   editStorage = new EditStorage();
   private emitter = CreateSuperTypedEmitter<{
     editorDoc: string | null;
-    edits: HistoryDocRecord[];
+    edits: HistoryDAO[];
     pending: boolean;
     mode: "edit" | "propose";
-    edit: HistoryDocRecord | null;
+    edit: HistoryDAO | null;
     baseDoc: string | null;
     proposedDoc: string | null;
   }>();
-  private mutex = new Mutex();
 
-  private muteChange: boolean = false;
   private documentId: string | null = null;
   private workspaceId: string | null = null;
   private releaseLiveQuerySubscription: Subscription["unsubscribe"] = () => {};
@@ -65,17 +62,17 @@ export class HistoryPlugin {
   }
 
   hook = ({
-    editorMarkdown,
+    markdownSync,
     setEditorMarkdown,
     writeMarkdown,
   }: {
-    editorMarkdown: string | null;
+    markdownSync: string | null;
     setEditorMarkdown?: (doc: string) => void;
     writeMarkdown?: (doc: string) => void;
   }) => {
-    if (typeof editorMarkdown === "string") {
-      if (this.$baseDoc === null) queueMicrotask(() => (this.$baseDoc = editorMarkdown));
-      if (this.$editorMarkdown !== editorMarkdown) queueMicrotask(() => (this.$editorMarkdown = editorMarkdown));
+    if (typeof markdownSync === "string") {
+      if (this.$baseDoc === null) this.$baseDoc = markdownSync;
+      if (this.$editorMarkdown !== markdownSync) this.$editorMarkdown = markdownSync;
     }
     if (setEditorMarkdown) this.setEditorMarkdown = setEditorMarkdown;
     if (writeMarkdown) this.writeMarkdown = writeMarkdown;
@@ -86,7 +83,7 @@ export class HistoryPlugin {
   };
   $getProposedDoc = () => this.state.proposedDoc;
 
-  $watchEdits = (cb: (edits: HistoryDocRecord[]) => void) => {
+  $watchEdits = (cb: (edits: HistoryDAO[]) => void) => {
     return this.emitter.on("edits", (e) => cb(e));
   };
   $getEdits = () => this.state.edits;
@@ -101,7 +98,7 @@ export class HistoryPlugin {
   };
   $getPending = () => this.state.pending;
 
-  $watchEdit = (cb: (edit: HistoryDocRecord | null) => void) => {
+  $watchEdit = (cb: (edit: HistoryDAO | null) => void) => {
     return this.emitter.on("edit", (edit) => cb(edit));
   };
   $getEdit = () => this.state.edit;
@@ -111,7 +108,7 @@ export class HistoryPlugin {
   };
   $getEditorMarkdown = () => this.state.editorDoc;
 
-  set $edit(edit: HistoryDocRecord | null) {
+  set $edit(edit: HistoryDAO | null) {
     this.state.edit = edit;
     this.emitter.emit("edit", edit!);
   }
@@ -119,7 +116,7 @@ export class HistoryPlugin {
     return this.state.edit;
   }
 
-  set $edits(edits: HistoryDocRecord[]) {
+  set $edits(edits: HistoryDAO[]) {
     this.state.edits = [...edits];
     this.emitter.emit("edits", edits);
   }
@@ -145,10 +142,6 @@ export class HistoryPlugin {
   }
   get $proposedDoc() {
     return this.state.proposedDoc;
-  }
-
-  set editorMarkdown(doc: string | null) {
-    this.state.editorDoc = doc;
   }
   get $editorMarkdown() {
     return this.state.editorDoc;
@@ -180,12 +173,17 @@ export class HistoryPlugin {
   };
 
   init() {
-    return this.$watchEditorMarkdown((doc) => {
-      if (this.$mode === "propose" && this.$proposedDoc !== doc) this.backoff();
-    });
+    return [
+      this.$watchEditorMarkdown((doc) => {
+        if (this.$mode === "propose" && this.$proposedDoc !== doc) this.backoff();
+      }),
+      this.$watchEditorMarkdown((doc) => {
+        if (this.$mode === "edit") this.$baseDoc = doc;
+      }),
+    ];
   }
 
-  propose = async (edit: HistoryDocRecord) => {
+  propose = async (edit: HistoryDAO) => {
     const editText = await this.getTextForEdit(edit);
     this.setEditorMarkdown(editText);
     return this.$$batchSet({
@@ -250,14 +248,6 @@ export class HistoryPlugin {
     ).subscribe((edits) => (this.$edits = edits)).unsubscribe;
   };
 
-  async transaction(fn: () => void) {
-    await this.mutex.runExclusive(async () => {
-      this.muteChange = true;
-      await fn();
-      this.muteChange = false;
-    });
-  }
-
   private onChangeDebounce = pDebounce(async (markdown: string) => {
     if (!this.documentId || !this.workspaceId) return;
     const documentId = this.documentId;
@@ -298,12 +288,6 @@ export function DocHistoryProvider({ children }: { children: React.ReactNode }) 
     [path, currentWorkspace.id]
   );
 
-  // useWatchTextFileContents({
-  //   currentWorkspace,
-  //   onChange: docHistory.onEditorChange,
-  //   path,
-  // });
-
   if (!isMarkdown) return children;
 
   return (
@@ -320,19 +304,19 @@ export function DocHistoryProvider({ children }: { children: React.ReactNode }) 
 }
 export function useDocHistory(
   {
-    editorMarkdown,
+    markdownSync,
     setEditorMarkdown,
     writeMarkdown,
   }: {
-    editorMarkdown: string | null;
+    markdownSync: string | null;
     setEditorMarkdown?: (doc: string) => void;
     writeMarkdown?: (doc: string) => void;
-  } = { editorMarkdown: null }
+  } = { markdownSync: null }
 ) {
   const { DocHistory } = useDocHistoryContext();
 
   DocHistory.hook({
-    editorMarkdown,
+    markdownSync,
     setEditorMarkdown,
     writeMarkdown,
   });

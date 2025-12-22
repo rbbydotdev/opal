@@ -1,4 +1,4 @@
-import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
+import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { ClientDb } from "@/data/instance";
 import * as CRC32 from "crc-32";
 import diff_match_patch, { Diff } from "diff-match-patch";
@@ -9,6 +9,34 @@ export class EditStorage {
 
   async clearAllEdits(documentId: string): Promise<number> {
     return ClientDb.historyDocs.where("id").equals(documentId).delete();
+  }
+
+  static MoveEdits = async ({
+    workspaceId,
+    changeSet,
+  }: {
+    workspaceId: string;
+    changeSet: [oldPath: string, newPath: string][];
+  }): Promise<void> => {
+    const changeSetMap = new Map(changeSet);
+    await ClientDb.transaction("rw", ClientDb.historyDocs, async () => {
+      const affectedRecords = await ClientDb.historyDocs
+        .where({ workspaceId })
+        .and((edit) => changeSetMap.has(edit.id))
+        .toArray();
+      if (affectedRecords.length === 0) return;
+      await ClientDb.historyDocs.bulkPut(
+        affectedRecords.map((record) => ({
+          ...record,
+          id: changeSetMap.get(record.id)!,
+          path: changeSetMap.get(record.id)!,
+        }))
+      );
+    });
+  };
+
+  public async updatePreviewForEditId(edit_id: number, preview: Blob): Promise<void> {
+    await ClientDb.historyDocs.update(edit_id, { preview });
   }
 
   reconstructDocument = async ({ edit_id }: { edit_id: number }): Promise<string> => {
@@ -38,8 +66,7 @@ export class EditStorage {
     workspaceId: string;
     documentId: string;
     markdown: string;
-  }): Promise<HistoryDocRecord | null> {
-    console.debug("save edit");
+  }): Promise<HistoryDAO | null> {
     const latestEdit = await this.getLatestEdit(documentId);
     const parentText = latestEdit ? await this.reconstructDocument({ edit_id: latestEdit.edit_id! }) : "";
     const diffs: Diff[] = this.dmp.diff_main(parentText || "", markdown);
@@ -55,23 +82,23 @@ export class EditStorage {
     }
 
     this.dmp.diff_cleanupEfficiency(diffs);
-    const patch = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
+    const change = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
     // Calculate CRC32 for the new content and get parent's CRC32
-    const newContentCrc32 = CRC32.str(markdown);
+    const crc32 = CRC32.str(markdown);
     const parentCrc32 = latestEdit?.crc32 ?? undefined;
 
-    const newDoc = new HistoryDocRecord(
+    const newDoc = new HistoryDAO({
       workspaceId,
-      documentId,
-      patch,
-      Date.now(),
-      latestEdit ? latestEdit.edit_id! : null,
-      null,
-      newContentCrc32,
-      parentCrc32
-    );
-    const resultId = await ClientDb.historyDocs.add(newDoc);
+      id: documentId,
+      change,
+      timestamp: Date.now(),
+      parent: latestEdit ? latestEdit.edit_id! : null,
+      preview: null,
+      crc32,
+      parentCrc32,
+    });
+    await ClientDb.historyDocs.add(newDoc);
     return newDoc;
   }
 
@@ -79,11 +106,11 @@ export class EditStorage {
     this.cache.clear();
   }
 
-  private async getEditByEditId(edit_id: number): Promise<HistoryDocRecord | null> {
+  private async getEditByEditId(edit_id: number): Promise<HistoryDAO | null> {
     return (await ClientDb.historyDocs.get(edit_id)) ?? null;
   }
 
-  private async getLatestEdit(documentId: string): Promise<HistoryDocRecord | null> {
+  private async getLatestEdit(documentId: string): Promise<HistoryDAO | null> {
     const result = await ClientDb.historyDocs.where("id").equals(documentId).reverse().sortBy("timestamp");
     return result[0] ?? null;
   }

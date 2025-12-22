@@ -18,7 +18,11 @@ export const SourceEditor = ({
   className?: string;
   mimeType?: SourceMimeType;
 }) => {
-  const { contents, updateDebounce, hasConflicts } = useFileContents({
+  const {
+    lazyContents: contents,
+    updateDebounce,
+    hasConflicts,
+  } = useFileContents({
     currentWorkspace,
   });
   const { storedValue: enableGitConflictResolution } = useLocalStorage(

@@ -1,6 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { HistoryStore } from "@/data/dao/HistoryDAO";
-import { HistoryDocRecord } from "@/data/dao/HistoryDocRecord";
+import { HistoryDAO } from "@/data/dao/HistoryDOA";
+import { EditStorage } from "@/editor/history/EditStorage";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
@@ -11,31 +11,31 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
   return `${workspaceId}/${editId}`;
 }
 
-export async function generateHtmlPreview(edit: HistoryDocRecord): Promise<Blob> {
-  const historyDAO = new HistoryStore();
+export async function generateHtmlPreview(edit: HistoryDAO): Promise<Blob> {
+  const editStore = new EditStorage();
   try {
-    const reconstructedContent = (await historyDAO.reconstructDocumentFromEdit(edit)) ?? "";
+    const reconstructedContent = (await editStore.reconstructDocument(edit)) ?? "";
     const html = renderMarkdownToHtml(stripFrontmatter(reconstructedContent));
     const blob = new Blob([html], { type: "text/html" });
     // Store the HTML blob in the database
-    await historyDAO.updatePreviewForEditId(edit.edit_id, blob);
+    await editStore.updatePreviewForEditId(edit.edit_id, blob);
 
     return blob;
   } finally {
-    historyDAO.tearDown();
+    editStore.tearDown();
   }
 }
 
 export function useHtmlPreviewGenerator() {
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
-  return function generatePreview(edit: HistoryDocRecord) {
+  return function generatePreview(edit: HistoryDAO) {
     if (!isHistoryImageGenerationEnabled) return;
     void generateHtmlPreview(edit);
   };
 }
 
-function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDocRecord; workspaceId: string; id: string }) {
+function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDAO; workspaceId: string; id: string }) {
   // console.warn("EditViewImage needs given an actual edit maybeee lol");
   return "<div>preview</div>";
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
@@ -135,7 +135,7 @@ export const EditViewImage = ({
   className,
 }: {
   workspaceId: string;
-  edit: HistoryDocRecord;
+  edit: HistoryDAO;
   className?: string;
 }) => {
   const id = previewId({ workspaceId, editId: edit.id });
