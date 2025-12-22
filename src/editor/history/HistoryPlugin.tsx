@@ -75,7 +75,7 @@ export class HistoryPlugin {
   }) => {
     if (typeof editorMarkdown === "string") {
       if (this.$baseDoc === null) queueMicrotask(() => (this.$baseDoc = editorMarkdown));
-      if (this.$editorMarkdown === null) queueMicrotask(() => (this.$editorMarkdown = editorMarkdown));
+      if (this.$editorMarkdown !== editorMarkdown) queueMicrotask(() => (this.$editorMarkdown = editorMarkdown));
     }
     if (setEditorMarkdown) this.setEditorMarkdown = setEditorMarkdown;
     if (writeMarkdown) this.writeMarkdown = writeMarkdown;
