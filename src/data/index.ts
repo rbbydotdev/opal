@@ -7,7 +7,7 @@ import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { default as Dexie, Table, type EntityTable } from "dexie";
-import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
+// import { applyEncryptionMiddleware, clearAllTables, cryptoOptions } from "dexie-encrypted";
 
 export class ClientIndexedDb extends Dexie {
   workspaces!: EntityTable<WorkspaceRecord, "guid">;
@@ -36,14 +36,14 @@ export class ClientIndexedDb extends Dexie {
       destinations: "guid,label,type,timestamp,remoteAuthGuid",
     });
 
-    applyEncryptionMiddleware<ClientIndexedDb>(
-      this as ClientIndexedDb,
-      new Uint8Array(new Array(32).fill(0)),
-      {
-        remoteAuths: cryptoOptions.NON_INDEXED_FIELDS,
-      },
-      clearAllTables
-    );
+    // applyEncryptionMiddleware<ClientIndexedDb>(
+    //   this as ClientIndexedDb,
+    //   new Uint8Array(new Array(32).fill(0)),<<<password is all zeros for now>>>
+    //   {
+    //     remoteAuths: cryptoOptions.NON_INDEXED_FIELDS,
+    //   },
+    //   clearAllTables
+    // );
     this.destinations.hook("creating", (_primaryKey, obj) => {
       obj.remoteAuthGuid = obj.remoteAuth?.guid ?? null;
     });

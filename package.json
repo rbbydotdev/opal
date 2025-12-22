@@ -95,7 +95,6 @@
     "crc-32": "^1.2.2",
     "debounce": "^3.0.0",
     "dexie": "^4.0.10",
-    "dexie-encrypted": "^2.0.0",
     "dexie-react-hooks": "^1.1.7",
     "diff-match-patch": "^1.0.5",
     "dotenv": "^17.2.3",
