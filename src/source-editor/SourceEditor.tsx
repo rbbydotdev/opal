@@ -30,8 +30,6 @@ export const SourceEditor = ({
     true
   );
 
-  if (contents === null) return null;
-
   return (
     <ConditionalDropzone
       shouldActivate={isExternalFileDrop}

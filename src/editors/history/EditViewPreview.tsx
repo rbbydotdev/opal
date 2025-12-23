@@ -94,7 +94,9 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
         font-size: 90%;
       }
       img {
-        max-width: 100%;
+        max-width: 160px;
+        border-radius: 12px;
+        margin: 4px;
         height: auto;
       }
       body {

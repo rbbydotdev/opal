@@ -38,7 +38,7 @@ export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: W
     }
   };
 
-  if (lazyContents === null || !currentWorkspace) return null;
+  if (!currentWorkspace) return null;
 
   return (
     <div className="flex flex-col h-full relative">
@@ -52,7 +52,7 @@ export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: W
           currentWorkspace={currentWorkspace}
           editorRef={editorRef}
           onChange={handleChange}
-          markdown={lazyContentsBody}
+          markdown={lazyContentsBody ?? ""}
           className={"bg-background flex-grow flex-col h-full "}
           contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
         />

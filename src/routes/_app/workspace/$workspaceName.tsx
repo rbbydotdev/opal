@@ -25,9 +25,7 @@ function WorkspaceLayout() {
   const { previewURL, previewNode, canShow, setPreviewNode } = usePreviewPaneProps({ path, currentWorkspace });
 
   useEffect(() => {
-    if (workspaceName) {
-      document.title = workspaceName;
-    }
+    if (workspaceName && !document.title) document.title = workspaceName;
   }, [workspaceName]);
   const [key, setKey] = useState(0);
   const previewKey = previewNode?.path + "-" + key;
