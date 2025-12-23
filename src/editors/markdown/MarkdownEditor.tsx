@@ -14,24 +14,26 @@ import { ComponentProps, useRef } from "react";
 
 export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: Workspace; path: AbsPath }) {
   const editorRef = useRef<MDXEditorMethods>(null);
+  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
+
   const { mimeType } = useCurrentFilepath();
+
   const { lazyContents, hotContents, hotData, lazyContentsBody, updateImmediate, updateDebounce } = useFileContents({
     currentWorkspace,
     path,
     onLazyBodyContentsChange: editorRef.current?.setMarkdown,
   });
+
   const { DocHistory } = useDocHistory({
     markdownSync: hotContents,
     setEditorMarkdown: (md) => editorRef.current?.setMarkdown(graymatter(md).content),
     writeMarkdown: updateImmediate,
   });
 
-  const mdxEditorElement = useWatchElement(MdxEditorScrollSelector);
-
   const handleChange = (md: string, initialMarkdownNormalize: boolean) => {
     if (!initialMarkdownNormalize) {
       const fullDoc = graymatter.stringify(md, hotData);
-      void DocHistory.saveEdit(fullDoc);
+      void DocHistory.saveEdit(fullDoc, lazyContents);
       updateDebounce(fullDoc);
     }
   };

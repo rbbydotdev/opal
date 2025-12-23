@@ -1,4 +1,16 @@
-export class HistoryDAO {
+import { ClientDb } from "@/data/instance";
+
+interface HistoryDOC {
+  id: string;
+  change: string;
+  timestamp: number;
+  parent: number | null;
+  edit_id: number;
+  preview: Blob | null;
+  workspaceId: string;
+}
+
+export class HistoryDAO implements HistoryDOC {
   id: string;
   change: string;
   timestamp: number;
@@ -6,8 +18,6 @@ export class HistoryDAO {
   edit_id!: number;
   preview: Blob | null;
   workspaceId: string;
-  crc32?: number;
-  parentCrc32?: number;
 
   constructor({
     workspaceId,
@@ -16,8 +26,6 @@ export class HistoryDAO {
     timestamp,
     parent,
     preview = null,
-    crc32,
-    parentCrc32,
   }: {
     workspaceId: string;
     id: string;
@@ -25,8 +33,6 @@ export class HistoryDAO {
     timestamp: number;
     parent: number | null;
     preview: Blob | null;
-    crc32?: number;
-    parentCrc32?: number;
   }) {
     this.workspaceId = workspaceId;
     this.id = id;
@@ -34,9 +40,14 @@ export class HistoryDAO {
     this.timestamp = timestamp;
     this.parent = parent;
     this.preview = preview;
-    this.crc32 = crc32;
-    this.parentCrc32 = parentCrc32;
   }
+  static Add = async (doc: Omit<HistoryDOC, "edit_id">) => {
+    const historyDoc = new HistoryDAO(doc);
+    const editId = await ClientDb.historyDocs.add(historyDoc);
+    historyDoc.edit_id = editId;
+    return historyDoc;
+  };
+
   static FromJSON(json: {
     workspaceId: string;
     id: string;
@@ -46,8 +57,6 @@ export class HistoryDAO {
     parent: number | null;
     preview?: Blob | null;
     filePath?: string;
-    crc32?: number;
-    parentCrc32?: number;
   }) {
     const hdr = new HistoryDAO({ preview: null, ...json });
     return hdr;

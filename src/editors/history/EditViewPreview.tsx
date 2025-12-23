@@ -83,12 +83,15 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
         transform-origin: top left;
         transform: scale(1);
       }
+      :root {
+        font-size: 14px;
+      }
       *, *::before, *::after {
         max-width: none;
         word-wrap: break-word;
-        font-size: 14px;
         line-height: 1.6;
         color: #000 !important;
+        font-size: 90%;
       }
       img {
         max-width: 100%;

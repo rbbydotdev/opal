@@ -1,6 +1,5 @@
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { ClientDb } from "@/data/instance";
-import * as CRC32 from "crc-32";
 import diff_match_patch, { Diff } from "diff-match-patch";
 
 export class HistoryDB {
@@ -121,12 +120,24 @@ export class HistoryDB {
     workspaceId,
     documentId,
     markdown,
+    prevMarkdown,
   }: {
     workspaceId: string;
     documentId: string;
     markdown: string;
+    prevMarkdown?: string | null;
   }): Promise<HistoryDAO | null> {
-    const latestEdit = await this.getLatestEdit(documentId);
+    let latestEdit = await this.getLatestEdit(documentId);
+    if (!latestEdit && typeof prevMarkdown === "string") {
+      latestEdit = await HistoryDAO.Add({
+        workspaceId,
+        id: documentId,
+        change: this.dmp.patch_toText(this.dmp.patch_make("", prevMarkdown)),
+        timestamp: Date.now(),
+        parent: null,
+        preview: null,
+      })!;
+    }
     const parentText = latestEdit ? await this.reconstructDocument({ edit_id: latestEdit.edit_id! }) : "";
     const diffs: Diff[] = this.dmp.diff_main(parentText || "", markdown);
 
@@ -143,22 +154,14 @@ export class HistoryDB {
     this.dmp.diff_cleanupEfficiency(diffs);
     const change = this.dmp.patch_toText(this.dmp.patch_make(parentText || "", diffs));
 
-    // Calculate CRC32 for the new content and get parent's CRC32
-    const crc32 = CRC32.str(markdown);
-    const parentCrc32 = latestEdit?.crc32 ?? undefined;
-
-    const newDoc = new HistoryDAO({
+    return HistoryDAO.Add({
       workspaceId,
       id: documentId,
       change,
       timestamp: Date.now(),
       parent: latestEdit ? latestEdit.edit_id! : null,
       preview: null,
-      crc32,
-      parentCrc32,
     });
-    await ClientDb.historyDocs.add(newDoc);
-    return newDoc;
   }
 
   tearDown(): void {

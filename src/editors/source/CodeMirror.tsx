@@ -297,14 +297,14 @@ export const CodeMirrorEditor = ({
             const userEvent = tr.annotation(Transaction.userEvent);
             if (userEvent && ["input", "delete", "undo", "redo"].some((prefix) => userEvent.includes(prefix))) {
               const newDoc = update.state.doc.toString();
-              void DocHistory.saveEdit(newDoc);
+              void DocHistory.saveEdit(newDoc, value);
               onChange(newDoc);
             }
           }
         }),
       ]),
     });
-  }, [DocHistory, onChange, updateCompartment]);
+  }, [DocHistory, onChange, updateCompartment, value]);
 
   return (
     <>

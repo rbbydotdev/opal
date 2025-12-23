@@ -19,8 +19,6 @@ import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
-import { useToggleEditHistory } from "@/editors/history/useToggleEditHistory";
-import { useToggleHistoryImageGeneration } from "@/editors/history/useToggleHistoryImageGeneration";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
 import { WorkspaceSearchDialog } from "@/features/workspace-search/SearchDialog";
@@ -44,7 +42,6 @@ import {
   ChevronDown,
   ChevronLeft,
   CirclePlus,
-  Clock,
   Delete,
   GlassesIcon,
   KeyboardIcon,
@@ -145,8 +142,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   const { setStoredValue: setCollapsed, storedValue: collapsed } = useLeftCollapsed();
   const { setZoom, isCurrentZoom, availableZooms } = useZoom();
 
-  const { isHistoryImageGenerationEnabled, toggleHistoryImageGeneration } = useToggleHistoryImageGeneration();
-  const { isEditHistoryEnabled, toggleEditHistory } = useToggleEditHistory();
   const router = useRouter();
   const { open } = useConfirm();
   const { devMode, toggleDevMode } = useDevMode();
@@ -259,17 +254,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
             ))}
           </ContextMenuSubContent>
         </ContextMenuSub>
-
-        <ContextMenuSeparator />
-
-        <ContextMenuItem
-          className="grid grid-cols-[1rem_1rem_1fr] items-center gap-2"
-          onClick={keepMenuOpen(toggleEditHistory)}
-        >
-          {isEditHistoryEnabled ? <Check size={12} /> : <div className="w-2" />}
-          <Clock size={12} />
-          <span className="pr-4">Use Editor History</span>
-        </ContextMenuItem>
 
         <ContextMenuSeparator />
         {/* set dev mode */}

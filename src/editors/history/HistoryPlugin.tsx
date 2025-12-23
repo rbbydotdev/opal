@@ -261,9 +261,9 @@ export class HistoryPlugin {
 
   getTextForEdit = this.editStorage.reconstructDocument;
 
-  saveEdit = async (markdown: string) => {
+  saveEdit = async (markdown: string, prevMarkdown?: string | null) => {
     this.$editorMarkdown = markdown;
-    await this.onChangeDebounce(markdown);
+    await this.onChangeDebounce(markdown, prevMarkdown);
   };
 
   setDocument = ({ documentId, workspaceId }: { documentId?: string | null; workspaceId?: string | null }) => {
@@ -275,7 +275,7 @@ export class HistoryPlugin {
     this.init();
   };
 
-  private onChangeDebounce = pDebounce(async (markdown: string) => {
+  private onChangeDebounce = pDebounce(async (markdown: string, prevMarkdown?: string | null) => {
     if (!this.documentId || !this.workspaceId) return;
     const documentId = this.documentId;
     const workspaceId = this.workspaceId;
@@ -283,6 +283,7 @@ export class HistoryPlugin {
       documentId,
       workspaceId,
       markdown,
+      prevMarkdown,
     });
   }, this.debounceMs);
 
