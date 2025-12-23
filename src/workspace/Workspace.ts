@@ -603,9 +603,11 @@ export class Workspace {
   }
 
   private async initFileRenameListener() {
+    /*
+    Listen for file renames and update edits, thumbnails and image cache accordingly
+    */
     return this.renameListener(async (pathChanges) => {
       const filePathChanges: [AbsPath, AbsPath][] = RenameDetailsToChangeSet(pathChanges, this.nodeFromPath);
-      console.table(filePathChanges);
       if (filePathChanges.length > 0) {
         await this.adjustThumbAndCachePaths(filePathChanges);
         await this.renameMdImages(filePathChanges);

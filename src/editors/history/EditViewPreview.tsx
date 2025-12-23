@@ -94,10 +94,17 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
         font-size: 90%;
       }
       img {
-        max-width: 160px;
+        width: 140px;
         border-radius: 12px;
         margin: 4px;
-        height: auto;
+        height: 140px;
+        object-fit: cover;
+        background-image:
+          linear-gradient(45deg, #ccc 25%, transparent 25%), 
+          linear-gradient(135deg, #ccc 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #ccc 75%),
+          linear-gradient(135deg, transparent 75%, #ccc 75%);
+        background-size: 20px 20px;
       }
       body {
         margin: 0;
