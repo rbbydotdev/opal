@@ -13,7 +13,7 @@ export function useLivePreview() {
   function handlePrintClick() {
     if (!context.isOpen) {
       showDialog(true);
-      extPreviewCtrl.current?.open();
+      extPreviewCtrl.current?.open({ print: true });
     }
   }
 

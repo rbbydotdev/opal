@@ -80,7 +80,7 @@ export function PreviewComponent({ path, currentWorkspace }: { path: AbsPath; cu
 }
 
 export interface WindowPreviewHandler {
-  open(): void;
+  open(params?: { print: boolean }): void;
   close(): void;
 }
 

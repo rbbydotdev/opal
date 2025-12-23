@@ -11,10 +11,12 @@ export function SidebarDndList({
   children,
   storageKey,
   show,
+  dragHandle = "[data-draggable]",
 }: {
   children: React.ReactElement<SidebarDndListChildProps> | React.ReactElement<SidebarDndListChildProps>[];
   storageKey: string;
   show?: string[] | null;
+  dragHandle?: string;
 }) {
   // const showSet = show ? null : new Set(show);
   const initialChildren = React.Children.toArray(children)
@@ -47,6 +49,20 @@ export function SidebarDndList({
   // Always use latest children
   const idToChild = Object.fromEntries(initialChildren.map((child) => [child.props["dndId"], child]));
 
+  // Set draggable attribute on drag handles
+  useEffect(() => {
+    const handleElements = document.querySelectorAll(dragHandle);
+    handleElements.forEach((element) => {
+      (element as HTMLElement).draggable = true;
+    });
+
+    return () => {
+      handleElements.forEach((element) => {
+        (element as HTMLElement).draggable = false;
+      });
+    };
+  }, [dragHandle]);
+
   return order.map((id, index) => {
     const child = idToChild[id];
     if (show && !show.includes(id)) return null;
@@ -56,8 +72,14 @@ export function SidebarDndList({
       className: clsx(child.props.className, {
         "bg-sidebar-accent outline outline-primary outline-[0.0625rem] m-[0.0625rem]": dragOver === index,
       }),
-      draggable: true,
       onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
+        // Only allow drag if the target matches the drag handle selector
+        const target = e.target as HTMLElement;
+        const dragElement = target.closest(dragHandle);
+        if (!dragElement || !e.currentTarget.contains(dragElement)) {
+          e.preventDefault();
+          return;
+        }
         setDragging(index);
         child.props.onDragStart?.(e);
       },

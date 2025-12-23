@@ -212,13 +212,12 @@ export class WindowManager extends BaseContextProvider {
     return this.windowRef.current;
   }
 
-  open(): void {
+  open({ print }: { print?: boolean } = {}): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
       const url = new URL(window.location.href);
       url.pathname = "/preview_blank.html";
       url.searchParams.set("workspaceName", this.workspaceName);
       url.searchParams.set("previewMode", "true");
-      // iframe.src = url.toString();
 
       this.windowRef.current = window.open(url, "_blank");
       if (!this.windowRef.current) {

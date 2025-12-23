@@ -159,7 +159,7 @@ export function SidebarMenuSections({ ...props }: React.ComponentProps<typeof Si
 }
 function SidebarMenuDndList({ show, currentWorkspace }: { show: DndSectionType[]; currentWorkspace: Workspace }) {
   return (
-    <SidebarDndList storageKey={"sidebarMenu"} show={show}>
+    <SidebarDndList storageKey={"sidebarMenu"} show={show} dragHandle="[data-sidebar='menu-button']">
       <DndSlot dndId={"build"}>
         <SidebarFileMenuBuild className="flex-shrink flex" currentWorkspace={currentWorkspace} />
       </DndSlot>
