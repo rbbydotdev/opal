@@ -3,7 +3,6 @@ import { CloudflareDestination } from "@/data/DestinationSchemaMap";
 import { RemoteAuthAgent } from "@/data/RemoteAuthTypes";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 import type { CloudflareAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
-import { optionalCORSBaseURL } from "../../lib/optionalCORSBaseURL";
 
 export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   private _cloudflareClient!: CloudflareClient;
@@ -38,7 +37,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
       this._cloudflareClient ||
       (this._cloudflareClient = new CloudflareClient({
         apiToken: this.getApiToken(),
-        corsProxy: this.remoteAuth.data.corsProxy
+        corsProxy: this.remoteAuth.data.corsProxy,
       }))
     );
   }
@@ -67,7 +66,9 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     if (!this.getAccountId()) {
       throw new Error("Account ID is required for Cloudflare Pages deployment");
     }
-    this.lastDeploymentResult = await this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, { logStatus });
+    this.lastDeploymentResult = await this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, {
+      logStatus,
+    });
     return this.lastDeploymentResult;
   }
 

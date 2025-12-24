@@ -67,7 +67,7 @@ function GitRemoteManager({
     <>
       <GitRemoteDialog
         cmdRef={cmdRef}
-        onSubmit={({ previous, next, mode }) => {
+        onSubmitted={({ previous, next, mode }) => {
           if (mode === "add") {
             addGitRemote(next);
           }

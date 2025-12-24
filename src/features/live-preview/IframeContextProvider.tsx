@@ -212,7 +212,7 @@ export class WindowManager extends BaseContextProvider {
     return this.windowRef.current;
   }
 
-  open({ print }: { print?: boolean } = {}): void {
+  open(): void {
     if (!this.windowRef.current || this.windowRef.current.closed) {
       const url = new URL(window.location.href);
       url.pathname = "/preview_blank.html";

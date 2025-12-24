@@ -8,21 +8,23 @@ export function useLivePreview() {
   const { currentWorkspace } = useWorkspaceContext();
   const { pathPreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
   const context = useWindowContextProvider();
-  const { showDialog, extPreviewCtrl } = useLivePreviewDialog();
+  const { showDialog, extPreviewCtrl, open, close } = useLivePreviewDialog();
 
   function handlePrintClick() {
     if (!context.isOpen) {
       showDialog(true);
-      extPreviewCtrl.current?.open({ print: true });
+      open({
+        print: true,
+      });
     }
   }
 
   function openPreview() {
-    extPreviewCtrl.current?.open();
+    open();
   }
 
   function closePreview() {
-    extPreviewCtrl.current?.close();
+    close();
   }
 
   return {

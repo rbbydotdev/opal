@@ -8,6 +8,8 @@ import { createContext, ReactNode, useContext, useRef, useState } from "react";
 interface LivePreviewDialogContextType {
   showDialog: (show: boolean) => void;
   extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
+  open: (params?: { print: boolean }) => void;
+  close: () => void;
 }
 
 const LivePreviewDialogContext = createContext<LivePreviewDialogContextType | undefined>(undefined);
@@ -20,12 +22,26 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
   const [isDialogOpen, showDialog] = useState(false);
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
+  const shouldPrintRef = useRef(false);
 
   const context = useWindowContextProvider();
   const extPreviewCtrl = useRef<WindowPreviewHandler | null>(null);
+  const open = ({ print }: { print?: boolean } = {}) => {
+    if (extPreviewCtrl.current) {
+      shouldPrintRef.current = print ?? false;
+      extPreviewCtrl.current.open();
+    }
+  };
+  const close = () => {
+    if (extPreviewCtrl.current) {
+      extPreviewCtrl.current.close();
+    }
+  };
 
   const handleRenderBodyReady = () => {
     if (!context.window) return;
+    if (!shouldPrintRef.current) return;
+    shouldPrintRef.current = false;
     context.window.addEventListener("afterprint", () => context.window.close());
     context.window.print();
     setTimeout(() => {
@@ -34,7 +50,7 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
   };
 
   return (
-    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl }}>
+    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl, open, close }}>
       {children}
       <WindowPreviewComponent
         path={path!}

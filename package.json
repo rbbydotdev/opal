@@ -12,7 +12,6 @@
     "dev:all": "npm-run-all --parallel dev:app build:workers:dev",
     "dev:app": "vite",
     "dev:tsc": "tsc --noEmit",
-    "dev:workerlog": "tsx ./src/workerlog",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "postinstall": "patch-package",
     "preview": "vite preview",

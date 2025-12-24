@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useMemo } from "react";
+import React from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,41 +21,17 @@ import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
 import { RemoteResource } from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
+import { GitRemoteFormValues, gitRemoteSchema } from "@/components/sidebar/sync-section/GitRemoteFormValues";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
-import { RemoteAuthGithubAPIAgent } from "@/data/remote-auth/RemoteAuthGithubAPIAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
-import { GithubAPIRemoteAuthDAO, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useImperativeHandle, useState } from "react";
-
-const gitRemoteSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Remote name is required")
-    .max(100, "Remote name is too long")
-    .regex(/^[a-zA-Z0-9._-]+$/, "Remote name can only contain letters, numbers, dots, underscores, and dashes"),
-  url: z
-    .string()
-    .min(1, "Remote URL is required")
-    .url("Remote URL must be a valid URL")
-    .regex(/^(https?|git|ssh|file):\/\/|^git@/, "Remote URL must be a valid Git URL"),
-  gitCorsProxy: z
-    .string()
-    .optional()
-    .transform((val) => (val === "" ? undefined : val))
-    .refine(
-      (val) => val === undefined || (typeof val === "string" && /^https?:\/\//.test(val)),
-      "CORS Proxy must be a valid HTTP/HTTPS URL"
-    ),
-  authId: z.string().optional(),
-});
-
-type GitRemoteFormValues = z.infer<typeof gitRemoteSchema>;
 
 const GitRemoteDialogModes = {
   ADD: "add",
@@ -102,12 +77,12 @@ const TryPathname = (url: string) => {
 export function GitRemoteDialog({
   children,
   defaultName = "origin",
-  onSubmit,
+  onSubmitted,
   cmdRef,
 }: {
   children?: React.ReactNode;
   defaultName?: string;
-  onSubmit?: (values: GitRemoteDialogResult & { next: GitRemote }) => void;
+  onSubmitted?: (values: GitRemoteDialogResult & { next: GitRemote }) => void;
   cmdRef: React.RefObject<GitRemoteDialogCmdRefType>;
 }) {
   const defaultValues = {
@@ -171,8 +146,7 @@ export function GitRemoteDialog({
   function handleFormSubmit(values: GitRemoteFormValues) {
     const result = { previous: prevRef.current, next: values, mode: modeRef.current };
 
-    // Call legacy onSubmit if provided for backward compatibility
-    onSubmit?.(result);
+    onSubmitted?.(result);
 
     // Resolve promise with result
     deferredPromiseRef.current?.resolve(result);
@@ -192,7 +166,6 @@ export function GitRemoteDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         onEscapeKeyDown={(event) => {
-          // if (event.target instanceof HTMLElement && event.target.closest(`#${REPO_URL_SEARCH_ID}`)) {
           if (event.target instanceof HTMLElement && event.target.closest("[data-no-escape]")) {
             event.preventDefault();
           }
@@ -259,28 +232,28 @@ function GitRemoteDialogInternal({
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
-  const searchAgent = useMemo(
-    () => (remoteAuth ? new RemoteAuthGithubAPIAgent(remoteAuth as GithubAPIRemoteAuthDAO) : null),
-    [remoteAuth]
-  );
+  const githubAgent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
   const {
     isLoading: searchLoading,
     searchValue,
     updateSearch,
+    clearCache,
     searchResults,
     error: searchError,
   } = useRemoteGitRepoSearch({
     cacheKey: String(remoteAuth?.guid),
-    agent: searchAgent,
+    agent: githubAgent,
     defaultValue: TryPathname(form.getValues("url"))
       .replace(/^\//, "")
       .replace(/\.git$/, ""),
   });
 
-  // Create functionality
-  const createAgent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
   const { ident, msg, request } = useRemoteGitRepo({
-    agent: createAgent,
+    agent: githubAgent,
+    onCreate: (repo) => {
+      clearCache();
+      form.setValue("url", repo.html_url);
+    },
     defaultName: currentWorkspace.name,
   });
 
