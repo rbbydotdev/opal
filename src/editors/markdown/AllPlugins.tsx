@@ -12,6 +12,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
+import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
 import {
   AdmonitionDirectiveDescriptor,
   CodeMirrorEditor,
@@ -100,6 +101,8 @@ export function useAllPlugins({
 }
 const EditorToolbar = memo(function EditorToolbar() {
   const { left } = useSidebarPanes();
+
+  const { isMainFile } = useCurrentFilepath();
   return (
     <div
       className={cn("flex gap-1 w-full", {
@@ -108,7 +111,7 @@ const EditorToolbar = memo(function EditorToolbar() {
       })}
     >
       <SourceEditorButton />
-      <EditHistoryMenu />
+      {isMainFile && <EditHistoryMenu />}
       <LivePreviewButtons />
       <MdxSearchToolbar />
 

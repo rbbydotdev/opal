@@ -363,7 +363,7 @@ const CodeMirrorToolbar = memo(
     mimeType?: OpalMimeType;
     editorView?: EditorView | null;
   }) => {
-    const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile } = useCurrentFilepath();
+    const { isMarkdown, hasEditOverride, isHtml, isSourceView, isCssFile, isMainFile } = useCurrentFilepath();
 
     const { left } = useSidebarPanes();
     const { choicePreviewNode: previewNode } = useResolvePathForPreview({ path, currentWorkspace });
@@ -439,7 +439,7 @@ const CodeMirrorToolbar = memo(
           </>
         )}
 
-        <EditHistoryMenu />
+        {isMainFile && <EditHistoryMenu />}
         {hasConflicts && isMarkdown && <GitConflictNotice />}
         <div className="ml-auto flex items-center gap-4">
           {setConflictResolution && hasConflicts && (

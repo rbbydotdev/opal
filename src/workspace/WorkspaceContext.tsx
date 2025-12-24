@@ -82,6 +82,7 @@ export function useCurrentFilepath() {
       filePath: null,
       mimeType: DEFAULT_MIME_TYPE,
       isImage: false,
+      isMainFile: false,
       isHtml: false,
       isBuildPath: false,
       isMarkdown: false,
@@ -102,6 +103,7 @@ export function useCurrentFilepath() {
   const mimeType = getMimeType(filePath) || DEFAULT_MIME_TYPE;
 
   const isBuildPath = filePath.startsWith(SpecialDirs.Build);
+  const inTrash = filePath.startsWith(SpecialDirs.Trash);
   return {
     filePath,
     mimeType,
@@ -114,10 +116,12 @@ export function useCurrentFilepath() {
     isEjs: isEjs(filePath),
     isBin: isBin(filePath),
 
+    isMainFile: !isBuildPath && !inTrash,
+
     isBuildPath,
     buildId: isBuildPath ? resolveFromRoot(SpecialDirs.Build, filePath).split("/")[0] : null,
 
-    inTrash: filePath.startsWith(SpecialDirs.Trash),
+    inTrash,
     isRecognized: isRecognizedFileType(mimeType) || editOverride || false,
     isSourceView: (viewMode === "source") as boolean,
     isRichView: (viewMode === "rich-text") as boolean,

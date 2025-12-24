@@ -22,11 +22,11 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
-import { Route as AppAutoImportRouteImport } from './routes/_app/autoImport'
 import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
 import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
 import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_app/workspace/$workspaceName.$'
+import { Route as AppAutoimportGithubOwnerRepoRouteImport } from './routes/_app/autoimport/github/$owner/$repo'
 
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
@@ -92,11 +92,6 @@ const AppNewWorkspaceRoute = AppNewWorkspaceRouteImport.update({
   path: '/newWorkspace',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAutoImportRoute = AppAutoImportRouteImport.update({
-  id: '/autoImport',
-  path: '/autoImport',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppWorkspaceWorkspaceNameRoute =
   AppWorkspaceWorkspaceNameRouteImport.update({
     id: '/$workspaceName',
@@ -121,13 +116,18 @@ const AppWorkspaceWorkspaceNameSplatRoute =
     path: '/$',
     getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
+const AppAutoimportGithubOwnerRepoRoute =
+  AppAutoimportGithubOwnerRepoRouteImport.update({
+    id: '/autoimport/github/$owner/$repo',
+    path: '/autoimport/github/$owner/$repo',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/$notfound': typeof NotfoundRoute
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/autoImport': typeof AppAutoImportRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -140,13 +140,13 @@ export interface FileRoutesByFullPath {
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
+  '/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
 }
 export interface FileRoutesByTo {
   '/$notfound': typeof NotfoundRoute
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/autoImport': typeof AppAutoImportRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -158,6 +158,7 @@ export interface FileRoutesByTo {
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameIndexRoute
+  '/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -166,7 +167,6 @@ export interface FileRoutesById {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/_app/autoImport': typeof AppAutoImportRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/themes': typeof AppThemesRoute
@@ -179,6 +179,7 @@ export interface FileRoutesById {
   '/_app/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/_app/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/_app/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
+  '/_app/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,7 +188,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/autoImport'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -200,13 +200,13 @@ export interface FileRouteTypes {
     | '/workspace/$workspaceName/$'
     | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName/'
+    | '/autoimport/github/$owner/$repo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$notfound'
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/autoImport'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -218,6 +218,7 @@ export interface FileRouteTypes {
     | '/workspace/$workspaceName/$'
     | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName'
+    | '/autoimport/github/$owner/$repo'
   id:
     | '__root__'
     | '/$notfound'
@@ -225,7 +226,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/_app/autoImport'
     | '/_app/newWorkspace'
     | '/_app/settings'
     | '/_app/themes'
@@ -238,6 +238,7 @@ export interface FileRouteTypes {
     | '/_app/workspace/$workspaceName/$'
     | '/_app/workspace/$workspaceName/settings'
     | '/_app/workspace/$workspaceName/'
+    | '/_app/autoimport/github/$owner/$repo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -344,13 +345,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNewWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/autoImport': {
-      id: '/_app/autoImport'
-      path: '/autoImport'
-      fullPath: '/autoImport'
-      preLoaderRoute: typeof AppAutoImportRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/workspace/$workspaceName': {
       id: '/_app/workspace/$workspaceName'
       path: '/$workspaceName'
@@ -378,6 +372,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/workspace/$workspaceName/$'
       preLoaderRoute: typeof AppWorkspaceWorkspaceNameSplatRouteImport
       parentRoute: typeof AppWorkspaceWorkspaceNameRoute
+    }
+    '/_app/autoimport/github/$owner/$repo': {
+      id: '/_app/autoimport/github/$owner/$repo'
+      path: '/autoimport/github/$owner/$repo'
+      fullPath: '/autoimport/github/$owner/$repo'
+      preLoaderRoute: typeof AppAutoimportGithubOwnerRepoRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
@@ -414,21 +415,21 @@ const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppAutoImportRoute: typeof AppAutoImportRoute
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppThemesRoute: typeof AppThemesRoute
   AppWorkspaceRoute: typeof AppWorkspaceRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppAutoimportGithubOwnerRepoRoute: typeof AppAutoimportGithubOwnerRepoRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAutoImportRoute: AppAutoImportRoute,
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppThemesRoute: AppThemesRoute,
   AppWorkspaceRoute: AppWorkspaceRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppAutoimportGithubOwnerRepoRoute: AppAutoimportGithubOwnerRepoRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

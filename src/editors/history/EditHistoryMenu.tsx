@@ -12,12 +12,17 @@ import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { EditViewPreview } from "@/editors/history/EditViewPreview";
 import { useDocHistory } from "@/editors/history/HistoryPlugin";
 import { useSelectedItemScroll } from "@/editors/history/useSelectedItemScroll";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
 import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
+
+function useEnabledEditHistory() {
+  return useLocalStorage("EditHistoryMenu/enabled", true);
+}
 
 function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | null; pending: boolean }) {
   if (selectedEdit !== null || pending) {
@@ -37,7 +42,7 @@ function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | n
 export function EditHistoryMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
-  const disabled = false;
+  const { storedValue: enabled } = useEnabledEditHistory();
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
 
@@ -48,13 +53,13 @@ export function EditHistoryMenu() {
 
   const timeAgoStr = useTimeAgoUpdater({ date: selectedEdit?.timestamp ? new Date(selectedEdit?.timestamp) : null });
 
-  if (disabled) {
+  if (!enabled) {
     <EditHistoryMenuDisabled />;
   }
   return (
     <div
       className={cn("relative flex items-center pl-2 gap-2 font-mono text-sm mx-2", {
-        "opacity-50": disabled,
+        "opacity-50": !enabled,
       })}
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
@@ -66,7 +71,7 @@ export function EditHistoryMenu() {
             <HistoryStatus selectedEdit={selectedEdit} pending={pending} />
           </button>
         </div>
-        <DropdownMenuTrigger asChild disabled={disabled}>
+        <DropdownMenuTrigger asChild disabled={!enabled}>
           <button
             tabIndex={0}
             className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
@@ -169,6 +174,7 @@ function HistoryMenuToolbar({
 }
 
 function EditHistoryMenuDisabled() {
+  const { setStoredValue: setEnabled } = useEnabledEditHistory();
   return (
     <div className="relative flex items-center pl-1 gap-2 font-mono text-sm opacity-50 mr-1">
       <DropdownMenu open={false} onOpenChange={() => {}}>
@@ -193,8 +199,7 @@ function EditHistoryMenuDisabled() {
               variant={"secondary"}
               size="default"
               onClick={() => {
-                // toggleEditHistory();
-                // setOpen(false);
+                setEnabled(true);
               }}
               className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary flex items-center gap-1"
             >
