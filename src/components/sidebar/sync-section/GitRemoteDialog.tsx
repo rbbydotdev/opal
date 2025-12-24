@@ -19,12 +19,9 @@ import { GitAuthSelect } from "@/components/AuthSelect";
 import { ConnectionsModalContent } from "@/components/connections-modal/ConnectionsModal";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
-import { RemoteResource } from "@/components/publish-modal/RemoteResourceField";
-import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
+import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { GitRemoteFormValues, gitRemoteSchema } from "@/components/sidebar/sync-section/GitRemoteFormValues";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
@@ -67,13 +64,6 @@ export function useGitRemoteDialogCmd() {
     open: async () => NULL_GIT_REMOTE_DIALOG_RESULT,
   });
 }
-const TryPathname = (url: string) => {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    return url;
-  }
-};
 export function GitRemoteDialog({
   children,
   defaultName = "origin",
@@ -232,30 +222,6 @@ function GitRemoteDialogInternal({
 
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
-  const githubAgent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-  const {
-    isLoading: searchLoading,
-    searchValue,
-    updateSearch,
-    clearCache,
-    searchResults,
-    error: searchError,
-  } = useRemoteGitRepoSearch({
-    cacheKey: String(remoteAuth?.guid),
-    agent: githubAgent,
-    defaultValue: TryPathname(form.getValues("url"))
-      .replace(/^\//, "")
-      .replace(/\.git$/, ""),
-  });
-
-  const { ident, msg, request } = useRemoteGitRepo({
-    agent: githubAgent,
-    onCreate: (repo) => {
-      clearCache();
-      form.setValue("url", repo.html_url);
-    },
-    defaultName: currentWorkspace.name,
-  });
 
   return (
     <div className={className}>
@@ -301,65 +267,34 @@ function GitRemoteDialogInternal({
             )}
           />
           <div data-no-escape className="w-full">
-            <RemoteResource.Root
-              control={form.control}
-              fieldName="url"
-              onValueChange={(value) => form.setValue("url", value)}
-              getValue={() => form.getValues("url")}
-            >
-              {authId && remoteAuth?.hasRemoteApi() && (
-                <>
-                  <RemoteResource.Search
-                    label="Repository"
-                    isLoading={searchLoading}
-                    searchValue={searchValue}
-                    onSearchChange={updateSearch}
-                    searchResults={searchResults}
-                    error={searchError}
-                  />
-                  <RemoteResource.Create
-                    label="New Repository Name"
-                    placeholder={"my-new-repo"}
-                    ident={{
-                      ...ident,
-                      name: ident.name,
-                      setName: (value: string) => {
-                        ident.setName(value);
-                      },
-                    }}
-                    msg={msg}
-                    request={{
-                      ...request,
-                      submit: async () => {
-                        const result = await request.submit();
-                        return result ? { name: result.html_url } : null;
-                      },
-                    }}
-                  />
-                </>
-              )}
-              <RemoteResource.InputField
-                label={
-                  authId && remoteAuth?.hasRemoteApi()
-                    ? "URL"
-                    : "URL (Select a remote authentication to search or create)"
-                }
-                placeholder="https://github.com/user/repo.git"
-              >
-                {authId && remoteAuth?.hasRemoteApi() && (
-                  <>
-                    <div>
-                      <RemoteResource.CreateButton
-                        title="Create Repository"
-                        ident={ident}
-                        createReset={() => request.reset()}
-                      />
-                    </div>
-                    <RemoteResource.SearchButton title="Search Repositories" onSearchChange={updateSearch} />
-                  </>
+            {authId && remoteAuth?.hasRemoteApi() ? (
+              <GitHubRepoSelector
+                control={form.control}
+                fieldName="url"
+                onValueChange={(value) => form.setValue("url", value)}
+                getValue={() => form.getValues("url")}
+                remoteAuth={remoteAuth}
+                defaultName={currentWorkspace.name}
+                label="Repository"
+                placeholder="my-new-repo"
+                createButtonTitle="Create Repository"
+                searchButtonTitle="Search Repositories"
+              />
+            ) : (
+              <FormField
+                control={form.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem className="min-w-0">
+                    <FormLabel>URL (Select a remote authentication to search or create)</FormLabel>
+                    <FormControl>
+                      <Input autoComplete="off" placeholder="https://github.com/user/repo.git" className="truncate" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </RemoteResource.InputField>
-            </RemoteResource.Root>
+              />
+            )}
           </div>
 
           <FormField

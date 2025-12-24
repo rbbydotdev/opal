@@ -1,30 +1,12 @@
-import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
-import {
-  RepositoryCreationProvider,
-  createGitHubAPICapabilities,
-  createGitHubCapabilities,
-} from "@/components/repository/RepositoryCreationProvider";
-import {
-  RepositoryVisibility,
-  RepositoryVisibilitySelector,
-  getVisibilityIcon,
-} from "@/components/repository/RepositoryVisibilitySelector";
+import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
-import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { RemoteAuthGithubAgent, coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { absPath } from "@/lib/paths2";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
-import { useState } from "react";
 import { flushSync } from "react-dom";
 import { UseFormReturn } from "react-hook-form";
-import {
-  RemoteResourceCreate,
-  RemoteResourceInput,
-  RemoteResourceRoot,
-  RemoteResourceSearch,
-} from "./RemoteResourceField";
 
 // https://github.com/rbbydotdev/test123/settings/pages
 // should set up gear link to assist and remind user to set up github pages
@@ -40,50 +22,14 @@ export function GitHubDestinationForm({
   remoteAuth: RemoteAuthDAO | null;
   defaultName?: string;
 }) {
-  const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
-
-  // Check if user has private repo permissions based on scope
-  // For GitHub OAuth: "repo" = full access, "public_repo" = public only
-  const hasScope = !!(remoteAuth?.data && "scope" in remoteAuth.data && remoteAuth.data.scope);
-  const scopeValue = hasScope ? (remoteAuth.data as any).scope : null;
-  const canCreatePrivate = hasScope && scopeValue && scopeValue.includes("repo") && !scopeValue.includes("public_repo");
-
-  // Default visibility: private if they can create private, otherwise public
-  const [visibility, setVisibility] = useState<RepositoryVisibility>(canCreatePrivate ? "private" : "public");
-
-  const {
-    isLoading,
-    searchValue,
-    reset: searchReset,
-    updateSearch,
-    clearCache,
-    searchResults,
-    error,
-  } = useRemoteGitRepoSearch({
-    agent,
-    cacheKey: String(remoteAuth?.guid),
-  });
-
   const updateBaseUrlFromRepoFullName = (fullName: string) => {
     const repoName = coerceRepoToName(fullName);
     form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
   };
-  const { ident, msg, request } = useRemoteGitRepo({
-    agent,
-    defaultName,
-    onCreate: ({ full_name }) => {
-      updateBaseUrlFromRepoFullName(full_name);
-      clearCache();
-    },
-    visibility,
-  });
-
-  // Choose appropriate capability factory based on auth type
-  const capabilities = hasScope ? createGitHubCapabilities(canCreatePrivate) : createGitHubAPICapabilities(); // API keys don't have scope info
 
   return (
-    <RepositoryCreationProvider capabilities={capabilities}>
-      <RemoteResourceRoot
+    <>
+      <GitHubRepoSelector
         control={form.control}
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
@@ -95,36 +41,15 @@ export function GitHubDestinationForm({
           })
         }
         getValue={() => form.getValues("meta.repository")}
-      >
-        <RemoteResourceSearch
-          label="Repository"
-          isLoading={isLoading}
-          searchValue={searchValue}
-          onSearchChange={updateSearch}
-          searchResults={searchResults}
-          error={error}
-        />
-        <RemoteResourceCreate
-          label="Repository"
-          placeholder="my-website-repo"
-          ident={ident}
-          msg={msg}
-          request={request}
-          icon={getVisibilityIcon(visibility)}
-        >
-          <RepositoryVisibilitySelector value={visibility} onChange={setVisibility} />
-        </RemoteResourceCreate>
-        <RemoteResourceInput
-          label="Repository"
-          placeholder="my-website-repo"
-          createButtonTitle="Create Repository"
-          searchButtonTitle="Search Repositories"
-          ident={ident}
-          onSearchChange={updateSearch}
-          searchReset={searchReset}
-          createReset={request.reset}
-        />
-      </RemoteResourceRoot>
+        remoteAuth={remoteAuth}
+        defaultName={defaultName}
+        label="Repository"
+        placeholder="my-website-repo"
+        onRepoCreated={({ full_name }) => {
+          updateBaseUrlFromRepoFullName(full_name);
+        }}
+        onValueProcessing={updateBaseUrlFromRepoFullName}
+      />
       <FormField
         control={form.control}
         name="meta.branch"
@@ -168,6 +93,6 @@ export function GitHubDestinationForm({
           </FormItem>
         )}
       />
-    </RepositoryCreationProvider>
+    </>
   );
 }
