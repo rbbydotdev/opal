@@ -30,20 +30,17 @@ import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useImperativeHandle, useState } from "react";
 
-const GitRemoteDialogModes = {
-  ADD: "add",
-  EDIT: "edit",
-} as const;
-type GitRemoteDialogModeType = (typeof GitRemoteDialogModes)[keyof typeof GitRemoteDialogModes];
+const gitRemoteDialogModes = ["add", "edit"] as const;
+type GitRemoteDialogModeType = (typeof gitRemoteDialogModes)[number];
 
 const DescForMode = {
-  [GitRemoteDialogModes.ADD]: "Add a new Git remote to your repository.",
-  [GitRemoteDialogModes.EDIT]: "Edit an existing Git remote in your repository.",
+  add: "Add a new Git remote to your repository.",
+  edit: "Edit an existing Git remote in your repository.",
 };
 
 const TitleForMode = {
-  [GitRemoteDialogModes.ADD]: "Add Git Remote",
-  [GitRemoteDialogModes.EDIT]: "Edit Git Remote",
+  add: "Add Git Remote",
+  edit: "Edit Git Remote",
 };
 type GitRemoteDialogResult = {
   previous: null | GitRemote;
@@ -53,7 +50,7 @@ type GitRemoteDialogResult = {
 const NULL_GIT_REMOTE_DIALOG_RESULT: GitRemoteDialogResult = {
   previous: null,
   next: null,
-  mode: GitRemoteDialogModes.ADD,
+  mode: "add",
 };
 
 type GitRemoteDialogCmdRefType = {
@@ -86,7 +83,7 @@ export function GitRemoteDialog({
     defaultValues,
   });
   const prevRef = React.useRef<GitRemote | null>(null);
-  const modeRef = React.useRef<GitRemoteDialogModeType>(GitRemoteDialogModes.ADD);
+  const modeRef = React.useRef<GitRemoteDialogModeType>("add");
   const [showConnectionModal, setShowConnModal] = React.useState(false);
   const deferredPromiseRef = React.useRef<PromiseWithResolvers<GitRemoteDialogResult> | null>(null);
 
@@ -98,6 +95,8 @@ export function GitRemoteDialog({
           deferredPromiseRef.current = Promise.withResolvers();
           if (mode === "edit") {
             form.reset({ ...defaultValues, ...previous });
+          } else {
+            form.reset(defaultValues);
           }
           modeRef.current = mode;
           prevRef.current = previous ?? null;
@@ -128,7 +127,7 @@ export function GitRemoteDialog({
       deferredPromiseRef.current = null;
       setShowConnModal(false);
       prevRef.current = null;
-      modeRef.current = GitRemoteDialogModes.ADD;
+      modeRef.current = "add";
       form.reset(defaultValues);
     }
   }
@@ -288,7 +287,12 @@ function GitRemoteDialogInternal({
                   <FormItem className="min-w-0">
                     <FormLabel>URL (Select a remote authentication to search or create)</FormLabel>
                     <FormControl>
-                      <Input autoComplete="off" placeholder="https://github.com/user/repo.git" className="truncate" {...field} />
+                      <Input
+                        autoComplete="off"
+                        placeholder="https://github.com/user/repo.git"
+                        className="truncate"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
