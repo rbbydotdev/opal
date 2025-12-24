@@ -6,7 +6,7 @@ import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem } from "@/data/fs/FileSystemTypes";
 import { MutexFs } from "@/data/fs/MutexFs";
-import { RequestSignalsInstance } from "@/lib/RequestSignals";
+import { RequestSignalsInstance } from "@/lib/service-worker/RequestSignalInstance";
 import LightningFs from "@isomorphic-git/lightning-fs";
 import { Mutex } from "async-mutex";
 

@@ -2,7 +2,7 @@ declare const self: ServiceWorkerGlobalScope;
 import { decodePath } from "@/lib/paths2";
 import { REQ_SIGNAL, RequestEventDetail } from "@/lib/service-worker/request-signal-types";
 
-import { RemoteLogger } from "@/lib/RemoteLogger";
+import { RemoteLogger, LogTransport } from "@/lib/RemoteLogger";
 
 interface WhiteListConfig {
   url?: string;
@@ -118,8 +118,8 @@ function formatConsoleMsg(msg: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return String(msg);
 }
-export function RemoteLoggerLogger(name: string = "") {
-  const RL = RemoteLogger(name);
+export function RemoteLoggerLogger(name: string = "", transport: LogTransport = "net") {
+  const RL = RemoteLogger(name, transport);
   return {
     log: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "log"),
     debug: (...msg: unknown[]) => RL(msg.map(formatConsoleMsg).join(" "), "debug"),

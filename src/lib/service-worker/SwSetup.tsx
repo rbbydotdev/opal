@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from "react";
+import { setupServiceWorkerLogger } from "./sw-logger-setup";
 
 export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
@@ -24,6 +25,9 @@ export async function setupServiceWorker(): Promise<void> {
       await navigator.serviceWorker.ready;
       console.log("service worker ready");
     }
+
+    // Setup service worker logger
+    setupServiceWorkerLogger();
   } catch (error) {
     console.error("Error setting up Service Worker", error);
     //log stack trace in development mode

@@ -1,14 +1,7 @@
 import { REQ_NAME, REQ_SIGNAL, RequestEventDetail } from "@/lib/service-worker/request-signal-types";
-import { useEffect, useRef, useState } from "react";
+import { RequestEvent } from "./RequestEvent";
 
-// Strongly-typed CustomEvent for request signals
-class RequestEvent extends CustomEvent<RequestEventDetail> {
-  constructor(detail: RequestEventDetail) {
-    super(REQ_NAME, { detail });
-  }
-}
-
-class RequestSignals {
+export class RequestSignals {
   initListeners = false;
   RequestEventBus = new EventTarget();
   count = 0;
@@ -77,7 +70,6 @@ class RequestSignals {
     };
     if ("serviceWorker" in navigator) {
       // Handler for messages from the Service Worker
-
       function addHandlerIfControlled() {
         if (navigator.serviceWorker.controller) {
           navigator.serviceWorker.addEventListener("message", handler as EventListener);
@@ -113,25 +105,3 @@ class RequestSignals {
     });
   }
 }
-export const RequestSignalsInstance = new RequestSignals();
-
-export const useRequestSignals = () => {
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    return RequestSignalsInstance.initAndWatch((count) => {
-      if (count <= 0) {
-        if (debounceTimer.current) {
-          clearTimeout(debounceTimer.current);
-        }
-        debounceTimer.current = setTimeout(() => {
-          setPending(false);
-        }, 1000);
-      } else if (!pending) {
-        setPending(true);
-      }
-    });
-  }, [pending]);
-  return { pending };
-};
