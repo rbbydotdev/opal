@@ -5,28 +5,33 @@ import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editors/prettifyMime";
 import { TemplateManager } from "@/features/templating/TemplateManager";
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
 import { Workspace } from "@/workspace/Workspace";
-import { RunnerLogLine, RunnerLogType, createLogLine } from "@/types/RunnerTypes";
+import { BaseRunner } from "@/services/runners/BaseRunner";
+import { RunnerLogLine, RunnerLogType } from "@/types/RunnerTypes";
+import { RunnerStatic } from "@/types/RunnerInterfaces";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-export class BuildRunner {
+// Define the exact argument types for BuildRunner's static methods
+type BuildRunnerCreateArgs = [{
+  workspace: Workspace;
+  label: string;
+  strategy: BuildStrategy;
+}];
+
+type BuildRunnerRecallArgs = [{
+  buildId: string;
+  workspace?: Workspace;
+}];
+
+export class BuildRunner extends BaseRunner {
   build: BuildDAO;
   private templateManager?: TemplateManager;
-  private _error: string | null = null;
-
-  emitter = CreateSuperTypedEmitter<{
-    log: RunnerLogLine;
-    complete: boolean;
-    running: boolean;
-    update: BuildRunner;
-  }>();
 
   get sourceDisk(): Disk {
     return this.build.getSourceDisk();
@@ -36,20 +41,19 @@ export class BuildRunner {
     return this.build.strategy;
   }
 
+  // Override logs to get from build DAO instead of internal state
   get logs(): RunnerLogLine[] {
     return this.build.logs;
   }
 
+  // Override completed to use build status
   get completed(): boolean {
     return this.isCompleted;
   }
 
+  // Override running to use build status
   get running(): boolean {
     return this.isBuilding;
-  }
-
-  get error(): string | null {
-    return this._error;
   }
 
   get outputDisk(): Disk {
@@ -82,17 +86,15 @@ export class BuildRunner {
   get isIdle() {
     return this.build.status === "idle";
   }
-  private abortController: AbortController = new AbortController();
-  protected readonly log = (message: string, type?: RunnerLogType) => {
-    const logLine = createLogLine(message, type);
 
+  // Override log to also store in build DAO
+  protected log = (message: string, type?: RunnerLogType) => {
+    const logLine = super['log'](message, type);
     this.build.logs = [...this.build.logs, logLine as BuildLogLine];
-    this.emitter.emit("log", logLine);
-    this.emitter.emit("update", this);
     return logLine;
   };
 
-  static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
+  static async Recall({ buildId, workspace }: BuildRunnerRecallArgs[0]): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
     if (!build) throw new Error(`Build with ID ${buildId} not found`);
     return new BuildRunner({
@@ -101,15 +103,11 @@ export class BuildRunner {
     });
   }
 
-  static NewBuild({
+  static Create({
     workspace,
     label,
     strategy,
-  }: {
-    label: string;
-    workspace: Workspace;
-    strategy: BuildStrategy;
-  }): BuildRunner {
+  }: BuildRunnerCreateArgs[0]): BuildRunner {
     const build = BuildDAO.CreateNew({
       label,
       workspaceId: workspace.guid,
@@ -133,41 +131,13 @@ export class BuildRunner {
   }
 
   constructor({ build, workspace }: { build: BuildDAO; workspace?: Workspace }) {
+    super();
     this.build = build;
     if (workspace) {
       this.templateManager = new TemplateManager(workspace);
     }
   }
 
-  onLog = (callback: (log: RunnerLogLine) => void) => {
-    return this.emitter.on("log", callback);
-  };
-  getLogs = () => this.logs;
-
-  onComplete = (callback: (complete: boolean) => void) => {
-    return this.emitter.on("complete", callback);
-  };
-  getComplete = () => this.isCompleted;
-
-  onRunning = (callback: (running: boolean) => void) => {
-    return this.emitter.on("running", callback);
-  };
-  getRunning = () => this.running;
-
-  onUpdate = (callback: (runner: BuildRunner) => void) => {
-    return this.emitter.on("update", callback);
-  };
-  getRunner = () => this;
-
-  tearDown() {
-    this.emitter.clearListeners();
-  }
-
-
-  cancel() {
-    this.abortController.abort();
-    this.log("Build cancelled by user", "error");
-  }
   async execute({
     abortSignal = this.abortController.signal,
     log = () => {},
@@ -179,9 +149,8 @@ export class BuildRunner {
     const infoLog = (message: string) => log(this.log(message, "info"));
     try {
       this.build.status = "pending";
-      this._error = null; // Clear any previous errors
-      this.emitter.emit("running", true);
-      this.emitter.emit("update", this);
+      this.clearError();
+      this.setRunning(true);
       await this.build.save();
       await this.sourceDisk.refresh();
       infoLog(`Starting ${this.strategy} build, id ${this.build.guid}...`);
@@ -261,22 +230,21 @@ export class BuildRunner {
       const errorMessage = error instanceof Error ? error.message : String(error);
       errorLog(`Build failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
-        this._error = "Build failed. Please check the logs for more details.";
+        this.setError("Build failed. Please check the logs for more details.");
         return await this.build.update({
           logs: this.logs,
           status: "failed",
         });
       } else {
-        this._error = "Build was cancelled.";
+        this.setError("Build was cancelled.");
         return await this.build.update({
           logs: this.logs,
           status: "cancelled",
         });
       }
     } finally {
-      this.emitter.emit("complete", this.isCompleted);
-      this.emitter.emit("running", this.running);
-      this.emitter.emit("update", this);
+      this.setCompleted(this.isCompleted);
+      this.setRunning(this.running);
     }
   }
 
@@ -632,6 +600,9 @@ export class BuildRunner {
     });
   }
 }
+
+// Type assertion to ensure BuildRunner conforms to the static interface
+const _buildRunnerTypeCheck: RunnerStatic<BuildRunner, BuildRunnerCreateArgs, BuildRunnerRecallArgs> = BuildRunner;
 
 class NullBuildRunner extends BuildRunner {
   constructor() {

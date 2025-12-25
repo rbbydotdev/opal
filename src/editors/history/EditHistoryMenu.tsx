@@ -34,7 +34,7 @@ function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | n
   }
   return (
     <div>
-      <History size={20} className="-scale-x-100 inline-block !text-primary group-hover:!text-ring" />
+      <History size={20} className="-scale-x-100 inline-block !text-secondary group-hover:!text-ring" />
     </div>
   );
 }
@@ -66,22 +66,22 @@ export function EditHistoryMenu() {
         <div className="h-full absolute left-4 flex justify-center items-center ">
           <button
             onClick={() => {}}
-            className="fill-primary-foreground text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
+            className="!text-white text-primary text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
           >
             <HistoryStatus selectedEdit={selectedEdit} pending={pending} />
           </button>
         </div>
         <DropdownMenuTrigger asChild disabled={!enabled}>
-          <button
+          <Button
             tabIndex={0}
-            className="mx-1 h-8 bg-primary-foreground text-primary cursor-pointer flex rounded-md border border-primary items-center p-1"
+            className="mx-1 h-8 flex items-center p-1"
             title={"Edit History" + (edits.length ? ` (${edits.length} edits)` : "")}
           >
             <div className="pl-8 mr-2 flex items-center space-x-2 ">
               <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
             </div>
             <ChevronDown size={12} />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[37.5rem] bg-background p-0">
           <HistoryMenuToolbar edits={edits} clearAll={clearAll} setOpen={setOpen} />

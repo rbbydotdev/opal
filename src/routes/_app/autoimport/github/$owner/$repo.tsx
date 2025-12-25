@@ -18,7 +18,7 @@ function useDiskFromRepo(fullRepoPath: string) {
   const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
 
   const importRunner = useRunner(() => {
-    return fullRepoPath ? ImportRunner.create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
+    return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
   }, [fullRepoPath, disk]);
 
   // Auto-start the import when runner is created

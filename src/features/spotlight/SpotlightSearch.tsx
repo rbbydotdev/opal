@@ -657,7 +657,10 @@ function SpotlightSearchInternal({
   // MARK: Render
   return (
     <>
-      {createPortal(<div className="inset-0 absolute backdrop-blur-sm" onClick={handleClose}></div>, document.body)}
+      {createPortal(
+        <div className="inset-0 absolute backdrop-blur-sm z-20" onClick={handleClose}></div>,
+        document.body
+      )}
       <div
         ref={containerRef}
         className={cn(

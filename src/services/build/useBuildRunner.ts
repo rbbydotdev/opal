@@ -15,11 +15,11 @@ type RunBuildResult =
 export function useBuildRunner(currentWorkspace: Workspace) {
   const [currentRunner, setCurrentRunner] = useState<BuildRunner | null>(null);
 
-  const buildRunner = useRunner(() => currentRunner || NULL_BUILD_RUNNER, [currentRunner]);
+  const buildRunner = useRunner(() => currentRunner || NULL_BUILD_RUNNER, [currentRunner]) as BuildRunner;
 
   const openNew = useCallback(
     (strategy: BuildStrategy) => {
-      const runner = BuildRunner.NewBuild({
+      const runner = BuildRunner.Create({
         workspace: currentWorkspace,
         label: `Build ${new Date().toLocaleString()}`,
         strategy,
@@ -55,7 +55,7 @@ export function useBuildRunner(currentWorkspace: Workspace) {
   }, [buildRunner]);
 
   const handleCancel = useCallback(() => {
-    buildRunner?.cancel();
+    buildRunner.cancel?.();
   }, [buildRunner]);
 
   return {

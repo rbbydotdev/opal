@@ -1,85 +1,36 @@
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { Disk } from "@/data/disk/Disk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
-import { relPath, absPath } from "@/lib/paths2";
-import { RunnerLogLine, RunnerLogType, createLogLine } from "@/types/RunnerTypes";
+import { absPath, relPath } from "@/lib/paths2";
+import { BaseRunner } from "@/services/runners/BaseRunner";
+import { RunnerStatic } from "@/types/RunnerInterfaces";
 
-export class ImportRunner {
+// Define the exact argument types for ImportRunner's static methods
+type ImportRunnerCreateArgs = [
+  {
+    disk: Disk;
+    fullRepoPath: string;
+  },
+];
+
+type ImportRunnerRecallArgs = []; // ImportRunner doesn't support recall
+
+export class ImportRunner extends BaseRunner {
   private disk: Disk;
   private importer: GithubImport;
-  private _logs: RunnerLogLine[] = [];
-  private _completed: boolean = false;
-  private _running: boolean = false;
-  private _error: string | null = null;
-  private abortController: AbortController = new AbortController();
-
-  emitter = CreateSuperTypedEmitter<{
-    log: RunnerLogLine;
-    complete: boolean;
-    running: boolean;
-    update: ImportRunner;
-  }>();
 
   constructor({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }) {
+    super();
     this.disk = disk;
     this.importer = new GithubImport(relPath(fullRepoPath));
   }
 
-  get logs(): RunnerLogLine[] {
-    return this._logs;
-  }
-
-  get completed(): boolean {
-    return this._completed;
-  }
-
-  get running(): boolean {
-    return this._running;
-  }
-
-  get error(): string | null {
-    return this._error;
-  }
-
-  static create({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }): ImportRunner {
+  static Create({ disk, fullRepoPath }: ImportRunnerCreateArgs[0]): ImportRunner {
     return new ImportRunner({ disk, fullRepoPath });
   }
 
-  onLog = (callback: (log: RunnerLogLine) => void) => {
-    return this.emitter.on("log", callback);
-  };
-
-  onComplete = (callback: (complete: boolean) => void) => {
-    return this.emitter.on("complete", callback);
-  };
-
-  onRunning = (callback: (running: boolean) => void) => {
-    return this.emitter.on("running", callback);
-  };
-
-  onUpdate = (callback: (runner: ImportRunner) => void) => {
-    return this.emitter.on("update", callback);
-  };
-
-  getRunner = () => this;
-
-  tearDown() {
-    this.emitter.clearListeners();
+  static async Recall(): Promise<ImportRunner> {
+    throw new Error("ImportRunner does not support recall - imports are single-use operations");
   }
-
-
-  cancel() {
-    this.abortController.abort();
-    this.log("Import cancelled by user", "error");
-  }
-
-  private log = (message: string, type?: RunnerLogType) => {
-    const line = createLogLine(message, type);
-    this._logs = [...this._logs, line];
-    this.emitter.emit("log", line);
-    this.emitter.emit("update", this);
-    return line;
-  };
 
   async execute({
     abortSignal = this.abortController.signal,
@@ -87,11 +38,9 @@ export class ImportRunner {
     abortSignal?: AbortSignal;
   } = {}): Promise<void> {
     try {
-      this._running = true;
-      this._completed = false;
-      this._error = null; // Clear any previous errors
-      this.emitter.emit("running", true);
-      this.emitter.emit("update", this);
+      this.setRunning(true);
+      this.setCompleted(false);
+      this.clearError();
 
       if (abortSignal?.aborted) {
         this.log("Import cancelled", "error");
@@ -112,27 +61,26 @@ export class ImportRunner {
       }
 
       this.log("Import completed successfully!", "info");
-      this._completed = true;
-
+      this.setCompleted(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.log(`Import failed: ${errorMessage}`, "error");
-      this._error = `Import failed: ${errorMessage}`;
-      this._completed = true;
+      this.setError(`Import failed: ${errorMessage}`);
+      this.setCompleted(true);
     } finally {
-      this._running = false;
-      this.emitter.emit("complete", this._completed);
-      this.emitter.emit("running", false);
-      this.emitter.emit("update", this);
+      this.setRunning(false);
     }
   }
 }
+
+// Type assertion to ensure ImportRunner conforms to the static interface
+const _importRunnerTypeCheck: RunnerStatic<ImportRunner, ImportRunnerCreateArgs, ImportRunnerRecallArgs> = ImportRunner;
 
 export class NullImportRunner extends ImportRunner {
   constructor() {
     super({
       disk: {} as Disk,
-      fullRepoPath: "",
+      fullRepoPath: "null/null",
     });
   }
 

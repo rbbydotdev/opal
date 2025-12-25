@@ -1,42 +1,44 @@
-import { useSyncExternalStore, useState, useEffect, useCallback } from "react";
-import { RunnerLogLine } from "@/types/RunnerTypes";
+import { useSyncExternalStore, useState, useCallback } from "react";
+import { useResource } from "./useResource";
+import { Runner, RunnerClass } from "@/types/RunnerInterfaces";
 
-export interface Runner {
-  tearDown(): void;
-  onUpdate: (callback: (runner: any) => void) => () => void;
-  getRunner: () => any;
-  logs: RunnerLogLine[];
-  completed: boolean;
-  running: boolean;
-  error: string | null;
-  execute(options?: any): Promise<any>;
-  cancel?(): void;
+export function useRunner<T extends Runner>(
+  setup: () => T,
+  deps: unknown[] = []
+) {
+  const runnerResource = useResource(setup, deps);
+  const runner = useSyncExternalStore(runnerResource.onUpdate, runnerResource.getRunner);
+
+  return runner;
 }
 
-export function useRunner<T extends Runner>(initialSetup: () => T) {
-  const [runner, setRunner] = useState<T>(initialSetup);
+// Enhanced hook that provides create and recall methods with full type safety
+export function useRunnerWithActions<
+  T extends Runner,
+  CreateArgs extends unknown[],
+  RecallArgs extends unknown[]
+>(
+  RunnerClass: RunnerClass<T, CreateArgs, RecallArgs>,
+  initialSetup: () => T
+) {
+  const [currentRunner, setCurrentRunner] = useState<T>(initialSetup);
+  const runner = useRunner(() => currentRunner, [currentRunner]);
 
-  // Teardown when runner changes
-  useEffect(() => {
-    return () => runner.tearDown();
-  }, [runner]);
+  const create = useCallback((...args: CreateArgs) => {
+    const newRunner = RunnerClass.Create(...args);
+    setCurrentRunner(newRunner);
+    return newRunner;
+  }, [RunnerClass]);
 
-  // Reactive subscriptions
-  const logs = useSyncExternalStore(runner.onUpdate, () => runner.logs);
-  const completed = useSyncExternalStore(runner.onUpdate, () => runner.completed);
-  const running = useSyncExternalStore(runner.onUpdate, () => runner.running);
-  const error = useSyncExternalStore(runner.onUpdate, () => runner.error);
-
-  const replaceRunner = useCallback((newSetup: () => T) => {
-    setRunner(newSetup());
-  }, []);
+  const recall = useCallback(async (...args: RecallArgs) => {
+    const recalledRunner = await RunnerClass.Recall(...args);
+    setCurrentRunner(recalledRunner);
+    return recalledRunner;
+  }, [RunnerClass]);
 
   return {
     runner,
-    logs,
-    completed,
-    running,
-    error,
-    replaceRunner,
+    create,
+    recall,
   };
 }
