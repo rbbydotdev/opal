@@ -42,7 +42,7 @@ export function OLD___useAsyncEffect(
 /**
  * Hook to run an async effect on mount and another on unmount.
  */
-export const useAsyncEffect2 = (
+export const useAsyncEffect = (
   mountCallback: (signal: AbortSignal) => Promise<any>,
   deps: any[] = [],
   { unmountCallback, tossError }: { unmountCallback?: () => Promise<any>; tossError: boolean } = {

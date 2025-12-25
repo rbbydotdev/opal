@@ -23,7 +23,7 @@ import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { GitRemoteFormValues, gitRemoteSchema } from "@/components/sidebar/sync-section/GitRemoteFormValues";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { GitRemote } from "@/features/git-repo/GitRepo";
-import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
@@ -197,7 +197,7 @@ export function GitRemoteDialog({
 function useRemoteAuthForm(authId: string | undefined) {
   const [remoteAuth, setRemoteAuth] = useState<null | RemoteAuthDAO>(null);
   // eslint-disable-next-line
-  useAsyncEffect2(async () => {
+  useAsyncEffect(async () => {
     if (authId) setRemoteAuth(await RemoteAuthDAO.GetByGuid(authId));
   }, [authId]);
   return remoteAuth;

@@ -6,12 +6,22 @@ type ErrorWithCode = Error & {
   code: string;
 };
 
+export class AbortError extends DOMException {
+  name = "AbortError" as const;
+
+  constructor(message: string = "Operation aborted") {
+    super(message, "AbortError");
+    Object.setPrototypeOf(this, AbortError.prototype);
+  }
+}
+
 export function isAbortError(error: unknown): error is Error & { message: string; name: "AbortError" } {
   return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    (error as Record<string, unknown>).name === "AbortError"
+    (typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error as Record<string, unknown>).name === "AbortError") ||
+    (error instanceof DOMException && error.name === "AbortError")
   );
 }
 
@@ -288,6 +298,11 @@ type ErrorMappingOptions = {
 };
 
 export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {}): ApplicationError {
+  // If it's already an AbortError, return it unchanged
+  if (isAbortError(error)) {
+    return error as any;
+  }
+
   // Try to extract code, name, message from error or options
   const err = toErrorWithMessage(error);
   const code =
@@ -314,6 +329,8 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
       return new ConflictError(message);
     case 422:
       return new UnprocessableContentError(message);
+    case 429:
+      return new ServiceUnavailableError(message);
     case 500:
       return new InternalServerError(message);
     case 501:

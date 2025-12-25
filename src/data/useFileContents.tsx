@@ -1,4 +1,4 @@
-import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { hasGitConflictMarkers } from "@/lib/gitConflictDetection";
 import { getMimeType } from "@/lib/mimeType";
 import { AbsPath, isStringish } from "@/lib/paths2";
@@ -204,7 +204,7 @@ export function useFileContents({
    * Updates: Both hotContents (live state) and contents (baseline state)
    * Includes: Cancellation support for async operations
    */
-  useAsyncEffect2(
+  useAsyncEffect(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     async (signal) => {
       if (currentWorkspace && filePath) {

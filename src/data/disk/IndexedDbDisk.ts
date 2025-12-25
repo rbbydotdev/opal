@@ -43,7 +43,7 @@ export class IndexedDbDisk extends Disk<IndexedDbDiskContext> {
   type = IndexedDbDisk.type;
 
   constructor(
-    public readonly guid: string,
+    public readonly guid: string = DiskDAO.guid(),
     indexCache?: TreeDirRootJType,
     context?: IndexedDbDiskContext
   ) {

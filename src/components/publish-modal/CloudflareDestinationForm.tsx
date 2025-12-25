@@ -7,7 +7,7 @@ import {
 } from "@/components/publish-modal/RemoteResourceField";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
-import { useAsyncEffect2 } from "@/hooks/useAsyncEffect";
+import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { CloudflareAPIRemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useMemo } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";
@@ -107,7 +107,7 @@ function CloudflareProjectNameSearchDropdown({
 
   if (accountId) agent.setAccountId(accountId);
   //we have to get the account id from the name
-  useAsyncEffect2(
+  useAsyncEffect(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     async (signal) => {
       if (!accountName || accountId) return;

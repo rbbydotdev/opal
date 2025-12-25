@@ -816,6 +816,15 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     }
   }
 
+  async Import(importer: WorkspaceImport) {
+    const files: AbsPath[] = [];
+    for await (const file of importer.fetchFiles()) {
+      await this.writeFile(absPath(file.path), file.content);
+      files.push(absPath(file.path));
+    }
+    return files;
+  }
+
   async setDiskContext(newContext: TContext): Promise<void> {
     const oldContext = this._context;
 
@@ -839,4 +848,8 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     await this.local.clearListeners();
     this.unsubs.forEach((us) => us());
   }
+}
+
+export interface WorkspaceImport {
+  fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }>;
 }

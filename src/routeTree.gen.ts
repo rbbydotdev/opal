@@ -22,6 +22,7 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
+import { Route as AppAutoImportRouteImport } from './routes/_app/autoImport'
 import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
 import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
@@ -92,6 +93,11 @@ const AppNewWorkspaceRoute = AppNewWorkspaceRouteImport.update({
   path: '/newWorkspace',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAutoImportRoute = AppAutoImportRouteImport.update({
+  id: '/autoImport',
+  path: '/autoImport',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWorkspaceWorkspaceNameRoute =
   AppWorkspaceWorkspaceNameRouteImport.update({
     id: '/$workspaceName',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
+  '/autoImport': typeof AppAutoImportRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
+  '/autoImport': typeof AppAutoImportRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
+  '/_app/autoImport': typeof AppAutoImportRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/themes': typeof AppThemesRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
+    | '/autoImport'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
+    | '/autoImport'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
+    | '/_app/autoImport'
     | '/_app/newWorkspace'
     | '/_app/settings'
     | '/_app/themes'
@@ -345,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNewWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/autoImport': {
+      id: '/_app/autoImport'
+      path: '/autoImport'
+      fullPath: '/autoImport'
+      preLoaderRoute: typeof AppAutoImportRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/workspace/$workspaceName': {
       id: '/_app/workspace/$workspaceName'
       path: '/$workspaceName'
@@ -415,6 +434,7 @@ const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAutoImportRoute: typeof AppAutoImportRoute
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppThemesRoute: typeof AppThemesRoute
@@ -424,6 +444,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAutoImportRoute: AppAutoImportRoute,
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppThemesRoute: AppThemesRoute,
