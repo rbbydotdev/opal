@@ -2,44 +2,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
-import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
-import { useAsyncEffect } from "@/hooks/useAsyncEffect";
+import { useRunner } from "@/hooks/useRunner";
+import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
+import { RunnerLogLine } from "@/types/RunnerTypes";
 import Github from "@/icons/github.svg?react";
-import { relPath } from "@/lib/paths2";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 
 export const Route = createFileRoute("/_app/autoimport/github/$owner/$repo")({
   component: RouteComponent,
 });
 
-class ImportRunner {}
-
 function useDiskFromRepo(fullRepoPath: string) {
-  // const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
-  // const files = await disk.Import(new GithubImport(relPath(fullRepoPath)));
-  const [logs, setLogs] = useState<string[]>([]);
-  const appendLog = useCallback((log: string) => {
-    setLogs((prevLogs) => [...prevLogs, log]);
-  }, []);
-  useAsyncEffect(
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    async (signal) => {
-      const disk = DiskFactoryByType(DefaultDiskType);
-      const importer = new GithubImport(relPath(fullRepoPath));
-      for await (const file of importer.fetchFiles(signal)) {
-        // Here you would write the file to the disk
-        // console.log(`Importing file: ${file.path}`);
-        // await disk.writeFile(file.path, file.content);
-        appendLog(`Imported file: ${file.path}`);
-      }
-      appendLog("Import complete");
-    },
-    [appendLog, fullRepoPath]
-  );
+  const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
 
-  return { logs, disk };
+  const importRunner = useRunner(() => {
+    return fullRepoPath ? ImportRunner.create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
+  }, [fullRepoPath, disk]);
+
+  // Auto-start the import when runner is created
+  useEffect(() => {
+    if (importRunner && importRunner !== NULL_IMPORT_RUNNER && !importRunner.running && !importRunner.completed) {
+      importRunner.execute();
+    }
+  }, [importRunner]);
+
+  return {
+    logs: importRunner.logs,
+    disk,
+    importRunner,
+    isImporting: importRunner.running,
+    isCompleted: importRunner.completed
+  };
 }
 
 function RouteComponent() {
@@ -48,6 +43,7 @@ function RouteComponent() {
   const [owner, repo, ...rest] = fullRepoRoute.split("/");
 
   const [isValidRepo, setIsValidRepo] = useState<boolean | null>(null);
+  const { logs, isImporting, isCompleted } = useDiskFromRepo(fullRepoRoute);
 
   useEffect(() => {
     if (!owner || !repo) {
@@ -113,10 +109,21 @@ function RouteComponent() {
             <p className="font-medium">
               {owner}/{repo}
             </p>
-            <Loader className="h-6 w-6 animate-spin mx-auto" />
-            <p className="text-sm text-muted-foreground">Setting up your workspace...</p>
+            {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
+            <p className="text-sm text-muted-foreground">
+              {isCompleted ? "Import completed!" : isImporting ? "Importing files..." : "Setting up your workspace..."}
+            </p>
+            {logs.length > 0 && (
+              <div className="text-left max-h-32 overflow-y-auto bg-gray-50 p-2 rounded text-xs">
+                {logs.slice(-5).map((log: RunnerLogLine, i: number) => (
+                  <div key={i} className={log.type === "error" ? "text-red-600" : "text-gray-600"}>
+                    {log.message}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <Button onClick={() => navigate({ to: "/" })}>Cancel</Button>
+          <Button onClick={() => navigate({ to: "/" })}>{isCompleted ? "Done" : "Cancel"}</Button>
         </CardContent>
       </Card>
     </div>

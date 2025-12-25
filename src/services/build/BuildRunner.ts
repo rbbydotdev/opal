@@ -10,33 +10,22 @@ import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
 import { Workspace } from "@/workspace/Workspace";
+import { RunnerLogLine, RunnerLogType, createLogLine } from "@/types/RunnerTypes";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-type BuildLogType = BuildLogLine["type"];
-function logLine(message: string, type: BuildLogType = "info") {
-  return {
-    timestamp: Date.now(),
-    message,
-    type,
-  } as BuildLogLine;
-}
-
 export class BuildRunner {
   build: BuildDAO;
-  private workspace?: Workspace;
   private templateManager?: TemplateManager;
-
-  get completed() {
-    return this.build.completed;
-  }
+  private _error: string | null = null;
 
   emitter = CreateSuperTypedEmitter<{
-    log: BuildLogLine;
+    log: RunnerLogLine;
     complete: boolean;
-    update: BuildDAO;
+    running: boolean;
+    update: BuildRunner;
   }>();
 
   get sourceDisk(): Disk {
@@ -47,8 +36,20 @@ export class BuildRunner {
     return this.build.strategy;
   }
 
-  get logs(): BuildLogLine[] {
+  get logs(): RunnerLogLine[] {
     return this.build.logs;
+  }
+
+  get completed(): boolean {
+    return this.isCompleted;
+  }
+
+  get running(): boolean {
+    return this.isBuilding;
+  }
+
+  get error(): string | null {
+    return this._error;
   }
 
   get outputDisk(): Disk {
@@ -82,19 +83,16 @@ export class BuildRunner {
     return this.build.status === "idle";
   }
   private abortController: AbortController = new AbortController();
-  protected readonly log = (message: string, type?: BuildLogType) => {
-    const logLine = {
-      timestamp: Date.now(),
-      message,
-      type,
-    } as BuildLogLine;
+  protected readonly log = (message: string, type?: RunnerLogType) => {
+    const logLine = createLogLine(message, type);
 
-    this.build.logs = [...this.build.logs, logLine];
+    this.build.logs = [...this.build.logs, logLine as BuildLogLine];
     this.emitter.emit("log", logLine);
+    this.emitter.emit("update", this);
     return logLine;
   };
 
-  static async recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
+  static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
     if (!build) throw new Error(`Build with ID ${buildId} not found`);
     return new BuildRunner({
@@ -103,7 +101,23 @@ export class BuildRunner {
     });
   }
 
-  static create({ build, workspace }: { build: BuildDAO; workspace?: Workspace }): BuildRunner {
+  static NewBuild({
+    workspace,
+    label,
+    strategy,
+  }: {
+    label: string;
+    workspace: Workspace;
+    strategy: BuildStrategy;
+  }): BuildRunner {
+    const build = BuildDAO.CreateNew({
+      label,
+      workspaceId: workspace.guid,
+      disk: workspace.disk,
+      sourceDisk: workspace.disk,
+      strategy,
+    });
+
     return new BuildRunner({
       build,
       workspace,
@@ -120,13 +134,12 @@ export class BuildRunner {
 
   constructor({ build, workspace }: { build: BuildDAO; workspace?: Workspace }) {
     this.build = build;
-    this.workspace = workspace;
     if (workspace) {
       this.templateManager = new TemplateManager(workspace);
     }
   }
 
-  onLog = (callback: (log: BuildLogLine) => void) => {
+  onLog = (callback: (log: RunnerLogLine) => void) => {
     return this.emitter.on("log", callback);
   };
   getLogs = () => this.logs;
@@ -136,9 +149,20 @@ export class BuildRunner {
   };
   getComplete = () => this.isCompleted;
 
+  onRunning = (callback: (running: boolean) => void) => {
+    return this.emitter.on("running", callback);
+  };
+  getRunning = () => this.running;
+
+  onUpdate = (callback: (runner: BuildRunner) => void) => {
+    return this.emitter.on("update", callback);
+  };
+  getRunner = () => this;
+
   tearDown() {
     this.emitter.clearListeners();
   }
+
 
   cancel() {
     this.abortController.abort();
@@ -148,13 +172,16 @@ export class BuildRunner {
     abortSignal = this.abortController.signal,
     log = () => {},
   }: {
-    log?: (l: BuildLogLine) => void;
+    log?: (l: RunnerLogLine) => void;
     abortSignal?: AbortSignal;
   } = {}): Promise<BuildDAO> {
     const errorLog = (message: string) => log(this.log(message, "error"));
     const infoLog = (message: string) => log(this.log(message, "info"));
     try {
       this.build.status = "pending";
+      this._error = null; // Clear any previous errors
+      this.emitter.emit("running", true);
+      this.emitter.emit("update", this);
       await this.build.save();
       await this.sourceDisk.refresh();
       infoLog(`Starting ${this.strategy} build, id ${this.build.guid}...`);
@@ -234,11 +261,13 @@ export class BuildRunner {
       const errorMessage = error instanceof Error ? error.message : String(error);
       errorLog(`Build failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
+        this._error = "Build failed. Please check the logs for more details.";
         return await this.build.update({
           logs: this.logs,
           status: "failed",
         });
       } else {
+        this._error = "Build was cancelled.";
         return await this.build.update({
           logs: this.logs,
           status: "cancelled",
@@ -246,6 +275,8 @@ export class BuildRunner {
       }
     } finally {
       this.emitter.emit("complete", this.isCompleted);
+      this.emitter.emit("running", this.running);
+      this.emitter.emit("update", this);
     }
   }
 

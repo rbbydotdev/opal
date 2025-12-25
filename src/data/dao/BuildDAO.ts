@@ -100,7 +100,7 @@ export class BuildDAO implements BuildRecord {
     workspaceId: string;
     guid?: string;
     fileCount?: number;
-    logs: BuildLogLine[];
+    logs?: BuildLogLine[];
   }) {
     const buildPath = BuildPath(guid);
     return new BuildDAO({

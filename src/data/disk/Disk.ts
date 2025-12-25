@@ -816,9 +816,9 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     }
   }
 
-  async Import(importer: WorkspaceImport) {
+  async Import(importer: WorkspaceImport, signal?: AbortSignal) {
     const files: AbsPath[] = [];
-    for await (const file of importer.fetchFiles()) {
+    for await (const file of importer.fetchFiles(signal || new AbortController().signal)) {
       await this.writeFile(absPath(file.path), file.content);
       files.push(absPath(file.path));
     }

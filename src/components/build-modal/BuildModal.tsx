@@ -7,6 +7,7 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useBuildRunner } from "@/services/build/useBuildRunner";
 import { Workspace } from "@/workspace/Workspace";
+import { RunnerLogLine } from "@/types/RunnerTypes";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -41,7 +42,6 @@ export function BuildModal({
     openNew,
     openEdit,
     buildError,
-    clearError,
   } = useBuildRunner(currentWorkspace);
 
   const handleOkay = () => setIsOpen(false);
@@ -211,7 +211,7 @@ export function BuildModal({
                   <AlertTriangle size={20} className="text-destructive" />
                   <span className="font-semibold uppercase">build failed</span>
                 </div>
-                <Button onClick={clearError} variant="destructive" className="flex items-center gap-2">
+                <Button onClick={handleOkay} variant="destructive" className="flex items-center gap-2">
                   Okay
                 </Button>
               </div>
@@ -235,7 +235,7 @@ export function BuildModal({
                 {logs.length === 0 ? (
                   <div className="text-muted-foreground italic">Build output will appear here...</div>
                 ) : (
-                  logs.map((log, index) => (
+                  logs.map((log: RunnerLogLine, index: number) => (
                     <div
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}
