@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const workers = [
   {
     name: "ServiceWorker",
-    entry: resolve(__dirname, "src/lib/service-worker/sw.ts"),
+    entry: resolve(__dirname, "src/lib/service-worker/sw-hono.ts"),
     outFile: "sw.js",
   },
 ];
@@ -47,7 +47,7 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
       },
     },
     define: {
-      __ENABLE_LOG__: JSON.stringify(false),
+      __ENABLE_LOG__: JSON.stringify(true),
       __LOG_LEVEL__: JSON.stringify("debug"),
     },
   });

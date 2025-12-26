@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_app/workspace/$workspaceName")({
 
 function WorkspaceLayout() {
   const { workspaceName } = Route.useParams();
-  useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
+  useFavicon("/favicon.svg" + "?workspaceName=" + workspaceName, "image/svg+xml");
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
 

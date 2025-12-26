@@ -1,58 +1,39 @@
 import { Thumb } from "@/data/Thumb";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
-import { errF, isError, NotFoundError } from "@/lib/errors/errors";
+import { NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath } from "@/lib/paths2";
-import { Workspace } from "@/workspace/Workspace";
-import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
-export async function handleImageRequest(request: Request, url: SuperUrl, workspaceName: string): Promise<Response> {
-  // TODO hoist controller logic up to the top level
-  try {
-    const decodedPathname = url.decodedPathname;
-    const isThumbnail = Thumb.isThumbURL(url);
-    logger.log(`Intercepted request for: 
-    decodedPathname: ${decodedPathname}
-    url.pathname: ${url.pathname}
-    href: ${url.href}
-    isThumbnail: ${isThumbnail}
-  `);
-    let cache: Cache;
-    if (!decodedPathname.endsWith(".svg")) {
-      cache = await Workspace.newCache(workspaceName).getCache();
-      const cachedResponse = await cache.match(request);
-      if (cachedResponse) {
-        logger.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
-        return cachedResponse;
-      }
-    }
-    logger.log(`Cache miss for: ${url.href.replace(url.origin, "")}, fetching from workspace name ${workspaceName}`);
-    const workspace = await SWWStore.tryWorkspace(workspaceName);
+export interface ImageResult {
+  contents: Uint8Array;
+  mimeType: string;
+  pathname: string;
+}
 
-    if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
+export async function handleImageRequest(
+  pathname: string,
+  workspaceName: string,
+  isThumbnail?: boolean
+): Promise<ImageResult> {
+  const workspace = await SWWStore.tryWorkspace(workspaceName);
 
-    const contents = await (isThumbnail && !decodedPathname.startsWith("/.thumb/")
-      ? workspace.readOrMakeThumb(absPath(decodedPathname))
-      : workspace.readFile(absPath(decodedPathname)));
-
-    const response = new Response(coerceUint8Array(contents) as BodyInit, {
-      headers: {
-        "Content-Type": getMimeType(decodedPathname),
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-
-    if (!decodedPathname.endsWith(".svg")) {
-      await cache!.put(request, response.clone());
-    }
-    return response;
-  } catch (e) {
-    if (isError(e, NotFoundError)) {
-      return new Response("Error", { status: 404 });
-    }
-    logger.error(errF`Error in service worker: ${e}`.toString());
-    return new Response("Error", { status: 500 });
+  if (!workspace) {
+    throw new NotFoundError(`Workspace not found: ${workspaceName}`);
   }
+
+  logger.log(`Using workspace: ${workspace.name} for image request: ${pathname}`);
+
+  // Determine if this is a thumbnail request if not provided
+  const isThumb = isThumbnail ?? pathname.includes("?thumb=");
+
+  const contents = await (isThumb && !pathname.startsWith("/.thumb/")
+    ? workspace.readOrMakeThumb(absPath(pathname))
+    : workspace.readFile(absPath(pathname)));
+
+  return {
+    contents: coerceUint8Array(contents),
+    mimeType: getMimeType(pathname),
+    pathname,
+  };
 }

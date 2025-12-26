@@ -1,20 +1,16 @@
 import { IdenticonStr } from "@/components/IndenticonStr";
+import { NotFoundError } from "@/lib/errors/errors";
 import { SWWStore } from "./SWWStore";
 
-export async function handleFaviconRequest(workspaceName: string): Promise<Response> {
+export async function handleFaviconRequest(workspaceName: string): Promise<string> {
   const workspace = await SWWStore.tryWorkspace(workspaceName);
-  return new Response(
-    IdenticonStr({
-      input: workspace.guid,
-      size: 4, // Grid size
-    }),
-    {
-      headers: {
-        "Content-Type": "image/svg+xml",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    }
-  );
+
+  if (!workspace) {
+    throw new NotFoundError(`Workspace not found: ${workspaceName}`);
+  }
+
+  return IdenticonStr({
+    input: workspace.guid,
+    size: 4, // Grid size
+  });
 }

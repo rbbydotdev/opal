@@ -27,7 +27,7 @@ export function WorkspaceFilePage() {
   useEffect(() => {
     if (workspaceName) document.title = workspaceName;
   }, [workspaceName]);
-  useFavicon("/favicon.svg" + "?" + workspaceName, "image/svg+xml");
+  useFavicon("/favicon.svg" + "?workspaceName=" + workspaceName, "image/svg+xml");
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
