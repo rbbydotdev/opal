@@ -1,4 +1,5 @@
 import { Disk } from "@/data/disk/Disk";
+import { NULL_DISK } from "@/data/disk/NullDisk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
@@ -22,8 +23,12 @@ export class ImportRunner extends ObservableRunner<any> {
     return new ImportRunner({ disk, fullRepoPath });
   }
 
+  static Show(_: any): ImportRunner {
+    return new ImportRunner({ disk: NULL_DISK, fullRepoPath: "show/show" });
+  }
+
   static async Recall(): Promise<ImportRunner> {
-    throw new Error("ImportRunner does not support recall - imports are single-use operations");
+    return new ImportRunner({ disk: NULL_DISK, fullRepoPath: "recall/recall" });
   }
 
   cancel(): void {

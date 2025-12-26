@@ -1,5 +1,11 @@
 import { LogLine } from "@/types/RunnerTypes";
 
+export interface RunnerForModal<T> {
+  Create: (args: any) => T;
+  Show: (args: any) => T;
+  Recall: (args: any) => Promise<T>;
+}
+
 // Base interface that all runners must implement
 export interface Runner {
   get logs(): LogLine[];
@@ -10,7 +16,7 @@ export interface Runner {
   onLog: (callback: (logs: LogLine[]) => void) => () => void;
   onError: (callback: (error: string | null) => void) => () => void;
   tearDown(): void;
-  execute(): Promise<unknown>;
+  execute(signal?: AbortSignal): Promise<unknown>;
   isCompleted: boolean;
   isPending: boolean;
   isIdle: boolean;

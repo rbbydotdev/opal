@@ -26,7 +26,7 @@ import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/wor
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
 import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
 import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_app/workspace/$workspaceName.$'
-import { Route as AppAutoimportGithubOwnerRepoRouteImport } from './routes/_app/autoimport/github/$owner/$repo'
+import { Route as AppImportGhOwnerRepoRouteImport } from './routes/_app/import/gh/$owner/$repo'
 
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
@@ -116,12 +116,11 @@ const AppWorkspaceWorkspaceNameSplatRoute =
     path: '/$',
     getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
-const AppAutoimportGithubOwnerRepoRoute =
-  AppAutoimportGithubOwnerRepoRouteImport.update({
-    id: '/autoimport/github/$owner/$repo',
-    path: '/autoimport/github/$owner/$repo',
-    getParentRoute: () => AppRoute,
-  } as any)
+const AppImportGhOwnerRepoRoute = AppImportGhOwnerRepoRouteImport.update({
+  id: '/import/gh/$owner/$repo',
+  path: '/import/gh/$owner/$repo',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/$notfound': typeof NotfoundRoute
@@ -140,7 +139,7 @@ export interface FileRoutesByFullPath {
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
-  '/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
+  '/import/gh/$owner/$repo': typeof AppImportGhOwnerRepoRoute
 }
 export interface FileRoutesByTo {
   '/$notfound': typeof NotfoundRoute
@@ -158,7 +157,7 @@ export interface FileRoutesByTo {
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameIndexRoute
-  '/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
+  '/import/gh/$owner/$repo': typeof AppImportGhOwnerRepoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,7 +178,7 @@ export interface FileRoutesById {
   '/_app/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
   '/_app/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/_app/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
-  '/_app/autoimport/github/$owner/$repo': typeof AppAutoimportGithubOwnerRepoRoute
+  '/_app/import/gh/$owner/$repo': typeof AppImportGhOwnerRepoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,7 +199,7 @@ export interface FileRouteTypes {
     | '/workspace/$workspaceName/$'
     | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName/'
-    | '/autoimport/github/$owner/$repo'
+    | '/import/gh/$owner/$repo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$notfound'
@@ -218,7 +217,7 @@ export interface FileRouteTypes {
     | '/workspace/$workspaceName/$'
     | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName'
-    | '/autoimport/github/$owner/$repo'
+    | '/import/gh/$owner/$repo'
   id:
     | '__root__'
     | '/$notfound'
@@ -238,7 +237,7 @@ export interface FileRouteTypes {
     | '/_app/workspace/$workspaceName/$'
     | '/_app/workspace/$workspaceName/settings'
     | '/_app/workspace/$workspaceName/'
-    | '/_app/autoimport/github/$owner/$repo'
+    | '/_app/import/gh/$owner/$repo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -373,11 +372,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceWorkspaceNameSplatRouteImport
       parentRoute: typeof AppWorkspaceWorkspaceNameRoute
     }
-    '/_app/autoimport/github/$owner/$repo': {
-      id: '/_app/autoimport/github/$owner/$repo'
-      path: '/autoimport/github/$owner/$repo'
-      fullPath: '/autoimport/github/$owner/$repo'
-      preLoaderRoute: typeof AppAutoimportGithubOwnerRepoRouteImport
+    '/_app/import/gh/$owner/$repo': {
+      id: '/_app/import/gh/$owner/$repo'
+      path: '/import/gh/$owner/$repo'
+      fullPath: '/import/gh/$owner/$repo'
+      preLoaderRoute: typeof AppImportGhOwnerRepoRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -420,7 +419,7 @@ interface AppRouteChildren {
   AppThemesRoute: typeof AppThemesRoute
   AppWorkspaceRoute: typeof AppWorkspaceRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
-  AppAutoimportGithubOwnerRepoRoute: typeof AppAutoimportGithubOwnerRepoRoute
+  AppImportGhOwnerRepoRoute: typeof AppImportGhOwnerRepoRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -429,7 +428,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppThemesRoute: AppThemesRoute,
   AppWorkspaceRoute: AppWorkspaceRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
-  AppAutoimportGithubOwnerRepoRoute: AppAutoimportGithubOwnerRepoRoute,
+  AppImportGhOwnerRepoRoute: AppImportGhOwnerRepoRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

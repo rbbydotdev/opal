@@ -13,9 +13,9 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
   const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
-  const execute = async (runner: T) => {
+  const execute = async (runner: T, signal?: AbortSignal) => {
     setRunner(runner);
-    await runner.execute();
+    await runner.execute(signal);
   };
 
   return {

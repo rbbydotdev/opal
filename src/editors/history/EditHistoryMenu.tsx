@@ -42,6 +42,7 @@ function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | n
 export function EditHistoryMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
+  const workspaceName = currentWorkspace.name; // Add workspace name for the endpoint
   const { storedValue: enabled } = useEnabledEditHistory();
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
@@ -66,7 +67,7 @@ export function EditHistoryMenu() {
         <div className="h-full absolute left-4 flex justify-center items-center ">
           <button
             onClick={() => {}}
-            className="!text-white text-primary text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
+            className="text-primary text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
           >
             <HistoryStatus selectedEdit={selectedEdit} pending={pending} />
           </button>
@@ -113,7 +114,12 @@ export function EditHistoryMenu() {
                     })}
                   >
                     <div className={cn("text-sm flex w-full items-center justify-start text-left")}>
-                      <EditViewPreview className="w-12 h-12" workspaceId={workspaceId} edit={edit} />
+                      <EditViewPreview
+                        className="w-12 h-12"
+                        workspaceId={workspaceId}
+                        workspaceName={workspaceName}
+                        edit={edit}
+                      />
                       <div className={"ml-4"}>
                         {isSelectedEdit(edit) ? (
                           <CheckCircle2 className="inline-block mr-2 text-ring" size={16} strokeWidth={2} />

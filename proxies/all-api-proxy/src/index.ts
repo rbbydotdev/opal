@@ -1,7 +1,8 @@
 // Unified API Proxy for GitHub, Netlify, Vercel, Cloudflare, and AWS S3 APIs
-// Using itty-router for clean routing and built-in CORS support
+// Using Hono for clean routing and built-in CORS support
 
-import { AutoRouter, cors } from "itty-router";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { getAllowedHeaders, getExposedHeaders } from "./specialHeaders";
 
 const ALLOWED_ORIGINS = ["https://opaledx.com", "http://localhost:3000"];
@@ -267,26 +268,22 @@ async function handleProxy(request: Request, env: Env): Promise<Response> {
   }
 }
 
-// Create CORS with all possible headers (including AWS and Cloudflare) for simplicity
-const { preflight, corsify } = cors({
+// Create Hono app
+const app = new Hono<{ Bindings: Env }>();
+
+// Apply CORS middleware
+app.use("*", cors({
   credentials: true,
   origin: ALLOWED_ORIGINS,
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-  // allowHeaders: "*", // Allow all headers - works for AWS, Cloudflare, and any other SDKs
   allowHeaders: getAllowedHeaders(),
   exposeHeaders: ["etag", ...getExposedHeaders().filter((h) => h !== "etag")],
   maxAge: 86400,
-});
-
-// Create router with CORS middleware
-const router = AutoRouter({
-  before: [preflight],
-  finally: [corsify],
-});
+}));
 
 // Handle all proxy requests: /:host/*
-router.all("/:host/*", async (request, env) => {
-  return handleProxy(request, env);
+app.all("/:host/*", async (c) => {
+  return handleProxy(c.req.raw, c.env);
 });
 
-export default router;
+export default app;

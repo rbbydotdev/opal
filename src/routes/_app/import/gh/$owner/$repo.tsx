@@ -4,45 +4,51 @@ import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
-import { NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
-import { RunnerLogLine } from "@/types/RunnerTypes";
+import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
+import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-export const Route = createFileRoute("/_app/autoimport/github/$owner/$repo")({
+// const {runner: importRunner } = useRunner(ImportRunner,() => {
+//   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
+// }, [fullRepoPath, disk]);
+
+// const { runner: importRunner } = useRunner(NULL_IMPORT_RUNNER);
+// BuildRunner.Show({
+//   build: NULL_BUILD,
+//   workspace: currentWorkspace,
+// }),
+// []
+
+export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
   component: RouteComponent,
 });
 
 function useDiskFromRepo(fullRepoPath: string) {
   const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
 
-  // const {runner: importRunner } = useRunner(ImportRunner,() => {
-  //   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
-  // }, [fullRepoPath, disk]);
-
-  const { runner: importRunner } = useRunner(NULL_IMPORT_RUNNER);
+  const { runner, execute, logs } = useRunner(NULL_IMPORT_RUNNER, []);
 
   // Auto-start the import when runner is created
   useEffect(() => {
-    throw new Error("Not implemented");
-    if (importRunner && importRunner !== NULL_IMPORT_RUNNER && !importRunner.running && !importRunner.completed) {
-      // importRunner.execute();
+    if (runner && runner !== NULL_IMPORT_RUNNER && !runner.isPending && !runner.isCompleted) {
+      void execute(ImportRunner.Create({ disk: DiskFactoryByType(DefaultDiskType), fullRepoPath }));
     }
-  }, [importRunner]);
+  }, [execute, fullRepoPath, runner]);
 
   return {
-    logs: importRunner.logs,
+    logs: runner.logs,
     disk,
-    importRunner,
-    isImporting: importRunner.running,
-    isCompleted: importRunner.completed,
+    importRunner: runner,
+    isImporting: runner.isPending,
+    isCompleted: runner.isCompleted,
   };
 }
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const fullRepoRoute = useLocation().pathname.split("/autoimport/github/").slice(1)[0]!;
+  const fullRepoRoute = useLocation().pathname.split("/import/gh/").slice(1)[0]!;
   const [owner, repo, ...rest] = fullRepoRoute.split("/");
 
   const [isValidRepo, setIsValidRepo] = useState<boolean | null>(null);
@@ -116,9 +122,10 @@ function RouteComponent() {
             <p className="text-sm text-muted-foreground">
               {isCompleted ? "Import completed!" : isImporting ? "Importing files..." : "Setting up your workspace..."}
             </p>
+
             {logs.length > 0 && (
               <div className="text-left max-h-32 overflow-y-auto bg-gray-50 p-2 rounded text-xs">
-                {logs.slice(-5).map((log: RunnerLogLine, i: number) => (
+                {logs.slice(-5).map((log: LogLine, i: number) => (
                   <div key={i} className={log.type === "error" ? "text-red-600" : "text-gray-600"}>
                     {log.message}
                   </div>

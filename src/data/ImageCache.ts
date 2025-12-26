@@ -8,13 +8,13 @@ export class ImageCache {
   }
   private getCacheId = () => `${this.guid}/${this.name}`;
   static getCacheId(id: string) {
-    return `${id}/${this.name}`;
+    return `${id}/img`;
   }
   static getCache(id: string) {
     return caches.open(this.getCacheId(id));
   }
   getCache() {
-    return (this._cache ??= ImageCache.getCache(this.getCacheId()));
+    return (this._cache ??= caches.open(this.getCacheId()));
   }
   destroy = async () => {
     await caches.delete(this.getCacheId());

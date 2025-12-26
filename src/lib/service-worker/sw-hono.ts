@@ -2,8 +2,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Context, Hono } from "hono";
 import { logger } from "hono/logger";
 import { handle } from "hono/service-worker";
-import { z } from "zod";
 import { marked } from "marked";
+import { z } from "zod";
 
 import { ENV } from "@/lib/env";
 import { BadRequestError, isError, NotFoundError } from "@/lib/errors/errors";
@@ -14,8 +14,8 @@ import { RemoteLoggerLogger, signalRequest, WHITELIST } from "@/lib/service-work
 import { Workspace } from "@/workspace/Workspace";
 
 // Import pure handler functions
-import { Thumb } from "@/data/Thumb";
 import { ClientDb } from "@/data/instance";
+import { Thumb } from "@/data/Thumb";
 import { HistoryDB } from "@/editors/history/HistoryDB";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
@@ -31,6 +31,8 @@ import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRe
 import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
 import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearch";
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
+import { SWWStore } from "@/lib/service-worker/SWWStore";
+import graymatter from "gray-matter";
 
 declare const self: ServiceWorkerGlobalScope;
 const LOG = RemoteLoggerLogger("SW");
@@ -376,6 +378,7 @@ app.get("/workspace-filename-search/:workspaceName", zValidator("query", filenam
     LOG.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
 
     const result = await handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
+
     return result;
   } catch (error) {
     LOG.error(`Workspace filename search error: ${error}`);
@@ -391,26 +394,62 @@ app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c)
     LOG.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
 
     // Get workspace to find workspaceId
-    const workspace = Workspace.Get(workspaceName);
+    const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
     if (!workspace) {
       LOG.error(`Workspace not found: ${workspaceName}`);
       return c.json({ error: "Workspace not found" }, 404);
     }
 
-    // Create HistoryDB instance and reconstruct document
-    const historyDB = new HistoryDB();
-    const markdownContent = await historyDB.reconstructDocument({ edit_id: editId });
+    // ---------- Cache Lookup ----------
+    const cache = await Workspace.newCache(workspaceName).getCache();
+    const cached = await cache.match(c.req.raw);
+    if (cached) {
+      LOG.log(`Cache hit for markdown render: ${editId}`);
+      return cached;
+    }
 
-    // Render markdown to HTML
-    const htmlContent = await marked(markdownContent);
+    // Get edit from database to check for existing preview blob
+    const edit = await ClientDb.historyDocs.get(editId);
+    if (!edit) {
+      LOG.error(`Edit not found: ${editId}`);
+      return c.json({ error: "Edit not found" }, 404);
+    }
 
-    // Return as HTML response
-    return new Response(htmlContent, {
+    let htmlContent: string;
+
+    // Check if edit already has preview blob
+    if (edit.preview) {
+      LOG.log(`Using existing preview blob for edit: ${editId}`);
+      htmlContent = await edit.preview.text();
+    } else {
+      LOG.log(`Generating new HTML for edit: ${editId}`);
+
+      // Create HistoryDB instance and reconstruct document
+      const historyDB = new HistoryDB();
+      const markdownContent = await historyDB.reconstructDocument({ edit_id: editId });
+
+      // Render markdown to HTML
+      htmlContent = await marked(graymatter(markdownContent).content);
+
+      // Store rendered HTML in edit.preview Blob field
+      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+      await historyDB.updatePreviewForEditId(editId, htmlBlob);
+
+      historyDB.tearDown();
+    }
+
+    // Create response
+    const response = new Response(htmlContent, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
+
+    // ---------- Cache Store ----------
+    await cache.put(c.req.raw, response.clone());
+
+    return response;
   } catch (error) {
     LOG.error(`Markdown render error: ${error}`);
     if (error instanceof Error && error.message.includes("not found")) {

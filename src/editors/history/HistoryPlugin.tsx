@@ -210,9 +210,6 @@ export class HistoryPlugin {
             .reverse()
             .sortBy("timestamp")
         ).subscribe((edits) => (this.$edits = edits)).unsubscribe,
-        //
-        this.editStorage.initPreviewLFU({ workspaceId: this.workspaceId, documentId: this.documentId }),
-        //
         this.$watchEditorMarkdown((doc) => {
           if (this.$mode === "propose" && this.$proposedDoc !== doc) this.backoff();
         }),

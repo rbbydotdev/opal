@@ -31,6 +31,7 @@ import {
   UploadCloudIcon,
   Zap,
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export function PublicationModalPublishContent({
   build,
@@ -68,6 +69,10 @@ export function PublicationModalPublishContent({
     destination,
     deploy,
   ]);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {
@@ -302,7 +307,7 @@ export function PublicationModalPublishContent({
             {showTimestamps ? "Hide" : "Show"} timestamps
           </Button>
         </div>
-        <ScrollArea className="flex border rounded-md p-3 bg-muted/30 h-96 min-h-0 ___[&>[data-radix-scroll-area-viewport]]:h-auto">
+        <ScrollArea className="flex border rounded-md p-3 bg-muted/30 h-96 min-h-0 flex-grow">
           <div className="font-mono text-sm space-y-1">
             {logs.length === 0 ? (
               <div className="text-muted-foreground italic">Output will appear here...</div>
@@ -320,6 +325,7 @@ export function PublicationModalPublishContent({
               ))
             )}
           </div>
+          <div ref={bottomRef} />
         </ScrollArea>
       </div>
     </div>

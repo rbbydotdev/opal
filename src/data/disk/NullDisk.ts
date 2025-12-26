@@ -44,3 +44,5 @@ export class NullDisk extends Disk<NullDiskContext> {
     return () => {};
   }
 }
+
+export const NULL_DISK = new NullDisk();

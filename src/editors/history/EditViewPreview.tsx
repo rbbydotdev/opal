@@ -1,8 +1,5 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { HistoryDB } from "@/editors/history/HistoryDB";
-import { stripFrontmatter } from "@/lib/markdown/frontMatter";
-import { renderMarkdownToHtmlAsync } from "@/lib/markdown/renderMarkdownToHtml";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
@@ -11,34 +8,45 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
   return `${workspaceId}/${editId}`;
 }
 
-export async function generateHtmlPreview(edit: HistoryDAO): Promise<Blob> {
-  const editStore = new HistoryDB();
-  try {
-    const reconstructedContent = (await editStore.reconstructDocument(edit)) ?? "";
-    const html = await renderMarkdownToHtmlAsync(stripFrontmatter(reconstructedContent));
-    const blob = new Blob([html], { type: "text/html" });
-    await editStore.updatePreviewForEditId(edit.edit_id, blob);
+export async function generateHtmlPreview(edit: HistoryDAO, workspaceName: string): Promise<Blob> {
+  // Use the service worker endpoint to generate HTML
+  const url = new URL("/markdown-render", window.location.origin);
+  url.searchParams.set("workspaceName", workspaceName);
+  url.searchParams.set("documentId", edit.id);
+  url.searchParams.set("editId", edit.edit_id.toString());
 
-    return blob;
-  } finally {
-    editStore.tearDown();
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to generate preview: ${response.statusText}`);
   }
+
+  return await response.blob();
 }
 
-export function useHtmlPreviewGenerator() {
+export function useHtmlPreviewGenerator(workspaceName: string) {
   const { isHistoryImageGenerationEnabled } = useToggleHistoryImageGeneration();
 
   return function generatePreview(edit: HistoryDAO) {
     if (!isHistoryImageGenerationEnabled) return;
-    void generateHtmlPreview(edit);
+    void generateHtmlPreview(edit, workspaceName);
   };
 }
 
-function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDAO; workspaceId: string; id: string }) {
+function useHtmlPreview({
+  edit,
+  workspaceId,
+  workspaceName,
+  id,
+}: {
+  edit: HistoryDAO;
+  workspaceId: string;
+  workspaceName: string;
+  id: string;
+}) {
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   useEffect(() => {
     if (edit.preview === null) {
-      generateHtmlPreview(edit)
+      generateHtmlPreview(edit, workspaceName)
         .then(async (blob) => {
           const html = await blob.text();
           setHtmlContent(html);
@@ -47,7 +55,7 @@ function useHtmlPreview({ edit, workspaceId, id }: { edit: HistoryDAO; workspace
     } else {
       edit.preview.text().then(setHtmlContent).catch(console.error);
     }
-  }, [edit, id, workspaceId]);
+  }, [edit, id, workspaceId, workspaceName]);
 
   return htmlContent;
 }
@@ -132,15 +140,17 @@ function ShadowDomPreview({ htmlContent, className }: { htmlContent: string; cla
 
 export const EditViewPreview = ({
   workspaceId,
+  workspaceName,
   edit,
   className,
 }: {
   workspaceId: string;
+  workspaceName: string;
   edit: HistoryDAO;
   className?: string;
 }) => {
   const id = previewId({ workspaceId, editId: edit.id });
-  const htmlContent = useHtmlPreview({ edit, workspaceId, id });
+  const htmlContent = useHtmlPreview({ edit, workspaceId, workspaceName, id });
   const [open, setOpen] = useState(false);
 
   return htmlContent !== null ? (
