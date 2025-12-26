@@ -1,15 +1,15 @@
-export type RunnerLogLine = {
-  timestamp: number;
-  message: string;
-  type: "info" | "error";
-};
+export type RunnerLogType = LogLine["type"];
 
-export type RunnerLogType = RunnerLogLine["type"];
-
-export function createLogLine(message: string, type: RunnerLogType = "info"): RunnerLogLine {
+export function createLogLine(message: string, type: RunnerLogType = "info"): LogLine {
   return {
     timestamp: Date.now(),
     message,
     type,
   };
 }
+
+export type LogLine = {
+  type: "info" | "error" | "warning" | "success";
+  timestamp: number;
+  message: string;
+};

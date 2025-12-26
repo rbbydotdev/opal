@@ -21,7 +21,7 @@ export class RemoteAuthBasicAuthAgent implements RemoteGitApiAgent {
   }
 
   // deployFiles, getDestinationURL
-  deployFiles(): Promise<unknown> {
+  deployFiles(bundle: any, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
     console.warn("RemoteAuthBasicAuthAgent.deployFiles() is not implemented");
     return Promise.resolve();
   }

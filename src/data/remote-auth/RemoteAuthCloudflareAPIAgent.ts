@@ -58,7 +58,8 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
   async deployFiles(
     bundle: DeployBundle,
     destination: CloudflareDestination,
-    logStatus?: (status: string) => void
+    logStatus?: (status: string) => void,
+    signal?: AbortSignal
   ): Promise<unknown> {
     const files = await bundle.getFiles();
     const projectName = destination.meta.projectName;
@@ -68,6 +69,7 @@ export class RemoteAuthCloudflareAPIAgent implements RemoteAuthAgent {
     }
     this.lastDeploymentResult = await this.cloudflareClient.deployToPages(this.getAccountId()!, projectName, files, {
       logStatus,
+      signal,
     });
     return this.lastDeploymentResult;
   }

@@ -2,7 +2,7 @@ import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemo
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 
 class RemoteAuthNullAgent implements RemoteAuthAgentDeployableFiles<DeployBundle> {
-  deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+  deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
     return Promise.resolve();
   }
   getDestinationURL(destination: any): Promise<string> {

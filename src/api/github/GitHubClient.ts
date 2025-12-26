@@ -153,8 +153,11 @@ export class GitHubClient {
       message: string;
       files: UniversalDeployFile[];
     },
-    log: (status: string) => void = () => {}
+    log: (status: string) => void = () => {},
+    signal?: AbortSignal
   ) {
+    signal?.throwIfAborted();
+
     // Check if repo is empty first
     const { exists, reason } = await this.checkGetBranchRefRequest({ owner, repo, branch });
 
@@ -164,6 +167,8 @@ export class GitHubClient {
 
     // Handle empty repo case - use Contents API for first file
     if (!exists && reason === "emptyrepo") {
+      signal?.throwIfAborted();
+
       if (files.length === 0) {
         throw new Error("Cannot deploy to empty repository with no files");
       }
@@ -198,6 +203,7 @@ export class GitHubClient {
       repo,
       branch,
       log: log,
+      signal,
     });
 
     const { newCommitSha } = await this.createDeployCommit({
@@ -208,6 +214,7 @@ export class GitHubClient {
       baseTreeSha: isOrphan ? undefined : baseTreeSha,
       parentSha: isOrphan ? undefined : latestCommitSha,
       log: log,
+      signal,
     });
 
     await this.updateOrCreateBranchRef({ owner, repo, branch, newCommitSha }, log);
@@ -219,11 +226,13 @@ export class GitHubClient {
     repo,
     branch,
     log: log = () => {},
+    signal,
   }: {
     owner: string;
     repo: string;
     branch: string;
     log?: (status: string) => void;
+    signal?: AbortSignal;
   }) {
     try {
       log(`Checking if branch '${branch}' exists...`);
@@ -231,13 +240,13 @@ export class GitHubClient {
         data: {
           object: { sha },
         },
-      } = await this.getBranchRefRequest({ owner, repo, branch });
+      } = await this.getBranchRefRequest({ owner, repo, branch, signal });
 
       const {
         data: {
           tree: { sha: baseTreeSha },
         },
-      } = await this.getCommitRequest({ owner, repo, commitSha: sha });
+      } = await this.getCommitRequest({ owner, repo, commitSha: sha, signal });
 
       log(`Found existing branch '${branch}'`);
       return { latestCommitSha: sha, baseTreeSha, isOrphan: false };
@@ -260,6 +269,7 @@ export class GitHubClient {
     baseTreeSha,
     parentSha,
     log: log = () => {},
+    signal,
   }: {
     owner: string;
     repo: string;
@@ -268,6 +278,7 @@ export class GitHubClient {
     baseTreeSha?: string;
     parentSha?: string;
     log?: (status: string) => void;
+    signal?: AbortSignal;
   }): Promise<{ newCommitSha: string }> {
     const tree: GithubTreeItem[] = [];
 
@@ -276,7 +287,7 @@ export class GitHubClient {
       const content = await file.asBase64();
       const {
         data: { sha },
-      } = await this.createBlobRequest({ owner, repo, content, encoding: "base64" });
+      } = await this.createBlobRequest({ owner, repo, content, encoding: "base64", signal });
 
       tree.push({ path: file.path, mode: "100644", type: "blob", sha });
     }
@@ -338,11 +349,12 @@ export class GitHubClient {
     }
   }
 
-  private async getBranchRefRequest({ owner, repo, branch }: { owner: string; repo: string; branch: string }) {
+  private async getBranchRefRequest({ owner, repo, branch, signal }: { owner: string; repo: string; branch: string; signal?: AbortSignal }) {
     return this.octokit.request("GET /repos/{owner}/{repo}/git/ref/heads/{branch}", {
       owner,
       repo,
       branch,
+      request: { signal },
     });
   }
 
@@ -365,11 +377,12 @@ export class GitHubClient {
     });
   }
 
-  private async getCommitRequest({ owner, repo, commitSha }: { owner: string; repo: string; commitSha: string }) {
+  private async getCommitRequest({ owner, repo, commitSha, signal }: { owner: string; repo: string; commitSha: string; signal?: AbortSignal }) {
     return this.octokit.request("GET /repos/{owner}/{repo}/git/commits/{commit_sha}", {
       owner,
       repo,
       commit_sha: commitSha,
+      request: { signal },
     });
   }
 
@@ -378,17 +391,20 @@ export class GitHubClient {
     repo,
     content,
     encoding,
+    signal,
   }: {
     owner: string;
     repo: string;
     content: string;
     encoding: "utf-8" | "base64";
+    signal?: AbortSignal;
   }) {
     return this.octokit.request("POST /repos/{owner}/{repo}/git/blobs", {
       owner,
       repo,
       content,
       encoding,
+      request: { signal },
     });
   }
 

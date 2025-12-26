@@ -67,7 +67,8 @@ export class NetlifyClient {
   async deployFiles(
     bundle: DeployBundle,
     destination: NetlifyDestination,
-    logStatus?: (status: string) => void
+    logStatus?: (status: string) => void,
+    signal?: AbortSignal
   ): Promise<NetlifyDeploy> {
     let siteId: string | null = destination.meta.siteId || null;
 
@@ -108,6 +109,7 @@ export class NetlifyClient {
     const emptyDeploy = await this.request<NetlifyDeploy>(`/sites/${siteId}/deploys`, {
       method: "POST",
       body: JSON.stringify({ draft: false }),
+      signal,
     });
 
     logStatus?.("Updating deploy with file digest...");
@@ -118,6 +120,7 @@ export class NetlifyClient {
       {
         method: "PUT",
         body: JSON.stringify({ files: filesDigest }),
+        signal,
       }
     );
 
@@ -138,6 +141,7 @@ export class NetlifyClient {
                 "Content-Type": "application/octet-stream",
               },
               body: fileContent as BodyInit,
+              signal,
             });
           }
         })

@@ -136,7 +136,7 @@ export class VercelClient {
     }
   }
 
-  async deploy({ projectName, files }: { projectName: string; files: UniversalDeployFile[] }) {
+  async deploy({ projectName, files }: { projectName: string; files: UniversalDeployFile[] }, { signal }: { signal?: AbortSignal } = {}) {
     // Convert raw file objects to Vercel's InlinedFile format
     const inlinedFiles: InlinedFile[] = await Promise.all(
       files.map(
@@ -161,6 +161,8 @@ export class VercelClient {
           rootDirectory: null,
         },
       },
+    }, {
+      signal,
     });
 
     return deployment;

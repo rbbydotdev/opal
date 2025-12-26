@@ -37,10 +37,10 @@ export abstract class RemoteAuthVercelAgent
   }
   private lastDeploymentResult: any = null;
 
-  async deployFiles(bundle: DeployBundle, destination: VercelDestination, logStatus?: (status: string) => void) {
+  async deployFiles(bundle: DeployBundle, destination: VercelDestination, logStatus?: (status: string) => void, signal?: AbortSignal) {
     const files = await bundle.getFiles();
     const projectName = destination.meta.project;
-    this.lastDeploymentResult = await this.vercelClient.deploy({ projectName, files });
+    this.lastDeploymentResult = await this.vercelClient.deploy({ projectName, files }, { signal });
     return this.lastDeploymentResult;
   }
   async getDestinationURL(destination: any) {

@@ -9,6 +9,7 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
 import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
+import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";
 
 type BuildJType = ReturnType<typeof BuildDAO.prototype.toJSON>;
@@ -89,6 +90,15 @@ export class BuildDAO implements BuildRecord {
   complete() {
     this.status === "success";
     return this.save();
+  }
+
+  log(message: string, type: "info" | "error" | "warning" | "success" = "info") {
+    const logLine: LogLine = {
+      type,
+      timestamp: Date.now(),
+      message,
+    };
+    this.logs.push(logLine);
   }
 
   static CreateNew({

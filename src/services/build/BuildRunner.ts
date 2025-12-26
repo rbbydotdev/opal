@@ -1,22 +1,63 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
-import { BuildLogLine, BuildStrategy } from "@/data/dao/BuildRecord";
+import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editors/prettifyMime";
 import { TemplateManager } from "@/features/templating/TemplateManager";
+import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
 import { getMimeType } from "@/lib/mimeType";
+import { observeMultiple } from "@/lib/Observable";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
-import { BaseRunner } from "@/services/runners/BaseRunner";
+import { Runner } from "@/types/RunnerInterfaces";
+import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-export class BuildRunner extends BaseRunner {
-  build: BuildDAO;
+export class BuildRunner implements Runner {
+  //build,template,template etc should make generic build and deploy objects so observable etc can be shared
+  build: BuildDAO = NULL_BUILD;
+
+  get status() {
+    return this.build.status;
+  }
+
+  get logs() {
+    return this.build.logs;
+  }
+
+  get error() {
+    return this.build.error;
+  }
+
+  onLog(callback: (logs: LogLine[]) => void): () => void {
+    return this.emitter.on("logs", callback);
+  }
+
+  onStatus(callback: () => void): () => void {
+    return this.emitter.on("status", callback);
+  }
+
+  onError(callback: (error: string | null) => void): () => void {
+    return this.emitter.on("error", callback);
+  }
+
+  tearDown(): void {
+    this.emitter.clearListeners();
+  }
+
+  private abortController: AbortController = new AbortController();
+
+  emitter = CreateSuperTypedEmitter<{
+    logs: LogLine[];
+    status: "success" | "pending" | "error" | "idle";
+    error: string | null;
+  }>();
+
   private templateManager?: TemplateManager;
 
   get sourceDisk(): Disk {
@@ -37,10 +78,6 @@ export class BuildRunner extends BaseRunner {
 
   get sourcePath(): AbsPath {
     return this.build.sourcePath;
-  }
-
-  get status() {
-    return this.build.status;
   }
 
   static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
@@ -84,15 +121,18 @@ export class BuildRunner extends BaseRunner {
   }
 
   constructor({ build, workspace }: { build: BuildDAO; workspace?: Workspace }) {
-    super();
-    this.build = build;
-    this.logs = this.build.logs;
+    this.build = observeMultiple(
+      build,
+      {
+        logs: () => this.emitter.emit("logs", this.build.logs),
+        status: () => this.emitter.emit("status", this.build.status),
+        error: () => this.emitter.emit("error", this.build.error),
+      },
+      { batch: true }
+    );
     if (workspace) {
       this.templateManager = new TemplateManager(workspace);
     }
-    this.onLog((log) => {
-      this.build.logs = [...this.build.logs, log as BuildLogLine];
-    });
   }
 
   async execute({
@@ -102,44 +142,40 @@ export class BuildRunner extends BaseRunner {
   } = {}): Promise<BuildDAO> {
     try {
       this.build.status = "pending";
-      this.broadcastStatus();
       await this.build.save();
       await this.sourceDisk.refresh();
-      this.log(`Starting ${this.strategy} build, id ${this.build.guid}...`, "info");
-      this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
-      this.log(`Output path: ${this.outputPath}`, "info");
+      this.build.log(`Starting ${this.strategy} build, id ${this.build.guid}...`, "info");
+      this.build.log(`Source disk: ${this.sourceDisk.guid}`, "info");
+      this.build.log(`Output path: ${this.outputPath}`, "info");
 
       if (abortSignal?.aborted) {
-        this.log("Build cancelled", "error");
-        return this.build.update({
-          logs: this.logs,
-          status: "error",
-          error: "Build was cancelled.",
-        });
+        this.build.log("Build cancelled", "error");
+        this.build.error = "Build was cancelled.";
+        this.build.status = "error";
       }
 
-      this.log("Starting build process...", "info");
-      this.log("Building file tree...", "info");
+      this.build.log("Starting build process...", "info");
+      this.build.log("Building file tree...", "info");
 
       // Index the source directory
-      this.log("Indexing source files...", "info");
+      this.build.log("Indexing source files...", "info");
       await this.sourceDisk.triggerIndex();
 
       const fileTree = this.sourceDisk.fileTree;
-      this.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
+      this.build.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
 
       await this.ensureOutputDirectory();
 
       if (abortSignal?.aborted) {
-        this.log("Build cancelled", "error");
+        this.build.log("Build cancelled", "error");
         return this.build.update({
-          logs: this.logs,
+          logs: this.build.logs,
           status: "error",
           error: "Build was cancelled.",
         });
       }
 
-      this.log(`Executing ${this.strategy} build strategy...`, "info");
+      this.build.log(`Executing ${this.strategy} build strategy...`, "info");
       switch (this.strategy) {
         case "freeform":
           await this.buildFreeform();
@@ -154,74 +190,48 @@ export class BuildRunner extends BaseRunner {
           this.strategy satisfies never;
           throw new TypeError(`Unknown build strategy: ${this.strategy}`);
       }
-      this.log(`${this.strategy} build strategy completed`, "info");
+      this.build.log(`${this.strategy} build strategy completed`, "info");
 
-      if (abortSignal?.aborted) {
-        return this.build.update({
-          logs: this.logs,
-          status: "error",
-          error: "Build was cancelled.",
-        });
-      }
+      abortSignal?.throwIfAborted();
 
-      this.log("Build completed successfully!", "info");
+      this.build.log("Build completed successfully!", "info");
 
       // Re-index output disk and calculate file count before final update
       await this.outputDisk.triggerIndex().catch((e) => console.warn("Failed to re-index output disk after build:", e));
-      this.log(`Build saved with ID: ${this.build.guid}`, "info");
+      this.build.log(`Build saved with ID: ${this.build.guid}`, "info");
       const count =
         this.outputDisk.fileTree.nodeFromPath(this.outputPath)?.countChildren({
           filterIn: Filter.only(SpecialDirs.Build).$,
         }) ?? 0;
 
-      this.log(`Total files in build output: ${count}`, "info");
-
-      return await this.build.update({
-        logs: this.logs,
-        status: "success",
-        fileCount: count,
-      });
+      this.build.log(`Total files in build output: ${count}`, "info");
+      this.build.fileCount = count;
+      this.build.status = "success";
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.log(`Build failed: ${errorMessage}`, "error");
-      if (!abortSignal?.aborted) {
-        // this.setError("Build failed. Please check the logs for more details.");
-        const build = await this.build.update({
-          logs: this.logs,
-          status: "error",
-          error: errorMessage,
-        });
-        this.broadcastStatus();
-        return build;
-      } else {
-        this.build = await this.build.update({
-          logs: this.logs,
-          status: "error",
-          error: "Build was cancelled.",
-        });
-        this.broadcastStatus();
-        return this.build;
-      }
+      this.build.log(`Build failed: ${errorMessage}`, "error");
+      this.build.status = "error";
+      this.build.error = !abortSignal?.aborted ? "Build was cancelled." : `Build failed: ${errorMessage}`;
     } finally {
-      await this.build.complete();
-      this.broadcastStatus();
+      await this.build.save();
+      return this.build.hydrate();
     }
   }
 
   private async ensureOutputDirectory(): Promise<void> {
-    this.log("Creating output directory...", "info");
+    this.build.log("Creating output directory...", "info");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
 
   private async buildFreeform(): Promise<void> {
-    this.log("Building with freeform strategy...", "info");
+    this.build.log("Building with freeform strategy...", "info");
 
     await this.copyAssets();
     await this.processTemplatesAndMarkdown();
   }
 
   private async buildBook(): Promise<void> {
-    this.log("Building with book strategy...", "info");
+    this.build.log("Building with book strategy...", "info");
 
     await this.copyAssets();
 
@@ -244,11 +254,11 @@ export class BuildRunner extends BaseRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
-    this.log("Book page generated", "info");
+    this.build.log("Book page generated", "info");
   }
 
   private async buildBlog(): Promise<void> {
-    this.log("Building with blog strategy...", "info");
+    this.build.log("Building with blog strategy...", "info");
 
     await this.copyAssets();
 
@@ -259,7 +269,7 @@ export class BuildRunner extends BaseRunner {
   }
 
   private async copyAssets(): Promise<void> {
-    this.log("Copying assets...", "info");
+    this.build.log("Copying assets...", "info");
 
     // Copy all files except templates, markdown, and files in _ directories
     for (const node of this.sourceDisk.fileTree.iterator(
@@ -272,7 +282,7 @@ export class BuildRunner extends BaseRunner {
   }
 
   private async processTemplatesAndMarkdown(): Promise<void> {
-    this.log("Processing templates and markdown...", "info");
+    this.build.log("Processing templates and markdown...", "info");
 
     for (const node of this.sourceDisk.fileTree.iterator(
       (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
@@ -322,7 +332,7 @@ export class BuildRunner extends BaseRunner {
     const content = await this.sourceDisk.readFile(node.path);
     await this.outputDisk.writeFile(outputPath, content);
 
-    this.log(`Copied asset: ${relativePath}`, "info");
+    this.build.log(`Copied asset: ${relativePath}`, "info");
   }
 
   async processTemplate(node: TreeNode): Promise<void> {
@@ -355,7 +365,7 @@ export class BuildRunner extends BaseRunner {
     }
 
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
-    this.log(`Template processed: ${relativePath}`, "info");
+    this.build.log(`Template processed: ${relativePath}`, "info");
   }
 
   async processMarkdown(node: TreeNode): Promise<void> {
@@ -381,7 +391,7 @@ export class BuildRunner extends BaseRunner {
     await this.ensureDirectoryExists(dirname(outputPath));
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
-    this.log(`Markdown processed: ${relativePath}`, "info");
+    this.build.log(`Markdown processed: ${relativePath}`, "info");
   }
 
   async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
@@ -443,7 +453,7 @@ export class BuildRunner extends BaseRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", html));
-    this.log("Blog index generated", "info");
+    this.build.log("Blog index generated", "info");
   }
 
   async processLayout(post: PageData): Promise<{ layout: string; type: "text/x-mustache" | "text/x-ejs" }> {
@@ -480,7 +490,7 @@ export class BuildRunner extends BaseRunner {
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
-      this.log(`Blog post generated: ${post.path}`, "info");
+      this.build.log(`Blog post generated: ${post.path}`, "info");
     }
   }
 
@@ -512,7 +522,7 @@ export class BuildRunner extends BaseRunner {
         await this.sourceDisk.readFile(stylePath);
         validPaths.push(absPath(`/${styleFile}`));
       } catch (_err) {
-        this.log(`Style file not found: ${styleFile}`, "error");
+        this.build.log(`Style file not found: ${styleFile}`, "error");
       }
     }
 

@@ -47,9 +47,9 @@ export abstract class RemoteAuthNetlifyAgent
     }
   }
 
-  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
     logStatus?.("Starting deployment to Netlify...");
-    return await this.netlifyClient.deployFiles(bundle, destination, logStatus);
+    return await this.netlifyClient.deployFiles(bundle, destination, logStatus, signal);
   }
 
   async getDestinationURL(destination: any) {

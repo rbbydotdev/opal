@@ -1,9 +1,10 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { DeployLogLine, DeployRecord } from "@/data/dao/DeployRecord";
+import { DeployRecord } from "@/data/dao/DeployRecord";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { DestinationType } from "@/data/DestinationSchemaMap";
 import { ClientDb } from "@/data/instance";
 import { NotFoundError } from "@/lib/errors/errors";
+import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";
 
 type DeployJType = ReturnType<typeof DeployDAO.prototype.toJSON>;
@@ -19,7 +20,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   provider: DestinationType = "custom";
   destinationId: string;
   status: "idle" | "pending" | "success" | "error";
-  logs: DeployLogLine[] = [];
+  logs: LogLine[] = [];
   meta: T;
   completedAt: number | null;
   error: string | null = null;

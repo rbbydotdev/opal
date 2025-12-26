@@ -95,7 +95,7 @@ export class RemoteAuthAWSAPIAgent
     }
   }
 
-  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void): Promise<unknown> {
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
     const bucketName = destination.meta.bucketName;
     logStatus?.("Starting deployment to S3...");
 
@@ -125,7 +125,7 @@ export class RemoteAuthAWSAPIAgent
     const uploadPromises = files.map(async (file) => {
       const contentType = getMimeType(file.path);
       logStatus?.(`Uploading ${file.path}...`);
-      return this.s3Client.putObject(bucketName, file.path, await file.asBuffer(), contentType);
+      return this.s3Client.putObject(bucketName, file.path, await file.asBuffer(), contentType, signal);
     });
 
     const results = await Promise.all(uploadPromises);

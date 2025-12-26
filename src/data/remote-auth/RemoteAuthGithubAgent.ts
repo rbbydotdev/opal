@@ -34,10 +34,13 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void) {
+  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal) {
     const files = await bundle.getFiles();
     const { repository, branch } = destination.meta;
     const [owner, repo] = await this.githubClient.getFullRepoName(repository);
+
+    // Check if the GitHub client already has methods with signal support
+    // and combine with any internal signals using AbortSignal.any if needed
     return this.githubClient.deploy(
       {
         owner,
@@ -46,7 +49,8 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
         files,
         message: "publish deploy",
       },
-      logStatus
+      logStatus,
+      signal
     );
   }
 

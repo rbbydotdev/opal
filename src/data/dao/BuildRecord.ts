@@ -1,5 +1,6 @@
 import { DiskJType } from "@/data/disk/DiskType";
 import { AbsPath } from "@/lib/paths2";
+import { LogLine } from "@/types/RunnerTypes";
 
 export type BuildStrategy = "freeform" | "book" | "blog";
 
@@ -16,11 +17,5 @@ export interface BuildRecord {
   fileCount: number;
   error: string | null;
   status: "success" | "error" | "pending" | "idle";
-  logs: BuildLogLine[];
+  logs: LogLine[];
 }
-
-export type BuildLogLine = {
-  timestamp: number;
-  message: string;
-  type: "info" | "error";
-};

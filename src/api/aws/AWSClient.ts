@@ -103,7 +103,8 @@ export class AWSS3Client {
     bucketName: string,
     key: string,
     content: StreamingBlobPayloadInputTypes,
-    contentType?: string
+    contentType?: string,
+    signal?: AbortSignal
   ): Promise<AWSS3PutResult> {
     try {
       const command = new PutObjectCommand({
@@ -113,7 +114,7 @@ export class AWSS3Client {
         ContentType: contentType,
       });
 
-      const response = await this.s3Client.send(command);
+      const response = await this.s3Client.send(command, { abortSignal: signal });
 
       return {
         etag: response.ETag?.replace(/"/g, "") || "", // Remove quotes from etag

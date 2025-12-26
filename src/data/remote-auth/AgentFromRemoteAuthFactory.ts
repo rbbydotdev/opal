@@ -119,7 +119,7 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
   return useMemo(() => AgentFromRemoteAuthFactory(remoteAuth) as T, [remoteAuth]);
 }
 export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundleBase> extends RemoteAuthAgent {
-  deployFiles(bundle: TBundle, destination: any, log?: (status: string) => void): Promise<unknown>;
+  deployFiles(bundle: TBundle, destination: any, log?: (status: string) => void, signal?: AbortSignal): Promise<unknown>;
   getDestinationURL(destination: any): Promise<string>;
   getDeploymentURL?(destination: any): Promise<string>;
 }
@@ -131,7 +131,7 @@ export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeploy
   getUsername(): string {
     return "null-remote-auth";
   }
-  async deployFiles(): Promise<unknown> {
+  async deployFiles(bundle: any, destination: any, log?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
     throw new Error("Cannot deploy: Remote connection is missing or invalid");
   }
   async getDestinationURL(destination: any) {

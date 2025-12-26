@@ -135,9 +135,10 @@ export class CloudflareClient {
     accountId: string,
     projectName: string,
     files: UniversalDeployFile[],
-    options: { logStatus?: (status: string) => void } = {}
+    options: { logStatus?: (status: string) => void; signal?: AbortSignal } = {}
   ): Promise<any> {
     const logStatus = options?.logStatus || (() => {});
+    const signal = options?.signal;
 
     try {
       // Step 1: Get upload JWT token
