@@ -270,21 +270,3 @@ export function PublishModalStack({
     </Dialog>
   );
 }
-
-function ComponentThing() {
-  const [n, setN] = useState(0);
-
-  const doThing = useCallback(
-    function doThing() {
-      console.log(1 + n);
-    },
-    [n]
-  );
-
-  useEffect(() => {
-    window.addEventListener("keydown", doThing);
-    return () => {
-      window.removeEventListener("keydown", doThing);
-    };
-  }, [doThing]);
-}

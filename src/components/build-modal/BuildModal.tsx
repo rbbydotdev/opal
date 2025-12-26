@@ -7,7 +7,7 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
-import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
+import { BuildRunner } from "@/services/build/BuildRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
@@ -33,7 +33,11 @@ export function BuildModal({
   );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const { runner, create, recall, isCompleted, isPending, logs } = useRunner(BuildRunner, () => NULL_BUILD_RUNNER);
+  const { runner, recall, isCompleted, isPending, logs } = useRunner(BuildRunner, () => ({
+    workspace: currentWorkspace,
+    label: `Build ${new Date().toLocaleString()}`,
+    strategy,
+  }));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,9 +46,8 @@ export function BuildModal({
   const handleOkay = () => setIsOpen(false);
 
   const handleOpenNew = useCallback(async () => {
-    create({ strategy, workspace: currentWorkspace, label: `Build ${new Date().toLocaleString()}` });
     setIsOpen(true);
-  }, [create, strategy, currentWorkspace]);
+  }, []);
 
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {

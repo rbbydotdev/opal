@@ -1,43 +1,13 @@
-import { handleNotFoundError } from "@/components/publish-modal/ValidationHelpers";
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
 import { AgentFromRemoteAuthFactory } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
 import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
+import { unwrapError } from "@/lib/errors/errors";
 import { absPath } from "@/lib/paths2";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import z from "zod";
-
-// Helper function to get GitHub agent from remoteAuth within refinement context
-async function getGithubAgent(remoteAuthId: string, allRemoteAuths: RemoteAuthDAO[]) {
-  const remoteAuth = allRemoteAuths.find((auth) => auth.guid === remoteAuthId);
-  if (!remoteAuth || remoteAuth.source !== "github") {
-    throw new Error("GitHub authentication required");
-  }
-
-  const agent = AgentFromRemoteAuthFactory(remoteAuth) as any;
-  if (!agent || !agent.githubClient) {
-    throw new Error("Failed to initialize GitHub client");
-  }
-
-  return agent;
-}
-
-// Helper function to get Netlify agent from remoteAuth within refinement context
-async function getNetlifyAgent(remoteAuthId: string, allRemoteAuths: RemoteAuthDAO[]) {
-  const remoteAuth = allRemoteAuths.find((auth) => auth.guid === remoteAuthId);
-  if (!remoteAuth || remoteAuth.source !== "netlify") {
-    throw new Error("Netlify authentication required");
-  }
-
-  const agent = AgentFromRemoteAuthFactory(remoteAuth) as any;
-  if (!agent || !agent.netlifyClient) {
-    throw new Error("Failed to initialize Netlify client");
-  }
-
-  return agent;
-}
 
 // Single factory function for all destination schemas with optional async validation
 export function DestinationSchemaMapFn(remoteAuths: RemoteAuthDAO[], destinationType: DestinationType) {
@@ -233,15 +203,11 @@ export const DestinationSchemaMap = {
         data.meta.repository = normalizedRepo;
         data.meta.fullName = fullName;
       } catch (error) {
-        const errorMessage = handleNotFoundError(
-          error instanceof Error ? error : new Error(String(error)),
-          "Repository",
-          data.meta.repository
-        ).message;
-
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: errorMessage,
+          message: unwrapError(error).includes("404")
+            ? `Repository ${data.meta.repository} not found`
+            : unwrapError(error),
           path: ["meta", "repository"],
         });
       }

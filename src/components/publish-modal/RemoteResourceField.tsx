@@ -11,7 +11,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
 import { Check, Plus, Search, X } from "lucide-react";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, startTransition, useEffect, useRef, useState } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
 interface RemoteResourceRootProps<T extends FieldValues, K extends FieldPath<T>> {
@@ -321,10 +321,12 @@ function RemoteResourceSearchButton({
       variant="outline"
       title={title}
       onClick={() => {
-        const currentValue = getValue();
-        onSearchChange(currentValue || "");
-        setMode("search");
-        searchReset?.();
+        startTransition(() => {
+          const currentValue = getValue();
+          onSearchChange(currentValue || "");
+          setMode("search");
+          searchReset?.();
+        });
       }}
     >
       <Search />

@@ -81,7 +81,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@replit/codemirror-vim": "^6.3.0",
     "@tanstack/react-query": "^5.90.12",
-    "@tanstack/react-router": "^1.131.2",
+    "@tanstack/react-router": "^1.143.11",
     "@tanstack/router-vite-plugin": "^1.139.14",
     "@vercel/sdk": "^1.18.2",
     "@zip.js/zip.js": "^2.7.62",

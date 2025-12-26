@@ -1,6 +1,6 @@
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useRef } from "react";
 
 export type BuildPublisherCmd = {
   open: ({ build }: { build: BuildDAO }) => void;
@@ -11,9 +11,15 @@ export type BuildPublisherCmd = {
 export function useBuildPublisher() {
   return useContext(BuildPublisherContext);
 }
-export const BuildPublisherContext = createContext<BuildPublisherCmd>({
-  open: () => {},
+export const defaultBuildPublisherCmd: BuildPublisherCmd = {
+  open: ({ build }: { build: BuildDAO }) => {},
   close: () => {},
-  openDestinationFlow: () => {},
-  openDeployment: () => {},
-});
+  openDestinationFlow: (destinationId?: string | null, view?: PublishViewType) => {},
+  openDeployment: (deployId: string) => {},
+};
+export const BuildPublisherContext = createContext<BuildPublisherCmd>(defaultBuildPublisherCmd);
+
+// useRef<BuildPublisherCmd>(defaultBuildPublisherCmd)
+export function useBuildPublisherCmdRef() {
+  return useRef<BuildPublisherCmd>(defaultBuildPublisherCmd);
+}

@@ -16,7 +16,7 @@ import { useDestinations } from "@/data/dao/useDestinations";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
-import { DeployRunner, NULL_DEPLOY_RUNNER } from "@/services/deploy/DeployRunner";
+import { DeployRunner } from "@/services/deploy/DeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
@@ -64,24 +64,13 @@ export function PublicationModalPublishContent({
   //use selected build but if is NullBuild try and get first build if possible
   const tryBuild = build.isNull ? builds[0] || build : build;
 
-  const {
-    // deployRunner,
-    // deployCompleted,
-    // deploy: liveDeploy,
-    runner,
-    isSuccess,
-    isCompleted,
-    isPending,
-    isFailed,
-    logs,
-  } = useRunner(DeployRunner, () => NULL_DEPLOY_RUNNER as DeployRunner<any>);
-  // {
-  //     label: `Deploy ${new Date().toLocaleString()}`,
-  //     workspaceId: currentWorkspace.id,
-  //     build: tryBuild,
-  //     deploy,
-  //     destination,
-  //   }
+  const { runner, isSuccess, isCompleted, isPending, isFailed, logs } = useRunner(DeployRunner, () => ({
+    build: tryBuild,
+    destination: destination!,
+    workspaceId: currentWorkspace.id,
+    deploy,
+    label: `Deploy ${new Date().toLocaleString()}`,
+  }));
 
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {

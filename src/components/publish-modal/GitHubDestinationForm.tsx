@@ -34,11 +34,13 @@ export function GitHubDestinationForm({
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
         onBlur={() =>
-          flushSync(() => {
-            const repoName = coerceRepoToName(form.getValues("meta.repository"));
-            form.setValue("meta.repository", repoName);
-            updateBaseUrlFromRepoFullName(repoName);
-          })
+          queueMicrotask(() =>
+            flushSync(() => {
+              const repoName = coerceRepoToName(form.getValues("meta.repository"));
+              form.setValue("meta.repository", repoName);
+              updateBaseUrlFromRepoFullName(repoName);
+            })
+          )
         }
         getValue={() => form.getValues("meta.repository")}
         remoteAuth={remoteAuth}

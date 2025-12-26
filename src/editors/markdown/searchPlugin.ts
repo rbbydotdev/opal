@@ -10,22 +10,22 @@ type TextNodeIndex = {
   offsetIndex: number[];
 };
 
-export const EmptyTextNodeIndex: TextNodeIndex = {
+const EmptyTextNodeIndex: TextNodeIndex = {
   allText: "",
   nodeIndex: [],
   offsetIndex: [],
 };
 
-export const editorSearchTerm$ = Cell<string>("");
-export const editorSearchRanges$ = Cell<Range[]>([]);
-export const editorSearchCursor$ = Cell<number>(0);
-export const editorSearchTextNodeIndex$ = Cell<TextNodeIndex>(EmptyTextNodeIndex);
-export const searchState$ = Cell<"searchIsClosed" | "searchIsOpen">("searchIsClosed");
-export const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
+const editorSearchTerm$ = Cell<string>("");
+const editorSearchRanges$ = Cell<Range[]>([]);
+const editorSearchCursor$ = Cell<number>(0);
+const editorSearchTextNodeIndex$ = Cell<TextNodeIndex>(EmptyTextNodeIndex);
+const searchState$ = Cell<"searchIsClosed" | "searchIsOpen">("searchIsClosed");
+const editorSearchTermDebounced$ = Cell<string>("", (realm) => {
   realm.link(editorSearchTermDebounced$, realm.pipe(editorSearchTerm$, realm.transformer(debounceTime(250))));
 });
 
-export const debouncedIndexer$ = Cell<TextNodeIndex>(EmptyTextNodeIndex, (realm) =>
+const debouncedIndexer$ = Cell<TextNodeIndex>(EmptyTextNodeIndex, (realm) =>
   realm.link(debouncedIndexer$, realm.pipe(editorSearchTextNodeIndex$, realm.transformer(debounceTime(250))))
 );
 
@@ -99,7 +99,7 @@ function indexAllTextNodes(root: HTMLElement | null): TextNodeIndex {
   return { allText: allText.join(""), nodeIndex, offsetIndex };
 }
 
-export function* rangeSearchScan(searchQuery: string, { allText, offsetIndex, nodeIndex }: TextNodeIndex) {
+function* rangeSearchScan(searchQuery: string, { allText, offsetIndex, nodeIndex }: TextNodeIndex) {
   for (const [start, end] of searchText(allText, searchQuery)) {
     const startOffset = offsetIndex[start];
     const endOffset = offsetIndex[end];
