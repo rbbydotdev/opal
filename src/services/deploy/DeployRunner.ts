@@ -155,18 +155,12 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends BaseRunner {
     abortSignal?: AbortSignal;
   } = {}): Promise<DeployDAO> {
     try {
-      this.setRunning(true);
-      this.setCompleted(false);
-      this.clearError();
       this.deploy.status = "pending";
-      await this.deploy.save();
+      // i want to proxy this this.broadcastStatus();
 
       if (abortSignal?.aborted) {
         this.log("Deployment cancelled", "error");
-        return this.deploy.update({
-          logs: this.deploy.logs,
-          status: "cancelled",
-        });
+        this.deploy.status = "cancelled";
       }
 
       this.log(`Starting deployment, id ${this.deploy.guid}...`, "info");
@@ -226,8 +220,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends BaseRunner {
         });
       }
     } finally {
-      this.setCompleted(this.isCompleted);
-      this.setRunning(this.isDeploying);
+      await this.deploy.save();
     }
   }
 }

@@ -180,7 +180,8 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 
   async update({ ...properties }: Partial<Omit<DeployRecord, "guid">>) {
-    await ClientDb.deployments.update(this.guid, properties);
+    Object.assign(this, properties);
+    await this.save();
     return this.hydrate();
   }
 
