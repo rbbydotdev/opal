@@ -18,7 +18,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   deploymentUrl?: string | null = null;
   provider: DestinationType = "custom";
   destinationId: string;
-  status: "idle" | "pending" | "success" | "failed" | "cancelled";
+  status: "idle" | "pending" | "success" | "error";
   logs: DeployLogLine[] = [];
   meta: T;
   completedAt: number | null;
@@ -202,30 +202,6 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       url: this.url,
       deploymentUrl: this.deploymentUrl,
     });
-  }
-
-  get completed() {
-    return this.status === "success" || this.status === "failed" || this.status === "cancelled";
-  }
-
-  get isSuccessful() {
-    return this.status === "success";
-  }
-
-  get isFailed() {
-    return this.status === "failed";
-  }
-
-  get isCancelled() {
-    return this.status === "cancelled";
-  }
-
-  get isDeploying() {
-    return this.status === "pending";
-  }
-
-  get isIdle() {
-    return this.status === "idle";
   }
 
   get effectiveUrl(): string | null {

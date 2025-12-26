@@ -42,6 +42,9 @@ export abstract class BaseRunner implements Runner {
   broadcastStatus = () => {
     this.emitter.emit("status", this.status);
   };
+  broadcastLogs = () => {
+    this.emitter.emit("log", this.logs.at(-1)!);
+  };
 
   // Abstract method that subclasses must implement
   abstract execute(options?: Record<string, unknown>): Promise<unknown>;

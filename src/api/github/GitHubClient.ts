@@ -153,7 +153,7 @@ export class GitHubClient {
       message: string;
       files: UniversalDeployFile[];
     },
-    logStatus: (status: string) => void = () => {}
+    log: (status: string) => void = () => {}
   ) {
     // Check if repo is empty first
     const { exists, reason } = await this.checkGetBranchRefRequest({ owner, repo, branch });
@@ -171,7 +171,7 @@ export class GitHubClient {
       const firstFile = files[0]!;
       const firstFileContent = await firstFile.asBase64();
 
-      logStatus(`Repository is empty. Creating first file '${firstFile.path}'...`);
+      log(`Repository is empty. Creating first file '${firstFile.path}'...`);
       await this.createFileRequest({
         owner,
         repo,
@@ -183,13 +183,13 @@ export class GitHubClient {
 
       // If only one file, we're done
       if (files.length === 1) {
-        logStatus(`Deploy completed successfully!`);
+        log(`Deploy completed successfully!`);
         return;
       }
 
       // Continue with remaining files using normal flow
       files = files.slice(1);
-      logStatus(`Continuing with remaining ${files.length} files...`);
+      log(`Continuing with remaining ${files.length} files...`);
     }
 
     // Normal Git API flow (works for all cases now that repo has history)
@@ -197,7 +197,7 @@ export class GitHubClient {
       owner,
       repo,
       branch,
-      logStatus,
+      log: log,
     });
 
     const { newCommitSha } = await this.createDeployCommit({
@@ -207,26 +207,26 @@ export class GitHubClient {
       files,
       baseTreeSha: isOrphan ? undefined : baseTreeSha,
       parentSha: isOrphan ? undefined : latestCommitSha,
-      logStatus,
+      log: log,
     });
 
-    await this.updateOrCreateBranchRef({ owner, repo, branch, newCommitSha }, logStatus);
-    logStatus(`Deploy completed successfully!`);
+    await this.updateOrCreateBranchRef({ owner, repo, branch, newCommitSha }, log);
+    log(`Deploy completed successfully!`);
   }
 
   private async resolveBranchForDeploy({
     owner,
     repo,
     branch,
-    logStatus = () => {},
+    log: log = () => {},
   }: {
     owner: string;
     repo: string;
     branch: string;
-    logStatus?: (status: string) => void;
+    log?: (status: string) => void;
   }) {
     try {
-      logStatus(`Checking if branch '${branch}' exists...`);
+      log(`Checking if branch '${branch}' exists...`);
       const {
         data: {
           object: { sha },
@@ -239,12 +239,12 @@ export class GitHubClient {
         },
       } = await this.getCommitRequest({ owner, repo, commitSha: sha });
 
-      logStatus(`Found existing branch '${branch}'`);
+      log(`Found existing branch '${branch}'`);
       return { latestCommitSha: sha, baseTreeSha, isOrphan: false };
     } catch (error: any) {
       if (error.status === 404) {
         // Branch doesn't exist, create as orphan (no parent)
-        logStatus(`Branch '${branch}' not found, will create as orphan branch`);
+        log(`Branch '${branch}' not found, will create as orphan branch`);
         return { latestCommitSha: undefined, baseTreeSha: undefined, isOrphan: true };
       } else {
         throw error;
@@ -259,7 +259,7 @@ export class GitHubClient {
     files,
     baseTreeSha,
     parentSha,
-    logStatus = () => {},
+    log: log = () => {},
   }: {
     owner: string;
     repo: string;
@@ -267,11 +267,11 @@ export class GitHubClient {
     files: UniversalDeployFile[];
     baseTreeSha?: string;
     parentSha?: string;
-    logStatus?: (status: string) => void;
+    log?: (status: string) => void;
   }): Promise<{ newCommitSha: string }> {
     const tree: GithubTreeItem[] = [];
 
-    logStatus(`Creating blobs for ${files.length} files...`);
+    log(`Creating blobs for ${files.length} files...`);
     for (const file of files) {
       const content = await file.asBase64();
       const {
@@ -281,7 +281,7 @@ export class GitHubClient {
       tree.push({ path: file.path, mode: "100644", type: "blob", sha });
     }
 
-    logStatus(`Creating tree with ${tree.length} files...`);
+    log(`Creating tree with ${tree.length} files...`);
     const {
       data: { sha: newTreeSha },
     } = await this.createTreeRequest({
@@ -302,7 +302,7 @@ export class GitHubClient {
       commitParams.parentSha = parentSha;
     }
 
-    logStatus(`Creating commit: "${message}"...`);
+    log(`Creating commit: "${message}"...`);
     const {
       data: { sha: newCommitSha },
     } = await this.createCommitRequest(commitParams);
@@ -322,15 +322,15 @@ export class GitHubClient {
       branch: string;
       newCommitSha: string;
     },
-    logStatus: (status: string) => void = () => {}
+    log: (status: string) => void = () => {}
   ) {
     try {
-      logStatus(`Updating branch '${branch}' (force push)...`);
+      log(`Updating branch '${branch}' (force push)...`);
       await this.updateBranchRefRequest({ owner, repo, branch, sha: newCommitSha });
     } catch (error: any) {
       if (error.status === 422) {
         // Branch doesn't exist, create it
-        logStatus(`Creating new branch '${branch}'...`);
+        log(`Creating new branch '${branch}'...`);
         await this.createBranchRefRequest({ owner, repo, branch, sha: newCommitSha });
       } else {
         throw error;

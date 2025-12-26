@@ -8,7 +8,7 @@ export interface DeployRecord<T = any> {
   workspaceId: string;
   provider: DestinationType;
   destinationId: string;
-  status: "idle" | "pending" | "success" | "failed" | "cancelled";
+  status: "idle" | "pending" | "success" | "error";
   logs: DeployLogLine[];
   meta: T;
   url: string | null;
