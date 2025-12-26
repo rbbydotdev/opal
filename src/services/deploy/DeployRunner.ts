@@ -34,6 +34,21 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
     this.bundle = bundle;
   }
 
+  static Show({
+    destination,
+    deploy,
+  }: {
+    destination: DestinationDAO | null;
+    deploy: DeployDAO | null;
+  }): DeployRunner<DeployBundle> {
+    return new DeployRunner({
+      bundle: {} as DeployBundle,
+      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle>,
+      destination: destination || NULL_DESTINATION,
+      deploy: deploy || NULL_DEPLOY,
+    });
+  }
+
   static async Recall({ deployId }: { deployId: string }): Promise<DeployRunner<DeployBundle>> {
     const deploy = await DeployDAO.FetchFromGuid(deployId);
     if (!deploy) throw new Error(`Deploy with ID ${deployId} not found`);
@@ -46,7 +61,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
     });
   }
 
-  static Create({
+  static New({
     build,
     deploy,
     destination,

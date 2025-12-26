@@ -11,4 +11,9 @@ export interface Runner {
   onError: (callback: (error: string | null) => void) => () => void;
   tearDown(): void;
   execute(options?: Record<string, unknown>): Promise<unknown>;
+  isCompleted: boolean;
+  isPending: boolean;
+  isIdle: boolean;
+  isFailed: boolean;
+  isSuccess: boolean;
 }

@@ -59,7 +59,7 @@ export function SidebarDeploymentList({ workspaceId }: { workspaceId: string }) 
                 <SelectableListItemAction onSelect={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
                   Show
                 </SelectableListItemAction>
-                {deploy.isSuccessful && deploy.effectiveUrl && (
+                {deploy.status === "success" && deploy.effectiveUrl && (
                   <SelectableListItemAction
                     onSelect={() => handleViewDeployment(deploy)}
                     icon={<Globe className="w-4 h-4" />}

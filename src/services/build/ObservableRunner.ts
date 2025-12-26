@@ -34,6 +34,18 @@ export class ObservableRunner<TInner extends RunnerStates> {
   get isCompleted() {
     return this.status === "success" || this.status === "error";
   }
+  get isPending() {
+    return this.status === "pending";
+  }
+  get isIdle() {
+    return this.status === "idle";
+  }
+  get isFailed() {
+    return this.status === "error";
+  }
+  get isSuccess() {
+    return this.status === "success";
+  }
 
   log(message: string, type: "info" | "error" | "warning" | "success" = "info") {
     const logLine: LogLine = {

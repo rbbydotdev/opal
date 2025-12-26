@@ -1,48 +1,29 @@
 import { Runner } from "@/types/RunnerInterfaces";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
-export interface UsableRunner<T extends Runner, P, R> {
-  Create: (args: P) => T;
-  Recall: (args: R) => Promise<T>;
-}
-export function useRunner<T extends Runner, P, R>(usableRunner: UsableRunner<T, P, R>, createParamsFn: () => P) {
-  const [currentRunner, setRunner] = useState(() => usableRunner.Create(createParamsFn()));
-
+export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: any[]) {
+  const [currentRunner, setRunner] = useState<T>(initialValue);
+  useEffect(() => {
+    setRunner(typeof initialValue === "function" ? initialValue() : initialValue);
+    return () => {
+      currentRunner.tearDown();
+    };
+  }, deps);
+  useEffect(() => currentRunner.tearDown, [currentRunner]);
   const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
   const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
-
-  useEffect(() => currentRunner.tearDown, [currentRunner]);
-
-  const create = useCallback(
-    (args: P) => {
-      const newRunner = usableRunner.Create(args);
-      setRunner(newRunner);
-      return newRunner;
-    },
-    [usableRunner]
-  );
-
-  const recall = useCallback(
-    async (args: R) => {
-      const recalledRunner = await usableRunner.Recall(args);
-      setRunner(recalledRunner);
-      return recalledRunner;
-    },
-    [usableRunner]
-  );
+  const execute = async (runner: T) => {
+    setRunner(runner);
+    await runner.execute();
+  };
 
   return {
-    runner: currentRunner,
+    setRunner,
+    execute,
+    runner: currentRunner as Omit<T, "execute">,
     logs,
-    isPending: status === "pending",
-    isCompleted: status === "success" || status === "error",
-    isIdle: status === "idle",
-    isFailed: status === "error",
-    isSuccess: status === "success",
     status,
-    create,
-    recall,
     error,
   };
 }

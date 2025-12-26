@@ -43,6 +43,10 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return this.target.sourcePath;
   }
 
+  static Show({}): BuildRunner {
+    return NULL_BUILD_RUNNER;
+  }
+
   static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
     if (!build) throw new Error(`Build with ID ${buildId} not found`);

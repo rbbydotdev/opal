@@ -101,31 +101,6 @@ export class UniversalDeployFile extends DeployFileBase<Extract<DeployBundleTree
   }
 }
 
-function DeployFile(file: Omit<Extract<DeployBundleTreeEntry, { type: "file" }>, "type">) {
-  return {
-    ...file,
-    type: "file" as const,
-  };
-}
-function DeployDir(dir: Omit<Extract<DeployBundleTreeEntry, { type: "dir" }>, "type">) {
-  return {
-    ...dir,
-    type: "dir" as const,
-  };
-}
-const isDeployBundleTreeFileEntry = (
-  entry: DeployBundleTreeEntry
-): entry is Extract<DeployBundleTreeEntry, { type: "file" }> => {
-  return (entry as any).type === "file";
-};
-const isDeployBundleTreeDirEntry = (
-  entry: DeployBundleTreeEntry
-): entry is Extract<DeployBundleTreeEntry, { type: "dir" }> => {
-  return (entry as any).type === "dir";
-};
-
-type DeployBundleTree = DeployBundleTreeEntry[];
-
 export type DeployBundleTreeFileOnly = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
 export abstract class DeployBundleBase<TMeta = unknown> {

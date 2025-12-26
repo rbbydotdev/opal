@@ -4,7 +4,7 @@ import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
-import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
+import { NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
 import { RunnerLogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
@@ -21,7 +21,7 @@ function useDiskFromRepo(fullRepoPath: string) {
   //   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
   // }, [fullRepoPath, disk]);
 
-  const { runner: importRunner } = useRunner(ImportRunner, () => NULL_IMPORT_RUNNER);
+  const { runner: importRunner } = useRunner(NULL_IMPORT_RUNNER);
 
   // Auto-start the import when runner is created
   useEffect(() => {

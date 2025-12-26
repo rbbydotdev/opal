@@ -64,18 +64,23 @@ export function PublicationModalPublishContent({
   //use selected build but if is NullBuild try and get first build if possible
   const tryBuild = build.isNull ? builds[0] || build : build;
 
-  const { runner, isSuccess, isCompleted, isPending, isFailed, logs } = useRunner(DeployRunner, () => ({
-    build: tryBuild,
-    destination: destination!,
-    workspaceId: currentWorkspace.id,
+  const { runner, execute, logs } = useRunner<DeployRunner<any>>(DeployRunner.Show({ destination, deploy }), [
+    destination,
     deploy,
-    label: `Deploy ${new Date().toLocaleString()}`,
-  }));
+  ]);
 
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {
     if (!destination) return;
-    await runner.execute();
+    await execute(
+      DeployRunner.New({
+        build: tryBuild,
+        destination: destination,
+        workspaceId: currentWorkspace.id,
+        deploy,
+        label: `Deploy ${new Date().toLocaleString()}`,
+      })
+    );
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
@@ -104,12 +109,12 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
-      <BuildSelector disabled={isCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
+      <BuildSelector disabled={runner.isCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
       <div className="space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
-            <Select disabled={isCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
+            <Select disabled={runner.isCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
@@ -202,7 +207,7 @@ export function PublicationModalPublishContent({
       {destination && (
         <div className="flex gap-2">
           <Button
-            disabled={isCompleted}
+            disabled={runner.isCompleted}
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-2"
@@ -213,9 +218,9 @@ export function PublicationModalPublishContent({
             onClick={handleDeploy}
             className="flex items-center gap-2"
             variant="secondary"
-            disabled={isCompleted || isPending}
+            disabled={runner.isCompleted || runner.isPending}
           >
-            {isPending ? (
+            {runner.isPending ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...
@@ -230,7 +235,7 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Deploy Success Indicator */}
-      {isSuccess && (
+      {runner.isSuccess && (
         <div className="border-2 border-success bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-success justify-between">
             <div className="flex items-center gap-4">
@@ -271,7 +276,7 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Deploy Error Indicator */}
-      {isFailed && (
+      {runner.isFailed && (
         <div className="border-2 border-destructive bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-destructive justify-between">
             <div className="flex items-center gap-4">

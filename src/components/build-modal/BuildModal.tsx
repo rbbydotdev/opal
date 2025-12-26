@@ -7,7 +7,7 @@ import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
-import { BuildRunner } from "@/services/build/BuildRunner";
+import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
@@ -33,11 +33,7 @@ export function BuildModal({
   );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const { runner, recall, isCompleted, isPending, logs } = useRunner(BuildRunner, () => ({
-    workspace: currentWorkspace,
-    label: `Build ${new Date().toLocaleString()}`,
-    strategy,
-  }));
+  const { runner, execute, setRunner, logs } = useRunner(BuildRunner.Show(NULL_BUILD_RUNNER), []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,14 +47,20 @@ export function BuildModal({
 
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {
-      await recall({ buildId, workspace: currentWorkspace });
       setIsOpen(true);
+      setRunner(await BuildRunner.Recall({ buildId, workspace: currentWorkspace }));
     },
-    [currentWorkspace, recall]
+    [currentWorkspace, setRunner]
   );
 
   const handleBuild = async () => {
-    return runner.execute();
+    return execute(
+      BuildRunner.Create({
+        workspace: currentWorkspace,
+        label: `Build ${new Date().toLocaleString()}`,
+        strategy,
+      })
+    );
   };
 
   const handleCancel = useCallback(() => {
@@ -69,15 +71,18 @@ export function BuildModal({
   const { open: openPubModal } = useBuildPublisher();
 
   const handleClose = useCallback(() => {
-    if (isPending) return;
+    if (runner.isPending) return;
     setIsOpen(false);
-  }, [isPending]);
+  }, [runner.isPending]);
 
-  const handleFocusOutside = (e: Event) => {
-    if (isPending) {
-      e.preventDefault();
-    }
-  };
+  const handleFocusOutside = useCallback(
+    (e: Event) => {
+      if (runner.isPending) {
+        e.preventDefault();
+      }
+    },
+    [runner.isPending]
+  );
   const handleOpenPubModal = () => {
     handleClose();
     openPubModal({ build: runner.target });
@@ -99,7 +104,7 @@ export function BuildModal({
       <DialogContent className="max-w-2xl h-[70vh] top-[10vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isPending && <Loader size={16} className="animate-spin" />}
+            {runner.isPending && <Loader size={16} className="animate-spin" />}
             Build Workspace
           </DialogTitle>
           <DialogDescription>Select a build strategy and publish your workspace to static HTML.</DialogDescription>
@@ -114,7 +119,7 @@ export function BuildModal({
             <Select
               value={strategy}
               onValueChange={(value: BuildStrategy) => setStrategy(value)}
-              disabled={isCompleted}
+              disabled={runner.isCompleted}
             >
               <SelectTrigger id="strategy-select" className="min-h-14">
                 <SelectValue placeholder="Select build strategy" />
@@ -149,9 +154,13 @@ export function BuildModal({
           <div className="flex gap-2">{/* base url, for base tag */}</div>
           {/* Build Controls */}
           <div className="flex gap-2">
-            {!isCompleted && (
-              <Button onClick={handleBuild} disabled={isPending || isCompleted} className="flex items-center gap-2">
-                {isPending ? (
+            {!runner.isCompleted && (
+              <Button
+                onClick={handleBuild}
+                disabled={runner.isPending || runner.isCompleted}
+                className="flex items-center gap-2"
+              >
+                {runner.isPending ? (
                   <>
                     <Loader size={16} className="animate-spin" />
                     Building...
@@ -162,7 +171,7 @@ export function BuildModal({
               </Button>
             )}
 
-            {isPending && (
+            {runner.isPending && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel
@@ -171,7 +180,7 @@ export function BuildModal({
           </div>
 
           {/* Build Success Indicator */}
-          {isCompleted && (
+          {runner.isCompleted && (
             <div className="border-2 border-success bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
