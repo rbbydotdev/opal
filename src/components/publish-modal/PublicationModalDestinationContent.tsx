@@ -24,7 +24,7 @@ import {
 import { DestinationSchemaMap, DestinationType } from "@/data/DestinationSchemaMap";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useDebounce } from "@/hooks/useDebounce";
-import { isCloudflareAPIRemoteAuthDAO, NullRemoteAuth, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { isCloudflareAPIRemoteAuthDAO, NULL_REMOTE_AUTH, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, Pencil, Plus, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -88,7 +88,7 @@ export function PublicationModalDestinationContent({
 
   const remoteAuth = useMemo(
     () => {
-      const matchedAuth = remoteAuths.find((ra) => ra.guid === currentRemoteAuthId) || NullRemoteAuth;
+      const matchedAuth = remoteAuths.find((ra) => ra.guid === currentRemoteAuthId) || NULL_REMOTE_AUTH;
       return RemoteAuthDAO.FromJSON(matchedAuth);
     },
     // ? RemoteAuthDAO.FromJSONSafe(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId), currentRemoteAuthId)

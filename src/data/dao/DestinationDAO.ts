@@ -5,7 +5,7 @@ import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
-import { NullRemoteAuth, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { NULL_REMOTE_AUTH, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
 export type DestinationJType<T = unknown> = ReturnType<DestinationDAO<T>["toJSON"]>;
@@ -65,7 +65,7 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
 
   get RemoteAuth() {
     if (!this.remoteAuth) {
-      return NullRemoteAuth;
+      return NULL_REMOTE_AUTH;
     }
     return this.remoteAuth instanceof RemoteAuthDAO ? this.remoteAuth : RemoteAuthDAO.FromJSON(this.remoteAuth);
 
@@ -196,6 +196,14 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
     return ClientDb.destinations.delete(guid);
   }
 }
+export const NULL_DESTINATION = new DestinationDAO({
+  guid: "null-destination",
+  label: "Null Destination",
+  remoteAuth: NULL_REMOTE_AUTH,
+  meta: {},
+  timestamp: Date.now(),
+  destinationUrl: null,
+});
 
 export const RandomTag = (tag: string) =>
   `My-${tag}-${RandomSlugWords(1)}-${`${Math.trunc(Math.random() * 100)}`.padStart(3, "0")}`;

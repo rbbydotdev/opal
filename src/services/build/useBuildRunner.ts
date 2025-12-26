@@ -3,8 +3,7 @@ import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useRunner } from "@/hooks/useRunner";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
 import { Workspace } from "@/workspace/Workspace";
-import { RunnerLogLine } from "@/types/RunnerTypes";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 type RunBuildResult =
   | { status: "success"; build: BuildDAO }
@@ -13,32 +12,27 @@ type RunBuildResult =
   | { status: "unknown"; build: null };
 
 export function useBuildRunner(currentWorkspace: Workspace) {
-  const [currentRunner, setCurrentRunner] = useState<BuildRunner | null>(null);
-
-  const buildRunner = useRunner(() => currentRunner || NULL_BUILD_RUNNER, [currentRunner]) as BuildRunner;
+  const { runner: buildRunner, create, recall } = useRunner(BuildRunner, () => NULL_BUILD_RUNNER);
 
   const openNew = useCallback(
     (strategy: BuildStrategy) => {
-      const runner = BuildRunner.Create({
+      return create({
         workspace: currentWorkspace,
         label: `Build ${new Date().toLocaleString()}`,
         strategy,
       });
-      setCurrentRunner(runner);
-      return runner.build;
     },
-    [currentWorkspace]
+    [create, currentWorkspace]
   );
 
   const openEdit = useCallback(
-    async (buildId: string) => {
-      const runner = await BuildRunner.Recall({
+    (buildId: string) => {
+      return recall({
         buildId,
         workspace: currentWorkspace,
       });
-      setCurrentRunner(runner);
     },
-    [currentWorkspace]
+    [currentWorkspace, recall]
   );
 
   const handleBuild = useCallback(async (): Promise<RunBuildResult> => {

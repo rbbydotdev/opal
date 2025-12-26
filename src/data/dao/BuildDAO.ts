@@ -70,14 +70,15 @@ export class BuildDAO implements BuildRecord {
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,
-      disk: this.disk,
-      sourceDisk: this.sourceDisk,
+      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      sourceDisk: this.sourceDisk instanceof Disk ? (this.sourceDisk.toJSON() as DiskJType) : this.sourceDisk,
       sourcePath: this.sourcePath,
       strategy: this.strategy,
       workspaceId: this.workspaceId,
       buildPath: this.buildPath,
       logs: this.logs,
       fileCount: this.fileCount,
+      status: this.status,
     };
   }
 
@@ -172,8 +173,9 @@ export class BuildDAO implements BuildRecord {
     return this;
   }
 
-  async update({ ...properties }: Partial<Omit<BuildRecord, "guid">>) {
-    await ClientDb.builds.update(this.guid, properties);
+  async update(properties: Partial<Omit<BuildRecord, "guid">>) {
+    Object.assign(this, properties);
+    await ClientDb.builds.update(this.guid, this.toJSON());
     return this.hydrate();
   }
 

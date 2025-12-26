@@ -1,42 +1,26 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
-import { DeployDAO } from "@/data/dao/DeployDAO";
-import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { DeployDAO, NULL_DEPLOY } from "@/data/dao/DeployDAO";
+import { DeployLogLine as OriginalDeployLogLine } from "@/data/dao/DeployRecord";
+import { DestinationDAO, NULL_DESTINATION } from "@/data/dao/DestinationDAO";
 import {
   DeployableAuthAgentFromRemoteAuth,
   RemoteAuthAgentDeployableFiles,
 } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { DeployBundle, DeployBundleBase, DeployBundleFactory } from "@/services/deploy/DeployBundle";
+import { NULL_REMOTE_AUTH_AGENT } from "@/data/remote-auth/RemoteAuthNullAgent";
+import { DeployBundle, DeployBundleBase, DeployBundleFactory, NULL_BUNDLE } from "@/services/deploy/DeployBundle";
+import { BaseRunner } from "@/services/runners/BaseRunner";
+import { RunnerLogLine, RunnerLogType } from "@/types/RunnerTypes";
 import { useSyncExternalStore } from "react";
 
-type DeployLogType = DeployLogLine["type"];
-function logLine(message: string, type: DeployLogType = "info") {
-  return {
-    timestamp: Date.now(),
-    message,
-    type,
-  } as DeployLogLine;
-}
+export type DeployLogLine = OriginalDeployLogLine;
 
-export type DeployLogLine = {
-  timestamp: number;
-  message: string;
-  type: "info" | "error";
-};
-
-export class DeployRunner<TBundle extends DeployBundleBase> {
+export class DeployRunner<TBundle extends DeployBundleBase> extends BaseRunner {
   readonly destination: DestinationDAO;
   readonly deploy: DeployDAO;
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle>;
   private bundle: TBundle;
-  private abortController: AbortController = new AbortController();
   kind = "deploy-runner";
 
-  emitter = CreateSuperTypedEmitter<{
-    log: DeployLogLine;
-    complete: boolean;
-    update: DeployDAO;
-  }>();
   constructor({
     agent,
     destination,
@@ -48,6 +32,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
     deploy: DeployDAO;
     bundle: TBundle;
   }) {
+    super();
     this.agent = agent;
     this.destination = destination;
     this.deploy = deploy;
@@ -57,6 +42,31 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
   get isDeploying() {
     return this.deploy.status === "pending";
   }
+
+  // Override logs to get from deploy DAO instead of internal state
+  get logs(): RunnerLogLine[] {
+    return this.deploy.logs.map((log) => ({
+      timestamp: log.timestamp,
+      message: log.message,
+      type: log.type === "success" || log.type === "warning" ? "info" : log.type,
+    }));
+  }
+
+  // Override completed to use deploy status
+  get completed(): boolean {
+    return this.deploy.status === "success" || this.deploy.status === "failed" || this.deploy.status === "cancelled";
+  }
+
+  // Override running to use deploy status
+  get running(): boolean {
+    return this.deploy.status === "pending";
+  }
+
+  // Implement Runner interface error property
+  get error(): string | null {
+    return this.deploy.status === "failed" ? "Deployment failed" : null;
+  }
+
   get isCompleted() {
     return this.deploy.status === "success" || this.deploy.status === "failed" || this.deploy.status === "cancelled";
   }
@@ -73,7 +83,9 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
     return this.deploy.status === "idle";
   }
 
-  static async FromDeploy(deploy: DeployDAO) {
+  static async Recall({ deployId }: { deployId: string }): Promise<DeployRunner<DeployBundle>> {
+    const deploy = await DeployDAO.FetchFromGuid(deployId);
+    if (!deploy) throw new Error(`Deploy with ID ${deployId} not found`);
     const destination = await DestinationDAO.FetchDAOFromGuid(deploy.destinationId, true);
     return new DeployRunner({
       bundle: {} as DeployBundle,
@@ -95,7 +107,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
     destination: DestinationDAO;
     workspaceId: string;
     label: string;
-  }) {
+  }): DeployRunner<DeployBundle> {
     if (!destination.RemoteAuth) {
       return new NullDeployRunner();
     }
@@ -117,68 +129,54 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
     });
   }
 
-  onLog = (callback: (log: DeployLogLine) => void) => {
-    return this.emitter.on("log", callback);
-  };
-  getLogs = () => this.deploy.logs;
+  // Override getRunner to return DeployRunner instead of generic Runner
+  getRunner = (): DeployRunner<TBundle> => this;
 
-  onComplete = (callback: (complete: boolean) => void) => {
-    return this.emitter.on("complete", callback);
-  };
-  getComplete = () => this.isCompleted;
-
-  onUpdate = (callback: (deploy: DeployDAO) => void) => {
-    return this.emitter.on("update", callback);
+  onDeploy = (callback: (deploy: DeployDAO) => void) => {
+    return this.onUpdate((runner) => callback((runner as DeployRunner<TBundle>).deploy));
   };
   getDeploy = () => this.deploy;
-
-  tearDown() {
-    this.emitter.clearListeners();
-  }
 
   cancel() {
     this.abortController.abort();
     this.log("Deployment cancelled by user", "error");
   }
 
-  protected readonly log = (message: string, type?: DeployLogType) => {
-    const line = logLine(message, type);
-    this.deploy.logs = [...this.deploy.logs, line];
-    this.emitter.emit("log", line);
-    return line;
+  // Override log to also store in deploy DAO
+  protected log = (message: string, type?: RunnerLogType) => {
+    const logLine = super["log"](message, type);
+    this.deploy.logs = [...this.deploy.logs, logLine as DeployLogLine];
+    return logLine;
   };
 
   async execute({
     abortSignal = this.abortController.signal,
-    log = () => {},
   }: {
-    log?: (l: DeployLogLine) => void;
     abortSignal?: AbortSignal;
   } = {}): Promise<DeployDAO> {
-    const errorLog = (message: string) => log(this.log(message, "error"));
-    const infoLog = (message: string) => log(this.log(message, "info"));
-
     try {
+      this.setRunning(true);
+      this.setCompleted(false);
+      this.clearError();
       this.deploy.status = "pending";
       await this.deploy.save();
-      this.emitter.emit("update", this.deploy);
 
       if (abortSignal?.aborted) {
-        errorLog("Deployment cancelled");
+        this.log("Deployment cancelled", "error");
         return this.deploy.update({
           logs: this.deploy.logs,
           status: "cancelled",
         });
       }
 
-      infoLog(`Starting deployment, id ${this.deploy.guid}...`);
-      infoLog(`Destination: ${this.destination.label}`);
+      this.log(`Starting deployment, id ${this.deploy.guid}...`, "info");
+      this.log(`Destination: ${this.destination.label}`, "info");
 
       await this.agent.deployFiles(this.bundle, this.destination, (status: string) => {
         if (abortSignal?.aborted) {
           throw new Error("Deployment cancelled");
         }
-        this.log(status);
+        this.log(status, "info");
       });
 
       if (abortSignal?.aborted) {
@@ -188,15 +186,16 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
         });
       }
 
-      infoLog("Deployment completed successfully.");
+      this.log("Deployment completed successfully.", "info");
 
       // Get the destination URL (main app URL)
       const destinationUrl = await this.agent.getDestinationURL(this.destination);
 
       // For deployment-specific URLs, check if agent provides one, otherwise fallback to destination URL
-      const deploymentUrl = typeof this.agent.getDeploymentURL === 'function'
-        ? await this.agent.getDeploymentURL(this.destination)
-        : destinationUrl;
+      const deploymentUrl =
+        typeof this.agent.getDeploymentURL === "function"
+          ? await this.agent.getDeploymentURL(this.destination)
+          : destinationUrl;
 
       // Update destination with main URL if not already set
       if (!this.destination.destinationUrl && destinationUrl) {
@@ -213,28 +212,28 @@ export class DeployRunner<TBundle extends DeployBundleBase> {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Deployment failed:", error);
-      errorLog(`Deployment failed: ${errorMessage}`);
+      this.log(`Deployment failed: ${errorMessage}`, "error");
+      this.setError(`Deployment failed: ${errorMessage}`);
       if (!abortSignal?.aborted) {
-        this.emitter.emit("update", this.deploy);
         return await this.deploy.update({
           logs: this.deploy.logs,
           status: "failed",
         });
       } else {
-        this.emitter.emit("update", this.deploy);
         return await this.deploy.update({
           logs: this.deploy.logs,
           status: "cancelled",
         });
       }
     } finally {
-      this.emitter.emit("complete", this.isCompleted);
+      this.setCompleted(this.isCompleted);
+      this.setRunning(this.isDeploying);
     }
   }
 }
 
 export function useDeployRunnerLogs(runner: DeployRunner<any>) {
-  return useSyncExternalStore(runner.onLog, runner.getLogs);
+  return useSyncExternalStore(runner.onUpdate, () => runner.logs);
 }
 
 export class AnyDeployRunner<TBundle extends DeployBundleBase<any>> extends DeployRunner<TBundle> {}
@@ -242,10 +241,10 @@ export class AnyDeployRunner<TBundle extends DeployBundleBase<any>> extends Depl
 export class NullDeployRunner extends DeployRunner<DeployBundle> {
   constructor() {
     super({
-      agent: {} as RemoteAuthAgentDeployableFiles<DeployBundle>,
-      destination: {} as DestinationDAO,
-      deploy: {} as DeployDAO,
-      bundle: {} as DeployBundle,
+      agent: NULL_REMOTE_AUTH_AGENT,
+      destination: NULL_DESTINATION,
+      deploy: NULL_DEPLOY,
+      bundle: NULL_BUNDLE,
     });
   }
 

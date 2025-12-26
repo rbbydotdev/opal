@@ -1,11 +1,12 @@
 import { RunnerLogLine } from "@/types/RunnerTypes";
 
 // Base interface that all runners must implement
-export interface Runner {
+export interface Runner<T = Runner<any>> {
   tearDown(): void;
-  onUpdate: (callback: (runner: Runner) => void) => () => void;
-  getRunner: () => Runner;
+  onUpdate: (callback: (runner: T) => void) => () => void;
+  getRunner: () => T;
   logs: RunnerLogLine[];
+  init?: () => void;
   completed: boolean;
   running: boolean;
   error: string | null;
@@ -14,16 +15,16 @@ export interface Runner {
 }
 
 // Interface for static methods that runner classes must implement
-export interface RunnerStatic<T extends Runner, CreateArgs extends unknown[], RecallArgs extends unknown[]> {
-  Create(...args: CreateArgs): T;
-  Recall(...args: RecallArgs): Promise<T>;
+export interface RunnerStatic<T extends Runner<T>, CreateArgs, RecallArgs> {
+  Create(args: CreateArgs): T;
+  Recall(args: RecallArgs): Promise<T>;
 }
 
 // Type helper to extract constructor types
-export type RunnerClass<
-  T extends Runner,
-  CreateArgs extends unknown[] = unknown[],
-  RecallArgs extends unknown[] = unknown[]
-> = RunnerStatic<T, CreateArgs, RecallArgs> & {
-  new (...args: unknown[]): T;
+export type RunnerClass<T extends Runner<T>, CreateArgs = unknown, RecallArgs = unknown> = RunnerStatic<
+  T,
+  CreateArgs,
+  RecallArgs
+> & {
+  new (...args: ConstructorParameters<new (...a: any[]) => T>): T;
 };

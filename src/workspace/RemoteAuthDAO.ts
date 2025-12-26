@@ -148,7 +148,7 @@ class NullRemoteAuthDAO extends RemoteAuthDAO {
   }
 }
 
-export const NullRemoteAuth = new NullRemoteAuthDAO();
+export const NULL_REMOTE_AUTH = new NullRemoteAuthDAO();
 
 // Use generics to create specific DAO types
 export type BasicAuthRemoteAuthDAO = RemoteAuthDAO & {

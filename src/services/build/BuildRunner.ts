@@ -8,28 +8,14 @@ import { TemplateManager } from "@/features/templating/TemplateManager";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
-import { Workspace } from "@/workspace/Workspace";
 import { BaseRunner } from "@/services/runners/BaseRunner";
-import { RunnerLogLine, RunnerLogType } from "@/types/RunnerTypes";
-import { RunnerStatic } from "@/types/RunnerInterfaces";
+import { Workspace } from "@/workspace/Workspace";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-// Define the exact argument types for BuildRunner's static methods
-type BuildRunnerCreateArgs = [{
-  workspace: Workspace;
-  label: string;
-  strategy: BuildStrategy;
-}];
-
-type BuildRunnerRecallArgs = [{
-  buildId: string;
-  workspace?: Workspace;
-}];
-
-export class BuildRunner extends BaseRunner {
+export class BuildRunner extends BaseRunner<BuildRunner> {
   build: BuildDAO;
   private templateManager?: TemplateManager;
 
@@ -41,10 +27,10 @@ export class BuildRunner extends BaseRunner {
     return this.build.strategy;
   }
 
-  // Override logs to get from build DAO instead of internal state
-  get logs(): RunnerLogLine[] {
-    return this.build.logs;
-  }
+  // // Override logs to get from build DAO instead of internal state
+  // get logs(): RunnerLogLine[] {
+  //   return this.build.logs;
+  // }
 
   // Override completed to use build status
   get completed(): boolean {
@@ -87,14 +73,10 @@ export class BuildRunner extends BaseRunner {
     return this.build.status === "idle";
   }
 
-  // Override log to also store in build DAO
-  protected log = (message: string, type?: RunnerLogType) => {
-    const logLine = super['log'](message, type);
-    this.build.logs = [...this.build.logs, logLine as BuildLogLine];
-    return logLine;
-  };
+  // init() {
+  // }
 
-  static async Recall({ buildId, workspace }: BuildRunnerRecallArgs[0]): Promise<BuildRunner> {
+  static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
     if (!build) throw new Error(`Build with ID ${buildId} not found`);
     return new BuildRunner({
@@ -107,7 +89,11 @@ export class BuildRunner extends BaseRunner {
     workspace,
     label,
     strategy,
-  }: BuildRunnerCreateArgs[0]): BuildRunner {
+  }: {
+    workspace: Workspace;
+    label: string;
+    strategy: BuildStrategy;
+  }): BuildRunner {
     const build = BuildDAO.CreateNew({
       label,
       workspaceId: workspace.guid,
@@ -137,55 +123,56 @@ export class BuildRunner extends BaseRunner {
       this.templateManager = new TemplateManager(workspace);
     }
   }
+  init() {
+    this.onLog((log) => {
+      this.build.logs = [...this.build.logs, log as BuildLogLine];
+    });
+  }
 
   async execute({
     abortSignal = this.abortController.signal,
-    log = () => {},
   }: {
-    log?: (l: RunnerLogLine) => void;
     abortSignal?: AbortSignal;
   } = {}): Promise<BuildDAO> {
-    const errorLog = (message: string) => log(this.log(message, "error"));
-    const infoLog = (message: string) => log(this.log(message, "info"));
     try {
       this.build.status = "pending";
       this.clearError();
       this.setRunning(true);
       await this.build.save();
       await this.sourceDisk.refresh();
-      infoLog(`Starting ${this.strategy} build, id ${this.build.guid}...`);
-      infoLog(`Source disk: ${this.sourceDisk.guid}`);
-      infoLog(`Output path: ${this.outputPath}`);
+      this.log(`Starting ${this.strategy} build, id ${this.build.guid}...`, "info");
+      this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
+      this.log(`Output path: ${this.outputPath}`, "info");
 
       if (abortSignal?.aborted) {
-        errorLog("Build cancelled");
+        this.log("Build cancelled", "error");
         return this.build.update({
           logs: this.logs,
           status: "cancelled",
         });
       }
 
-      infoLog("Starting build process...");
-      infoLog("Building file tree...");
+      this.log("Starting build process...", "info");
+      this.log("Building file tree...", "info");
 
       // Index the source directory
-      infoLog("Indexing source files...");
+      this.log("Indexing source files...", "info");
       await this.sourceDisk.triggerIndex();
 
       const fileTree = this.sourceDisk.fileTree;
-      infoLog(`File tree loaded with ${fileTree ? "files found" : "no files"}`);
+      this.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
 
       await this.ensureOutputDirectory();
 
       if (abortSignal?.aborted) {
-        errorLog("Build cancelled");
+        this.log("Build cancelled", "error");
         return this.build.update({
           logs: this.logs,
           status: "cancelled",
         });
       }
 
-      infoLog(`Executing ${this.strategy} build strategy...`);
+      this.log(`Executing ${this.strategy} build strategy...`, "info");
       switch (this.strategy) {
         case "freeform":
           await this.buildFreeform();
@@ -200,7 +187,7 @@ export class BuildRunner extends BaseRunner {
           this.strategy satisfies never;
           throw new TypeError(`Unknown build strategy: ${this.strategy}`);
       }
-      infoLog(`${this.strategy} build strategy completed`);
+      this.log(`${this.strategy} build strategy completed`, "info");
 
       if (abortSignal?.aborted) {
         return this.build.update({
@@ -209,17 +196,17 @@ export class BuildRunner extends BaseRunner {
         });
       }
 
-      infoLog("Build completed successfully!");
+      this.log("Build completed successfully!", "info");
 
       // Re-index output disk and calculate file count before final update
       await this.outputDisk.triggerIndex().catch((e) => console.warn("Failed to re-index output disk after build:", e));
-      infoLog(`Build saved with ID: ${this.build.guid}`);
+      this.log(`Build saved with ID: ${this.build.guid}`, "info");
       const count =
         this.outputDisk.fileTree.nodeFromPath(this.outputPath)?.countChildren({
           filterIn: Filter.only(SpecialDirs.Build).$,
         }) ?? 0;
 
-      infoLog(`Total files in build output: ${count}`);
+      this.log(`Total files in build output: ${count}`, "info");
 
       return await this.build.update({
         logs: this.logs,
@@ -228,7 +215,7 @@ export class BuildRunner extends BaseRunner {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      errorLog(`Build failed: ${errorMessage}`);
+      this.log(`Build failed: ${errorMessage}`, "error");
       if (!abortSignal?.aborted) {
         this.setError("Build failed. Please check the logs for more details.");
         return await this.build.update({
@@ -284,11 +271,11 @@ export class BuildRunner extends BaseRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
-    this.log("Book page generated");
+    this.log("Book page generated", "info");
   }
 
   private async buildBlog(): Promise<void> {
-    this.log("Building with blog strategy...");
+    this.log("Building with blog strategy...", "info");
 
     await this.copyAssets();
 
@@ -299,7 +286,7 @@ export class BuildRunner extends BaseRunner {
   }
 
   private async copyAssets(): Promise<void> {
-    this.log("Copying assets...");
+    this.log("Copying assets...", "info");
 
     // Copy all files except templates, markdown, and files in _ directories
     for (const node of this.sourceDisk.fileTree.iterator(
@@ -312,7 +299,7 @@ export class BuildRunner extends BaseRunner {
   }
 
   private async processTemplatesAndMarkdown(): Promise<void> {
-    this.log("Processing templates and markdown...");
+    this.log("Processing templates and markdown...", "info");
 
     for (const node of this.sourceDisk.fileTree.iterator(
       (node) => node.isTreeFile() && FilterOutSpecialDirs(node.path)
@@ -362,7 +349,7 @@ export class BuildRunner extends BaseRunner {
     const content = await this.sourceDisk.readFile(node.path);
     await this.outputDisk.writeFile(outputPath, content);
 
-    this.log(`Copied asset: ${relativePath}`);
+    this.log(`Copied asset: ${relativePath}`, "info");
   }
 
   async processTemplate(node: TreeNode): Promise<void> {
@@ -395,7 +382,7 @@ export class BuildRunner extends BaseRunner {
     }
 
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
-    this.log(`Template processed: ${relativePath}`);
+    this.log(`Template processed: ${relativePath}`, "info");
   }
 
   async processMarkdown(node: TreeNode): Promise<void> {
@@ -421,7 +408,7 @@ export class BuildRunner extends BaseRunner {
     await this.ensureDirectoryExists(dirname(outputPath));
     await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
-    this.log(`Markdown processed: ${relativePath}`);
+    this.log(`Markdown processed: ${relativePath}`, "info");
   }
 
   async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
@@ -483,7 +470,7 @@ export class BuildRunner extends BaseRunner {
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
     await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", html));
-    this.log("Blog index generated");
+    this.log("Blog index generated", "info");
   }
 
   async processLayout(post: PageData): Promise<{ layout: string; type: "text/x-mustache" | "text/x-ejs" }> {
@@ -520,7 +507,7 @@ export class BuildRunner extends BaseRunner {
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
       await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
 
-      this.log(`Blog post generated: ${post.path}`);
+      this.log(`Blog post generated: ${post.path}`, "info");
     }
   }
 
@@ -600,9 +587,6 @@ export class BuildRunner extends BaseRunner {
     });
   }
 }
-
-// Type assertion to ensure BuildRunner conforms to the static interface
-const _buildRunnerTypeCheck: RunnerStatic<BuildRunner, BuildRunnerCreateArgs, BuildRunnerRecallArgs> = BuildRunner;
 
 class NullBuildRunner extends BuildRunner {
   constructor() {

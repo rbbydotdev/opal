@@ -4,8 +4,8 @@ import crypto from "crypto";
 //
 import { FileTree } from "@/components/filetree/Filetree";
 import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
-import { BuildDAO } from "@/data/dao/BuildDAO";
-import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
+import { DestinationDAO, NULL_DESTINATION } from "@/data/dao/DestinationDAO";
 import { isGithubDestination } from "@/data/DestinationSchemaMap";
 import { archiveTree } from "@/data/disk/archiveTree";
 import { TranslateFsTransform } from "@/data/fs/TranslateFs";
@@ -226,10 +226,6 @@ export abstract class DeployBundleBase<TMeta = unknown> {
 }
 
 export class DeployBundle extends DeployBundleBase {
-  // async getFiles(): Promise<DeployBundleTreeEntry[]> {
-  //   const deployFiles = await this.getDeployFiles();
-  //   return deployFiles.map((file) => file.asClientFile());
-  // }
   // Expose raw file objects for client-specific conversion
   async getFiles(): Promise<UniversalDeployFile[]> {
     return this.getDeployFiles();
@@ -251,6 +247,13 @@ export class DeployBundle extends DeployBundleBase {
     }
   }
 }
+
+class NullDeployBundle extends DeployBundle {
+  constructor() {
+    super(NULL_BUILD, NULL_DESTINATION);
+  }
+}
+export const NULL_BUNDLE = new NullDeployBundle();
 
 export function DeployBundleFactory(build: BuildDAO, destination: DestinationDAO): DeployBundle {
   return new DeployBundle(build, destination);

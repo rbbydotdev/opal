@@ -306,7 +306,7 @@ export function PublicationModalPublishContent({
             {logs.length === 0 ? (
               <div className="text-muted-foreground italic">Output will appear here...</div>
             ) : (
-              logs.map((log, index) => (
+              logs.map((log: any, index: number) => (
                 <div
                   key={index}
                   className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}

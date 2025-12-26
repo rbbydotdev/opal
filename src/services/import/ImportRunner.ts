@@ -2,17 +2,6 @@ import { Disk } from "@/data/disk/Disk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
 import { absPath, relPath } from "@/lib/paths2";
 import { BaseRunner } from "@/services/runners/BaseRunner";
-import { RunnerStatic } from "@/types/RunnerInterfaces";
-
-// Define the exact argument types for ImportRunner's static methods
-type ImportRunnerCreateArgs = [
-  {
-    disk: Disk;
-    fullRepoPath: string;
-  },
-];
-
-type ImportRunnerRecallArgs = []; // ImportRunner doesn't support recall
 
 export class ImportRunner extends BaseRunner {
   private disk: Disk;
@@ -24,7 +13,7 @@ export class ImportRunner extends BaseRunner {
     this.importer = new GithubImport(relPath(fullRepoPath));
   }
 
-  static Create({ disk, fullRepoPath }: ImportRunnerCreateArgs[0]): ImportRunner {
+  static Create({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }): ImportRunner {
     return new ImportRunner({ disk, fullRepoPath });
   }
 
@@ -72,9 +61,6 @@ export class ImportRunner extends BaseRunner {
     }
   }
 }
-
-// Type assertion to ensure ImportRunner conforms to the static interface
-const _importRunnerTypeCheck: RunnerStatic<ImportRunner, ImportRunnerCreateArgs, ImportRunnerRecallArgs> = ImportRunner;
 
 export class NullImportRunner extends ImportRunner {
   constructor() {

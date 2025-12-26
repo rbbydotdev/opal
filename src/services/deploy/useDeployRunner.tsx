@@ -2,7 +2,8 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { AnyDeployRunner, NullDeployRunner } from "@/services/deploy/DeployRunner";
-import { useMemo, useSyncExternalStore } from "react";
+import { useRunner } from "@/hooks/useRunner";
+import { useMemo } from "react";
 
 export function useDeployRunner({
   build,
@@ -29,8 +30,13 @@ export function useDeployRunner({
         });
   }, [build, destination, label, workspaceId, deploy]);
 
-  const logs = useSyncExternalStore(deployRunner.onLog, deployRunner.getLogs);
-  const deployCompleted = useSyncExternalStore(deployRunner.onComplete, deployRunner.getComplete);
-  const deployWatch = useSyncExternalStore(deployRunner.onUpdate, deployRunner.getDeploy);
-  return { deployRunner, logs: logs ?? [], deployCompleted, deploy: deployWatch };
+  const runner = useRunner(() => deployRunner, [deployRunner]);
+
+  return {
+    deployRunner: deployRunner as AnyDeployRunner<any>,
+    logs: runner.logs,
+    deployCompleted: runner.completed,
+    deploy: (deployRunner as AnyDeployRunner<any>).deploy,
+    isDeploying: runner.running,
+  };
 }

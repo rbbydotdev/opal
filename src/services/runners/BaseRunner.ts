@@ -1,8 +1,8 @@
 import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { RunnerLogLine, RunnerLogType, createLogLine } from "@/types/RunnerTypes";
 import { Runner } from "@/types/RunnerInterfaces";
+import { RunnerLogLine, RunnerLogType, createLogLine } from "@/types/RunnerTypes";
 
-export abstract class BaseRunner implements Runner {
+export abstract class BaseRunner<T extends BaseRunner<T> = any> implements Runner<T> {
   protected _logs: RunnerLogLine[] = [];
   protected _completed: boolean = false;
   protected _running: boolean = false;
@@ -13,7 +13,7 @@ export abstract class BaseRunner implements Runner {
     log: RunnerLogLine;
     complete: boolean;
     running: boolean;
-    update: any;
+    update: T;
   }>();
 
   // Runner interface implementation
@@ -49,11 +49,11 @@ export abstract class BaseRunner implements Runner {
     return this.emitter.on("running", callback);
   };
 
-  onUpdate = (callback: (runner: Runner) => void) => {
+  onUpdate = (callback: (runner: T) => void) => {
     return this.emitter.on("update", callback);
   };
 
-  getRunner = (): Runner => this;
+  getRunner = (): T => this as unknown as T;
 
   tearDown() {
     this.emitter.clearListeners();
@@ -69,7 +69,7 @@ export abstract class BaseRunner implements Runner {
     const line = createLogLine(message, type);
     this._logs = [...this._logs, line];
     this.emitter.emit("log", line);
-    this.emitter.emit("update", this);
+    this.emitter.emit("update", this as T);
     return line;
   };
 
@@ -77,23 +77,23 @@ export abstract class BaseRunner implements Runner {
   protected setRunning(running: boolean) {
     this._running = running;
     this.emitter.emit("running", running);
-    this.emitter.emit("update", this);
+    this.emitter.emit("update", this as T);
   }
 
   protected setCompleted(completed: boolean) {
     this._completed = completed;
     this.emitter.emit("complete", completed);
-    this.emitter.emit("update", this);
+    this.emitter.emit("update", this as T);
   }
 
   protected setError(error: string | null) {
     this._error = error;
-    this.emitter.emit("update", this);
+    this.emitter.emit("update", this as T);
   }
 
   protected clearError() {
     this._error = null;
-    this.emitter.emit("update", this);
+    this.emitter.emit("update", this as T);
   }
 
   // Abstract method that subclasses must implement

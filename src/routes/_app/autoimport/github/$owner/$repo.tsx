@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { useRunner } from "@/hooks/useRunner";
+import Github from "@/icons/github.svg?react";
 import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
 import { RunnerLogLine } from "@/types/RunnerTypes";
-import Github from "@/icons/github.svg?react";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_app/autoimport/github/$owner/$repo")({
   component: RouteComponent,
@@ -17,14 +17,17 @@ export const Route = createFileRoute("/_app/autoimport/github/$owner/$repo")({
 function useDiskFromRepo(fullRepoPath: string) {
   const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
 
-  const importRunner = useRunner(() => {
-    return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
-  }, [fullRepoPath, disk]);
+  // const {runner: importRunner } = useRunner(ImportRunner,() => {
+  //   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
+  // }, [fullRepoPath, disk]);
+
+  const { runner: importRunner } = useRunner(ImportRunner, () => NULL_IMPORT_RUNNER, []);
 
   // Auto-start the import when runner is created
   useEffect(() => {
+    throw new Error("Not implemented");
     if (importRunner && importRunner !== NULL_IMPORT_RUNNER && !importRunner.running && !importRunner.completed) {
-      importRunner.execute();
+      // importRunner.execute();
     }
   }, [importRunner]);
 
@@ -33,7 +36,7 @@ function useDiskFromRepo(fullRepoPath: string) {
     disk,
     importRunner,
     isImporting: importRunner.running,
-    isCompleted: importRunner.completed
+    isCompleted: importRunner.completed,
   };
 }
 
