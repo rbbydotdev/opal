@@ -15,7 +15,7 @@ import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-export class BuildRunner extends BaseRunner<BuildRunner> {
+export class BuildRunner extends BaseRunner {
   build: BuildDAO;
   private templateManager?: TemplateManager;
 
@@ -25,21 +25,6 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
 
   get strategy(): BuildStrategy {
     return this.build.strategy;
-  }
-
-  // // Override logs to get from build DAO instead of internal state
-  // get logs(): RunnerLogLine[] {
-  //   return this.build.logs;
-  // }
-
-  // Override completed to use build status
-  get completed(): boolean {
-    return this.isCompleted;
-  }
-
-  // Override running to use build status
-  get running(): boolean {
-    return this.isBuilding;
   }
 
   get outputDisk(): Disk {
@@ -54,27 +39,9 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
     return this.build.sourcePath;
   }
 
-  get isBuilding() {
-    return this.build.status === "pending";
+  get status() {
+    return this.build.status;
   }
-  get isCompleted() {
-    return this.build.status === "success" || this.build.status === "failed" || this.build.status === "cancelled";
-  }
-  get isSuccessful() {
-    return this.build.status === "success";
-  }
-  get isCancelled() {
-    return this.build.status === "cancelled";
-  }
-  get isFailed() {
-    return this.build.status === "failed";
-  }
-  get isIdle() {
-    return this.build.status === "idle";
-  }
-
-  // init() {
-  // }
 
   static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
     const build = await BuildDAO.FetchFromGuid(buildId);
@@ -119,11 +86,10 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
   constructor({ build, workspace }: { build: BuildDAO; workspace?: Workspace }) {
     super();
     this.build = build;
+    this.logs = this.build.logs;
     if (workspace) {
       this.templateManager = new TemplateManager(workspace);
     }
-  }
-  init() {
     this.onLog((log) => {
       this.build.logs = [...this.build.logs, log as BuildLogLine];
     });
@@ -136,8 +102,7 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
   } = {}): Promise<BuildDAO> {
     try {
       this.build.status = "pending";
-      this.clearError();
-      this.setRunning(true);
+      this.broadcastStatus();
       await this.build.save();
       await this.sourceDisk.refresh();
       this.log(`Starting ${this.strategy} build, id ${this.build.guid}...`, "info");
@@ -148,7 +113,8 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
         this.log("Build cancelled", "error");
         return this.build.update({
           logs: this.logs,
-          status: "cancelled",
+          status: "error",
+          error: "Build was cancelled.",
         });
       }
 
@@ -168,7 +134,8 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
         this.log("Build cancelled", "error");
         return this.build.update({
           logs: this.logs,
-          status: "cancelled",
+          status: "error",
+          error: "Build was cancelled.",
         });
       }
 
@@ -192,7 +159,8 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
       if (abortSignal?.aborted) {
         return this.build.update({
           logs: this.logs,
-          status: "cancelled",
+          status: "error",
+          error: "Build was cancelled.",
         });
       }
 
@@ -217,21 +185,26 @@ export class BuildRunner extends BaseRunner<BuildRunner> {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.log(`Build failed: ${errorMessage}`, "error");
       if (!abortSignal?.aborted) {
-        this.setError("Build failed. Please check the logs for more details.");
-        return await this.build.update({
+        // this.setError("Build failed. Please check the logs for more details.");
+        const build = await this.build.update({
           logs: this.logs,
-          status: "failed",
+          status: "error",
+          error: errorMessage,
         });
+        this.broadcastStatus();
+        return build;
       } else {
-        this.setError("Build was cancelled.");
-        return await this.build.update({
+        this.build = await this.build.update({
           logs: this.logs,
-          status: "cancelled",
+          status: "error",
+          error: "Build was cancelled.",
         });
+        this.broadcastStatus();
+        return this.build;
       }
     } finally {
-      this.setCompleted(this.isCompleted);
-      this.setRunning(this.running);
+      await this.build.complete();
+      this.broadcastStatus();
     }
   }
 

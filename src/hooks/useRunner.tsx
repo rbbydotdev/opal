@@ -1,42 +1,48 @@
-import { Runner, RunnerClass } from "@/types/RunnerInterfaces";
+import { BaseRunner } from "@/services/runners/BaseRunner";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
+export interface UsableRunner<T extends BaseRunner = BaseRunner> {
+  Create: (args: any) => T;
+  Recall: (args: any) => Promise<T>;
+}
 // Enhanced hook that provides create and recall methods with full type safety
-export function useRunner<T extends Runner<T>, CreateArgs, RecallArgs>(
-  RunnerClass: RunnerClass<T, CreateArgs, RecallArgs>,
+export function useRunner<T extends BaseRunner = BaseRunner, U extends UsableRunner<T> = UsableRunner<T>>(
+  UsableRunner: U,
   initialSetup: () => T
 ) {
-  const [currentRunner, setRunner] = useState<T>(initialSetup);
+  const [currentRunner, setRunner] = useState(initialSetup);
 
-  const runner = useSyncExternalStore<T>(currentRunner.onUpdate, currentRunner.getRunner);
+  const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
+  const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
 
-  useEffect(() => {
-    currentRunner.init?.();
-    return () => {
-      currentRunner.tearDown();
-    };
-  }, [currentRunner]);
+  useEffect(() => currentRunner.tearDown, [currentRunner]);
 
   const create = useCallback(
-    (args: CreateArgs) => {
-      const newRunner = RunnerClass.Create(args);
+    (args: any) => {
+      const newRunner = UsableRunner.Create(args);
       setRunner(newRunner);
       return newRunner;
     },
-    [RunnerClass]
+    [UsableRunner]
   );
 
   const recall = useCallback(
-    async (args: RecallArgs) => {
-      const recalledRunner = await RunnerClass.Recall(args);
+    async (args: any) => {
+      const recalledRunner = await UsableRunner.Recall(args);
       setRunner(recalledRunner);
       return recalledRunner;
     },
-    [RunnerClass]
+    [UsableRunner]
   );
 
   return {
-    runner,
+    runner: currentRunner,
+    logs,
+    isPending: status === "pending",
+    isCompleted: status === "success" || status === "error",
+    isIdle: status === "idle",
+    isFailed: status === "error",
+    status,
     create,
     recall,
   };

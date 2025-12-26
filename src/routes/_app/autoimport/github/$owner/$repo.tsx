@@ -21,7 +21,7 @@ function useDiskFromRepo(fullRepoPath: string) {
   //   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
   // }, [fullRepoPath, disk]);
 
-  const { runner: importRunner } = useRunner(ImportRunner, () => NULL_IMPORT_RUNNER, []);
+  const { runner: importRunner } = useRunner(ImportRunner, () => NULL_IMPORT_RUNNER);
 
   // Auto-start the import when runner is created
   useEffect(() => {

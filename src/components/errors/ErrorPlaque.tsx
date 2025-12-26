@@ -32,18 +32,17 @@ export function ErrorPlaque({
   reset?: () => void;
 }) {
   useEffect(() => {
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        reset && reset();
-      }
-    });
-    return () => {
-      window.removeEventListener("keydown", (e) => {
+    const controller = new AbortController();
+    window.addEventListener(
+      "keydown",
+      (e) => {
         if (e.key === "Escape") {
           reset && reset();
         }
-      });
-    };
+      },
+      { once: true, signal: controller.signal }
+    );
+    return () => controller.abort();
   }, [reset]);
   const navigateTo = error instanceof ApplicationError ? error.getNavigateTo() : null;
   return (

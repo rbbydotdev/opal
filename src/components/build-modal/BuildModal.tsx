@@ -5,12 +5,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
-import { useBuildRunner } from "@/services/build/useBuildRunner";
-import { Workspace } from "@/workspace/Workspace";
-import { RunnerLogLine } from "@/types/RunnerTypes";
-import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
-import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useRunner } from "@/hooks/useRunner";
+import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
+import { RunnerLogLine } from "@/types/RunnerTypes";
+import { Workspace } from "@/workspace/Workspace";
+import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 export function BuildModal({
   cmdRef,
@@ -32,58 +33,51 @@ export function BuildModal({
   );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const {
-    buildRunner,
-    logs,
-    buildCompleted,
-    isBuilding,
-    runBuild,
-    cancelBuild,
-    openNew,
-    openEdit,
-    buildError,
-  } = useBuildRunner(currentWorkspace);
+  const { runner, create, recall, isCompleted, isPending, logs } = useRunner(BuildRunner, () => NULL_BUILD_RUNNER);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   const handleOkay = () => setIsOpen(false);
 
   const handleOpenNew = useCallback(async () => {
-    openNew(strategy);
+    create({ strategy, workspace: currentWorkspace, label: `Build ${new Date().toLocaleString()}` });
     setIsOpen(true);
-  }, [strategy, openNew]);
+  }, [create, strategy, currentWorkspace]);
 
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {
-      await openEdit(buildId);
+      await recall({ buildId, workspace: currentWorkspace });
       setIsOpen(true);
     },
-    [openEdit]
+    [currentWorkspace, recall]
   );
 
   const handleBuild = async () => {
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    return runBuild();
+    return runner.execute();
   };
 
   const handleCancel = useCallback(() => {
-    cancelBuild();
+    runner.cancel();
     setIsOpen(false);
-  }, [cancelBuild]);
+  }, [runner]);
 
   const { open: openPubModal } = useBuildPublisher();
 
   const handleClose = useCallback(() => {
-    if (isBuilding) return;
+    if (isPending) return;
     setIsOpen(false);
-  }, [isBuilding]);
+  }, [isPending]);
 
   const handleFocusOutside = (e: Event) => {
-    if (isBuilding) {
+    if (isPending) {
       e.preventDefault();
     }
   };
   const handleOpenPubModal = () => {
     handleClose();
-    openPubModal({ build: buildRunner.build });
+    openPubModal({ build: runner.build });
   };
 
   useImperativeHandle(
@@ -102,7 +96,7 @@ export function BuildModal({
       <DialogContent className="max-w-2xl h-[70vh] top-[10vh] flex flex-col" onPointerDownOutside={handleFocusOutside}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {buildRunner.isBuilding && <Loader size={16} className="animate-spin" />}
+            {isPending && <Loader size={16} className="animate-spin" />}
             Build Workspace
           </DialogTitle>
           <DialogDescription>Select a build strategy and publish your workspace to static HTML.</DialogDescription>
@@ -117,7 +111,7 @@ export function BuildModal({
             <Select
               value={strategy}
               onValueChange={(value: BuildStrategy) => setStrategy(value)}
-              disabled={isBuilding || buildCompleted}
+              disabled={isCompleted}
             >
               <SelectTrigger id="strategy-select" className="min-h-14">
                 <SelectValue placeholder="Select build strategy" />
@@ -152,9 +146,9 @@ export function BuildModal({
           <div className="flex gap-2">{/* base url, for base tag */}</div>
           {/* Build Controls */}
           <div className="flex gap-2">
-            {!buildCompleted && (
-              <Button onClick={handleBuild} disabled={isBuilding || buildCompleted} className="flex items-center gap-2">
-                {isBuilding ? (
+            {!isCompleted && (
+              <Button onClick={handleBuild} disabled={isPending || isCompleted} className="flex items-center gap-2">
+                {isPending ? (
                   <>
                     <Loader size={16} className="animate-spin" />
                     Building...
@@ -165,7 +159,7 @@ export function BuildModal({
               </Button>
             )}
 
-            {isBuilding && (
+            {isPending && (
               <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel
@@ -174,11 +168,11 @@ export function BuildModal({
           </div>
 
           {/* Build Success Indicator */}
-          {buildCompleted && (
+          {isCompleted && (
             <div className="border-2 border-success bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
-                  <WorkspaceIcon input={buildRunner.build.guid} variant="round" />
+                  <WorkspaceIcon input={runner.build.guid} variant="round" />
                   <span className="font-semibold uppercase text-sm">build completed successfully</span>
                 </div>
                 <div className="flex gap-4 justify-center items-center">
@@ -194,7 +188,7 @@ export function BuildModal({
                     <UploadCloud /> Publish
                   </Button>
                   <Button className="flex items-center gap-2" variant="secondary" size="sm" asChild>
-                    <a href={buildRunner.build.getDownloadBuildZipURL()}>
+                    <a href={runner.build.getDownloadBuildZipURL()}>
                       <Download /> Download
                     </a>
                   </Button>
@@ -204,7 +198,7 @@ export function BuildModal({
           )}
 
           {/* Build Error Indicator */}
-          {buildError && (
+          {runner.error && (
             <div className="border-2 border-destructive bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-destructive justify-between">
                 <div className="flex items-center gap-4">
@@ -227,7 +221,7 @@ export function BuildModal({
                 className="flex items-center gap-1 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 <Clock size={12} />
-                {showTimestamps ? 'Hide' : 'Show'} timestamps
+                {showTimestamps ? "Hide" : "Show"} timestamps
               </Button>
             </div>
             <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">

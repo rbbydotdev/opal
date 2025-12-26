@@ -25,7 +25,8 @@ export class BuildDAO implements BuildRecord {
   label: string;
   fileCount: number;
   timestamp: number;
-  status: "idle" | "pending" | "success" | "failed" | "cancelled";
+  status: "success" | "error" | "pending" | "idle" = "idle";
+  error: string | null = null;
   workspaceId: string;
   buildPath: AbsPath;
   logs: BuildLogLine[];
@@ -46,7 +47,8 @@ export class BuildDAO implements BuildRecord {
     workspaceId,
     buildPath,
     logs,
-  }: Optional<BuildRecord, "status">) {
+    error = null,
+  }: Optional<BuildRecord, "status" | "error">) {
     this.guid = guid;
     this.label = label;
     this.timestamp = timestamp;
@@ -58,6 +60,7 @@ export class BuildDAO implements BuildRecord {
     this.workspaceId = workspaceId;
     this.buildPath = buildPath;
     this.status = status;
+    this.error = error;
     this.logs = logs;
   }
 
@@ -67,19 +70,25 @@ export class BuildDAO implements BuildRecord {
 
   toJSON() {
     return {
+      buildPath: this.buildPath,
+      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      error: this.error,
+      fileCount: this.fileCount,
       guid: this.guid,
       label: this.label,
-      timestamp: this.timestamp,
-      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      logs: this.logs,
       sourceDisk: this.sourceDisk instanceof Disk ? (this.sourceDisk.toJSON() as DiskJType) : this.sourceDisk,
       sourcePath: this.sourcePath,
-      strategy: this.strategy,
-      workspaceId: this.workspaceId,
-      buildPath: this.buildPath,
-      logs: this.logs,
-      fileCount: this.fileCount,
       status: this.status,
+      strategy: this.strategy,
+      timestamp: this.timestamp,
+      workspaceId: this.workspaceId,
     };
+  }
+
+  complete() {
+    this.status === "success";
+    return this.save();
   }
 
   static CreateNew({
@@ -140,7 +149,7 @@ export class BuildDAO implements BuildRecord {
       sourceDisk: new NullDisk(),
       sourcePath: absPath("/"),
       strategy: "freeform",
-      status: "failed",
+      status: "error",
       workspaceId: "",
       buildPath: absPath("/"),
       logs: [],
@@ -180,24 +189,11 @@ export class BuildDAO implements BuildRecord {
   }
 
   save() {
-    return ClientDb.builds.put({
-      guid: this.guid,
-      label: this.label,
-      timestamp: this.timestamp,
-      workspaceId: this.workspaceId,
-      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
-      sourceDisk: this.sourceDisk instanceof Disk ? (this.sourceDisk.toJSON() as DiskJType) : this.sourceDisk,
-      sourcePath: this.sourcePath,
-      strategy: this.strategy,
-      buildPath: this.buildPath,
-      logs: this.logs,
-      status: this.status,
-      fileCount: this.fileCount,
-    });
+    return ClientDb.builds.put(this.toJSON());
   }
 
   get completed() {
-    return this.status === "success" || this.status === "failed" || this.status === "cancelled";
+    return this.status !== "pending";
   }
 
   getBuildPath(): AbsPath {

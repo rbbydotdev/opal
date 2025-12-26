@@ -14,7 +14,8 @@ export interface BuildRecord {
   workspaceId: string;
   buildPath: AbsPath;
   fileCount: number;
-  status: "idle" | "pending" | "success" | "failed" | "cancelled";
+  error: string | null;
+  status: "success" | "error" | "pending" | "idle";
   logs: BuildLogLine[];
 }
 
