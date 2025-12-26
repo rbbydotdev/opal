@@ -215,7 +215,7 @@ export function PublishModalStack({
           </div>
         </DialogHeader>
 
-        {/* MARK: view dest*/}
+        {/* MARK:dest*/}
         {currentView === "destination" && (
           <>
             <PublicationModalDestinationContent
@@ -230,7 +230,7 @@ export function PublishModalStack({
             />
           </>
         )}
-        {/* MARK: view conn */}
+        {/* MARK:conn */}
         {currentView === "connection" && (
           <ConnectionsModalContent
             connection={preferredConnection}
@@ -250,7 +250,7 @@ export function PublishModalStack({
           </ConnectionsModalContent>
         )}
 
-        {/* MARK: view pub */}
+        {/* MARK:pub */}
         {currentView === "publish" && (
           <PublicationModalPublishContent
             //* for jumping to new connection

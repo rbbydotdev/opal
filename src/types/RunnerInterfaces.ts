@@ -10,7 +10,7 @@ export interface Runner {
   onLog: (callback: (logs: LogLine[]) => void) => () => void;
   onError: (callback: (error: string | null) => void) => () => void;
   tearDown(): void;
-  execute(options?: Record<string, unknown>): Promise<unknown>;
+  execute(): Promise<unknown>;
   isCompleted: boolean;
   isPending: boolean;
   isIdle: boolean;

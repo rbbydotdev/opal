@@ -77,7 +77,7 @@ export function PublicationModalPublishContent({
         build: tryBuild,
         destination: destination,
         workspaceId: currentWorkspace.id,
-        deploy,
+        deploy: null,
         label: `Deploy ${new Date().toLocaleString()}`,
       })
     );
@@ -110,7 +110,7 @@ export function PublicationModalPublishContent({
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
       <BuildSelector disabled={runner.isCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
-      <div className="space-y-2 flex flex-col h-full min-h-0">
+      <div className="flex-shrink-0 space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
@@ -302,7 +302,7 @@ export function PublicationModalPublishContent({
             {showTimestamps ? "Hide" : "Show"} timestamps
           </Button>
         </div>
-        <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30 h-96">
+        <ScrollArea className="flex border rounded-md p-3 bg-muted/30 h-96 min-h-0 ___[&>[data-radix-scroll-area-viewport]]:h-auto">
           <div className="font-mono text-sm space-y-1">
             {logs.length === 0 ? (
               <div className="text-muted-foreground italic">Output will appear here...</div>

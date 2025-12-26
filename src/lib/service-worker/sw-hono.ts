@@ -3,6 +3,7 @@ import { Context, Hono } from "hono";
 import { logger } from "hono/logger";
 import { handle } from "hono/service-worker";
 import { z } from "zod";
+import { marked } from "marked";
 
 import { ENV } from "@/lib/env";
 import { BadRequestError, isError, NotFoundError } from "@/lib/errors/errors";
@@ -14,6 +15,8 @@ import { Workspace } from "@/workspace/Workspace";
 
 // Import pure handler functions
 import { Thumb } from "@/data/Thumb";
+import { ClientDb } from "@/data/instance";
+import { HistoryDB } from "@/editors/history/HistoryDB";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
 import { handleDocxConvertRequest } from "@/lib/service-worker/handleDocxConvertRequest";
@@ -139,6 +142,12 @@ const filenameSearchSchema = z.object({
 const downloadEncryptedSchema = z.object({
   password: z.string(),
   encryption: z.union([z.literal("aes"), z.literal("zipcrypto")]),
+});
+
+const markdownRenderSchema = z.object({
+  workspaceName: z.string(),
+  documentId: z.string(),
+  editId: z.string().transform((val) => parseInt(val, 10)),
 });
 
 // Hono's built-in logger middleware
@@ -370,6 +379,43 @@ app.get("/workspace-filename-search/:workspaceName", zValidator("query", filenam
     return result;
   } catch (error) {
     LOG.error(`Workspace filename search error: ${error}`);
+    throw error;
+  }
+});
+
+// Markdown render handler
+app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c) => {
+  try {
+    const { workspaceName, documentId, editId } = c.req.valid("query");
+
+    LOG.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
+
+    // Get workspace to find workspaceId
+    const workspace = Workspace.Get(workspaceName);
+    if (!workspace) {
+      LOG.error(`Workspace not found: ${workspaceName}`);
+      return c.json({ error: "Workspace not found" }, 404);
+    }
+
+    // Create HistoryDB instance and reconstruct document
+    const historyDB = new HistoryDB();
+    const markdownContent = await historyDB.reconstructDocument({ edit_id: editId });
+
+    // Render markdown to HTML
+    const htmlContent = await marked(markdownContent);
+
+    // Return as HTML response
+    return new Response(htmlContent, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  } catch (error) {
+    LOG.error(`Markdown render error: ${error}`);
+    if (error instanceof Error && error.message.includes("not found")) {
+      return c.json({ error: "Edit not found" }, 404);
+    }
     throw error;
   }
 });

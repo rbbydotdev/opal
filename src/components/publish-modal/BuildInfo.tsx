@@ -47,7 +47,7 @@ export function BuildInfo({
         {/* Ready to publish to {destination.label} via {destination.RemoteAuth.source} hosting */}
         <Badge variant="outline">Info</Badge>
       </summary>
-      <div className="w-full mt-2 p-3 bg-muted/30 rounded-md">
+      <div className="w-full mt-2 p-3 bg-muted/30 rounded-md max-h-32">
         <DataDisplay data={displayData} className="mb-4" />
       </div>
     </details>

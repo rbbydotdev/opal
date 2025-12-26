@@ -43,7 +43,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return this.target.sourcePath;
   }
 
-  static Show({}): BuildRunner {
+  static Show({ build, workspace }: { build: BuildDAO; workspace: Workspace }): BuildRunner {
     return NULL_BUILD_RUNNER;
   }
 
@@ -64,21 +64,25 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     workspace,
     label,
     strategy,
+    build,
   }: {
     workspace: Workspace;
     label: string;
     strategy: BuildStrategy;
+    build?: BuildDAO;
   }): BuildRunner {
-    const build = BuildDAO.CreateNew({
-      label,
-      workspaceId: workspace.guid,
-      disk: workspace.disk,
-      sourceDisk: workspace.disk,
-      strategy,
-    });
+    const realBuild =
+      build ??
+      BuildDAO.CreateNew({
+        label,
+        workspaceId: workspace.guid,
+        disk: workspace.disk,
+        sourceDisk: workspace.disk,
+        strategy,
+      });
 
     return new BuildRunner({
-      build,
+      build: realBuild,
       workspace,
     });
   }

@@ -193,6 +193,7 @@ export const DestinationSchemaMap = {
         ) as RemoteAuthGithubAgent;
 
         // Normalize the repository name
+
         const normalizedRepo = coerceRepoToName(data.meta.repository);
 
         // Get the full repository name and validate it exists

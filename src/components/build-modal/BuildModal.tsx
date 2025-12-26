@@ -4,10 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
+import { NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
-import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
+import { BuildRunner } from "@/services/build/BuildRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
@@ -33,7 +34,13 @@ export function BuildModal({
   );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const { runner, execute, setRunner, logs } = useRunner(BuildRunner.Show(NULL_BUILD_RUNNER), []);
+  const { runner, execute, setRunner, logs } = useRunner(
+    BuildRunner.Show({
+      build: NULL_BUILD,
+      workspace: currentWorkspace,
+    }),
+    []
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

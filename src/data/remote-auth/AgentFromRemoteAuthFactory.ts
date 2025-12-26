@@ -21,6 +21,7 @@ import { RemoteAuthNetlifyAPIAgent } from "./RemoteAuthNetlifyAPIAgent";
 import { RemoteAuthNetlifyOAuthAgent } from "./RemoteAuthNetlifyOAuthAgent";
 import { RemoteAuthVercelAPIAgent } from "./RemoteAuthVercelAPIAgent";
 
+import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { DeployBundle, DeployBundleBase } from "@/services/deploy/DeployBundle";
 import { useMemo } from "react";
 import { RemoteAuthAgentSearchType } from "../useFuzzySearchQuery";
@@ -119,9 +120,14 @@ export function useRemoteAuthAgent<T extends ReturnType<typeof AgentFromRemoteAu
   return useMemo(() => AgentFromRemoteAuthFactory(remoteAuth) as T, [remoteAuth]);
 }
 export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundleBase> extends RemoteAuthAgent {
-  deployFiles(bundle: TBundle, destination: any, log?: (status: string) => void, signal?: AbortSignal): Promise<unknown>;
-  getDestinationURL(destination: any): Promise<string>;
-  getDeploymentURL?(destination: any): Promise<string>;
+  deployFiles(
+    bundle: TBundle,
+    destination: DestinationDAO,
+    log?: (status: string) => void,
+    signal?: AbortSignal
+  ): Promise<unknown>;
+  getDestinationURL(destination: DestinationDAO): Promise<string>;
+  getDeploymentURL?(destination: DestinationDAO): Promise<string>;
 }
 
 export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeployableFiles<DeployBundleBase> {
@@ -131,7 +137,12 @@ export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeploy
   getUsername(): string {
     return "null-remote-auth";
   }
-  async deployFiles(bundle: any, destination: any, log?: (status: string) => void, signal?: AbortSignal): Promise<unknown> {
+  async deployFiles(
+    bundle: any,
+    destination: any,
+    log?: (status: string) => void,
+    signal?: AbortSignal
+  ): Promise<unknown> {
     throw new Error("Cannot deploy: Remote connection is missing or invalid");
   }
   async getDestinationURL(destination: any) {

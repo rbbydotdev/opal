@@ -113,17 +113,22 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
       this.log(`Starting deployment, id ${this.target.guid}...`, "info");
       this.log(`Destination: ${this.target.label}`, "info");
 
-      await this.agent.deployFiles(this.bundle, this.target, (status: string) => this.log(status, "info"), abortSignal);
+      await this.agent.deployFiles(
+        this.bundle,
+        this.destination,
+        (status: string) => this.log(status, "info"),
+        abortSignal
+      );
 
       this.log("Deployment completed successfully.", "info");
 
       // Get the destination URL (main app URL)
-      const destinationUrl = await this.agent.getDestinationURL(this.target);
+      const destinationUrl = await this.agent.getDestinationURL(this.destination);
 
       // For deployment-specific URLs, check if agent provides one, otherwise fallback to destination URL
       const deploymentUrl =
         typeof this.agent.getDeploymentURL === "function"
-          ? await this.agent.getDeploymentURL(this.target)
+          ? await this.agent.getDeploymentURL(this.destination)
           : destinationUrl;
 
       // Update destination with main URL if not already set

@@ -34,7 +34,12 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
     return this.githubClient.getRepos({ signal });
   }
 
-  async deployFiles(bundle: DeployBundle, destination: any, logStatus?: (status: string) => void, signal?: AbortSignal) {
+  async deployFiles(
+    bundle: DeployBundle,
+    destination: GithubDestination,
+    logStatus?: (status: string) => void,
+    signal?: AbortSignal
+  ) {
     const files = await bundle.getFiles();
     const { repository, branch } = destination.meta;
     const [owner, repo] = await this.githubClient.getFullRepoName(repository);
