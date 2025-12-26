@@ -7,35 +7,15 @@ import {
 } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { NULL_REMOTE_AUTH_AGENT } from "@/data/remote-auth/RemoteAuthNullAgent";
 import { unwrapError } from "@/lib/errors/errors";
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { observeMultiple } from "@/lib/Observable";
+import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { DeployBundle, DeployBundleBase, DeployBundleFactory, NULL_BUNDLE } from "@/services/deploy/DeployBundle";
 import { Runner } from "@/types/RunnerInterfaces";
-import { LogLine } from "@/types/RunnerTypes";
 
-export class DeployRunner<TBundle extends DeployBundleBase> implements Runner {
+export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRunner<DeployDAO> implements Runner {
   readonly destination: DestinationDAO;
-  readonly deploy: DeployDAO;
   readonly agent: RemoteAuthAgentDeployableFiles<TBundle>;
   private bundle: TBundle;
-
-  emitter = CreateSuperTypedEmitter<{
-    logs: LogLine[];
-    status: "success" | "pending" | "error" | "idle";
-  }>();
-
-  tearDown(): void {
-    this.emitter.clearListeners();
-  }
-  get logs() {
-    return this.deploy.logs;
-  }
-  get status() {
-    return this.deploy.status;
-  }
-  get error() {
-    return this.deploy.error;
-  }
+  protected abortController: AbortController = new AbortController();
 
   constructor({
     agent,
@@ -48,28 +28,10 @@ export class DeployRunner<TBundle extends DeployBundleBase> implements Runner {
     deploy: DeployDAO;
     bundle: TBundle;
   }) {
+    super(deploy);
     this.agent = agent;
     this.destination = destination;
-    // Wrap deploy with Observable to automatically broadcast status changes
-    this.deploy = observeMultiple(
-      deploy,
-      {
-        status: this.broadcastUpdate,
-        logs: this.broadcastUpdate,
-      },
-      {
-        batch: true,
-      }
-    );
     this.bundle = bundle;
-  }
-
-  get status() {
-    return this.deploy.status;
-  }
-
-  get isDeploying() {
-    return this.deploy.status === "pending";
   }
 
   static async Recall({ deployId }: { deployId: string }): Promise<DeployRunner<DeployBundle>> {
@@ -129,29 +91,24 @@ export class DeployRunner<TBundle extends DeployBundleBase> implements Runner {
     abortSignal?: AbortSignal;
   } = {}): Promise<DeployDAO> {
     try {
-      this.deploy.status = "pending";
+      this.target.status = "pending";
 
       abortSignal?.throwIfAborted();
 
-      this.log(`Starting deployment, id ${this.deploy.guid}...`, "info");
-      this.log(`Destination: ${this.destination.label}`, "info");
+      this.log(`Starting deployment, id ${this.target.guid}...`, "info");
+      this.log(`Destination: ${this.target.label}`, "info");
 
-      await this.agent.deployFiles(
-        this.bundle,
-        this.destination,
-        (status: string) => this.log(status, "info"),
-        abortSignal
-      );
+      await this.agent.deployFiles(this.bundle, this.target, (status: string) => this.log(status, "info"), abortSignal);
 
       this.log("Deployment completed successfully.", "info");
 
       // Get the destination URL (main app URL)
-      const destinationUrl = await this.agent.getDestinationURL(this.destination);
+      const destinationUrl = await this.agent.getDestinationURL(this.target);
 
       // For deployment-specific URLs, check if agent provides one, otherwise fallback to destination URL
       const deploymentUrl =
         typeof this.agent.getDeploymentURL === "function"
-          ? await this.agent.getDeploymentURL(this.destination)
+          ? await this.agent.getDeploymentURL(this.target)
           : destinationUrl;
 
       // Update destination with main URL if not already set
@@ -159,19 +116,19 @@ export class DeployRunner<TBundle extends DeployBundleBase> implements Runner {
         await this.destination.update({ destinationUrl });
       }
 
-      this.deploy.url = destinationUrl;
-      this.deploy.deploymentUrl = deploymentUrl;
-      this.deploy.status = "success";
+      this.target.url = destinationUrl;
+      this.target.deploymentUrl = deploymentUrl;
+      this.target.status = "success";
     } catch (error) {
       const errorMessage = unwrapError(error);
       console.error("Deployment failed:", error);
       this.log(`Deployment failed: ${errorMessage}`, "error");
-      this.deploy.error = abortSignal?.aborted ? `Deployment cancelled` : `Deployment failed: ${errorMessage}`;
-      this.deploy.status = "error";
+      this.target.error = abortSignal?.aborted ? `Deployment cancelled` : `Deployment failed: ${errorMessage}`;
+      this.target.status = "error";
     } finally {
-      this.deploy.completedAt = Date.now();
-      await this.deploy.save();
-      return this.deploy.hydrate();
+      this.target.completedAt = Date.now();
+      await this.target.save();
+      return this.target.hydrate();
     }
   }
 }
@@ -189,6 +146,8 @@ export class NullDeployRunner extends DeployRunner<DeployBundle> {
   }
 
   async execute(): Promise<DeployDAO> {
-    return this.deploy;
+    return this.target;
   }
 }
+
+export const NULL_DEPLOY_RUNNER = new NullDeployRunner();

@@ -8,7 +8,7 @@ import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
 import { BuildRunner, NULL_BUILD_RUNNER } from "@/services/build/BuildRunner";
-import { RunnerLogLine } from "@/types/RunnerTypes";
+import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
@@ -77,7 +77,7 @@ export function BuildModal({
   };
   const handleOpenPubModal = () => {
     handleClose();
-    openPubModal({ build: runner.build });
+    openPubModal({ build: runner.target });
   };
 
   useImperativeHandle(
@@ -172,7 +172,7 @@ export function BuildModal({
             <div className="border-2 border-success bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
-                  <WorkspaceIcon input={runner.build.guid} variant="round" />
+                  <WorkspaceIcon input={runner.target.guid} variant="round" />
                   <span className="font-semibold uppercase text-sm">build completed successfully</span>
                 </div>
                 <div className="flex gap-4 justify-center items-center">
@@ -188,7 +188,7 @@ export function BuildModal({
                     <UploadCloud /> Publish
                   </Button>
                   <Button className="flex items-center gap-2" variant="secondary" size="sm" asChild>
-                    <a href={runner.build.getDownloadBuildZipURL()}>
+                    <a href={runner.target.getDownloadBuildZipURL()}>
                       <Download /> Download
                     </a>
                   </Button>
@@ -229,7 +229,7 @@ export function BuildModal({
                 {logs.length === 0 ? (
                   <div className="text-muted-foreground italic">Build output will appear here...</div>
                 ) : (
-                  logs.map((log: RunnerLogLine, index: number) => (
+                  logs.map((log: LogLine, index: number) => (
                     <div
                       key={index}
                       className={`flex gap-2 ${log.type === "error" ? "text-destructive" : "text-foreground"}`}

@@ -1,14 +1,19 @@
 import { Disk } from "@/data/disk/Disk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
 import { absPath, relPath } from "@/lib/paths2";
-import { BaseRunner } from "@/services/runners/BaseRunner";
+import { ObservableRunner } from "@/services/build/ObservableRunner";
 
-export class ImportRunner extends BaseRunner {
+export class ImportRunner extends ObservableRunner<any> {
   private disk: Disk;
   private importer: GithubImport;
+  protected abortController: AbortController = new AbortController();
 
   constructor({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }) {
-    super();
+    super({
+      status: "idle",
+      logs: [],
+      error: null,
+    });
     this.disk = disk;
     this.importer = new GithubImport(relPath(fullRepoPath));
   }
@@ -21,18 +26,22 @@ export class ImportRunner extends BaseRunner {
     throw new Error("ImportRunner does not support recall - imports are single-use operations");
   }
 
+  cancel(): void {
+    this.abortController.abort();
+  }
+
   async execute({
     abortSignal = this.abortController.signal,
   }: {
     abortSignal?: AbortSignal;
   } = {}): Promise<void> {
     try {
-      this.setRunning(true);
-      this.setCompleted(false);
-      this.clearError();
+      this.target.status = "pending";
+      this.target.error = null;
 
       if (abortSignal?.aborted) {
         this.log("Import cancelled", "error");
+        this.target.status = "error";
         return;
       }
 
@@ -41,6 +50,7 @@ export class ImportRunner extends BaseRunner {
       for await (const file of this.importer.fetchFiles(abortSignal)) {
         if (abortSignal?.aborted) {
           this.log("Import cancelled", "error");
+          this.target.status = "error";
           return;
         }
 
@@ -50,14 +60,12 @@ export class ImportRunner extends BaseRunner {
       }
 
       this.log("Import completed successfully!", "info");
-      this.setCompleted(true);
+      this.target.status = "success";
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.log(`Import failed: ${errorMessage}`, "error");
-      this.setError(`Import failed: ${errorMessage}`);
-      this.setCompleted(true);
-    } finally {
-      this.setRunning(false);
+      this.target.error = `Import failed: ${errorMessage}`;
+      this.target.status = "error";
     }
   }
 }

@@ -165,7 +165,7 @@ export function PublishModalStack({
       <DialogContent
         className={cn("overflow-y-auto top-[10vh] min-h-[50vh] max-w-2xl max-h-[85vh]", {
           "min-h-[80vh]": currentView === "publish",
-          "top-[2vh] max-h-[95vh]": deploy?.completed,
+          "top-[2vh] max-h-[95vh]": deploy?.isCompleted,
         })}
         onPointerDownOutside={handlePointerDownOutside}
         onEscapeKeyDown={handleEscapeKeyDown}

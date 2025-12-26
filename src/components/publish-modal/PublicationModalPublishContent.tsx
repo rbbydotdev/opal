@@ -15,7 +15,8 @@ import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useDeployRunner } from "@/services/deploy/useDeployRunner";
+import { useRunner } from "@/hooks/useRunner";
+import { DeployRunner, NULL_DEPLOY_RUNNER } from "@/services/deploy/DeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
@@ -64,22 +65,28 @@ export function PublicationModalPublishContent({
   const tryBuild = build.isNull ? builds[0] || build : build;
 
   const {
-    deployRunner,
-    deployCompleted,
-    deploy: liveDeploy,
+    // deployRunner,
+    // deployCompleted,
+    // deploy: liveDeploy,
+    runner,
+    isSuccess,
+    isCompleted,
+    isPending,
+    isFailed,
     logs,
-  } = useDeployRunner({
-    label: `Deploy ${new Date().toLocaleString()}`,
-    workspaceId: currentWorkspace.id,
-    build: tryBuild,
-    deploy,
-    destination,
-  });
+  } = useRunner(DeployRunner, () => NULL_DEPLOY_RUNNER as DeployRunner<any>);
+  // {
+  //     label: `Deploy ${new Date().toLocaleString()}`,
+  //     workspaceId: currentWorkspace.id,
+  //     build: tryBuild,
+  //     deploy,
+  //     destination,
+  //   }
 
   const handleOkay = () => onOpenChange(false);
   const handleDeploy = async () => {
     if (!destination) return;
-    await deployRunner.execute();
+    await runner.execute();
   };
   const handleBuildSelect = (buildId: string) => {
     const build = builds.find((build) => build.guid === buildId)!;
@@ -108,12 +115,12 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
-      <BuildSelector disabled={deployCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
+      <BuildSelector disabled={isCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
       <div className="space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
-            <Select disabled={deployCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
+            <Select disabled={isCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
@@ -176,7 +183,7 @@ export function PublicationModalPublishContent({
             variant={"outline"}
             className="min-h-12"
             title="Add Destination"
-            disabled={deploy?.completed}
+            disabled={deploy?.isCompleted}
             onClick={() => {
               setDestination(null);
               pushView(remoteAuths.length === 0 ? "connection" : "destination");
@@ -189,7 +196,7 @@ export function PublicationModalPublishContent({
               className="min-h-12"
               title="Edit Destination"
               type="button"
-              disabled={deploy?.completed}
+              disabled={deploy?.isCompleted}
               variant="outline"
               onClick={() => pushView("destination")}
             >
@@ -206,7 +213,7 @@ export function PublicationModalPublishContent({
       {destination && (
         <div className="flex gap-2">
           <Button
-            disabled={deployCompleted}
+            disabled={isCompleted}
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-2"
@@ -217,9 +224,9 @@ export function PublicationModalPublishContent({
             onClick={handleDeploy}
             className="flex items-center gap-2"
             variant="secondary"
-            disabled={liveDeploy.isDeploying || deployCompleted}
+            disabled={isCompleted || isPending}
           >
-            {liveDeploy.isDeploying ? (
+            {isPending ? (
               <>
                 <Loader size={16} className="animate-spin" />
                 Publishing...
@@ -234,7 +241,7 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Deploy Success Indicator */}
-      {liveDeploy.isSuccessful && (
+      {isSuccess && (
         <div className="border-2 border-success bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-success justify-between">
             <div className="flex items-center gap-4">
@@ -253,17 +260,17 @@ export function PublicationModalPublishContent({
                   </a>
                 </Button>
               )}
-              {liveDeploy?.deploymentUrl && liveDeploy.deploymentUrl !== destination?.destinationUrl && (
+              {runner?.target.deploymentUrl && runner.target.deploymentUrl !== destination?.destinationUrl && (
                 <Button className="flex items-center gap-2" asChild>
-                  <a href={liveDeploy.deploymentUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={runner.target.deploymentUrl} target="_blank" rel="noopener noreferrer">
                     <Globe size={16} />
                     View Deploy
                   </a>
                 </Button>
               )}
-              {!destination?.destinationUrl && liveDeploy?.effectiveUrl && (
+              {!destination?.destinationUrl && runner?.target.effectiveUrl && (
                 <Button className="flex items-center gap-2" asChild>
-                  <a href={liveDeploy.effectiveUrl || "#"} target="_blank" rel="noopener noreferrer">
+                  <a href={runner.target.effectiveUrl || "#"} target="_blank" rel="noopener noreferrer">
                     <ArrowUpRightIcon size={16} />
                     View
                   </a>
@@ -275,7 +282,7 @@ export function PublicationModalPublishContent({
       )}
 
       {/* Deploy Error Indicator */}
-      {liveDeploy.isFailed && (
+      {isFailed && (
         <div className="border-2 border-destructive bg-card p-4 rounded-lg">
           <div className="flex items-center gap-2 font-mono text-destructive justify-between">
             <div className="flex items-center gap-4">

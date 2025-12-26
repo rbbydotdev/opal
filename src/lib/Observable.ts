@@ -64,9 +64,9 @@ export type ObservableConfig<T, K extends keyof T> = {
  * Creates a Proxy-wrapped object that observes changes to a specific property
  * and calls the provided callback when that property is modified.
  */
-export function Observable<T extends Record<string | number | symbol, any>, K extends keyof T>(
+export function createObservable<T extends Record<string | number | symbol, any>, K extends keyof T>(
   config: ObservableConfig<T, K>
-): T {
+): Observable<T> {
   const { target, property, onChange, options } = config;
   const shouldBatch = options?.batch ?? false;
 
@@ -98,42 +98,71 @@ export function Observable<T extends Record<string | number | symbol, any>, K ex
 
     get(target: T, prop: string | symbol): any {
       return (target as any)[prop];
-    }
+    },
   }) as T;
 
-  return obj;
+  return obj as Observable<T>;
 }
 
 /**
- * Type helper for creating an Observable with TypeScript inference
- * Usage: Observable<DeployDAO, "status">({ target: deploy, property: "status", onChange: ... })
+ * Type guard to check if an object is observable
  */
-export type ObservableType<T, K extends keyof T> = T & {
-  readonly __observable: { property: K; target: T };
+export function isObservable<T>(obj: T | Observable<T>): obj is Observable<T> {
+  return obj && typeof obj === "object";
+}
+
+/**
+ * Helper to assert that an object is observable (throws if not)
+ */
+export function assertObservable<T>(obj: T | Observable<T>): asserts obj is Observable<T> {
+  if (!isObservable(obj)) {
+    throw new Error("Object must be observable");
+  }
+}
+
+/**
+ * Brand symbol for Observable types - ensures type safety
+ */
+declare const __observableBrand: unique symbol;
+
+/**
+ * Branded Observable type that enforces explicit observable creation
+ * Usage in classes: Observable<MyClass> to require the object be made observable
+ */
+export type Observable<T> = T & {
+  readonly [__observableBrand]: true;
+};
+
+/**
+ * Type helper for creating an Observable with TypeScript inference
+ * Usage: ObservableWithProperty<DeployDAO, "status">({ target: deploy, property: "status", onChange: ... })
+ */
+export type ObservableWithProperty<T, K extends keyof T> = Observable<T> & {
+  readonly __observableProperty: { property: K; target: T };
 };
 
 /**
  * Convenience function for creating an observable with a simplified API
  */
-export function observe<T extends Record<string | number | symbol, any>, K extends keyof T>(
+export function observe<T extends Record<string, any>, K extends keyof T>(
   target: T,
   property: K,
   onChange: PropertyChangeCallback<T, K>,
   options?: { batch?: boolean }
-): T {
-  return Observable({ target, property, onChange, options });
+): Observable<T> {
+  return createObservable({ target, property, onChange, options });
 }
 
 /**
  * Multiple property observer - watches multiple properties on the same object
  */
-export function observeMultiple<T extends Record<string | number | symbol, any>>(
+export function observeMultiple<T extends Record<string, any>>(
   target: T,
-  observers: Partial<{
+  observers: {
     [K in keyof T]: PropertyChangeCallback<T, K>;
-  }>,
+  },
   options?: { batch?: boolean }
-): T {
+): Observable<T> {
   const shouldBatch = options?.batch ?? false;
 
   // Pre-create callback functions for each property
@@ -141,7 +170,7 @@ export function observeMultiple<T extends Record<string | number | symbol, any>>
 
   const obj = new Proxy(target as any, {
     set(target: T, prop: string | symbol, newValue: any): boolean {
-      const callback = observers[prop as keyof T];
+      const callback = observers?.[prop as keyof T];
 
       if (callback && prop in obj) {
         const oldValue = (target as any)[prop];
@@ -171,10 +200,10 @@ export function observeMultiple<T extends Record<string | number | symbol, any>>
       return true;
     },
 
-    get(target: T, prop: string | symbol): any {
+    get(target: T, prop: string): any {
       return (target as any)[prop];
-    }
+    },
   }) as T;
 
-  return obj;
+  return obj as Observable<T>;
 }

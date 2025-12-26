@@ -345,7 +345,6 @@ export class GitRepo {
       if (this.info?.conflictingFiles.length) {
         void this.sync();
       }
-      // void this.local.emit(RepoEvents.WORKTREE, SIGNAL_ONLY);
     });
     //TODO: added this donno if breaks in main or worker?
     void this.remote.on(RepoEvents.GIT, () => {

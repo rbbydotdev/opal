@@ -176,8 +176,11 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
       Object.assign(this, deployment);
     }
 
-    // console.log(this.toJSON());
     return this;
+  }
+
+  get isCompleted() {
+    return this.status === "success" || this.status === "error";
   }
 
   async update({ ...properties }: Partial<Omit<DeployRecord, "guid">>) {

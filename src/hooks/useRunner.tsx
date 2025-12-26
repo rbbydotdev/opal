@@ -43,8 +43,10 @@ export function useRunner<T extends Runner = Runner, U extends UsableRunner<T> =
     isCompleted: status === "success" || status === "error",
     isIdle: status === "idle",
     isFailed: status === "error",
+    isSuccess: status === "success",
     status,
     create,
     recall,
+    error,
   };
 }

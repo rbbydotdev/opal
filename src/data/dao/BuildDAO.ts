@@ -1,4 +1,4 @@
-import { BuildLogLine, BuildRecord, BuildStrategy } from "@/data/dao/BuildRecord";
+import { BuildRecord, BuildStrategy } from "@/data/dao/BuildRecord";
 import { PublicationDAO, PublicationJType } from "@/data/dao/PublicationDAO";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
@@ -30,7 +30,7 @@ export class BuildDAO implements BuildRecord {
   error: string | null = null;
   workspaceId: string;
   buildPath: AbsPath;
-  logs: BuildLogLine[];
+  logs: LogLine[];
   publications: (PublicationJType | PublicationDAO)[] = [];
 
   static guid = () => "build_id_" + nanoid();
@@ -92,15 +92,6 @@ export class BuildDAO implements BuildRecord {
     return this.save();
   }
 
-  log(message: string, type: "info" | "error" | "warning" | "success" = "info") {
-    const logLine: LogLine = {
-      type,
-      timestamp: Date.now(),
-      message,
-    };
-    this.logs.push(logLine);
-  }
-
   static CreateNew({
     label,
     disk,
@@ -120,7 +111,7 @@ export class BuildDAO implements BuildRecord {
     workspaceId: string;
     guid?: string;
     fileCount?: number;
-    logs?: BuildLogLine[];
+    logs?: LogLine[];
   }) {
     const buildPath = BuildPath(guid);
     return new BuildDAO({

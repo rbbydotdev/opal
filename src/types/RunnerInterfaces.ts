@@ -5,6 +5,7 @@ export interface Runner {
   get logs(): LogLine[];
   get error(): string | null;
   get status(): "idle" | "success" | "pending" | "error";
+  cancel(): void;
   onStatus: (callback: () => void) => () => void;
   onLog: (callback: (logs: LogLine[]) => void) => () => void;
   onError: (callback: (error: string | null) => void) => () => void;
