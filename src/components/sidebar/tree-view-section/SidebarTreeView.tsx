@@ -41,7 +41,7 @@ export function SidebarTreeView({
         </SidebarGroupLabel>
 
         <CollapsibleContent>
-          <SidebarContent className="scrollbar-thin p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
+          <SidebarContent className="p-0 pb-2 pl-4 max-w-full overflow-x-hidden border-l-2 pr-5 group">
             <SidebarTreeViewMenu />
           </SidebarContent>
         </CollapsibleContent>

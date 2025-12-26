@@ -1,9 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
+import { logger } from "hono/logger";
+import { handle } from "hono/service-worker";
 import { z } from "zod";
 
 import { ENV } from "@/lib/env";
-import { BadRequestError, errF, isError, NotFoundError } from "@/lib/errors/errors";
+import { BadRequestError, isError, NotFoundError } from "@/lib/errors/errors";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { absPath } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
@@ -28,8 +30,9 @@ import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearc
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
 
 declare const self: ServiceWorkerGlobalScope;
+const LOG = RemoteLoggerLogger("SW");
 
-initializeGlobalLogger(RemoteLoggerLogger("ServiceWorker"));
+initializeGlobalLogger(LOG);
 
 const app = new Hono<{ Variables: { workspaceName: string } }>();
 
@@ -60,41 +63,53 @@ const extractWorkspaceFromReferrer = (referrer: string | undefined): string | nu
 };
 
 // Workspace validator middleware factory
-const workspaceValidator = (options: { required?: boolean } = {}, ...extractors: Array<(c: any) => string | null>) => {
-  return async (c: any, next: () => Promise<void>) => {
+const workspaceValidator = (
+  options: { required?: boolean } = {},
+  ...extractors: Array<(c: Context) => string | null>
+) => {
+  return async (c: Context, next: () => Promise<void>) => {
     let workspaceName: string | null = null;
 
-    for (const extractor of extractors) {
+    LOG.log(`[WorkspaceValidator] Processing URL: ${c.req.url}`);
+    LOG.log(`[WorkspaceValidator] Referrer: ${c.req.raw.referrer}`);
+    LOG.log(`[WorkspaceValidator] Headers referer: ${c.req.header("referer")}`);
+    LOG.log(`[WorkspaceValidator] Raw referrer: ${c.req.raw.referrer}`);
+
+    for (let i = 0; i < extractors.length; i++) {
+      const extractor = extractors[i]!;
       workspaceName = extractor(c);
+      LOG.log(`[WorkspaceValidator] Extractor ${i} result: ${workspaceName}`);
       if (workspaceName) break;
     }
 
     if (options.required && !workspaceName) {
+      LOG.error(`[WorkspaceValidator] Failed to resolve workspace for ${c.req.url}`);
       return c.json({ error: "Workspace name could not be determined" }, 400);
     }
 
+    LOG.log(`[WorkspaceValidator] Final workspace: ${workspaceName}`);
     c.set("workspaceName", workspaceName);
     await next();
   };
 };
 
 // Individual extractor functions for composition
-const extractFromSearchParams = (c: any) => {
+const extractFromSearchParams = (c: Context) => {
   const url = new URL(c.req.url);
   return url.searchParams.get("workspaceName");
 };
 
-const extractFromUrlPath = (c: any) => extractWorkspaceFromUrl(c.req.url);
+const extractFromUrlPath = (c: Context) => extractWorkspaceFromUrl(c.req.url);
 
-const extractFromReferrer = (c: any) => {
-  const referrer = c.req.header("referer");
+const extractFromReferrer = (c: Context) => {
+  // In service worker, referrer comes from the request object, not headers
+  const referrer = c.req.raw.referrer;
+  LOG.log(`Extracting from referrer: ${referrer}`);
   return extractWorkspaceFromReferrer(referrer);
 };
 
-const extractFromPathParam = (c: any) => c.req.param("workspaceName");
+const extractFromPathParam = (c: Context) => c.req.param("workspaceName");
 
-// Pre-composed validators for common cases
-const requireWorkspaceFromParam = workspaceValidator({ required: true }, extractFromPathParam);
 const resolveWorkspaceFromAny = workspaceValidator(
   { required: true },
   extractFromSearchParams,
@@ -107,13 +122,6 @@ const resolveWorkspaceFromQueryOrContext = workspaceValidator(
   extractFromSearchParams,
   extractFromUrlPath,
   extractFromReferrer
-);
-const resolveWorkspaceOptional = workspaceValidator(
-  { required: false },
-  extractFromSearchParams,
-  extractFromUrlPath,
-  extractFromReferrer,
-  extractFromPathParam
 );
 
 const searchSchema = z.object({
@@ -133,8 +141,75 @@ const downloadEncryptedSchema = z.object({
   encryption: z.union([z.literal("aes"), z.literal("zipcrypto")]),
 });
 
-// Middleware for request signaling
+// Hono's built-in logger middleware
+app.use("*", logger(LOG.log.bind(LOG)));
+
+// Custom logging for service worker specific info
 app.use("*", async (c, next) => {
+  const request = c.req.raw;
+  LOG.log(
+    `${c.req.method} ${c.req.url} | Mode: ${request.mode} | Destination: ${request.destination} | Referrer: ${request.referrer}`
+  );
+  await next();
+});
+
+// Middleware to skip static files
+app.use("*", async (c, next) => {
+  const url = new URL(c.req.url);
+  if (url.pathname.startsWith("/@static/")) {
+    LOG.log(`Skipping static file: ${c.req.url}`);
+    // Return a pass-through response to let the browser handle it
+    return fetch(c.req.raw);
+  }
+  await next();
+});
+
+// Middleware to check host URLs
+app.use("*", async (c, next) => {
+  const url = new URL(c.req.url);
+  if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
+    LOG.log(`Bypassing non-host URL: ${c.req.url}`);
+    // Return a pass-through response to let the browser handle it
+    return fetch(c.req.raw);
+  }
+  await next();
+});
+
+// Middleware to skip navigation requests (except downloads)
+app.use("*", async (c, next) => {
+  const request = c.req.raw;
+  if (c.req.path === "/download.zip") {
+    return await next();
+  }
+
+  if (request.mode === "navigate" || !request.referrer) {
+    LOG.log(
+      `Skipping navigation/no-referrer request: ${c.req.url} | Mode: ${request.mode} | Referrer: ${request.referrer}`
+    );
+    // Return a pass-through response to let the browser handle it
+    return fetch(c.req.raw);
+  }
+  await next();
+});
+
+// Middleware to check whitelist and filter requests
+app.use("*", async (c, next) => {
+  const request = c.req.raw;
+  const url = new URL(c.req.url);
+  const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
+
+  if (!request.referrer || whiteListMatch || request.destination === "script") {
+    console.log(
+      `Skipping filtered request: ${c.req.url} | Referrer: ${request.referrer} | WhitelistMatch: ${whiteListMatch} | Destination: ${request.destination}`
+    );
+    // Return a pass-through response to let the browser handle it
+    return fetch(c.req.raw);
+  }
+  await next();
+});
+
+// Middleware for request signaling
+app.use("*", async (_c, next) => {
   signalRequest({ type: REQ_SIGNAL.START });
   try {
     await next();
@@ -145,7 +220,7 @@ app.use("*", async (c, next) => {
 
 // Error handler middleware
 app.onError((err, c) => {
-  logger.error(`Handler error: ${err.message}`);
+  LOG.error(`Handler error: ${err.message}`);
 
   if (isError(err, BadRequestError)) {
     return c.json({ error: "Validation error", details: err.message }, 400);
@@ -160,7 +235,7 @@ app.onError((err, c) => {
 
 // Route handlers using Hono best practices
 
-// Image upload handler
+// Add a simple root route for testing
 app.post("/upload-image/*", resolveWorkspaceFromAny, async (c) => {
   try {
     const workspaceName = c.get("workspaceName");
@@ -168,7 +243,7 @@ app.post("/upload-image/*", resolveWorkspaceFromAny, async (c) => {
     const filePath = absPath(url.decodedPathname.replace("/upload-image", ""));
     const arrayBuffer = await c.req.arrayBuffer();
 
-    logger.log(`Handling image upload for: ${url.pathname}`);
+    LOG.log(`Handling image upload for: ${url.pathname}`);
 
     const resultPath = await handleImageUpload(workspaceName, filePath, arrayBuffer);
 
@@ -179,7 +254,7 @@ app.post("/upload-image/*", resolveWorkspaceFromAny, async (c) => {
       },
     });
   } catch (error) {
-    logger.error(`Upload image error: ${error}`);
+    LOG.error(`Upload image error: ${error}`);
     throw error;
   }
 });
@@ -192,12 +267,12 @@ app.post("/upload-docx/*", resolveWorkspaceFromAny, async (c) => {
     const fullPathname = absPath(url.decodedPathname.replace("/upload-docx", ""));
     const arrayBuffer = await c.req.arrayBuffer();
 
-    logger.log(`Handling DOCX upload for: ${fullPathname}`);
+    LOG.log(`Handling DOCX upload for: ${fullPathname}`);
 
     const result = await handleDocxConvertRequest(workspaceName, fullPathname, arrayBuffer);
     return result; // Returns a Response
   } catch (error) {
-    logger.error(`Upload DOCX error: ${error}`);
+    LOG.error(`Upload DOCX error: ${error}`);
     throw error;
   }
 });
@@ -210,12 +285,12 @@ app.post("/upload-markdown/*", resolveWorkspaceFromAny, async (c) => {
     const fullPathname = absPath(url.decodedPathname.replace("/upload-markdown", ""));
     const arrayBuffer = await c.req.arrayBuffer();
 
-    logger.log(`Handling markdown upload for: ${url.pathname}`);
+    LOG.log(`Handling markdown upload for: ${url.pathname}`);
 
     const result = await handleDocxConvertRequest(workspaceName, fullPathname, arrayBuffer);
     return result;
   } catch (error) {
-    logger.error(`Upload markdown error: ${error}`);
+    LOG.error(`Upload markdown error: ${error}`);
     throw error;
   }
 });
@@ -231,12 +306,12 @@ app.post(
       const findReplacePairs = c.req.valid("json");
       const url = new SuperUrl(c.req.url);
 
-      logger.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
+      LOG.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
 
       const result = await handleMdImageReplace(url, workspaceName, findReplacePairs);
       return result;
     } catch (error) {
-      logger.error(`Replace MD images error: ${error}`);
+      LOG.error(`Replace MD images error: ${error}`);
       throw error;
     }
   }
@@ -253,12 +328,12 @@ app.post(
       const findReplacePairs = c.req.valid("json");
       const url = new SuperUrl(c.req.url);
 
-      logger.log(`Replacing files with: ${findReplacePairs.length} pairs`);
+      LOG.log(`Replacing files with: ${findReplacePairs.length} pairs`);
 
       const result = await handleFileReplace(url, workspaceName, findReplacePairs);
       return result;
     } catch (error) {
-      logger.error(`Replace files error: ${error}`);
+      LOG.error(`Replace files error: ${error}`);
       throw error;
     }
   }
@@ -273,12 +348,12 @@ app.get("/workspace-search/:workspaceName", zValidator("query", searchSchema), a
     // Convert regexp parameter
     const regexpFlag = regexp === null ? true : regexp === "1" || regexp === true;
 
-    logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
+    LOG.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
 
     const result = await handleWorkspaceSearch({ workspaceName, searchTerm, regexp: regexpFlag });
     return result;
   } catch (error) {
-    logger.error(`Workspace search error: ${error}`);
+    LOG.error(`Workspace search error: ${error}`);
     throw error;
   }
 });
@@ -289,12 +364,12 @@ app.get("/workspace-filename-search/:workspaceName", zValidator("query", filenam
     const workspaceName = c.req.param("workspaceName");
     const { searchTerm } = c.req.valid("query");
 
-    logger.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
+    LOG.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
 
     const result = await handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
     return result;
   } catch (error) {
-    logger.error(`Workspace filename search error: ${error}`);
+    LOG.error(`Workspace filename search error: ${error}`);
     throw error;
   }
 });
@@ -318,13 +393,13 @@ app.get("/download.zip", resolveWorkspaceFromQueryOrContext, async (c) => {
     // Validate the payload using the download schema
     const validatedPayload = downloadZipSchema.parse(urlPayload);
 
-    logger.log(`Handling download for: ${url.href}`);
-    logger.log(`Download payload: ${JSON.stringify(validatedPayload)}`);
+    LOG.log(`Handling download for: ${url.href}`);
+    LOG.log(`Download payload: ${JSON.stringify(validatedPayload)}`);
 
     const result = await handleDownloadRequest(workspaceName, validatedPayload);
     return result;
   } catch (error) {
-    logger.error(`Download error: ${error}`);
+    LOG.error(`Download error: ${error}`);
     throw error;
   }
 });
@@ -342,12 +417,12 @@ app.post("/download-encrypted.zip", resolveWorkspaceFromQueryOrContext, async (c
 
     const options = downloadEncryptedSchema.parse({ password, encryption });
 
-    logger.log(`Handling encrypted download for workspace: ${workspaceName}`);
+    LOG.log(`Handling encrypted download for workspace: ${workspaceName}`);
 
     const result = await handleDownloadRequestEncrypted(workspaceName, options);
     return result;
   } catch (error) {
-    logger.error(`Encrypted download error: ${error}`);
+    LOG.error(`Encrypted download error: ${error}`);
     throw error;
   }
 });
@@ -374,47 +449,53 @@ app.get("*.css", resolveWorkspaceFromQueryOrContext, async (c) => {
   return handleStyleSheetRequest(url, workspaceName);
 });
 
-// Image handler using Hono pattern matching
-app.get("*{.*\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrContext, async (c) => {
+app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrContext, async (c) => {
   const workspaceName = c.get("workspaceName");
+  const _filename = c.req.param("file");
   const url = new SuperUrl(c.req.url);
-  const request = c.req.raw;
+  const pathname = url.decodedPathname;
 
-  if (request.destination === "image" || url.decodedPathname.match(/\.(jpg|jpeg|png|webp|svg)$/i)) {
-    logger.log(`Handling image request for: ${url.pathname}`);
+  // Optional: log or inspect
+  LOG.log(`Handling image request for: ${pathname}`);
 
-    // Check cache first for non-SVG files
-    let cache: Cache | undefined;
-    if (!url.decodedPathname.endsWith(".svg")) {
-      cache = await Workspace.newCache(workspaceName).getCache();
-      const cachedResponse = await cache.match(request);
-      if (cachedResponse) {
-        logger.log(`Cache hit for: ${url.href.replace(url.origin, "")}`);
-        return cachedResponse;
-      }
+  const isSVG = pathname.endsWith(".svg");
+  const isThumbnail = Thumb.isThumbURL(url);
+
+  // ---------- Cache Lookup ----------
+  let cache: Cache | undefined;
+  if (!isSVG) {
+    cache = await Workspace.newCache(workspaceName).getCache();
+    const cached = await cache.match(c.req.raw);
+    if (cached) {
+      LOG.log(`Cache hit for: ${pathname}`);
+      return cached;
     }
-
-    // Get image from pure function
-    const isThumbnail = Thumb.isThumbURL(url);
-    const imageResult = await handleImageRequest(url.decodedPathname, workspaceName, isThumbnail);
-
-    const response = new Response(imageResult.contents as BodyInit, {
-      headers: {
-        "Content-Type": imageResult.mimeType,
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-
-    // Cache the response for non-SVG files
-    if (cache && !url.decodedPathname.endsWith(".svg")) {
-      await cache.put(request, response.clone());
-    }
-
-    return response;
   }
 
-  // Fallback to network
-  return fetch(request);
+  // ---------- Generate / Fetch Image ----------
+  const image = await handleImageRequest(pathname, workspaceName, isThumbnail);
+  if (!image?.contents) {
+    return c.notFound();
+  }
+
+  // ---------- Build Response ----------
+  const headers = {
+    "Content-Type": image.mimeType,
+    "Cache-Control": "public, max-age=31536000, immutable",
+  };
+
+  const res = c.newResponse(image.contents as Uint8Array<ArrayBuffer>, 200, headers);
+
+  // ---------- Cache Store ----------
+  if (cache && !isSVG) {
+    await cache.put(c.req.raw, res.clone());
+  }
+
+  return res;
+});
+
+app.all("*", async (c) => {
+  return fetch(c.req.raw);
 });
 
 // Service Worker Event Handlers
@@ -426,44 +507,6 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   event.waitUntil(self.skipWaiting());
 });
 
-// Fetch event handler
-self.addEventListener("fetch", (event: FetchEvent) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip static files
-  if (url.pathname.startsWith("/@static/")) {
-    return;
-  }
-
-  logger.log(`Fetch event for: ${request.url} | Mode: ${request.mode} | Destination: ${request.destination}`);
-
-  // Only handle requests from our host URLs
-  if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
-    logger.log(`Bypassing fetch for non-host URL: ${request.url}`);
-    return;
-  }
-
-  const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
-
-  // Handle navigation requests
-  if (request.mode === "navigate" || !request.referrer) {
-    logger.log(`Handling navigation request for: ${request.url}`);
-    return;
-  }
-
-  // Skip whitelisted requests or script requests
-  if (!request.referrer || whiteListMatch || event.request.destination === "script") {
-    return;
-  }
-
-  try {
-    logger.log(`Routing request through Hono: ${request.url}`);
-    event.respondWith(app.fetch(request));
-  } catch (e) {
-    logger.error(
-      errF`Error in fetch controller: ${request.url}. Referrer: ${request.referrer}. Error: ${e}`.toString()
-    );
-    return;
-  }
-});
+// Use Hono's built-in service worker handler
+// All filtering logic is now handled by middleware
+self.addEventListener("fetch", handle(app));

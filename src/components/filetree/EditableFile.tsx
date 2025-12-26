@@ -63,7 +63,7 @@ export const EditableFile = ({
   return (
     <div className="select-none">
       {!isEditing ? (
-        <div className="mx-1">
+        <div>
           <ActiveLink
             active={equals(fullPath, workspaceRoute.path)}
             draggable

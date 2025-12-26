@@ -61,7 +61,7 @@ export const EditableDir = ({
   }, [isFocused, isEditing, linkRef]);
 
   return (
-    <div className="mx-1">
+    <div>
       <a
         {...props}
         draggable
