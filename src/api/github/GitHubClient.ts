@@ -658,7 +658,9 @@ export class GitHubClient {
       });
 
       if (error.code === 404) {
-        error.hint(`Repository ${owner}/${repo} does not exist. Please check the repository name and ensure you have access to it.`);
+        error.hint(
+          `Repository ${owner}/${repo} does not exist. Please check the repository name and ensure you have access to it.`
+        );
       } else if (error.code === 403) {
         error.hint(`GitHub API rate limit exceeded. Please wait or authenticate to continue.`);
       } else if (error.code === 401) {
@@ -761,10 +763,9 @@ export class GitHubClient {
         error.hint(
           `Repository ${owner}/${repo} not found or branch ${branch} does not exist. Please check the repository name and branch.`
         );
-      } else if (error.code === 422 || error.code === 409) {
-        error.hint(
-          `Repository ${owner}/${repo} appears to be empty or there's a conflict. Please ensure the repository has content on the ${branch} branch.`
-        );
+      } else if (error.code === 409) {
+        error.hint(`Repository ${owner}/${repo} appears to be empty on ${branch} branch.`);
+      } else if (error.code === 422) {
       } else if (error.code === 403) {
         error.hint(
           `GitHub API rate limit exceeded. Authenticated requests get a higher rate limit. Please wait or authenticate to continue.`

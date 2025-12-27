@@ -3,14 +3,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
+import { stripLeadingSlash, stripTrailingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { CheckCircle, Loader, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
+export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
+  loader: async ({ params }) => {
+    const fullRepoPath = stripTrailingSlash(`${params.owner}/${params.repo}/${params._splat}`);
+    console.log("Import Route Loader:", { fullRepoPath });
+    // const runner = ImportRunner.Create({ fullRepoPath });
+
+    // Start your import or async job now and await initial info/logs if needed
+
+    return {
+      fullRepoPath,
+      runner: {},
+    };
+  },
+  onEnter: async ({ context }) => {
+    console.log(context);
+    return {
+      status: "ok",
+    };
+  },
+  onLeave: async ({ context }) => {
+    console.log(context);
+  },
   component: RouteComponent,
 });
 
@@ -38,36 +60,31 @@ function getImportStatusText(
   return "Setting up your workspace...";
 }
 
-function useDiskFromRepo(fullRepoPath: string) {
-  const {
-    runner: importRunner,
-    execute,
-    cancel,
-    logs,
-    error,
-  } = useRunner(() => {
-    return fullRepoPath ? ImportRunner.Create({ fullRepoPath }) : NULL_IMPORT_RUNNER;
-  }, [fullRepoPath]);
+function useImporter(fullRepoPath: string) {
+  const { runner: importRunner, execute, cancel, logs, error } = useRunner(() => NULL_IMPORT_RUNNER, [fullRepoPath]);
+
+  const autoImportStart = useRef(false);
 
   // Auto-start the import when fullRepoPath changes
   useEffect(() => {
-    if (
-      fullRepoPath &&
-      importRunner &&
-      importRunner !== NULL_IMPORT_RUNNER &&
-      !importRunner.isPending &&
-      !importRunner.isCompleted
-    ) {
+    if (!autoImportStart.current) {
+      autoImportStart.current = true;
       void execute(ImportRunner.Create({ fullRepoPath }));
     }
-  }, [execute, fullRepoPath, importRunner]);
+
+    return () => cancel();
+  }, [cancel, execute, fullRepoPath]);
+
+  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(fullRepoPath).split("/");
 
   return {
     logs,
     error,
     importRunner,
     cancel,
+    repoInfo: { owner, repo, branch, dir },
     isSuccess: importRunner.isSuccess,
+    isValidRepoRoute: true,
     isImporting: importRunner.isPending,
     isCompleted: importRunner.isCompleted,
     isFailed: importRunner.isFailed,
@@ -76,27 +93,33 @@ function useDiskFromRepo(fullRepoPath: string) {
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const fullRepoRoute = useLocation().pathname.split("/import/gh/").slice(1)[0] ?? "unknown/unknown/unknown";
-  const [owner, repo, ...rest] = fullRepoRoute.split("/");
+  const { pathname } = useLocation();
+  const importPath = useMemo(() => pathname.split("/import/gh/")[1] ?? "", [pathname]);
 
-  const [isValidRepo, setIsValidRepo] = useState<boolean | null>(null);
-  const { logs, cancel, isFailed, isImporting, isSuccess, isCompleted, error } = useDiskFromRepo(fullRepoRoute);
-
-  useEffect(() => {
-    if (!owner || !repo) {
-      setIsValidRepo(false);
-      return;
-    }
-
-    // Simple validation: just check that we have non-empty strings
-    setIsValidRepo(owner.trim().length > 0 && repo.trim().length > 0);
-  }, [owner, repo]);
+  const { fullRepoPath, runner } = Route.useLoaderData();
+  const { logs, cancel, repoInfo, isValidRepoRoute, isFailed, isImporting, isSuccess, isCompleted, error } =
+    useImporter(importPath);
 
   const handleOkayClick = () => {
     void navigate({ to: "/" });
   };
+  const location = useLocation();
 
-  if (isValidRepo === null) {
+  const mountRef = useRef(false);
+  useEffect(() => {
+    if (mountRef.current) {
+      return () => {
+        console.log("Unmounted route:", location.pathname);
+      };
+    }
+  }, [location.pathname]); // runs once on unmount
+
+  if (!mountRef.current) {
+    console.log("Mounted route:", location.pathname);
+    mountRef.current = true;
+  }
+
+  if (isValidRepoRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen p-8 w-full">
         <Card className="w-full max-w-md">
@@ -109,19 +132,17 @@ function RouteComponent() {
     );
   }
 
-  if (!isValidRepo) {
+  if (!isValidRepoRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen p-8 w-full">
-        <Card className="w-full max-w-md">
+        <Card>
           <CardHeader className="text-center">
             {/* {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />} */}
             <CardTitle className="text-lg">Unknown Import</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {owner && repo ? `"${owner}/${repo}" is not a valid repository format.` : "Invalid repository format."}
-            </p>
-            <p className="text-xs text-muted-foreground">Expected format: owner/repo</p>
+            <div className="text-sm text-muted-foreground">{`${importPath} is not a valid repository format.`}</div>
+            <ExampleTableFormat />
             <Button onClick={handleOkayClick} className="w-full">
               OKAY
             </Button>
@@ -145,7 +166,7 @@ function RouteComponent() {
             {isCompleted && isSuccess && <CheckCircle className="h-6 w-6 text-success mx-auto" />}
             {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />}
             <p className="font-medium">
-              {owner}/{repo}
+              {repoInfo.owner}/{repoInfo.repo}
             </p>
             {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
             <p className="text-sm text-muted-foreground">
@@ -185,6 +206,49 @@ function RouteComponent() {
           </Button>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ExampleTableFormat() {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">Expected formats:</p>
+      <div className="rounded-md border overflow-hidden text-left">
+        <div className="bg-card px-3 py-2 text-[11px] font-medium text-muted-foreground">
+          <div className="grid grid-cols-3 gap-2">
+            <span>Example</span>
+            <span>Meaning</span>
+            <span>Pattern</span>
+          </div>
+        </div>
+
+        <div className="divide-y">
+          <div className="bg-background/40 px-3 py-2 text-[11px]">
+            <div className="grid grid-cols-3 gap-2">
+              <span className="font-mono break-all">rbbydotdev/foobar</span>
+              <span>Owner / Repo only</span>
+              <span className="font-mono">owner/repo</span>
+            </div>
+          </div>
+
+          <div className="bg-card px-3 py-2 text-[11px]">
+            <div className="grid grid-cols-3 gap-2">
+              <span className="font-mono break-all">rbbydotdev/foobar/master</span>
+              <span>Owner / Repo / Branch</span>
+              <span className="font-mono">owner/repo/branch</span>
+            </div>
+          </div>
+
+          <div className="bg-background/40 px-3 py-2 text-[11px]">
+            <div className="grid grid-cols-3 gap-2">
+              <span className="font-mono break-all">rbbydotdev/foobar/master/my-dir</span>
+              <span>Owner / Repo / Branch / Path</span>
+              <span className="font-mono">owner/repo/branch/path</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

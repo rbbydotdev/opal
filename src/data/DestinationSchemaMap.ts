@@ -174,50 +174,46 @@ export const DestinationSchemaMap = {
           .string()
           .trim()
           .min(1, "Repository is required")
-          .regex(
-            /^([^/]+|[^/]+\/[^/]+)$/,
-            "Repository must be a single string or a string in the format '<min 1 char>/<min 1 char>'"
-          ),
-        fullName: z.string().trim().optional(), // Auto-resolved full name (owner/repo)
+          .url("Repository must be a valid URL"),
         branch: z.string().trim().min(1, "Branch is required"),
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
     })
-    .superRefine(async (data, ctx) => {
-      try {
-        // Only validate if repository is provided
-        if (!data.meta.repository || !data.meta.repository.trim()) return;
+    // .superRefine(async (data, ctx) => {
+    //   try {
+    //     // Only validate if repository is provided
+    //     if (!data.meta.repository || !data.meta.repository.trim()) return;
 
-        const agent = AgentFromRemoteAuthFactory(
-          (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
-        ) as RemoteAuthGithubAgent;
+    //     const agent = AgentFromRemoteAuthFactory(
+    //       (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
+    //     ) as RemoteAuthGithubAgent;
 
-        // Normalize the repository name
+    //     // Normalize the repository name
 
-        const normalizedRepo = coerceGithubRepoToName(data.meta.repository);
+    //     const normalizedRepo = coerceGithubRepoToName(data.meta.repository);
 
-        // Get the full repository name and validate it exists
-        const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);
-        const fullName = `${owner}/${repo}`;
+    //     // Get the full repository name and validate it exists
+    //     const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);
+    //     const fullName = `${owner}/${repo}`;
 
-        // Update the data with validated values
-        data.meta.repository = normalizedRepo;
-        data.meta.fullName = fullName;
-      } catch (error) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: unwrapError(error).includes("404")
-            ? `Repository ${data.meta.repository} not found`
-            : unwrapError(error),
-          path: ["meta", "repository"],
-        });
-      }
-    })
+    //     // Update the data with validated values
+    //     data.meta.repository = normalizedRepo;
+    //     data.meta.fullName = fullName;
+    //   } catch (error) {
+    //     ctx.addIssue({
+    //       code: z.ZodIssueCode.custom,
+    //       message: unwrapError(error).includes("404")
+    //         ? `Repository ${data.meta.repository} not found`
+    //         : unwrapError(error),
+    //       path: ["meta", "repository"],
+    //     });
+    //   }
+    // })
 
     .default(() => ({
       remoteAuthId: "",
       label: RandomTag("Github"),
-      meta: { repository: "", fullName: "", branch: "gh-pages", baseUrl: "/" },
+      meta: { repository: "", branch: "gh-pages", baseUrl: "/" },
     })),
   aws: z
     .object({

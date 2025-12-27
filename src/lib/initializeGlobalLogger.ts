@@ -33,5 +33,5 @@ export function initializeGlobalLogger(
       }
     : NOOPS;
 
-  return logger;
+  return __ENABLE_LOG__ ? logger : NOOPS;
 }

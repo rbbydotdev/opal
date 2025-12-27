@@ -12,7 +12,8 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
   }
 
   async getDestinationURL(destination: GithubDestination) {
-    const [owner, repo] = await this.githubClient.getFullRepoName(destination.meta.repository);
+    const repoName = coerceGithubRepoToName(destination.meta.repository);
+    const [owner, repo] = await this.githubClient.getFullRepoName(repoName);
     return `https://${owner}.github.io/${repo}`;
   }
 
@@ -42,7 +43,8 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
   ) {
     const files = await bundle.getFiles();
     const { repository, branch } = destination.meta;
-    const [owner, repo] = await this.githubClient.getFullRepoName(repository);
+    const repoName = coerceGithubRepoToName(repository);
+    const [owner, repo] = await this.githubClient.getFullRepoName(repoName);
 
     // Check if the GitHub client already has methods with signal support
     // and combine with any internal signals using AbortSignal.any if needed
@@ -92,8 +94,8 @@ export function coerceGithubRepoToName(repoName: string): string {
     const url = new URL(repoName);
     return stripLeadingSlash(url.pathname.replace(/\.git$/, "")).trim();
   } catch {}
-  stripLeadingSlash(repoName).split("/").slice(0, 2).join("/");
-  return relPath(repoName);
+  // If not a URL, clean up the path and take first two segments (owner/repo)
+  return stripLeadingSlash(repoName).split("/").slice(0, 2).join("/");
 }
 
 export function coerceGitHubRepoToURL(repoName: string): string {

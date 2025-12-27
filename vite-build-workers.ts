@@ -48,8 +48,7 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
     },
     define: {
       //i have no clue how this could be broken?
-      // __ENABLE_LOG__: JSON.stringify(process.env.ENABLE_WORKER_LOGS === "true"),
-      __ENABLE_LOG__: JSON.stringify(false),
+      __ENABLE_LOG__: JSON.stringify(process.env.ENABLE_WORKER_LOGS === "true"),
 
       __LOG_LEVEL__: JSON.stringify(process.env.WORKER_LOG_LEVEL || "debug"),
     },

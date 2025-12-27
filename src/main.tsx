@@ -11,7 +11,7 @@ const router = createRouter({
   defaultNotFoundComponent: () => {
     redirect({ to: "/" });
     return null;
-  }
+  },
 });
 
 declare module "@tanstack/react-router" {
