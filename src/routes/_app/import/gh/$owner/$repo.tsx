@@ -7,12 +7,36 @@ import { cn } from "@/lib/utils";
 import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
+import { CheckCircle, Loader, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
   component: RouteComponent,
 });
+
+function getImportStatusText(
+  isFailed: boolean,
+  isCompleted: boolean,
+  isImporting: boolean,
+  error: string | null
+): string {
+  if (isFailed) {
+    if (error) {
+      return error;
+    }
+    return "Import failed. Please try again.";
+  }
+
+  if (isCompleted) {
+    return "Import completed";
+  }
+
+  if (isImporting) {
+    return "Importing files...";
+  }
+
+  return "Setting up your workspace...";
+}
 
 function useDiskFromRepo(fullRepoPath: string) {
   const {
@@ -20,6 +44,7 @@ function useDiskFromRepo(fullRepoPath: string) {
     execute,
     cancel,
     logs,
+    error,
   } = useRunner(() => {
     return fullRepoPath ? ImportRunner.Create({ fullRepoPath }) : NULL_IMPORT_RUNNER;
   }, [fullRepoPath]);
@@ -39,8 +64,10 @@ function useDiskFromRepo(fullRepoPath: string) {
 
   return {
     logs,
+    error,
     importRunner,
     cancel,
+    isSuccess: importRunner.isSuccess,
     isImporting: importRunner.isPending,
     isCompleted: importRunner.isCompleted,
     isFailed: importRunner.isFailed,
@@ -53,7 +80,7 @@ function RouteComponent() {
   const [owner, repo, ...rest] = fullRepoRoute.split("/");
 
   const [isValidRepo, setIsValidRepo] = useState<boolean | null>(null);
-  const { logs, cancel, isFailed, isImporting, isCompleted } = useDiskFromRepo(fullRepoRoute);
+  const { logs, cancel, isFailed, isImporting, isSuccess, isCompleted, error } = useDiskFromRepo(fullRepoRoute);
 
   useEffect(() => {
     if (!owner || !repo) {
@@ -87,6 +114,7 @@ function RouteComponent() {
       <div className="flex items-center justify-center min-h-screen p-8 w-full">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
+            {/* {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />} */}
             <CardTitle className="text-lg">Unknown Import</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
@@ -107,27 +135,21 @@ function RouteComponent() {
     <div className="flex items-center justify-center min-h-screen p-8 w-full">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-card text-card-foreground p-2 rounded-md w-12 h-12 flex items-center justify-center">
-              <Github style={{ width: "24px", height: "24px" }} />
-            </div>
+          <div className="flex justify-center bg-card text-card-foreground rounded-md h-12 w-full items-center ">
+            <Github style={{ width: "24px", height: "24px" }} />
           </div>
           <CardTitle className="text-lg">Importing from GitHub</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-8">
           <div className="space-y-2">
+            {isCompleted && isSuccess && <CheckCircle className="h-6 w-6 text-success mx-auto" />}
+            {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />}
             <p className="font-medium">
               {owner}/{repo}
             </p>
             {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
             <p className="text-sm text-muted-foreground">
-              {isFailed
-                ? "Import failed. Please try again."
-                : isCompleted
-                  ? "Import completed"
-                  : isImporting
-                    ? "Importing files..."
-                    : "Setting up your workspace..."}
+              {getImportStatusText(isFailed, isCompleted, isImporting, error)}
             </p>
 
             <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
@@ -159,7 +181,7 @@ function RouteComponent() {
               void navigate({ to: "/" });
             }}
           >
-            {isCompleted ? "Done" : "Cancel"}
+            {isCompleted ? "OK" : "Cancel"}
           </Button>
         </CardContent>
       </Card>

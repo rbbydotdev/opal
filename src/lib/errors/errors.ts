@@ -33,6 +33,10 @@ export function coerceError(error: unknown): Error {
   }
 }
 
+export function isApplicationError(error: unknown): error is ApplicationError {
+  return error instanceof ApplicationError;
+}
+
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
     typeof error === "object" &&
@@ -106,7 +110,8 @@ export class ApplicationError extends Error {
     if (typeof hint === "undefined") {
       return this._hint || this.name;
     }
-    this._hint = unwrapError(hint);
+    // If hint is already a string, use it directly to avoid JSON.stringify quotes
+    this._hint = typeof hint === "string" ? hint : unwrapError(hint);
     return this;
   }
   setNavigateTo(path: string) {
@@ -301,6 +306,9 @@ export function mapToTypedError(error: unknown, options: ErrorMappingOptions = {
   // If it's already an AbortError, return it unchanged
   if (isAbortError(error)) {
     return error as any;
+  }
+  if (isApplicationError(error)) {
+    return error;
   }
 
   // Try to extract code, name, message from error or options

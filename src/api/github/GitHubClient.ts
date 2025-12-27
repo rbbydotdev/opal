@@ -61,7 +61,17 @@ export class GitHubClient {
       const response = await this.getCurrentUserRequest();
       return response.data;
     } catch (e) {
-      throw mapToTypedError(e);
+      const error = mapToTypedError(e);
+
+      if (error.code === 401) {
+        error.hint("Authentication failed. Please check your GitHub token or re-authenticate.");
+      } else if (error.code === 403) {
+        error.hint("GitHub API rate limit exceeded. Please wait or use an authenticated token for higher limits.");
+      } else {
+        error.hint(tryParseGitHubError(e));
+      }
+
+      throw error;
     }
   }
 
@@ -172,8 +182,22 @@ export class GitHubClient {
   ) {
     signal?.throwIfAborted();
 
+    // First check if the repository exists
+    await this.verifyRepositoryExists({ owner, repo });
+
     // Check if repo is empty first
     const { exists, reason } = await this.checkGetBranchRefRequest({ owner, repo, branch });
+
+    if (!exists && reason === "notfound") {
+      const error = mapToTypedError(new Error(`Repository ${owner}/${repo} not found`), {
+        message: `Repository ${owner}/${repo} not found`,
+        path: `${owner}/${repo}`,
+      });
+      error.hint(
+        `Repository ${owner}/${repo} does not exist or you don't have access to it. Please check the repository name and your permissions.`
+      );
+      throw error;
+    }
 
     if (!exists && reason === "unknown") {
       throw new Error("Unable to determine repository status");
@@ -264,8 +288,10 @@ export class GitHubClient {
 
       log(`Found existing branch '${branch}'`);
       return { latestCommitSha: sha, baseTreeSha, isOrphan: false };
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (e) {
+      const error = mapToTypedError(e);
+      console.log("Error checking branch ref:", error);
+      if (error.code === 404) {
         // Branch doesn't exist, create as orphan (no parent)
         log(`Branch '${branch}' not found, will create as orphan branch`);
         return { latestCommitSha: undefined, baseTreeSha: undefined, isOrphan: true };
@@ -536,7 +562,8 @@ export class GitHubClient {
       } as const;
     } catch (e: any) {
       const error = mapToTypedError(e);
-      if (e.status === 422) {
+      if (e.status === 404 || e.status === 422) {
+        // Since we verified the repo exists, both 404 and 422 mean the branch doesn't exist
         return {
           exists: false,
           error,
@@ -619,6 +646,29 @@ export class GitHubClient {
       username,
       password: apiToken,
     };
+  }
+
+  async verifyRepositoryExists({ owner, repo }: { owner: string; repo: string }) {
+    try {
+      await this.octokit.request("GET /repos/{owner}/{repo}", { owner, repo });
+    } catch (e) {
+      const error = mapToTypedError(e, {
+        message: `Repository ${owner}/${repo} not found`,
+        path: `${owner}/${repo}`,
+      });
+
+      if (error.code === 404) {
+        error.hint(`Repository ${owner}/${repo} does not exist. Please check the repository name and ensure you have access to it.`);
+      } else if (error.code === 403) {
+        error.hint(`GitHub API rate limit exceeded. Please wait or authenticate to continue.`);
+      } else if (error.code === 401) {
+        error.hint(`Authentication failed. Please check your credentials.`);
+      } else {
+        error.hint(tryParseGitHubError(e));
+      }
+
+      throw error;
+    }
   }
 
   async getRepositoryTree(
@@ -705,7 +755,25 @@ export class GitHubClient {
         message: `Failed to fetch repository content for ${owner}/${repo}`,
         path: `${owner}/${repo}`,
       });
-      error.hint(tryParseGitHubError(e));
+
+      // Add specific hints based on status codes
+      if (error.code === 404) {
+        error.hint(
+          `Repository ${owner}/${repo} not found or branch ${branch} does not exist. Please check the repository name and branch.`
+        );
+      } else if (error.code === 422 || error.code === 409) {
+        error.hint(
+          `Repository ${owner}/${repo} appears to be empty or there's a conflict. Please ensure the repository has content on the ${branch} branch.`
+        );
+      } else if (error.code === 403) {
+        error.hint(
+          `GitHub API rate limit exceeded. Authenticated requests get a higher rate limit. Please wait or authenticate to continue.`
+        );
+      } else if (error.code === 401) {
+        error.hint(`Authentication failed. Please check your credentials.`);
+      } else {
+        error.hint(tryParseGitHubError(e));
+      }
       throw error;
     }
   }

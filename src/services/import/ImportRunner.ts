@@ -1,7 +1,8 @@
 import { Disk } from "@/data/disk/Disk";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { MemDisk } from "@/data/disk/MemDisk";
-import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
+import { GithubImport } from "@/features/workspace-import/GithubImport";
+import { isApplicationError, unwrapError } from "@/lib/errors/errors";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { Runner } from "@/types/RunnerInterfaces";
@@ -96,9 +97,9 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
       this.log("Import completed successfully!", "info");
       this.target.status = "success";
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.log(`Import failed: ${errorMessage}`, "error");
-      this.target.error = `Import failed: ${errorMessage}`;
+      const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
+      this.log(`Import failed: ${errMsg}`, "error");
+      this.target.error = errMsg;
       this.target.status = "error";
     }
 
