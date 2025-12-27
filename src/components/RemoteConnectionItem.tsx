@@ -7,7 +7,7 @@ import { Repo } from "@/data/RemoteAuthTypes";
 import { RemoteAuthAgentSearchType, useFuzzySearchQuery } from "@/data/useFuzzySearchQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { errF } from "@/lib/errors/errors";
+import { ApplicationError, errF, isAbortError } from "@/lib/errors/errors";
 import { isFuzzyResult } from "@/lib/fuzzy-helpers";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
@@ -67,7 +67,6 @@ export const RemoteItemCreateInput = forwardRef<
             ref={ref}
             data-no-escape
             autoFocus={!noAutoFocus}
-            // autoFocus={true}
             value={ident.name}
             onChange={(e) => ident.setName(e.target.value)}
             onBlur={handleBlur}
@@ -627,8 +626,14 @@ function useRemoteResource<T>({
       setIsLoading(false);
       return result;
     } catch (err: any) {
+      if (isAbortError(err)) {
+        // Aborted, do nothing
+        abortCntrlRef.current = null;
+        setIsLoading(false);
+        return null;
+      }
       console.error(errF`Remote resource creation failed: ${err}`);
-      setError(err.message || config.messages.errorFallback);
+      setError(err instanceof ApplicationError ? err.getHint() : err.message || config.messages.errorFallback);
       abortCntrlRef.current = null;
       setIsLoading(false);
       throw err;
