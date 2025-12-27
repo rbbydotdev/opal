@@ -258,7 +258,7 @@ export function BuildModal({
                           {`[${new Date(log.timestamp).toLocaleString()}]`}
                         </span>
                       )}
-                      <span className="break-all">{log.message}</span>
+                      <span className="break-words">{log.message}</span>
                     </div>
                   ))
                 )}

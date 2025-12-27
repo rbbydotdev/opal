@@ -10,7 +10,7 @@ import { BadRequestError, isError, NotFoundError } from "@/lib/errors/errors";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { absPath } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
-import { RemoteLoggerLogger, signalRequest, WHITELIST } from "@/lib/service-worker/utils";
+import { RemoteLoggerLogger, signalRequest } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 // Import pure handler functions
@@ -164,58 +164,38 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-// Middleware to skip static files
-app.use("*", async (c, next) => {
-  const url = new URL(c.req.url);
-  if (url.pathname.startsWith("/@static/")) {
-    LOG.log(`Skipping static file: ${c.req.url}`);
-    // Return a pass-through response to let the browser handle it
-    return fetch(c.req.raw);
-  }
-  await next();
-});
-
-// Middleware to check host URLs
-app.use("*", async (c, next) => {
-  const url = new URL(c.req.url);
-  if (!ENV.HOST_URLS.some((hostUrl) => url.origin === hostUrl)) {
-    LOG.log(`Bypassing non-host URL: ${c.req.url}`);
-    // Return a pass-through response to let the browser handle it
-    return fetch(c.req.raw);
-  }
-  await next();
-});
-
-// Middleware to skip navigation requests (except downloads)
+// Skip requests that should bypass service worker
 app.use("*", async (c, next) => {
   const request = c.req.raw;
-  if (c.req.path === "/download.zip") {
-    return await next();
+  const url = c.req.url;
+
+  // Skip non-host URLs
+  if (!ENV.HOST_URLS.some((hostUrl) => url.startsWith(hostUrl))) {
+    LOG.log(`Bypassing non-host URL: ${url}`);
+    return fetch(request);
   }
 
-  if (request.mode === "navigate" || !request.referrer) {
-    LOG.log(
-      `Skipping navigation/no-referrer request: ${c.req.url} | Mode: ${request.mode} | Referrer: ${request.referrer}`
-    );
-    // Return a pass-through response to let the browser handle it
-    return fetch(c.req.raw);
+  // Skip navigation requests (except downloads)
+  if (c.req.path !== "/download.zip" && (request.mode === "navigate" || !request.referrer)) {
+    LOG.log(`Skipping navigation: ${url}`);
+    return fetch(request);
   }
-  await next();
-});
 
-// Middleware to check whitelist and filter requests
-app.use("*", async (c, next) => {
-  const request = c.req.raw;
-  const url = new URL(c.req.url);
-  const whiteListMatch = WHITELIST.some((item) => item.test(url, request));
-
-  if (!request.referrer || whiteListMatch || request.destination === "script") {
-    console.log(
-      `Skipping filtered request: ${c.req.url} | Referrer: ${request.referrer} | WhitelistMatch: ${whiteListMatch} | Destination: ${request.destination}`
-    );
-    // Return a pass-through response to let the browser handle it
-    return fetch(c.req.raw);
+  // Skip static assets and dev files
+  const path = c.req.path;
+  if (
+    path.startsWith("/@") ||           // Vite special files (@vite/client, @static/, etc.)
+    path.startsWith("/node_modules/") || // Vite deps
+    path.startsWith("/src/") ||         // Source files
+    path === "/opal.svg" ||
+    path === "/opal-blank.svg" ||
+    path === "/opal-lite.svg" ||
+    request.destination === "script"    // All script requests should bypass
+  ) {
+    LOG.log(`Skipping dev/static file: ${path}`);
+    return fetch(request);
   }
+
   await next();
 });
 

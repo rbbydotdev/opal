@@ -320,7 +320,7 @@ export function PublicationModalPublishContent({
                   {showTimestamps && (
                     <span className="text-muted-foreground shrink-0 text-2xs">{`[${new Date(log.timestamp).toLocaleString()}]`}</span>
                   )}
-                  <span className="break-all">{log.message}</span>
+                  <span className="break-words">{log.message}</span>
                 </div>
               ))
             )}

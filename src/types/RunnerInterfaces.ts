@@ -16,7 +16,7 @@ export interface Runner {
   onLog: (callback: (logs: LogLine[]) => void) => () => void;
   onError: (callback: (error: string | null) => void) => () => void;
   tearDown(): void;
-  execute(signal?: AbortSignal): Promise<unknown>;
+  execute(options?: { abortSignal?: AbortSignal }): Promise<unknown>;
   isCompleted: boolean;
   isPending: boolean;
   isIdle: boolean;

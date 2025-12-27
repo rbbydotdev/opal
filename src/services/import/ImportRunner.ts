@@ -3,8 +3,19 @@ import { NULL_DISK } from "@/data/disk/NullDisk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
+import { Runner } from "@/types/RunnerInterfaces";
 
-export class ImportRunner extends ObservableRunner<any> {
+type ImportState = {
+  status: "idle" | "success" | "pending" | "error";
+  logs: Array<{
+    type: "info" | "error" | "warning" | "success";
+    timestamp: number;
+    message: string;
+  }>;
+  error: string | null;
+};
+
+export class ImportRunner extends ObservableRunner<ImportState> implements Runner {
   private disk: Disk;
   private importer: GithubImport;
   protected abortController: AbortController = new AbortController();
@@ -39,7 +50,7 @@ export class ImportRunner extends ObservableRunner<any> {
     abortSignal = this.abortController.signal,
   }: {
     abortSignal?: AbortSignal;
-  } = {}): Promise<void> {
+  } = {}): Promise<ImportState> {
     try {
       this.target.status = "pending";
       this.target.error = null;
@@ -47,7 +58,7 @@ export class ImportRunner extends ObservableRunner<any> {
       if (abortSignal?.aborted) {
         this.log("Import cancelled", "error");
         this.target.status = "error";
-        return;
+        return this.target;
       }
 
       this.log("Starting repository import...", "info");
@@ -56,7 +67,7 @@ export class ImportRunner extends ObservableRunner<any> {
         if (abortSignal?.aborted) {
           this.log("Import cancelled", "error");
           this.target.status = "error";
-          return;
+          return this.target;
         }
 
         // Write the file to the disk
@@ -72,19 +83,21 @@ export class ImportRunner extends ObservableRunner<any> {
       this.target.error = `Import failed: ${errorMessage}`;
       this.target.status = "error";
     }
+
+    return this.target;
   }
 }
 
 export class NullImportRunner extends ImportRunner {
   constructor() {
     super({
-      disk: {} as Disk,
+      disk: NULL_DISK,
       fullRepoPath: "null/null",
     });
   }
 
-  async execute(): Promise<void> {
-    // Do nothing
+  async execute(): Promise<ImportState> {
+    return this.target;
   }
 }
 

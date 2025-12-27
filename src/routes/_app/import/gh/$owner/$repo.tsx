@@ -1,25 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
+import { cn } from "@/lib/utils";
 import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
-// const {runner: importRunner } = useRunner(ImportRunner,() => {
-//   return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
-// }, [fullRepoPath, disk]);
-
-// const { runner: importRunner } = useRunner(NULL_IMPORT_RUNNER);
-// BuildRunner.Show({
-//   build: NULL_BUILD,
-//   workspace: currentWorkspace,
-// }),
-// []
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
   component: RouteComponent,
@@ -28,31 +19,46 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
 function useDiskFromRepo(fullRepoPath: string) {
   const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
 
-  const { runner, execute, logs } = useRunner(NULL_IMPORT_RUNNER, []);
+  const {
+    runner: importRunner,
+    execute,
+    cancel,
+    logs,
+  } = useRunner(() => {
+    return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
+  }, [fullRepoPath, disk]);
 
-  // Auto-start the import when runner is created
+  // Auto-start the import when fullRepoPath changes
   useEffect(() => {
-    if (runner && runner !== NULL_IMPORT_RUNNER && !runner.isPending && !runner.isCompleted) {
-      void execute(ImportRunner.Create({ disk: DiskFactoryByType(DefaultDiskType), fullRepoPath }));
+    if (
+      fullRepoPath &&
+      importRunner &&
+      importRunner !== NULL_IMPORT_RUNNER &&
+      !importRunner.isPending &&
+      !importRunner.isCompleted
+    ) {
+      void execute(ImportRunner.Create({ disk, fullRepoPath }));
     }
-  }, [execute, fullRepoPath, runner]);
+  }, [execute, fullRepoPath, disk, importRunner]);
 
   return {
-    logs: runner.logs,
+    logs,
     disk,
-    importRunner: runner,
-    isImporting: runner.isPending,
-    isCompleted: runner.isCompleted,
+    importRunner,
+    cancel,
+    isImporting: importRunner.isPending,
+    isCompleted: importRunner.isCompleted,
+    isFailed: importRunner.isFailed,
   };
 }
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const fullRepoRoute = useLocation().pathname.split("/import/gh/").slice(1)[0]!;
+  const fullRepoRoute = useLocation().pathname.split("/import/gh/").slice(1)[0] ?? "unknown/unknown/unknown";
   const [owner, repo, ...rest] = fullRepoRoute.split("/");
 
   const [isValidRepo, setIsValidRepo] = useState<boolean | null>(null);
-  const { logs, isImporting, isCompleted } = useDiskFromRepo(fullRepoRoute);
+  const { logs, cancel, isFailed, isImporting, isCompleted } = useDiskFromRepo(fullRepoRoute);
 
   useEffect(() => {
     if (!owner || !repo) {
@@ -107,7 +113,7 @@ function RouteComponent() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="dark:bg-black bg-white dark:text-white text-black p-2 rounded-md w-12 h-12 flex items-center justify-center">
+            <div className="bg-card text-card-foreground p-2 rounded-md w-12 h-12 flex items-center justify-center">
               <Github style={{ width: "24px", height: "24px" }} />
             </div>
           </div>
@@ -120,20 +126,46 @@ function RouteComponent() {
             </p>
             {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
             <p className="text-sm text-muted-foreground">
-              {isCompleted ? "Import completed!" : isImporting ? "Importing files..." : "Setting up your workspace..."}
+              {isFailed
+                ? "Import failed. Please try again."
+                : isCompleted
+                  ? "Import completed"
+                  : isImporting
+                    ? "Importing files..."
+                    : "Setting up your workspace..."}
             </p>
 
-            {logs.length > 0 && (
-              <div className="text-left max-h-32 overflow-y-auto bg-gray-50 p-2 rounded text-xs">
-                {logs.slice(-5).map((log: LogLine, i: number) => (
-                  <div key={i} className={log.type === "error" ? "text-red-600" : "text-gray-600"}>
-                    {log.message}
-                  </div>
-                ))}
+            <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
+              <div className="font-mono text-xs space-y-1">
+                {logs.length === 0 ? (
+                  <div className="text-muted-foreground italic">importing...</div>
+                ) : (
+                  logs.map((log: LogLine, index: number) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "text-left whitespace-break-spaces gap-2",
+                        log.type === "error" ? "text-destructive" : "text-foreground"
+                      )}
+                    >
+                      <span className="break-words">{log.message}</span>
+                    </div>
+                  ))
+                )}
+                <div />
               </div>
-            )}
+            </ScrollArea>
           </div>
-          <Button onClick={() => navigate({ to: "/" })}>{isCompleted ? "Done" : "Cancel"}</Button>
+          <Button
+            onClick={() => {
+              if (isImporting) {
+                cancel();
+              }
+              void navigate({ to: "/" });
+            }}
+          >
+            {isCompleted ? "Done" : "Cancel"}
+          </Button>
         </CardContent>
       </Card>
     </div>
