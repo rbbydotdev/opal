@@ -3,22 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
-import { stripLeadingSlash, stripTrailingSlash } from "@/lib/paths2";
+import { stripLeadingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner";
+import { ImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { CheckCircle, Loader, TriangleAlert } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
-  loader: async ({ params }) => {
+  /*  loader: async ({ params }) => {
     const fullRepoPath = stripTrailingSlash(`${params.owner}/${params.repo}/${params._splat}`);
     console.log("Import Route Loader:", { fullRepoPath });
-    // const runner = ImportRunner.Create({ fullRepoPath });
-
-    // Start your import or async job now and await initial info/logs if needed
-
     return {
       fullRepoPath,
       runner: {},
@@ -32,7 +28,7 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
   },
   onLeave: async ({ context }) => {
     console.log(context);
-  },
+  },*/
   component: RouteComponent,
 });
 
@@ -61,17 +57,16 @@ function getImportStatusText(
 }
 
 function useImporter(fullRepoPath: string) {
-  const { runner: importRunner, execute, cancel, logs, error } = useRunner(() => NULL_IMPORT_RUNNER, [fullRepoPath]);
+  const {
+    runner: importRunner,
+    execute,
+    cancel,
+    logs,
+    error,
+  } = useRunner(() => ImportRunner.Create({ fullRepoPath }), [fullRepoPath]);
 
-  const autoImportStart = useRef(false);
-
-  // Auto-start the import when fullRepoPath changes
   useEffect(() => {
-    if (!autoImportStart.current) {
-      autoImportStart.current = true;
-      void execute(ImportRunner.Create({ fullRepoPath }));
-    }
-
+    void execute();
     return () => cancel();
   }, [cancel, execute, fullRepoPath]);
 
@@ -96,28 +91,15 @@ function RouteComponent() {
   const { pathname } = useLocation();
   const importPath = useMemo(() => pathname.split("/import/gh/")[1] ?? "", [pathname]);
 
-  const { fullRepoPath, runner } = Route.useLoaderData();
+  // const { fullRepoPath, runner } = Route.useLoaderData();
+
   const { logs, cancel, repoInfo, isValidRepoRoute, isFailed, isImporting, isSuccess, isCompleted, error } =
     useImporter(importPath);
 
   const handleOkayClick = () => {
     void navigate({ to: "/" });
   };
-  const location = useLocation();
-
-  const mountRef = useRef(false);
-  useEffect(() => {
-    if (mountRef.current) {
-      return () => {
-        console.log("Unmounted route:", location.pathname);
-      };
-    }
-  }, [location.pathname]); // runs once on unmount
-
-  if (!mountRef.current) {
-    console.log("Mounted route:", location.pathname);
-    mountRef.current = true;
-  }
+  // const location = useLocation();
 
   if (isValidRepoRoute) {
     return (

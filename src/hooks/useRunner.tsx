@@ -1,5 +1,5 @@
 import { Runner } from "@/types/RunnerInterfaces";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: any[]) {
   const [currentRunner, setRunner] = useState<T>(initialValue);
@@ -17,24 +17,24 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
 
-  const execute = async (runner: T, options?: { abortSignal?: AbortSignal }) => {
+  const execute = useCallback(async (runner: T, options?: { abortSignal?: AbortSignal }) => {
     // Create a new abort controller for this execution
     abortControllerRef.current = new AbortController();
 
     setRunner(runner);
     await runner.execute({
       abortSignal: abortControllerRef.current.signal,
-      ...options
+      ...options,
     });
-  };
+  }, []);
 
-  const cancel = () => {
+  const cancel = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     currentRunner.cancel();
-  };
+  }, [currentRunner]);
 
   return {
     setRunner,

@@ -3,6 +3,7 @@ import {
   isAWSAPIRemoteAuthDAO,
   isBasicAuthRemoteAuthDAO,
   isCloudflareAPIRemoteAuthDAO,
+  isCustomRemoteAuthDAO,
   isGithubAPIRemoteAuthDAO,
   isGithubDeviceOAuthRemoteAuthDAO,
   isGithubOAuthRemoteAuthDAO,
@@ -72,6 +73,9 @@ export function DeployableAuthAgentFromRemoteAuth<TBundle extends DeployBundle>(
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
   }
+  if (isCustomRemoteAuthDAO(remoteAuth)) {
+    return new NullRemoteAuthAgentDeployableFiles(); /* USING NULL FOR NOW OOPS */
+  }
 
   throw new Error(`No Agent for this type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
@@ -110,6 +114,9 @@ export function AgentFromRemoteAuthFactory<T extends RemoteAuthDAO>(
   if (isAWSAPIRemoteAuthDAO(remoteAuth)) {
     return new RemoteAuthAWSAPIAgent(remoteAuth);
   }
+  if (isCustomRemoteAuthDAO(remoteAuth)) {
+    return new NullRemoteAuthAgentDeployableFiles(); /* USING NULL FOR NOW OOPS */
+  }
 
   throw new Error(`No Agent for this type: ${remoteAuth.type} source: ${remoteAuth.source}`);
 }
@@ -131,6 +138,8 @@ export interface RemoteAuthAgentDeployableFiles<TBundle extends DeployBundleBase
 }
 
 export class NullRemoteAuthAgentDeployableFiles implements RemoteAuthAgentDeployableFiles<DeployBundleBase> {
+  hasUpdates = () => Promise.resolve({ updated: false, newEtag: null });
+  fetchAll = async () => [];
   getApiToken(): string {
     return "";
   }

@@ -241,6 +241,15 @@ export function isAWSAPIRemoteAuthDAO(record: RemoteAuthDAO): record is AWSAPIRe
   return record.type === "api" && record.source === "aws";
 }
 
+export type CustomRemoteAuthDAO = Omit<RemoteAuthDAO, "data"> & {
+  type: "no-auth";
+  source: "custom";
+  data: RemoteAuthDataFor<"no-auth">;
+};
+export function isCustomRemoteAuthDAO(record: RemoteAuthDAO): record is CustomRemoteAuthDAO {
+  return record.type === "no-auth" && record.source === "custom";
+}
+
 // Union types using generics
 export type GithubRemoteAuthDAO = GithubAPIRemoteAuthDAO | GithubOAuthRemoteAuthDAO | GithubDeviceOAuthRemoteAuthDAO;
 export type VercelRemoteAuthDAO = VercelAPIRemoteAuthDAO | VercelOAuthRemoteAuthDAO;
