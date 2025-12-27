@@ -11,11 +11,6 @@ import { slugifier } from "@/lib/slugifier";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
-type WorkspaceGuid = Brand<string, "WorkspaceGuid">;
-
-const isWorkspaceGuid = (workspaceGuid: string): workspaceGuid is WorkspaceGuid =>
-  workspaceGuid.startsWith("__workspace__");
-
 export class WorkspaceDAO {
   static guid = () => "__workspace__" + nanoid();
 
@@ -26,6 +21,13 @@ export class WorkspaceDAO {
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
   timestamp: number;
+  import: {
+    id: string;
+    provider: string;
+    details: {
+      url: string;
+    };
+  } | null = null;
 
   toJSON() {
     return {
@@ -98,6 +100,7 @@ export class WorkspaceDAO {
       thumbs: this.thumbs,
       code: this.code,
       timestamp: this.timestamp || Date.now(),
+      import: this.import,
     });
   };
   static async CreateNewWithDiskType({
@@ -118,6 +121,9 @@ export class WorkspaceDAO {
       disk,
     });
   }
+
+  // static async FindImport()
+
   static async CreateNew({
     name,
     remoteAuths = [],

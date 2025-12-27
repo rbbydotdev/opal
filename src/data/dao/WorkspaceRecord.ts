@@ -10,4 +10,11 @@ export class WorkspaceRecord {
   code!: WorkspaceStatusCode;
   remoteAuths!: RemoteAuthRecord[];
   timestamp!: number;
+  import!: {
+    id: string;
+    provider: string;
+    details: {
+      url: string;
+    };
+  } | null;
 }

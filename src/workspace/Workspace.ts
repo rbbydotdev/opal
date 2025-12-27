@@ -148,6 +148,7 @@ export class Workspace {
       thumbs: this.thumbs.toJSON(),
       code: this.connector.code,
       timestamp: this.connector.timestamp,
+      import: this.connector.import,
     };
   }
   static FromJSON(json: WorkspaceJType) {
