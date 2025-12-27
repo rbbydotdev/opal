@@ -20,8 +20,8 @@ type ImportState = {
 export class ImportRunner extends ObservableRunner<ImportState> implements Runner {
   // private tmpDisk: Disk;
   private tmpDisk = DiskFactoryByType(MemDisk.type);
-  private importer: GithubImport;
   protected abortController: AbortController = new AbortController();
+  readonly fullRepoPath: string;
 
   constructor({ fullRepoPath }: { fullRepoPath: string }) {
     super({
@@ -29,7 +29,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
       logs: [],
       error: null,
     });
-    this.importer = new GithubImport(relPath(fullRepoPath));
+    this.fullRepoPath = fullRepoPath;
   }
 
   static Create({ fullRepoPath }: { fullRepoPath: string }): ImportRunner {
@@ -71,6 +71,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
     abortSignal?: AbortSignal;
   } = {}): Promise<ImportState> {
     try {
+      const importer = new GithubImport(relPath(this.fullRepoPath));
       this.target.status = "pending";
       this.target.error = null;
 
@@ -82,7 +83,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
 
       this.log("Starting repository import...", "info");
 
-      for await (const file of this.importer.fetchFiles(abortSignal)) {
+      for await (const file of importer.fetchFiles(abortSignal)) {
         if (abortSignal?.aborted) {
           this.log("Import cancelled", "error");
           this.target.status = "error";

@@ -28,13 +28,14 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
     });
   }, []);
 
+  const currentRunnerRef = useRef(currentRunner);
   const cancel = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    currentRunner.cancel();
-  }, [currentRunner]);
+    currentRunnerRef.current.cancel();
+  }, []);
 
   return {
     setRunner,

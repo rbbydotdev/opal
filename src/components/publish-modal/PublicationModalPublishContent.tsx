@@ -114,12 +114,12 @@ export function PublicationModalPublishContent({
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0 h-full">
-      <BuildSelector disabled={runner.isCompleted} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
+      <BuildSelector disabled={!runner.isIdle} builds={builds} build={tryBuild} setBuildId={handleBuildSelect} />
       <div className="flex-shrink-0 space-y-2 flex flex-col h-full min-h-0">
         <span className="text-sm font-medium">Destination</span>
         <div className="flex gap-2">
           <div className="w-full">
-            <Select disabled={runner.isCompleted} value={destination?.guid} onValueChange={handleSetDestination}>
+            <Select disabled={!runner.isIdle} value={destination?.guid} onValueChange={handleSetDestination}>
               <SelectTrigger className="min-h-12 p-2">
                 <SelectValue placeholder="Select Destination" />
               </SelectTrigger>
@@ -182,7 +182,7 @@ export function PublicationModalPublishContent({
             variant={"outline"}
             className="min-h-12"
             title="Add Destination"
-            disabled={deploy?.isCompleted}
+            disabled={!runner.isIdle}
             onClick={() => {
               setDestination(null);
               pushView(remoteAuths.length === 0 ? "connection" : "destination");
@@ -195,7 +195,7 @@ export function PublicationModalPublishContent({
               className="min-h-12"
               title="Edit Destination"
               type="button"
-              disabled={deploy?.isCompleted}
+              disabled={!runner.isIdle}
               variant="outline"
               onClick={() => pushView("destination")}
             >

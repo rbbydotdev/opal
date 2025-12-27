@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { ImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
-import { CheckCircle, Loader, TriangleAlert } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
   /*  loader: async ({ params }) => {
@@ -63,10 +63,10 @@ function useImporter(fullRepoPath: string) {
     cancel,
     logs,
     error,
-  } = useRunner(() => ImportRunner.Create({ fullRepoPath }), [fullRepoPath]);
+  } = useRunner(() => ImportRunner.Show({ fullRepoPath }), [fullRepoPath]);
 
   useEffect(() => {
-    void execute();
+    void execute(ImportRunner.Create({ fullRepoPath }));
     return () => cancel();
   }, [cancel, execute, fullRepoPath]);
 
@@ -89,9 +89,9 @@ function useImporter(fullRepoPath: string) {
 function RouteComponent() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const importPath = useMemo(() => pathname.split("/import/gh/")[1] ?? "", [pathname]);
 
-  // const { fullRepoPath, runner } = Route.useLoaderData();
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const importPath = useMemo(() => pathname.split("/import/gh/")[1] ?? "", [pathname]);
 
   const { logs, cancel, repoInfo, isValidRepoRoute, isFailed, isImporting, isSuccess, isCompleted, error } =
     useImporter(importPath);
@@ -99,20 +99,10 @@ function RouteComponent() {
   const handleOkayClick = () => {
     void navigate({ to: "/" });
   };
-  // const location = useLocation();
 
-  if (isValidRepoRoute) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-8 w-full">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center py-8">
-            <Loader className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground">Processing import...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   if (!isValidRepoRoute) {
     return (
@@ -155,37 +145,43 @@ function RouteComponent() {
               {getImportStatusText(isFailed, isCompleted, isImporting, error)}
             </p>
 
-            <ScrollArea className="flex-1 border rounded-md p-3 bg-muted/30">
-              <div className="font-mono text-xs space-y-1">
-                {logs.length === 0 ? (
-                  <div className="text-muted-foreground italic">importing...</div>
-                ) : (
-                  logs.map((log: LogLine, index: number) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "text-left whitespace-break-spaces gap-2",
-                        log.type === "error" ? "text-destructive" : "text-foreground"
-                      )}
-                    >
-                      <span className="break-words">{log.message}</span>
-                    </div>
-                  ))
-                )}
-                <div />
-              </div>
+            <ScrollArea className="font-mono text-xs space-y-1 flex-1 border rounded-md p-3 bg-muted/30 h-32 overflow-y-auto scrollbar-thin">
+              {logs.length === 0 ? (
+                <div className="text-muted-foreground italic">importing...</div>
+              ) : (
+                logs.map((log: LogLine, index: number) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "text-left whitespace-break-spaces gap-2",
+                      log.type === "error" ? "text-destructive" : "text-foreground"
+                    )}
+                  >
+                    <span className="break-words">{log.message}sfsdfsf</span>
+                  </div>
+                ))
+              )}
+              <div ref={bottomRef} />
             </ScrollArea>
           </div>
-          <Button
-            onClick={() => {
-              if (isImporting) {
-                cancel();
-              }
-              void navigate({ to: "/" });
-            }}
-          >
-            {isCompleted ? "OK" : "Cancel"}
-          </Button>
+          <div className="flex gap-4 justify-center items-center w-full">
+            <Button
+              onClick={() => {
+                if (isImporting) {
+                  cancel();
+                }
+                void navigate({ to: "/" });
+              }}
+            >
+              {isCompleted ? "OK" : "Cancel"}
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={`https://github.com/${repoInfo.owner}/${repoInfo.repo}`} target="_blank" rel="noreferrer">
+                Github Repo
+                <ArrowUpRightFromSquare />{" "}
+              </a>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
