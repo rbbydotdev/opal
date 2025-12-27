@@ -1,4 +1,4 @@
-import { ClientDb } from "@/data/instance";
+import { ClientDb } from "@/data/db/DBInstance";
 import {
   RemoteAuthDataFor,
   RemoteAuthExplicitType,

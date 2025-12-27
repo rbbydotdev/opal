@@ -1,10 +1,10 @@
 import { BuildRecord, BuildStrategy } from "@/data/dao/BuildRecord";
 import { PublicationDAO, PublicationJType } from "@/data/dao/PublicationDAO";
+import { ClientDb } from "@/data/db/DBInstance";
 import { Disk } from "@/data/disk/Disk";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { DiskJType } from "@/data/disk/DiskType";
 import { NullDisk } from "@/data/disk/NullDisk";
-import { ClientDb } from "@/data/instance";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";

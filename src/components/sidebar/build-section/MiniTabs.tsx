@@ -1,6 +1,12 @@
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 
-// interface MiniTabProps
+export const useBuildListMiniTabs = (id = "SidebarFileMenuBuild/activeTab") => {
+  const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage<
+    "builds" | "files" | "destinations" | "deployments"
+  >(id, "files");
+  return { activeTab, setActiveTab };
+};
 
 export function MiniTab({
   children,

@@ -7,7 +7,7 @@ import { SelectableListItemAction } from "@/components/selectable-list/Selectabl
 import { BuildSelector } from "@/components/sidebar/build-files-section/BuildSelector";
 import { BuildSidebarFileMenuFileSection } from "@/components/sidebar/build-files-section/BuildSidebarFileMenuFileSection";
 import { useBuildManager } from "@/components/sidebar/build-files-section/useBuildManager";
-import { MiniTab } from "@/components/sidebar/build-section/AnimatedTabs";
+import { MiniTab, useBuildListMiniTabs } from "@/components/sidebar/build-section/MiniTabs";
 import { SidebarBuildsList } from "@/components/sidebar/build-section/SidebarBuildsList";
 import { SidebarDeploymentList } from "@/components/sidebar/build-section/SidebarDeploymentList";
 import { SidebarDestinationList } from "@/components/sidebar/build-section/SidebarDestinationList";
@@ -26,7 +26,6 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenuButton } from "@/components
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath } from "@/workspace/WorkspaceContext";
@@ -58,9 +57,8 @@ export function SidebarFileMenuBuild({
   const { open: openNewPub } = useBuildPublisher();
   const { open: openConfirm } = useConfirm();
   const [selectMode, setSelectMode] = useState<"select" | "delete">("select");
-  const { storedValue: activeTab, setStoredValue: setActiveTab } = useLocalStorage<
-    "builds" | "files" | "destinations" | "deployments"
-  >("SidebarFileMenuBuild/activeTab", "files");
+
+  const { activeTab, setActiveTab } = useBuildListMiniTabs();
 
   const { builds, build, setBuildId } = useBuildManager({ currentWorkspace });
 
@@ -176,9 +174,7 @@ export function SidebarFileMenuBuild({
                   )}
                 </div>
                 <div>{activeTab === "destinations" && <SidebarDestinationList />}</div>
-                <div>
-                  {activeTab === "deployments" && <SidebarDeploymentList workspaceId={currentWorkspace.guid} />}
-                </div>
+                <div>{activeTab === "deployments" && <SidebarDeploymentList workspace={currentWorkspace} />}</div>
               </div>
             </div>
           </CollapsibleContent>

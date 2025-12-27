@@ -1,5 +1,6 @@
 import { FileTree } from "@/components/filetree/Filetree";
 import { TreeDirRootJType } from "@/components/filetree/TreeNode";
+import { ClientDb } from "@/data/db/DBInstance";
 import { Disk } from "@/data/disk/Disk";
 import { DiskContext } from "@/data/disk/DiskContext";
 import { DiskDAO } from "@/data/disk/DiskDAO";
@@ -7,7 +8,6 @@ import { DiskType } from "@/data/disk/DiskType";
 import { OPFSNamespacedFs } from "@/data/fs/CommonFileSystem";
 import { MutexFs } from "@/data/fs/MutexFs";
 import { PatchedOPFS } from "@/data/fs/NamespacedFs";
-import { ClientDb } from "@/data/instance";
 import { absPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import { IFileSystemDirectoryHandle } from "memfs/lib/fsa/types";

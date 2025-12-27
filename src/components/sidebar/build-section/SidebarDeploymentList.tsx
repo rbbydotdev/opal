@@ -8,18 +8,23 @@ import {
   SelectableListSimple,
 } from "@/components/selectable-list/SelectableList";
 import { DeployLabel } from "@/components/sidebar/build-files-section/DeployLabel";
+import { useBuildManager } from "@/components/sidebar/build-files-section/useBuildManager";
+import { useBuildListMiniTabs } from "@/components/sidebar/build-section/MiniTabs";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { useDeploys } from "@/data/dao/useDeploys";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
-import { Delete, Eye, Globe } from "lucide-react";
+import { Workspace } from "@/workspace/Workspace";
+import { Delete, Eye, Files, Globe } from "lucide-react";
 
-export function SidebarDeploymentList({ workspaceId }: { workspaceId: string }) {
+export function SidebarDeploymentList({ workspace }: { workspace: Workspace }) {
   const errorToss = useErrorToss();
-  const { deploys } = useDeploys({ workspaceId });
+  const { deploys } = useDeploys({ workspaceId: workspace.guid });
   const { openDeployment } = useBuildPublisher();
 
+  const { setBuildId } = useBuildManager({ currentWorkspace: workspace });
+  const { activeTab, setActiveTab } = useBuildListMiniTabs();
   const handleDelete = async (destId: string) => {
     try {
       await DeployDAO.delete(destId);
@@ -59,6 +64,19 @@ export function SidebarDeploymentList({ workspaceId }: { workspaceId: string }) 
                 <SelectableListItemAction onSelect={() => handleView(deploy.guid)} icon={<Eye className="w-4 h-4" />}>
                   Show
                 </SelectableListItemAction>
+                {deploy.status === "success" && deploy.effectiveUrl && (
+                  <SelectableListItemAction
+                    onSelect={() => {
+                      setBuildId(deploy.buildId);
+
+                      setActiveTab("files");
+                    }}
+                    icon={<Files className="w-4 h-4" />}
+                  >
+                    Build Files
+                  </SelectableListItemAction>
+                )}
+
                 {deploy.status === "success" && deploy.effectiveUrl && (
                   <SelectableListItemAction
                     onSelect={() => handleViewDeployment(deploy)}

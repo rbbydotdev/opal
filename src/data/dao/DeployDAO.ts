@@ -1,8 +1,8 @@
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { DeployRecord } from "@/data/dao/DeployRecord";
 import { DestinationDAO } from "@/data/dao/DestinationDAO";
+import { ClientDb } from "@/data/db/DBInstance";
 import { DestinationType } from "@/data/DestinationSchemaMap";
-import { ClientDb } from "@/data/instance";
 import { NotFoundError } from "@/lib/errors/errors";
 import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";

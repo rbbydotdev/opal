@@ -115,10 +115,10 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       this.log(`Starting ${this.strategy} build, id ${this.target.guid}...`, "info");
       this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
       this.log(`Output path: ${this.outputPath}`, "info");
-      await new Promise((resolve, rj) => {
-        setTimeout(resolve, 100000);
-        allAbortSignal?.addEventListener("abort", () => rj(new Error("Aborted")));
-      }); // allow log to flush
+      // await new Promise((resolve, rj) => { FOR TESTING
+      //   setTimeout(resolve, 100000);
+      //   allAbortSignal?.addEventListener("abort", () => rj(new Error("Aborted")));
+      // }); // allow log to flush
 
       if (allAbortSignal?.aborted) {
         this.log("Build cancelled", "error");

@@ -1,7 +1,7 @@
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { cn } from "@/lib/utils";
-import { FolderOpenIcon } from "lucide-react";
+import { AlertTriangle, FolderOpenIcon } from "lucide-react";
 import { timeAgo } from "short-time-ago";
 
 export function BuildLabel({ build, className }: { build: BuildDAO; className?: string }) {
@@ -9,6 +9,8 @@ export function BuildLabel({ build, className }: { build: BuildDAO; className?: 
     <div className={cn("flex justify-start flex-col items-start gap-1 w-full whitespace-nowrap", className)}>
       <div className="w-full flex justify-center items-center gap-2">
         {/* <span className="rounded-full w-2 h-2 bg-primary flex-shrink-0"></span> */}
+
+        {build.status === "error" && <AlertTriangle size={24} className="text-destructive w-4" />}
         <span className="w-3 h-3 rounded border flex-shrink-0 flex justify-center items-center">
           <WorkspaceIcon size={4} variant="round" input={build.guid} />
         </span>

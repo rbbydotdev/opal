@@ -14,7 +14,7 @@ import { RemoteLoggerLogger, signalRequest } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 // Import pure handler functions
-import { ClientDb } from "@/data/instance";
+import { ClientDb } from "@/data/db/DBInstance";
 import { Thumb } from "@/data/Thumb";
 import { HistoryDB } from "@/editors/history/HistoryDB";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";

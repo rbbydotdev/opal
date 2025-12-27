@@ -1,5 +1,5 @@
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { ClientDb } from "@/data/instance";
+import { ClientDb } from "@/data/db/DBInstance";
 import diff_match_patch, { Diff } from "diff-match-patch";
 
 export class HistoryDB {

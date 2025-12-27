@@ -1,7 +1,7 @@
 import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
+import { ClientDb } from "@/data/db/DBInstance";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
-import { ClientDb } from "@/data/instance";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { WorkspaceStatusCode, WS_OK } from "@/data/WorkspaceStatusCode";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors/errors";

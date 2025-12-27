@@ -1,8 +1,8 @@
 import { TreeDirRoot, TreeDirRootJType } from "@/components/filetree/TreeNode";
+import { ClientDb } from "@/data/db/DBInstance";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
-import { ClientDb } from "@/data/instance";
 import { NotFoundError } from "@/lib/errors/errors";
 import { nanoid } from "nanoid";
 

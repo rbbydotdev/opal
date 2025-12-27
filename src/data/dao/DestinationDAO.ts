@@ -1,6 +1,6 @@
 import { DestinationRecord } from "@/data/dao/DestinationRecord";
+import { ClientDb } from "@/data/db/DBInstance";
 import { DestinationSchemaTypeMap, DestinationType } from "@/data/DestinationSchemaMap";
-import { ClientDb } from "@/data/instance";
 import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";

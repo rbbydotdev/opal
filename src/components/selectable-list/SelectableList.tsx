@@ -184,7 +184,7 @@ export function SelectableListActions({ children }: { children?: React.ReactNode
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {children}
-          <DropdownMenuSeparator />
+          {children && <DropdownMenuSeparator />}
           <DropdownMenuItem
             onClick={() => setSelected(allItemIds)}
             className="grid grid-cols-[auto_1fr] items-center gap-2"
@@ -421,7 +421,12 @@ export function SelectableListItemAction({
   };
 
   return (
-    <DropdownMenuItem onSelect={handleSelect} className={destructive ? "text-destructive" : ""} asChild={asChild}>
+    <DropdownMenuItem
+      onSelect={handleSelect}
+      onClick={(e) => e.stopPropagation()}
+      className={destructive ? "text-destructive" : ""}
+      asChild={asChild}
+    >
       {icon && <div className="w-4 h-4 mr-2">{icon}</div>}
       {children}
     </DropdownMenuItem>

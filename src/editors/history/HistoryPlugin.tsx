@@ -1,5 +1,5 @@
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
-import { ClientDb } from "@/data/instance";
+import { ClientDb } from "@/data/db/DBInstance";
 import { HistoryDB } from "@/editors/history/HistoryDB";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
