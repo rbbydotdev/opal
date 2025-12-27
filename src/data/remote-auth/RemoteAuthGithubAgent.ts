@@ -23,7 +23,7 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
     { repoName, private: isPrivate }: { repoName: string; private?: boolean },
     { signal }: { signal?: AbortSignal } = {}
   ) {
-    return this.githubClient.createRepo({ repoName: coerceRepoToName(repoName), private: isPrivate }, { signal });
+    return this.githubClient.createRepo({ repoName: coerceGithubRepoToName(repoName), private: isPrivate }, { signal });
   }
   async getRemoteUsername(): Promise<string> {
     const user = await this.githubClient.getCurrentUser();
@@ -86,11 +86,20 @@ export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, Remote
   abstract getApiToken(): string;
 }
 
-export function coerceRepoToName(repoName: string): string {
+export function coerceGithubRepoToName(repoName: string): string {
   // If a full URL is provided, extract the path part
   try {
     const url = new URL(repoName);
     return relPath(url.pathname.replace(/\.git$/, "")).trim();
   } catch {}
-  return repoName;
+  relPath(repoName).split("/").slice(0, 2).join("/");
+  return relPath(repoName);
+}
+
+export function coerceGitHubRepoToURL(repoName: string): string {
+  // If it's already a URL, return as is
+  try {
+    return `https://github.com/${coerceGithubRepoToName(new URL(repoName).pathname)}`;
+  } catch {}
+  return `https://github.com/${coerceGithubRepoToName(repoName)}`;
 }

@@ -2,7 +2,7 @@ import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
-import { coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { coerceGithubRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { absPath } from "@/lib/paths2";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { flushSync } from "react-dom";
@@ -23,7 +23,7 @@ export function GitHubDestinationForm({
   defaultName?: string;
 }) {
   const updateBaseUrlFromRepoFullName = (fullName: string) => {
-    const repoName = coerceRepoToName(fullName);
+    const repoName = coerceGithubRepoToName(fullName);
     form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
   };
 
@@ -36,7 +36,7 @@ export function GitHubDestinationForm({
         onBlur={() =>
           queueMicrotask(() =>
             flushSync(() => {
-              const repoName = coerceRepoToName(form.getValues("meta.repository"));
+              const repoName = coerceGithubRepoToName(form.getValues("meta.repository"));
               form.setValue("meta.repository", repoName);
               updateBaseUrlFromRepoFullName(repoName);
             })

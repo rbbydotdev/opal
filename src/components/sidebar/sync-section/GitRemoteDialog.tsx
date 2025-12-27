@@ -23,7 +23,7 @@ import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { GitRemoteFormValues, gitRemoteSchema } from "@/components/sidebar/sync-section/GitRemoteFormValues";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
-import { coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { coerceGithubRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
@@ -226,7 +226,7 @@ function GitRemoteDialogInternal({
   const remoteAuth = useRemoteAuthForm(authId);
 
   const updateBaseUrlFromRepoFullName = (fullName: string) => {
-    const repoName = coerceRepoToName(fullName);
+    const repoName = coerceGithubRepoToName(fullName);
     form.setValue("url", repoName);
   };
 
@@ -278,8 +278,8 @@ function GitRemoteDialogInternal({
               <GitHubRepoSelector
                 control={form.control}
                 fieldName="url"
-                onValueChange={(value) => form.setValue("url", coerceRepoToName(value))}
-                getValue={() => coerceRepoToName(form.getValues("url"))}
+                onValueChange={(value) => form.setValue("url", coerceGithubRepoToName(value))}
+                getValue={() => coerceGithubRepoToName(form.getValues("url"))}
                 remoteAuth={remoteAuth}
                 defaultName={currentWorkspace.name}
                 label="Repository"

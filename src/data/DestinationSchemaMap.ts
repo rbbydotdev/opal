@@ -1,7 +1,7 @@
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
 import { AgentFromRemoteAuthFactory } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
-import { coerceRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { coerceGithubRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
 import { unwrapError } from "@/lib/errors/errors";
@@ -194,7 +194,7 @@ export const DestinationSchemaMap = {
 
         // Normalize the repository name
 
-        const normalizedRepo = coerceRepoToName(data.meta.repository);
+        const normalizedRepo = coerceGithubRepoToName(data.meta.repository);
 
         // Get the full repository name and validate it exists
         const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);

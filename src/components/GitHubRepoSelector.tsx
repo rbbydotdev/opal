@@ -1,3 +1,9 @@
+import {
+  RemoteResourceCreate,
+  RemoteResourceInput,
+  RemoteResourceRoot,
+  RemoteResourceSearch,
+} from "@/components/publish-modal/RemoteResourceField";
 import { useRemoteGitRepo, useRemoteGitRepoSearch } from "@/components/RemoteConnectionItem";
 import {
   RepositoryCreationProvider,
@@ -9,18 +15,12 @@ import {
   RepositoryVisibilitySelector,
   getVisibilityIcon,
 } from "@/components/repository/RepositoryVisibilitySelector";
-import { RemoteAuthGithubAgent, coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
-import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
+import { RemoteAuthGithubAgent, coerceGithubRepoToName, coerceGitHubRepoToURL } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
-import {
-  RemoteResourceCreate,
-  RemoteResourceInput,
-  RemoteResourceRoot,
-  RemoteResourceSearch,
-} from "@/components/publish-modal/RemoteResourceField";
 
 interface GitHubRepoSelectorProps<T extends FieldValues, K extends FieldPath<T>> {
   control: Control<T>;
@@ -100,7 +100,7 @@ export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>
   const handleBlur = () => {
     if (onValueProcessing) {
       flushSync(() => {
-        const repoName = coerceRepoToName(getValue() || "");
+        const repoName = coerceGithubRepoToName(getValue() || "");
         onValueChange(repoName);
         onValueProcessing(repoName);
       });

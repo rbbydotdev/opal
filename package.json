@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run build:workers && npm run build:app",
     "build:app": "vite build",
-    "build:workers": "tsx vite-build-workers.ts",
+    "build:workers": "ENABLE_WORKER_LOGS=false tsx vite-build-workers.ts",
     "build:workers:dev": "tsx vite-build-workers.ts dev",
     "dev:workerlog": "tsx ./src/workerlog/index.ts",
     "dev": "vite",
