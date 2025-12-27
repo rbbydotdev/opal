@@ -22,6 +22,8 @@ import { ErrorMiniPlaque } from "@/components/errors/ErrorPlaque";
 import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { GitRemoteFormValues, gitRemoteSchema } from "@/components/sidebar/sync-section/GitRemoteFormValues";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { isGithubRemoteAuth } from "@/data/isGithubRemoteAuth";
+import { coerceRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { GitRemote } from "@/features/git-repo/GitRepo";
 import { useAsyncEffect } from "@/hooks/useAsyncEffect";
 import { ENV } from "@/lib/env";
@@ -81,6 +83,7 @@ export function GitRemoteDialog({
   const form = useForm<GitRemoteFormValues>({
     resolver: zodResolver(gitRemoteSchema),
     defaultValues,
+    mode: "onBlur",
   });
   const prevRef = React.useRef<GitRemote | null>(null);
   const modeRef = React.useRef<GitRemoteDialogModeType>("add");
@@ -222,6 +225,11 @@ function GitRemoteDialogInternal({
   const authId = useWatch({ name: "authId", control: form.control });
   const remoteAuth = useRemoteAuthForm(authId);
 
+  const updateBaseUrlFromRepoFullName = (fullName: string) => {
+    const repoName = coerceRepoToName(fullName);
+    form.setValue("url", repoName);
+  };
+
   return (
     <div className={className}>
       <DialogHeader>
@@ -266,18 +274,19 @@ function GitRemoteDialogInternal({
             )}
           />
           <div data-no-escape className="w-full">
-            {authId && remoteAuth?.hasRemoteApi() ? (
+            {authId && remoteAuth?.hasRemoteApi() && isGithubRemoteAuth(remoteAuth) ? (
               <GitHubRepoSelector
                 control={form.control}
                 fieldName="url"
-                onValueChange={(value) => form.setValue("url", value)}
-                getValue={() => form.getValues("url")}
+                onValueChange={(value) => form.setValue("url", coerceRepoToName(value))}
+                getValue={() => coerceRepoToName(form.getValues("url"))}
                 remoteAuth={remoteAuth}
                 defaultName={currentWorkspace.name}
                 label="Repository"
                 placeholder="my-new-repo"
                 createButtonTitle="Create Repository"
                 searchButtonTitle="Search Repositories"
+                onValueProcessing={updateBaseUrlFromRepoFullName}
               />
             ) : (
               <FormField
