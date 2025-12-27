@@ -62,8 +62,8 @@ export class GitHubClient {
     { signal }: { signal?: AbortSignal } = {}
   ) {
     try {
-      const finalRepoName = repoName.trim();
-      return this.octokit.request("POST /user/repos", {
+      const finalRepoName = repoName.trim().split("/").pop()!;
+      return await this.octokit.request("POST /user/repos", {
         name: finalRepoName,
         private: isPrivate ?? true, // Default to private if not specified
         auto_init: false,
@@ -72,7 +72,9 @@ export class GitHubClient {
         },
       });
     } catch (e) {
-      throw mapToTypedError(e);
+      const error = mapToTypedError(e);
+      error.hint(tryParseGitHubError(e));
+      throw error;
     }
   }
 
@@ -349,7 +351,17 @@ export class GitHubClient {
     }
   }
 
-  private async getBranchRefRequest({ owner, repo, branch, signal }: { owner: string; repo: string; branch: string; signal?: AbortSignal }) {
+  private async getBranchRefRequest({
+    owner,
+    repo,
+    branch,
+    signal,
+  }: {
+    owner: string;
+    repo: string;
+    branch: string;
+    signal?: AbortSignal;
+  }) {
     return this.octokit.request("GET /repos/{owner}/{repo}/git/ref/heads/{branch}", {
       owner,
       repo,
@@ -377,7 +389,17 @@ export class GitHubClient {
     });
   }
 
-  private async getCommitRequest({ owner, repo, commitSha, signal }: { owner: string; repo: string; commitSha: string; signal?: AbortSignal }) {
+  private async getCommitRequest({
+    owner,
+    repo,
+    commitSha,
+    signal,
+  }: {
+    owner: string;
+    repo: string;
+    commitSha: string;
+    signal?: AbortSignal;
+  }) {
     return this.octokit.request("GET /repos/{owner}/{repo}/git/commits/{commit_sha}", {
       owner,
       repo,
@@ -585,5 +607,53 @@ export class GitHubClient {
       username,
       password: apiToken,
     };
+  }
+}
+
+/*
+{
+  "message": "Repository creation failed.",
+  "errors": [
+    {
+      "resource": "Repository",
+      "code": "custom",
+      "field": "name",
+      "message": "name already exists on this account"
+    }
+  ],
+  "documentation_url": "https://docs.github.com/rest/repos/repos#create-a-repository-for-the-authenticated-user",
+  "status": "422"
+}
+*/
+export function tryParseGitHubError(error: unknown): string | null {
+  try {
+    // Handle the case when Octokit passes an object (not a raw string)
+    const parsed =
+      typeof error === "string"
+        ? JSON.parse(error)
+        : typeof error === "object" && error !== null
+          ? ((error as any).response?.data ?? error)
+          : null;
+
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const message = parsed.message as string | undefined;
+    const errors = parsed.errors as
+      | Array<{
+          resource?: string;
+          field?: string;
+          message?: string;
+        }>
+      | undefined;
+
+    if (Array.isArray(errors) && errors.length > 0) {
+      // Build readable multi-line or single-line summary
+      return errors.map((e) => `${e.resource ?? "Unknown"} - ${e.message ?? message ?? ""}`).join("\n");
+    }
+
+    // Some GitHub errors contain only top-level message
+    return message ?? null;
+  } catch {
+    return null;
   }
 }

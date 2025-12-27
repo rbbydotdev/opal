@@ -42,7 +42,24 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
     return new ImportRunner({ disk: NULL_DISK, fullRepoPath: "recall/recall" });
   }
 
+  async writeMemDiskToDisk(realDisk: Disk): Promise<void> {
+    await this.disk.copyDiskToDisk(realDisk);
+    //no op for now
+    // const fileTree = await this.disk.triggerIndex();
+    // for (const file of fileTree.iterator()) {
+    //   if (file.isTreeFile()) {
+    //     await realDisk.writeFile(file.path, file.read());
+    //   }
+    // }
+  }
+
   cancel(): void {
+    //when import is cancelled, we should clean up any partial files written to disk
+    //as a matter of fact we should use a MemoryDisk during import and only write to the real disk on success
+    //look in git history for MemoryDisk which has been remove
+    //would be nice to copy one disk to another easily which is already kind of done when we move files between disks
+    //we could use disk file tree iterator actually
+    // for (const file of this.disk.getFlatTree()){}
     this.abortController.abort();
   }
 

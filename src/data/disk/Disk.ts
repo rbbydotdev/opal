@@ -626,6 +626,13 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     return newPath;
   }
 
+  copyDiskToDisk(targetDisk: Disk): Promise<AbsPath[]> {
+    return targetDisk.copyMultipleSourceNodes(
+      this.fileTree.all().map((n) => new SourceTreeNode(n, n.path)),
+      this
+    );
+  }
+
   async copyDir(oldFullPath: AbsPath, newFullPath: AbsPath, overWrite?: boolean) {
     const fullPath = await this.copyDirQuiet(oldFullPath, newFullPath, overWrite);
     await this.fileTreeIndex();
