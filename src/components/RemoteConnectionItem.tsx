@@ -41,6 +41,7 @@ namespace RemoteItemType {
 export const RemoteItemCreateInput = forwardRef<
   HTMLInputElement,
   {
+    onFocus?: () => void;
     onClose: (val?: string) => void;
     submit: () => void;
     request: RemoteItemType.Request<any>;
@@ -53,7 +54,18 @@ export const RemoteItemCreateInput = forwardRef<
   }
 >(
   (
-    { onClose, request, msg, className, ident, submit, placeholder = "my-new-thing", noAutoFocus = false, icon },
+    {
+      onClose,
+      request,
+      msg,
+      onFocus,
+      className,
+      ident,
+      submit,
+      placeholder = "my-new-thing",
+      noAutoFocus = false,
+      icon,
+    },
     ref
   ) => {
     const handleBlur = () => onClose(ident.name.trim() || undefined);
@@ -70,6 +82,7 @@ export const RemoteItemCreateInput = forwardRef<
             value={ident.name}
             onChange={(e) => ident.setName(e.target.value)}
             onBlur={handleBlur}
+            onFocus={onFocus}
             placeholder={placeholder}
             className={cn("w-full", icon && "pl-10")}
             onKeyDown={(e) => {

@@ -5,9 +5,7 @@ export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRoot
 
 const DiskKinds = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk", "NullDisk", "MemDisk"] as const;
 
-type AbleDiskTypes = Exclude<DiskType, "MemDisk">;
-
-export const getDiskTypeLabel = (type: AbleDiskTypes) => {
+export const getDiskTypeLabel = (type: DiskType) => {
   return DiskKindLabel[type] ?? "Unknown";
 };
 export const DiskKindLabel: Record<DiskType, string> = {
@@ -19,18 +17,19 @@ export const DiskKindLabel: Record<DiskType, string> = {
 };
 
 export const DiskEnabledFSTypes = ["IndexedDbDisk", "OpFsDisk", "OpFsDirMountDisk"] as const;
-export const DiskLabelMap: Record<AbleDiskTypes, string> = {
+export type DiskEnabledFSType = (typeof DiskEnabledFSTypes)[number];
+
+export const DiskLabelMap: Record<DiskType, string> = {
   IndexedDbDisk: "IndexedDB (Recommended)",
   OpFsDisk: "OPFS (origin private file system)",
   OpFsDirMountDisk: "OPFS (mount to directory)",
   NullDisk: "Null",
-  // MemDisk: "In-Memory",
+  MemDisk: "Memory",
 };
-export const DiskCanUseMap: Record<AbleDiskTypes, () => boolean> = {
+export const DiskCanUseMap: Record<DiskEnabledFSType, () => boolean> = {
   IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
   OpFsDisk: () => BrowserAbility.canUseOPFS(),
   OpFsDirMountDisk: () => BrowserAbility.canUseOPFS() && "showDirectoryPicker" in window,
-  NullDisk: () => true,
 };
 
 export type DiskType = (typeof DiskKinds)[number];

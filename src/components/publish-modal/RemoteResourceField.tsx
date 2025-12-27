@@ -19,7 +19,8 @@ interface RemoteResourceRootProps<T extends FieldValues, K extends FieldPath<T>>
   control: Control<T>;
   fieldName: K;
   onValueChange: (value: string) => void;
-  onBlur?: () => void;
+  onInputBlur?: () => void;
+  onCreateFocus?: () => void;
   getValue: () => string | undefined;
 }
 
@@ -28,7 +29,8 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
   control,
   fieldName,
   onValueChange,
-  onBlur,
+  onInputBlur,
+  onCreateFocus,
   getValue,
 }: RemoteResourceRootProps<T, K>) {
   const [mode, setMode] = useState<RemoteResourceMode>("input");
@@ -46,7 +48,8 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
     control,
     fieldName,
     onValueChange,
-    onBlur,
+    onCreateFocus,
+    onInputBlur,
     getValue,
     inputRef,
   };
@@ -139,7 +142,7 @@ export function RemoteResourceCreate({
   children?: React.ReactNode;
   icon?: React.ReactNode;
 }) {
-  const { mode, setMode, onValueChange } = useRemoteResourceContext();
+  const { mode, setMode, onValueChange, onCreateFocus } = useRemoteResourceContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const pauseCloseRef = useRef<boolean>(false);
   if (mode === "option") {
@@ -157,6 +160,7 @@ export function RemoteResourceCreate({
   }
 
   if (mode !== "create") return null;
+  //useEffect mode === "create" ???
   const handleCreateSubmit = async () => {
     try {
       pauseCloseRef.current = true;
@@ -179,6 +183,7 @@ export function RemoteResourceCreate({
           ref={inputRef}
           placeholder={placeholder}
           icon={icon}
+          onFocus={onCreateFocus}
           onClose={(newName) => {
             if (!pauseCloseRef.current) {
               onValueChange(newName || "");
@@ -207,7 +212,7 @@ function RemoteResourceInputField({
   placeholder: string;
   children?: React.ReactNode;
 }) {
-  const { mode, setMode, control, fieldName, inputRef, onBlur } = useRemoteResourceContext();
+  const { mode, setMode, control, fieldName, inputRef, onInputBlur } = useRemoteResourceContext();
 
   const { cmdRef } = useTooltipToastCmd();
 
@@ -240,7 +245,7 @@ function RemoteResourceInputField({
                 <Input
                   {...field}
                   ref={inputRef}
-                  onBlur={onBlur}
+                  onBlur={onInputBlur}
                   placeholder={placeholder}
                   className="flex-1 w-full"
                   onChange={(e) => {

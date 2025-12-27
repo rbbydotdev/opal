@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DefaultDiskType } from "@/data/disk/DiskDefaults";
-import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
 import { cn } from "@/lib/utils";
@@ -10,23 +8,21 @@ import { ImportRunner, NULL_IMPORT_RUNNER } from "@/services/import/ImportRunner
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo")({
   component: RouteComponent,
 });
 
 function useDiskFromRepo(fullRepoPath: string) {
-  const disk = useMemo(() => DiskFactoryByType(DefaultDiskType), []);
-
   const {
     runner: importRunner,
     execute,
     cancel,
     logs,
   } = useRunner(() => {
-    return fullRepoPath ? ImportRunner.Create({ disk, fullRepoPath }) : NULL_IMPORT_RUNNER;
-  }, [fullRepoPath, disk]);
+    return fullRepoPath ? ImportRunner.Create({ fullRepoPath }) : NULL_IMPORT_RUNNER;
+  }, [fullRepoPath]);
 
   // Auto-start the import when fullRepoPath changes
   useEffect(() => {
@@ -37,13 +33,12 @@ function useDiskFromRepo(fullRepoPath: string) {
       !importRunner.isPending &&
       !importRunner.isCompleted
     ) {
-      void execute(ImportRunner.Create({ disk, fullRepoPath }));
+      void execute(ImportRunner.Create({ fullRepoPath }));
     }
-  }, [execute, fullRepoPath, disk, importRunner]);
+  }, [execute, fullRepoPath, importRunner]);
 
   return {
     logs,
-    disk,
     importRunner,
     cancel,
     isImporting: importRunner.isPending,

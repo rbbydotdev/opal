@@ -2,11 +2,13 @@ import { TreeDirRoot } from "@/components/filetree/TreeNode";
 import { Disk } from "@/data/disk/Disk";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
+import { MemDisk } from "@/data/disk/MemDisk";
 import { NullDisk } from "@/data/disk/NullDisk";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { OpFsDisk } from "@/data/disk/OpFsDisk";
 
 const DiskMap = {
+  [MemDisk.type]: MemDisk,
   [IndexedDbDisk.type]: IndexedDbDisk,
   [NullDisk.type]: NullDisk,
   [OpFsDisk.type]: OpFsDisk,

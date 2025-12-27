@@ -74,6 +74,15 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
     }
 
     emit<K extends keyof Events>(event: K, payload: Events[K] & Meta): void {
+      // Special handling for error events
+      if (event === 'error') {
+        const errorListeners = this.emitter.listenerCount('error');
+        if (errorListeners === 0) {
+          console.error(`Unhandled error event: ${payload}`);
+          return;
+        }
+      }
+
       this.emitter.emit(event as string | symbol, payload);
       this.emitter.emit("*", { ...payload, eventName: event });
     }
@@ -134,6 +143,15 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
   }
 
   emit<K extends keyof Events>(event: K, payload: Events[K]): void {
+    // Special handling for error events
+    if (event === 'error') {
+      const errorListeners = this.emitter.listenerCount('error');
+      if (errorListeners === 0) {
+        console.error(`Unhandled error event: ${payload}`);
+        return;
+      }
+    }
+
     this.emitter.emit(event as string | symbol, payload);
   }
 

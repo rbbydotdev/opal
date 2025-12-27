@@ -2,7 +2,6 @@ import { GitHubRepoSelector } from "@/components/GitHubRepoSelector";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DestinationMetaType } from "@/data/dao/DestinationDAO";
-import { coerceGithubRepoToName } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { absPath } from "@/lib/paths2";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { flushSync } from "react-dom";
@@ -22,10 +21,10 @@ export function GitHubDestinationForm({
   remoteAuth: RemoteAuthDAO | null;
   defaultName?: string;
 }) {
-  const updateBaseUrlFromRepoFullName = (fullName: string) => {
-    const repoName = coerceGithubRepoToName(fullName);
-    form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
-  };
+  // const updateBaseUrlFromRepoFullName = (fullName: string) => {
+  //   const repoName = coerceGithubRepoToName(fullName);
+  //   form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
+  // };
 
   return (
     <>
@@ -33,24 +32,24 @@ export function GitHubDestinationForm({
         control={form.control}
         fieldName="meta.repository"
         onValueChange={(value: string) => form.setValue("meta.repository", value)}
-        onBlur={() =>
-          queueMicrotask(() =>
-            flushSync(() => {
-              const repoName = coerceGithubRepoToName(form.getValues("meta.repository"));
-              form.setValue("meta.repository", repoName);
-              updateBaseUrlFromRepoFullName(repoName);
-            })
-          )
-        }
+        // onBlur={() =>
+        //   queueMicrotask(() =>
+        //     flushSync(() => {
+        //       const repoName = coerceGithubRepoToName(form.getValues("meta.repository"));
+        //       form.setValue("meta.repository", repoName);
+        //       updateBaseUrlFromRepoFullName(repoName);
+        //     })
+        //   )
+        // }
         getValue={() => form.getValues("meta.repository")}
         remoteAuth={remoteAuth}
         defaultName={defaultName}
         label="Repository"
         placeholder="my-website-repo"
-        onRepoCreated={({ full_name }) => {
-          updateBaseUrlFromRepoFullName(full_name);
-        }}
-        onValueProcessing={updateBaseUrlFromRepoFullName}
+        // onRepoCreated={({ full_name }) => {
+        //   updateBaseUrlFromRepoFullName(full_name);
+        // }}
+        // onValueProcessing={updateBaseUrlFromRepoFullName}
       />
       <FormField
         control={form.control}

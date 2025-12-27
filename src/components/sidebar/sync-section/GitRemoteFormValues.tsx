@@ -10,7 +10,6 @@ export const gitRemoteSchema = z.object({
     .string()
     .min(1, "Remote URL is required")
     .url("Remote URL must be a valid URL")
-    // form.setValue("url", `https://github.com/${coerceRepoToName(form.getValues("url"))}`);
     .regex(/^(https?|git|ssh|file):\/\/|^git@/, "Remote URL must be a valid Git URL"),
   gitCorsProxy: z
     .string()

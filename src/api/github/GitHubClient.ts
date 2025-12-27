@@ -1,5 +1,5 @@
 import { OctokitClient } from "@/auth/OctokitClient";
-import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
+import { AbortError, isAbortError, mapToTypedError } from "@/lib/errors/errors";
 import { DeployBundleTreeEntry, UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
 
@@ -13,13 +13,20 @@ export interface GitHubRepo {
   private: boolean;
 }
 
-type GithubTreeItem = {
+export type GithubTreeItem = {
   path?: string;
   mode?: "100644" | "100755" | "040000" | "160000" | "120000";
   type?: "blob" | "tree" | "commit";
   sha?: string | null;
   content?: string;
 };
+
+export interface GitHubTreeItem {
+  path: string;
+  type: "blob" | "tree";
+  sha: string;
+  size?: number;
+}
 
 export interface GitHubUser {
   login: string;
@@ -30,12 +37,17 @@ export interface GitHubUser {
   bio?: string;
 }
 
+export interface GitHubFileContent {
+  path: string;
+  content: string;
+}
+
 export type GithubInlinedFile = Extract<DeployBundleTreeEntry, { type: "file" }>;
 
 export class GitHubClient {
   private octokit: Octokit;
 
-  constructor(auth: string) {
+  constructor(auth: string | null = null) {
     this.octokit = OctokitClient({
       auth,
       request: {
@@ -607,6 +619,95 @@ export class GitHubClient {
       username,
       password: apiToken,
     };
+  }
+
+  async getRepositoryTree(
+    { owner, repo, branch = "main" }: { owner: string; repo: string; branch?: string },
+    { signal }: { signal?: AbortSignal } = {}
+  ): Promise<GitHubTreeItem[]> {
+    try {
+      const response = await this.octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
+        owner,
+        repo,
+        tree_sha: branch,
+        recursive: "1",
+        request: { signal },
+      });
+
+      return response.data.tree
+        .filter((item: any) => item.type === "blob")
+        .map((item: any) => ({
+          path: item.path,
+          type: item.type as "blob" | "tree",
+          sha: item.sha,
+          size: item.size,
+        }));
+    } catch (e) {
+      if (isAbortError(e)) throw e;
+      throw mapToTypedError(e, {
+        message: `Failed to fetch repository tree for ${owner}/${repo}`,
+        path: `${owner}/${repo}`,
+      });
+    }
+  }
+
+  async getFileContent(
+    { owner, repo, path, branch = "main" }: { owner: string; repo: string; path: string; branch?: string },
+    { signal }: { signal?: AbortSignal } = {}
+  ): Promise<string> {
+    try {
+      const response = await this.octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
+        owner,
+        repo,
+        path,
+        ref: branch,
+        request: { signal },
+      });
+
+      // Handle the case where the content is base64 encoded
+      const data = response.data as any;
+      if (data.encoding === "base64" && data.content) {
+        return atob(data.content.replace(/\s/g, ""));
+      }
+
+      return data.content || "";
+    } catch (e) {
+      if (isAbortError(e)) throw e;
+      throw mapToTypedError(e, {
+        message: `Failed to fetch file content for ${path} in ${owner}/${repo}`,
+        path: `${owner}/${repo}/${path}`,
+      });
+    }
+  }
+
+  async *fetchRepositoryFiles(
+    { owner, repo, branch = "main" }: { owner: string; repo: string; branch?: string },
+    { signal }: { signal?: AbortSignal } = {}
+  ): AsyncGenerator<{ path: string; content: string }> {
+    try {
+      const files = await this.getRepositoryTree({ owner, repo, branch }, { signal });
+
+      for (const file of files) {
+        if (signal?.aborted) {
+          throw new AbortError();
+        }
+
+        try {
+          const content = await this.getFileContent({ owner, repo, path: file.path, branch }, { signal });
+          yield { path: file.path, content };
+        } catch (error) {
+          console.warn(`Error fetching ${file.path}:`, error);
+        }
+      }
+    } catch (e) {
+      if (isAbortError(e)) throw e;
+      const error = mapToTypedError(e, {
+        message: `Failed to fetch repository content for ${owner}/${repo}`,
+        path: `${owner}/${repo}`,
+      });
+      error.hint(tryParseGitHubError(e));
+      throw error;
+    }
   }
 }
 

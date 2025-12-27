@@ -2,7 +2,7 @@ import { GitHubClient } from "@/api/github/GitHubClient";
 import { GithubDestination } from "@/data/DestinationSchemaMap";
 import { RemoteAuthAgentDeployableFiles } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteGitApiAgent, Repo } from "@/data/RemoteAuthTypes";
-import { relPath } from "@/lib/paths2";
+import { relPath, stripLeadingSlash } from "@/lib/paths2";
 import { DeployBundle } from "@/services/deploy/DeployBundle";
 
 export abstract class RemoteAuthGithubAgent implements RemoteGitApiAgent, RemoteAuthAgentDeployableFiles<DeployBundle> {
@@ -90,9 +90,9 @@ export function coerceGithubRepoToName(repoName: string): string {
   // If a full URL is provided, extract the path part
   try {
     const url = new URL(repoName);
-    return relPath(url.pathname.replace(/\.git$/, "")).trim();
+    return stripLeadingSlash(url.pathname.replace(/\.git$/, "")).trim();
   } catch {}
-  relPath(repoName).split("/").slice(0, 2).join("/");
+  stripLeadingSlash(repoName).split("/").slice(0, 2).join("/");
   return relPath(repoName);
 }
 

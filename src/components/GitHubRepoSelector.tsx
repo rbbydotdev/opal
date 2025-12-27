@@ -16,17 +16,19 @@ import {
   getVisibilityIcon,
 } from "@/components/repository/RepositoryVisibilitySelector";
 import { useRemoteAuthAgent } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
-import { RemoteAuthGithubAgent, coerceGithubRepoToName, coerceGitHubRepoToURL } from "@/data/remote-auth/RemoteAuthGithubAgent";
+import {
+  RemoteAuthGithubAgent,
+  coerceGitHubRepoToURL,
+  coerceGithubRepoToName,
+} from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { useState } from "react";
-import { flushSync } from "react-dom";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 
 interface GitHubRepoSelectorProps<T extends FieldValues, K extends FieldPath<T>> {
   control: Control<T>;
   fieldName: K;
   onValueChange: (value: string) => void;
-  onBlur?: () => void;
   getValue: () => string | undefined;
   remoteAuth: RemoteAuthDAO | null;
   defaultName?: string;
@@ -34,17 +36,13 @@ interface GitHubRepoSelectorProps<T extends FieldValues, K extends FieldPath<T>>
   placeholder?: string;
   createButtonTitle?: string;
   searchButtonTitle?: string;
-  // Additional callback for when repo is created - useful for side effects like clearing cache
   onRepoCreated?: (repo: Awaited<ReturnType<RemoteAuthGithubAgent["createRepo"]>>["data"]) => void;
-  // Custom value processing - useful for things like updating related form fields
-  onValueProcessing?: (value: string) => void;
 }
 
 export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>>({
   control,
   fieldName,
   onValueChange,
-  onBlur,
   getValue,
   remoteAuth,
   defaultName,
@@ -53,7 +51,6 @@ export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>
   createButtonTitle = "Create Repository",
   searchButtonTitle = "Search Repositories",
   onRepoCreated,
-  onValueProcessing,
 }: GitHubRepoSelectorProps<T, K>) {
   const agent = useRemoteAuthAgent<RemoteAuthGithubAgent>(remoteAuth);
 
@@ -92,20 +89,8 @@ export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>
   // Choose appropriate capability factory based on auth type
   const capabilities = hasScope ? createGitHubCapabilities(canCreatePrivate) : createGitHubAPICapabilities();
 
-  const handleValueChange = (value: string) => {
-    onValueChange(value);
-    onValueProcessing?.(value);
-  };
-
   const handleBlur = () => {
-    if (onValueProcessing) {
-      flushSync(() => {
-        const repoName = coerceGithubRepoToName(getValue() || "");
-        onValueChange(repoName);
-        onValueProcessing(repoName);
-      });
-    }
-    onBlur?.();
+    onValueChange(coerceGitHubRepoToURL(getValue() || ""));
   };
 
   return (
@@ -113,8 +98,11 @@ export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>
       <RemoteResourceRoot
         control={control}
         fieldName={fieldName}
-        onValueChange={handleValueChange}
-        onBlur={handleBlur}
+        onValueChange={onValueChange}
+        onInputBlur={handleBlur}
+        onCreateFocus={() => {
+          ident.setName(coerceGithubRepoToName(ident.name));
+        }}
         getValue={getValue}
       >
         <RemoteResourceSearch
@@ -136,12 +124,13 @@ export function GitHubRepoSelector<T extends FieldValues, K extends FieldPath<T>
           <RepositoryVisibilitySelector value={visibility} onChange={setVisibility} />
         </RemoteResourceCreate>
         <RemoteResourceInput
+          key={ident.name}
           label={label}
           placeholder={placeholder}
           createButtonTitle={createButtonTitle}
           searchButtonTitle={searchButtonTitle}
           ident={ident}
-          onSearchChange={updateSearch}
+          onSearchChange={(v) => updateSearch(coerceGithubRepoToName(v))}
           searchReset={searchReset}
           createReset={request.reset}
         />

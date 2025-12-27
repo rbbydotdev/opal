@@ -1,5 +1,6 @@
 import { Disk } from "@/data/disk/Disk";
-import { NULL_DISK } from "@/data/disk/NullDisk";
+import { DiskFactoryByType } from "@/data/disk/DiskFactory";
+import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/WorkspaceImport";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
@@ -16,34 +17,34 @@ type ImportState = {
 };
 
 export class ImportRunner extends ObservableRunner<ImportState> implements Runner {
-  private disk: Disk;
+  // private tmpDisk: Disk;
+  private tmpDisk = DiskFactoryByType(MemDisk.type);
   private importer: GithubImport;
   protected abortController: AbortController = new AbortController();
 
-  constructor({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }) {
+  constructor({ fullRepoPath }: { fullRepoPath: string }) {
     super({
       status: "idle",
       logs: [],
       error: null,
     });
-    this.disk = disk;
     this.importer = new GithubImport(relPath(fullRepoPath));
   }
 
-  static Create({ disk, fullRepoPath }: { disk: Disk; fullRepoPath: string }): ImportRunner {
-    return new ImportRunner({ disk, fullRepoPath });
+  static Create({ fullRepoPath }: { fullRepoPath: string }): ImportRunner {
+    return new ImportRunner({ fullRepoPath });
   }
 
   static Show(_: any): ImportRunner {
-    return new ImportRunner({ disk: NULL_DISK, fullRepoPath: "show/show" });
+    return new ImportRunner({ fullRepoPath: "show/show" });
   }
 
   static async Recall(): Promise<ImportRunner> {
-    return new ImportRunner({ disk: NULL_DISK, fullRepoPath: "recall/recall" });
+    return new ImportRunner({ fullRepoPath: "recall/recall" });
   }
 
   async writeMemDiskToDisk(realDisk: Disk): Promise<void> {
-    await this.disk.copyDiskToDisk(realDisk);
+    await this.tmpDisk.copyDiskToDisk(realDisk);
     //no op for now
     // const fileTree = await this.disk.triggerIndex();
     // for (const file of fileTree.iterator()) {
@@ -88,7 +89,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
         }
 
         // Write the file to the disk
-        await this.disk.writeFile(absPath(file.path), file.content);
+        await this.tmpDisk.writeFile(absPath(file.path), file.content);
         this.log(`Imported file: ${file.path}`, "info");
       }
 
@@ -108,7 +109,6 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
 export class NullImportRunner extends ImportRunner {
   constructor() {
     super({
-      disk: NULL_DISK,
       fullRepoPath: "null/null",
     });
   }
