@@ -1,7 +1,7 @@
 export type LogTransport = "net" | "postMsg" | "net+postMsg";
 
 export const RemoteLogger =
-  (name: string, transport: LogTransport = "net") =>
+  (name: string, transport: LogTransport = "postMsg") =>
   (_msg: string, type = "log") => {
     const logData = {
       msg: `{${name}}: ${_msg}`,
