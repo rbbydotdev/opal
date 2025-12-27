@@ -22,35 +22,22 @@ export function GitHubDestinationForm({
   remoteAuth: RemoteAuthDAO | null;
   defaultName?: string;
 }) {
-  // const updateBaseUrlFromRepoFullName = (fullName: string) => {
-  //   const repoName = coerceGithubRepoToName(fullName);
-  //   form.setValue("meta.baseUrl", absPath([...repoName.split("/")].pop() || "/"));
-  // };
-
   return (
     <>
       <GitHubRepoSelector
         control={form.control}
         fieldName="meta.repository"
-        onValueChange={(value: string) => form.setValue("meta.repository", coerceGitHubRepoToURL(value))}
-        // onBlur={() =>
-        //   queueMicrotask(() =>
-        //     flushSync(() => {
-        //       const repoName = coerceGithubRepoToName(form.getValues("meta.repository"));
-        //       form.setValue("meta.repository", repoName);
-        //       updateBaseUrlFromRepoFullName(repoName);
-        //     })
-        //   )
-        // }
+        onValueChange={(value: string) => {
+          form.setValue("meta.repository", coerceGitHubRepoToURL(value));
+          if (form.getValues("meta.baseUrl") === "/") {
+            form.setValue("meta.baseUrl", absPath([...value.split("/")].pop() || "/"));
+          }
+        }}
         getValue={() => form.getValues("meta.repository")}
         remoteAuth={remoteAuth}
         defaultName={defaultName}
         label="Repository"
         placeholder="https://github.com/user/my-website-repo"
-        // onRepoCreated={({ full_name }) => {
-        //   updateBaseUrlFromRepoFullName(full_name);
-        // }}
-        // onValueProcessing={updateBaseUrlFromRepoFullName}
       />
       <FormField
         control={form.control}

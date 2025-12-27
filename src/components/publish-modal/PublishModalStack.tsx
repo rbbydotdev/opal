@@ -10,6 +10,7 @@ import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
 import { DeployDAO } from "@/data/dao/DeployDAO";
 import { AnyDestinationMetaType, DestinationDAO } from "@/data/dao/DestinationDAO";
 import { isRemoteAuthJType, PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
+import { useModalSignal } from "@/lib/useModalSignal";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { ArrowLeft, ArrowUpRight, Globe, Zap } from "lucide-react";
@@ -63,6 +64,7 @@ export function PublishModalStack({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [build, setBuild] = useState<BuildDAO>(NULL_BUILD);
+  const modalSignal = useModalSignal(isOpen);
   const { remoteAuths } = useRemoteAuths();
   const [destination, setDestination] = useState<DestinationDAO | null>(null);
   const [preferredConnection, setPreferredConnection] = useState<RemoteAuthJType | PartialRemoteAuthJType | null>(null);
@@ -257,6 +259,7 @@ export function PublishModalStack({
             setPreferredConnection={setPreferredConnection}
             pushView={pushView}
             //*
+            modalSignal={modalSignal.current?.signal}
             destination={destination}
             deploy={deploy}
             setDestination={setDestination}

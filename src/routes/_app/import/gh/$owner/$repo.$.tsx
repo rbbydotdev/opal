@@ -7,54 +7,13 @@ import { stripLeadingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { ImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
-import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
-import { ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
+import { createFileRoute, useBlocker, useLocation, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
-  /*  loader: async ({ params }) => {
-    const fullRepoPath = stripTrailingSlash(`${params.owner}/${params.repo}/${params._splat}`);
-    console.log("Import Route Loader:", { fullRepoPath });
-    return {
-      fullRepoPath,
-      runner: {},
-    };
-  },
-  onEnter: async ({ context }) => {
-    console.log(context);
-    return {
-      status: "ok",
-    };
-  },
-  onLeave: async ({ context }) => {
-    console.log(context);
-  },*/
   component: RouteComponent,
 });
-
-function getImportStatusText(
-  isFailed: boolean,
-  isCompleted: boolean,
-  isImporting: boolean,
-  error: string | null
-): string {
-  if (isFailed) {
-    if (error) {
-      return error;
-    }
-    return "Import failed. Please try again.";
-  }
-
-  if (isCompleted) {
-    return "Import completed";
-  }
-
-  if (isImporting) {
-    return "Importing files...";
-  }
-
-  return "Setting up your workspace...";
-}
 
 function useImporter(fullRepoPath: string) {
   const {
@@ -96,6 +55,11 @@ function RouteComponent() {
   const { logs, cancel, repoInfo, isValidRepoRoute, isFailed, isImporting, isSuccess, isCompleted, error } =
     useImporter(importPath);
 
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => isImporting,
+    withResolver: true,
+  });
+
   const handleOkayClick = () => {
     void navigate({ to: "/" });
   };
@@ -103,6 +67,33 @@ function RouteComponent() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
+
+  if (status === "blocked") {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-8 w-full">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-lg flex items-center justify-center gap-2">
+              <TriangleAlert className="h-5 w-5 text-amber-500" />
+              Navigation Warning
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              An import is currently in progress. Leaving this page will cancel the import.
+            </p>
+            <p className="text-sm font-medium">Are you sure you want to leave?</p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="destructive" onClick={proceed}>
+                Yes, Leave
+              </Button>
+              <Button onClick={reset}>Stay</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isValidRepoRoute) {
     return (
@@ -127,23 +118,30 @@ function RouteComponent() {
   return (
     <div className="flex items-center justify-center min-h-screen p-8 w-full">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center ">
           <div className="flex justify-center bg-card text-card-foreground rounded-md h-12 w-full items-center ">
-            <Github style={{ width: "24px", height: "24px" }} />
+            <div className="w-42 flex gap-2">
+              <Github style={{ width: "24px", height: "24px" }} />
+              <ArrowRight className="mx-2" />
+              {isCompleted && isSuccess && <CheckCircle className="h-6 w-6 text-success mx-auto" />}
+              {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />}
+              {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
+            </div>
           </div>
           <CardTitle className="text-lg">Importing from GitHub</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-8">
-          <div className="space-y-2">
-            {isCompleted && isSuccess && <CheckCircle className="h-6 w-6 text-success mx-auto" />}
-            {isCompleted && isFailed && <TriangleAlert className="h-6 w-6 text-destructive mx-auto" />}
-            <p className="font-medium">
+          <div className="space-y-4">
+            <a
+              target="_blank"
+              href={`https://github.com/${repoInfo.owner}/${repoInfo.repo}`}
+              className="font-medium bg-card-foreground/10 w-full rounded-lg py-2 block"
+            >
               {repoInfo.owner}/{repoInfo.repo}
-            </p>
-            {isImporting && <Loader className="h-6 w-6 animate-spin mx-auto" />}
-            <p className="text-sm text-muted-foreground">
+            </a>
+            {/* <div className="text-sm text-muted-foreground">
               {getImportStatusText(isFailed, isCompleted, isImporting, error)}
-            </p>
+            </div> */}
 
             <ScrollArea className="font-mono text-xs space-y-1 flex-1 border rounded-md p-3 bg-muted/30 h-32 overflow-y-auto scrollbar-thin">
               {logs.length === 0 ? (
@@ -157,7 +155,7 @@ function RouteComponent() {
                       log.type === "error" ? "text-destructive" : "text-foreground"
                     )}
                   >
-                    <span className="break-words">{log.message}sfsdfsf</span>
+                    <span className="break-words">{log.message}</span>
                   </div>
                 ))
               )}
@@ -165,22 +163,36 @@ function RouteComponent() {
             </ScrollArea>
           </div>
           <div className="flex gap-4 justify-center items-center w-full">
-            <Button
-              onClick={() => {
-                if (isImporting) {
-                  cancel();
-                }
-                void navigate({ to: "/" });
-              }}
-            >
-              {isCompleted ? "OK" : "Cancel"}
-            </Button>
-            <Button variant="secondary" asChild>
-              <a href={`https://github.com/${repoInfo.owner}/${repoInfo.repo}`} target="_blank" rel="noreferrer">
-                Github Repo
-                <ArrowUpRightFromSquare />{" "}
-              </a>
-            </Button>
+            {isCompleted ? (
+              <Button
+                className="px-12"
+                onClick={() => {
+                  void navigate({ to: "/" });
+                }}
+              >
+                OK
+              </Button>
+            ) : (
+              <Button
+                className="px-12"
+                onClick={() => {
+                  if (isImporting) {
+                    cancel();
+                  }
+                  void navigate({ to: "/" });
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            {isFailed && (
+              <Button variant="secondary" asChild>
+                <a href={`https://github.com/${repoInfo.owner}/${repoInfo.repo}`} target="_blank" rel="noreferrer">
+                  Github Repo
+                  <ArrowUpRightFromSquare />{" "}
+                </a>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -229,4 +241,28 @@ function ExampleTableFormat() {
       </div>
     </div>
   );
+}
+
+function getImportStatusText(
+  isFailed: boolean,
+  isCompleted: boolean,
+  isImporting: boolean,
+  error: string | null
+): string {
+  if (isFailed) {
+    if (error) {
+      return error;
+    }
+    return "Import failed. Please try again.";
+  }
+
+  if (isCompleted) {
+    return "Import completed";
+  }
+
+  if (isImporting) {
+    return "Importing files...";
+  }
+
+  return "Setting up your workspace...";
 }

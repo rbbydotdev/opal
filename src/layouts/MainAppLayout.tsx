@@ -61,16 +61,16 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
             <ErrorPopper>
               <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
                 <WorkspaceProvider>
-                  <DocHistoryProvider>
-                    <TooltipProvider delayDuration={1000}>
-                      <WindowContextProviderComponent>
-                        <LivePreviewDialogProvider>
-                          <GitStatusProvider>
-                            <PublicationModalProvider>
-                              <SidebarProvider>
-                                <BuildCreationProvider>
-                                  <PromptProvider>
-                                    <ConfirmProvider>
+                  <ConfirmProvider>
+                    <DocHistoryProvider>
+                      <TooltipProvider delayDuration={1000}>
+                        <WindowContextProviderComponent>
+                          <LivePreviewDialogProvider>
+                            <GitStatusProvider>
+                              <PublicationModalProvider>
+                                <SidebarProvider>
+                                  <BuildCreationProvider>
+                                    <PromptProvider>
                                       <RemoteMDXEditorRealmProvider>
                                         <div className="w-full flex">
                                           <ErrorBoundary fallback={ErrorPlaque}>
@@ -83,16 +83,16 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                           </ErrorBoundary>
                                         </div>
                                       </RemoteMDXEditorRealmProvider>
-                                    </ConfirmProvider>
-                                  </PromptProvider>
-                                </BuildCreationProvider>
-                              </SidebarProvider>
-                            </PublicationModalProvider>
-                          </GitStatusProvider>
-                        </LivePreviewDialogProvider>
-                      </WindowContextProviderComponent>
-                    </TooltipProvider>
-                  </DocHistoryProvider>
+                                    </PromptProvider>
+                                  </BuildCreationProvider>
+                                </SidebarProvider>
+                              </PublicationModalProvider>
+                            </GitStatusProvider>
+                          </LivePreviewDialogProvider>
+                        </WindowContextProviderComponent>
+                      </TooltipProvider>
+                    </DocHistoryProvider>
+                  </ConfirmProvider>
                 </WorkspaceProvider>
               </ErrorBoundary>
             </ErrorPopper>

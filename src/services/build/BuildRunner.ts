@@ -103,10 +103,11 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   }
 
   async execute({
-    abortSignal = this.abortController.signal,
+    abortSignal,
   }: {
     abortSignal?: AbortSignal;
   } = {}): Promise<BuildDAO> {
+    const allAbortSignal = AbortSignal.any([this.abortController.signal, abortSignal].filter(Boolean));
     try {
       this.target.status = "pending";
       await this.target.save();
@@ -114,8 +115,12 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       this.log(`Starting ${this.strategy} build, id ${this.target.guid}...`, "info");
       this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
       this.log(`Output path: ${this.outputPath}`, "info");
+      await new Promise((resolve, rj) => {
+        setTimeout(resolve, 100000);
+        allAbortSignal?.addEventListener("abort", () => rj(new Error("Aborted")));
+      }); // allow log to flush
 
-      if (abortSignal?.aborted) {
+      if (allAbortSignal?.aborted) {
         this.log("Build cancelled", "error");
         this.target.error = "Build was cancelled.";
         this.target.status = "error";
@@ -133,7 +138,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
 
       await this.ensureOutputDirectory();
 
-      if (abortSignal?.aborted) {
+      if (allAbortSignal?.aborted) {
         this.log("Build cancelled", "error");
         return this.target.update({
           logs: this.logs,
@@ -159,7 +164,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       }
       this.log(`${this.strategy} build strategy completed`, "info");
 
-      abortSignal?.throwIfAborted();
+      allAbortSignal?.throwIfAborted();
 
       this.log("Build completed successfully!", "info");
 
@@ -178,7 +183,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.log(`Build failed: ${errorMessage}`, "error");
       this.target.status = "error";
-      this.target.error = !abortSignal?.aborted ? "Build was cancelled." : `Build failed: ${errorMessage}`;
+      this.target.error = !allAbortSignal?.aborted ? "Build was cancelled." : `Build failed: ${errorMessage}`;
     } finally {
       await this.target.save();
       return this.target.hydrate();

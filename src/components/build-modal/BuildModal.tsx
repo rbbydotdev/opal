@@ -1,3 +1,4 @@
+import { useConfirm } from "@/components/ConfirmContext";
 import { useBuildPublisher } from "@/components/publish-modal/PubicationModalCmdContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,6 +9,7 @@ import { NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
+import { useModalSignal } from "@/lib/useModalSignal";
 import { BuildRunner } from "@/services/build/BuildRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
@@ -27,6 +29,7 @@ export function BuildModal({
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [isOpen, setIsOpen] = useState(false);
+  const abortController = useModalSignal(isOpen);
   const { storedValue: showTimestamps, setStoredValue: setShowTimestamps } = useLocalStorage(
     "BuildModal/showTimestamps",
     true,
@@ -35,11 +38,13 @@ export function BuildModal({
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const { runner, execute, setRunner, logs } = useRunner(
-    BuildRunner.Show({
-      build: NULL_BUILD,
-      workspace: currentWorkspace,
-    }),
-    []
+    () =>
+      BuildRunner.Show({
+        build: NULL_BUILD,
+        workspace: currentWorkspace,
+      }),
+    [isOpen /* will reset when modal is opened/closed */],
+    abortController.current?.signal
   );
 
   useEffect(() => {
@@ -61,26 +66,36 @@ export function BuildModal({
   );
 
   const handleBuild = async () => {
+    abortController.current = new AbortController();
     return execute(
       BuildRunner.Create({
         workspace: currentWorkspace,
         label: `Build ${new Date().toLocaleString()}`,
         strategy,
-      })
+      }),
+      { abortSignal: abortController.current?.signal }
     );
   };
 
-  const handleCancel = useCallback(() => {
-    runner.cancel();
-    setIsOpen(false);
-  }, [runner]);
-
   const { open: openPubModal } = useBuildPublisher();
 
-  const handleClose = useCallback(() => {
-    if (runner.isPending) return;
+  // const { open, cmdRef: confirmCmd } = useConfirmCmd();
+  const { open: openConfirm } = useConfirm();
+
+  const handleClose = useCallback(async () => {
+    if (
+      runner.isPending &&
+      !(await openConfirm(
+        () => true,
+        "Cancel Build",
+        "A build is currently in progress. Are you sure you want to close the modal?"
+      ))
+    ) {
+      return;
+    }
     setIsOpen(false);
-  }, [runner.isPending]);
+    runner.cancel();
+  }, [openConfirm, runner]);
 
   const handleFocusOutside = useCallback(
     (e: Event) => {
@@ -91,7 +106,7 @@ export function BuildModal({
     [runner.isPending]
   );
   const handleOpenPubModal = () => {
-    handleClose();
+    void handleClose();
     openPubModal({ build: runner.target });
   };
 
@@ -179,7 +194,7 @@ export function BuildModal({
             )}
 
             {runner.isPending && (
-              <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleClose} className="flex items-center gap-2">
                 <X size={16} />
                 Cancel
               </Button>
@@ -187,7 +202,7 @@ export function BuildModal({
           </div>
 
           {/* Build Success Indicator */}
-          {runner.isCompleted && (
+          {runner.isSuccess && (
             <div className="border-2 border-success bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-success justify-between">
                 <div className="flex items-center gap-4">
@@ -217,7 +232,7 @@ export function BuildModal({
           )}
 
           {/* Build Error Indicator */}
-          {runner.error && (
+          {runner.isFailed && (
             <div className="border-2 border-destructive bg-card p-4 rounded-lg">
               <div className="flex items-center gap-2 font-mono text-destructive justify-between">
                 <div className="flex items-center gap-4">

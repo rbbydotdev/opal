@@ -101,14 +101,15 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
   }
 
   async execute({
-    abortSignal = this.abortController.signal,
+    abortSignal,
   }: {
     abortSignal?: AbortSignal;
   } = {}): Promise<DeployDAO> {
+    const allAbortSignal = AbortSignal.any([this.abortController.signal, abortSignal].filter(Boolean));
     try {
       this.target.status = "pending";
 
-      abortSignal?.throwIfAborted();
+      allAbortSignal?.throwIfAborted();
 
       this.log(`Starting deployment, id ${this.target.guid}...`, "info");
       this.log(`Destination: ${this.target.label}`, "info");
@@ -117,7 +118,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
         this.bundle,
         this.destination,
         (status: string) => this.log(status, "info"),
-        abortSignal
+        allAbortSignal
       );
 
       this.log("Deployment completed successfully.", "info");
@@ -143,7 +144,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
       const errorMessage = unwrapError(error);
       console.error("Deployment failed:", error);
       this.log(`Deployment failed: ${errorMessage}`, "error");
-      this.target.error = abortSignal?.aborted ? `Deployment cancelled` : `Deployment failed: ${errorMessage}`;
+      this.target.error = allAbortSignal?.aborted ? `Deployment cancelled` : `Deployment failed: ${errorMessage}`;
       this.target.status = "error";
     } finally {
       this.target.completedAt = Date.now();

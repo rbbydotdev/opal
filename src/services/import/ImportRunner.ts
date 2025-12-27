@@ -66,10 +66,11 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
   }
 
   async execute({
-    abortSignal = this.abortController.signal,
+    abortSignal,
   }: {
     abortSignal?: AbortSignal;
   } = {}): Promise<ImportState> {
+    const allAbortSignal = AbortSignal.any([this.abortController.signal, abortSignal].filter(Boolean));
     try {
       const importer = new GithubImport(relPath(this.fullRepoPath));
       this.target.status = "pending";
@@ -83,7 +84,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
 
       this.log("Starting repository import...", "info");
 
-      for await (const file of importer.fetchFiles(abortSignal)) {
+      for await (const file of importer.fetchFiles(allAbortSignal)) {
         if (abortSignal?.aborted) {
           this.log("Import cancelled", "error");
           this.target.status = "error";

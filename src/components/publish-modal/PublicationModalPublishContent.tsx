@@ -38,6 +38,7 @@ export function PublicationModalPublishContent({
   deploy,
   setBuild,
   destination,
+  modalSignal,
   currentWorkspace,
   onOpenChange,
   pushView,
@@ -47,6 +48,7 @@ export function PublicationModalPublishContent({
   build: BuildDAO;
   deploy: DeployDAO | null;
   setBuild: (build: BuildDAO) => void;
+  modalSignal?: AbortSignal;
   currentWorkspace: Workspace;
   destination: DestinationDAO | null;
   onOpenChange: (value: boolean) => void;
@@ -62,6 +64,7 @@ export function PublicationModalPublishContent({
   const { remoteAuths } = useRemoteAuths();
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
+  // const thing = useModalSignal(isOpen);
   //use selected build but if is NullBuild try and get first build if possible
   const tryBuild = build.isNull ? builds[0] || build : build;
 
@@ -84,7 +87,10 @@ export function PublicationModalPublishContent({
         workspaceId: currentWorkspace.id,
         deploy: null,
         label: `Deploy ${new Date().toLocaleString()}`,
-      })
+      }),
+      {
+        abortSignal: modalSignal,
+      }
     );
   };
   const handleBuildSelect = (buildId: string) => {

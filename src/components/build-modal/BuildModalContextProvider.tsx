@@ -8,9 +8,15 @@ export function BuildCreationProvider({ children }: { children: React.ReactNode 
   const { currentWorkspace } = useWorkspaceContext();
   const { cmdRef } = useBuildCreationCmd();
   const contextValue = {
-    openNew: () => cmdRef.current.openNew(),
-    openEdit: (options: { buildId: string }) => cmdRef.current.openEdit(options),
-    close: () => cmdRef.current.close(),
+    openNew: () => {
+      return cmdRef.current.openNew();
+    },
+    openEdit: (options: { buildId: string }) => {
+      cmdRef.current.openEdit(options);
+    },
+    close: () => {
+      cmdRef.current.close();
+    },
   };
   return (
     <BuildCreationContext.Provider value={contextValue}>

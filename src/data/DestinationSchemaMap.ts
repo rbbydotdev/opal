@@ -1,10 +1,8 @@
 import { DestinationDAO, RandomTag } from "@/data/dao/DestinationDAO";
 import { AgentFromRemoteAuthFactory } from "@/data/remote-auth/AgentFromRemoteAuthFactory";
 import { RemoteAuthCloudflareAPIAgent } from "@/data/remote-auth/RemoteAuthCloudflareAPIAgent";
-import { coerceGithubRepoToName, RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import { RemoteAuthNetlifyAgent } from "@/data/remote-auth/RemoteAuthNetlifyAgent";
 import { RemoteAuthSource } from "@/data/RemoteAuthTypes";
-import { unwrapError } from "@/lib/errors/errors";
 import { absPath } from "@/lib/paths2";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import z from "zod";
@@ -170,11 +168,7 @@ export const DestinationSchemaMap = {
       remoteAuthId: z.string().trim().min(1, "Remote Auth ID is required"),
       label: z.string().trim().min(1, "Label is required"),
       meta: z.object({
-        repository: z
-          .string()
-          .trim()
-          .min(1, "Repository is required")
-          .url("Repository must be a valid URL"),
+        repository: z.string().trim().min(1, "Repository is required").url("Repository must be a valid URL"),
         branch: z.string().trim().min(1, "Branch is required"),
         baseUrl: z.string().trim().min(1, "Base URL is required").transform(absPath),
       }),
@@ -183,19 +177,14 @@ export const DestinationSchemaMap = {
     //   try {
     //     // Only validate if repository is provided
     //     if (!data.meta.repository || !data.meta.repository.trim()) return;
-
     //     const agent = AgentFromRemoteAuthFactory(
     //       (await RemoteAuthDAO.GetByGuid(data.remoteAuthId))!
     //     ) as RemoteAuthGithubAgent;
-
     //     // Normalize the repository name
-
     //     const normalizedRepo = coerceGithubRepoToName(data.meta.repository);
-
     //     // Get the full repository name and validate it exists
     //     const [owner, repo] = await agent.githubClient.getFullRepoName(normalizedRepo);
     //     const fullName = `${owner}/${repo}`;
-
     //     // Update the data with validated values
     //     data.meta.repository = normalizedRepo;
     //     data.meta.fullName = fullName;
