@@ -35,9 +35,7 @@ import { SWWStore } from "@/lib/service-worker/SWWStore";
 import graymatter from "gray-matter";
 
 declare const self: ServiceWorkerGlobalScope;
-const LOG = RemoteLoggerLogger("SW");
-
-initializeGlobalLogger(LOG);
+const LOG = initializeGlobalLogger(RemoteLoggerLogger("SW"));
 
 const app = new Hono<{ Variables: { workspaceName: string } }>();
 
@@ -184,13 +182,13 @@ app.use("*", async (c, next) => {
   // Skip static assets and dev files
   const path = c.req.path;
   if (
-    path.startsWith("/@") ||           // Vite special files (@vite/client, @static/, etc.)
+    path.startsWith("/@") || // Vite special files (@vite/client, @static/, etc.)
     path.startsWith("/node_modules/") || // Vite deps
-    path.startsWith("/src/") ||         // Source files
+    path.startsWith("/src/") || // Source files
     path === "/opal.svg" ||
     path === "/opal-blank.svg" ||
     path === "/opal-lite.svg" ||
-    request.destination === "script"    // All script requests should bypass
+    request.destination === "script" // All script requests should bypass
   ) {
     LOG.log(`Skipping dev/static file: ${path}`);
     return fetch(request);
