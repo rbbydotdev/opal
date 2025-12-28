@@ -1,6 +1,6 @@
 import { useQueryState } from "nuqs";
 
-const RANGE_KEY = "hlRanges";
+const RANGE_KEY = "HL";
 
 const rangesParser = {
   parse: (value: string): [start: number, end: number][] | null => {

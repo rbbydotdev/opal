@@ -132,6 +132,10 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     return this.fileTree;
   };
 
+  //run indexing without saving, good for temp memdisks
+  superficialIndex = () => {
+    return this.fileTreeIndex({ writeIndexCache: false });
+  };
   private fileTreeIndex = async ({
     writeIndexCache = true,
   }: {

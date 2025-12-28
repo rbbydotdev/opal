@@ -91,9 +91,9 @@ export function WorkspaceSearchDialog({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     //if url has highlight ranges then remove them pre-emptively
-    if (isOpen && window.location.search.includes("hlRanges=")) {
+    if (isOpen && window.location.search.includes("HL=")) {
       const url = new URL(window.location.href);
-      url.searchParams.delete("hlRanges");
+      url.searchParams.delete("HL");
       window.history.replaceState({}, document.title, url.toString());
     }
   }, [isOpen]);
@@ -393,7 +393,7 @@ function SearchFile({
 function SearchLine({ match, href, onClick }: { match: SearchResult; href: string; onClick?: () => void }) {
   const ranges = JSON.stringify([[match.start, match.end]]);
   return (
-    <Link to={href} search={{ hlRanges: ranges, viewMode: "source" }} onClick={onClick}>
+    <Link to={href} search={{ HL: ranges, viewMode: "source" }} onClick={onClick}>
       <div className="group flex cursor-pointer items-start border-b-4 border-background bg-sidebar-foreground p-1 py-1 font-mono text-xs text-sidebar last-of-type:border-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
         <div className="relative mr-2 min-w-8 text-right font-bold">
           {match.linesSpanned > 0 && (

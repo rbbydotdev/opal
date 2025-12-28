@@ -2,10 +2,11 @@ import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
-import { isApplicationError, unwrapError } from "@/lib/errors/errors";
+import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { Runner } from "@/types/RunnerInterfaces";
+import { NULL_WORKSPACE } from "@/workspace/NullWorkspace";
 import { Workspace } from "@/workspace/Workspace";
 
 type ImportState = {
@@ -46,7 +47,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
   }
 
   async createWorkspaceFromTmpDisk(workspaceName: string): Promise<Workspace> {
-    await this.tmpDisk.tryFirstIndex();
+    await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
     const workspace = await Workspace.CreateNew(workspaceName, sourceTree.iterator(), IndexedDbDisk.type);
 
@@ -69,7 +70,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
   }
 
   cancel(): void {
-    this.abortController.abort("Operation cancelled by user");
+    this.abortController.abort(new AbortError("Operation cancelled by user"));
   }
 
   get repoInfo() {
@@ -81,56 +82,43 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
     abortSignal,
   }: {
     abortSignal?: AbortSignal;
-  } = {}): Promise<ImportState> {
+  } = {}) {
     const allAbortSignal = AbortSignal.any([this.abortController.signal, abortSignal].filter(Boolean));
     try {
       const importer = new GithubImport(relPath(this.fullRepoPath));
       this.target.status = "pending";
       this.target.error = null;
 
-      if (abortSignal?.aborted) {
-        this.log("Import cancelled", "error");
-        this.target.status = "error";
-        return this.target;
-      }
+      abortSignal?.throwIfAborted();
 
       this.log("Starting repository import...", "info");
       for await (const file of importer.fetchFiles(allAbortSignal)) {
-        if (abortSignal?.aborted) {
-          this.log("Import cancelled", "error");
-          this.target.status = "error";
-          return this.target;
-        }
-
-        // Write the file to the disk
+        abortSignal?.throwIfAborted();
         await this.tmpDisk.writeFile(absPath(file.path), file.content);
         this.log(`Imported file: ${file.path}`, "info");
       }
 
-      //create workspace and copy disk
-
       this.log("Import completed successfully", "info");
-      // await this.createWorkspaceFromFromGitRemote(
-      //   this.fullRepoPath.replace("/", "-"),
-      //   `https://github.com/${stripLeadingSlash(this.fullRepoPath)}`
-      // );
 
       const wsImportName = this.fullRepoPath.replace("/", "-");
 
       this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
-      await this.createWorkspaceFromTmpDisk(wsImportName);
+      const workspace = await this.createWorkspaceFromTmpDisk(wsImportName);
       this.log("Workspace created successfully", "success");
-
       this.target.status = "success";
+      return workspace;
     } catch (error) {
-      console.error(error);
-      const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
-      this.log(`Import failed: ${errMsg}`, "error");
-      this.target.error = errMsg;
+      if (isAbortError(error)) {
+        this.log("Import cancelled by user", "error");
+        this.target.error = "Import cancelled by user";
+      } else {
+        const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
+        this.log(`Import failed: ${errMsg}`, "error");
+        this.target.error = errMsg;
+      }
       this.target.status = "error";
+      return NULL_WORKSPACE;
     }
-
-    return this.target;
   }
 }
 
@@ -141,8 +129,8 @@ export class NullImportRunner extends ImportRunner {
     });
   }
 
-  async execute(): Promise<ImportState> {
-    return this.target;
+  async execute() {
+    return NULL_WORKSPACE;
   }
 }
 

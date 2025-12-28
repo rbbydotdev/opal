@@ -1,6 +1,8 @@
+import { AbortError } from "@/lib/errors/errors";
 import { useEffect, useRef } from "react";
 
 export function useModalSignal(isOpen: boolean, reason?: string) {
+  //  DOMException(msg, "AbortError")
   const abortController = useRef<AbortController | null>(null);
   useEffect(() => {
     // If modal has opened: create a new controller
@@ -9,12 +11,12 @@ export function useModalSignal(isOpen: boolean, reason?: string) {
       return () => {
         // Abort on unmount or when modal closes
 
-        abortController.current?.abort(reason);
+        abortController.current?.abort(new AbortError(reason));
         abortController.current = null;
       };
     } else {
       // If modal is closed: ensure any pending operations are cancelled
-      abortController.current?.abort(reason);
+      abortController.current?.abort(new AbortError(reason));
       abortController.current = null;
     }
   }, [isOpen, reason]);

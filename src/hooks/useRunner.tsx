@@ -1,3 +1,4 @@
+import { AbortError } from "@/lib/errors/errors";
 import { Runner } from "@/types/RunnerInterfaces";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
@@ -7,9 +8,7 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
 
   useEffect(() => {
     setRunner(typeof initialValue === "function" ? initialValue() : initialValue);
-    return () => {
-      currentRunner.tearDown();
-    };
+    return () => currentRunner.tearDown();
   }, deps);
   useEffect(() => currentRunner.tearDown, [currentRunner]);
 
@@ -18,16 +17,14 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
 
   const execute = useCallback(
-    async (runner: T, options?: { abortSignal?: AbortSignal }) => {
+    (runner: T, options?: { signal?: AbortSignal }) => {
       // Create a new abort controller for this execution
       abortControllerRef.current = new AbortController();
 
       setRunner(runner);
-      await runner.execute({
-        abortSignal: AbortSignal.any(
-          [abortControllerRef.current.signal, abortSignal, options?.abortSignal].filter(Boolean)
-        ),
-      });
+      return runner.execute({
+        abortSignal: AbortSignal.any([abortControllerRef.current.signal, abortSignal, options?.signal].filter(Boolean)),
+      }) as ReturnType<T["execute"]>;
     },
     [abortSignal]
   );
@@ -35,7 +32,7 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const currentRunnerRef = useRef(currentRunner);
   const cancel = useCallback(() => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort("Operation cancelled by user");
+      abortControllerRef.current.abort(new AbortError("Operation cancelled by user"));
       abortControllerRef.current = null;
     }
     currentRunnerRef.current.cancel();

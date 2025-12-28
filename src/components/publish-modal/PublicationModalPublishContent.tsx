@@ -86,7 +86,7 @@ export function PublicationModalPublishContent({
         label: `Deploy ${new Date().toLocaleString()}`,
       }),
       {
-        abortSignal: modalSignal,
+        signal: modalSignal,
       }
     );
   };

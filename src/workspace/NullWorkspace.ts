@@ -29,3 +29,5 @@ export class NullWorkspace extends Workspace {
     );
   }
 }
+
+export const NULL_WORKSPACE = new NullWorkspace();

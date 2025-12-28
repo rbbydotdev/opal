@@ -73,7 +73,7 @@ export function BuildModal({
         label: `Build ${new Date().toLocaleString()}`,
         strategy,
       }),
-      { abortSignal: abortController.current?.signal }
+      { signal: abortController.current?.signal }
     );
   };
 

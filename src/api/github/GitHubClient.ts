@@ -188,15 +188,8 @@ export class GitHubClient {
     // Check if repo is empty first
     const { exists, reason } = await this.checkGetBranchRefRequest({ owner, repo, branch });
 
-    if (!exists && reason === "notfound") {
-      const error = mapToTypedError(new Error(`Repository ${owner}/${repo} not found`), {
-        message: `Repository ${owner}/${repo} not found`,
-        path: `${owner}/${repo}`,
-      });
-      error.hint(
-        `Repository ${owner}/${repo} does not exist or you don't have access to it. Please check the repository name and your permissions.`
-      );
-      throw error;
+    if (!exists && reason === "nobranch") {
+      log(`Branch '${branch}' does not exist. It will be created during deploy.`);
     }
 
     if (!exists && reason === "unknown") {

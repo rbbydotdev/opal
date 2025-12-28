@@ -7,33 +7,29 @@ type ErrorWithCode = Error & {
 };
 
 export class AbortError extends DOMException {
-  name = "AbortError" as const;
-
   constructor(message: string = "Operation aborted") {
+    // The second argument automatically makes err.name === "AbortError"
     super(message, "AbortError");
     Object.setPrototypeOf(this, AbortError.prototype);
   }
 }
+export function isAbortError(error: unknown): error is AbortError {
+  if (error && typeof error === "object") {
+    const e = error as any;
 
-export function isAbortError(error: unknown): boolean {
-  // direct AbortError
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return true;
+    // Direct AbortError or cross-realm equivalent
+    if ((e instanceof DOMException && e.name === "AbortError") || e.name === "AbortError") {
+      return true;
+    }
+
+    // If cause or reason is an AbortSignal (or carries AbortError)
+    const maybeCause = e.cause ?? e.reason;
+    if (maybeCause) {
+      if (maybeCause instanceof AbortSignal) return true;
+      if (maybeCause.aborted) return true;
+      if (maybeCause.name === "AbortError") return true;
+    }
   }
-
-  // Errors explicitly named AbortError
-  if (typeof error === "object" && error !== null && "name" in error && (error as any).name === "AbortError") {
-    return true;
-  }
-
-  // Wrapped errors (e.g., HttpError, custom wrappers) that carry an AbortSignal or reason
-  const maybeObj = error as any;
-  if (maybeObj?.cause instanceof AbortSignal) return true;
-  if (maybeObj?.cause?.aborted) return true;
-  if (maybeObj?.cause?.name === "AbortError") return true;
-  if (maybeObj?.reason instanceof AbortSignal) return true;
-  if (maybeObj?.reason?.aborted) return true;
-
   return false;
 }
 
