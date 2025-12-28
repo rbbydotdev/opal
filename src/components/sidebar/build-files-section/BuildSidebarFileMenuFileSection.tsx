@@ -57,7 +57,7 @@ export function BuildSidebarFileMenuFileSection({ className, build }: { classNam
   return (
     <FileTreeProvider
       filterIn={(treeNode) =>
-        treeNode.toString().startsWith(SpecialDirs.Build) || treeNode.toString() === SpecialDirs.Build
+        treeNode.toString().startsWith(SpecialDirs.Build + "/") || treeNode.toString() === SpecialDirs.Build
       }
     >
       <BuildSidebarFileMenuFileSectionInternal className={className} build={build} />

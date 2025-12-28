@@ -7,7 +7,7 @@ import { stripLeadingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { ImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
-import { createFileRoute, useBlocker, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -55,10 +55,13 @@ function RouteComponent() {
   const { logs, cancel, repoInfo, isValidRepoRoute, isFailed, isImporting, isSuccess, isCompleted, error } =
     useImporter(importPath);
 
-  const { proceed, reset, status } = useBlocker({
-    shouldBlockFn: () => isImporting,
-    withResolver: true,
-  });
+  // const { proceed, reset, status } = useBlocker({
+  //   shouldBlockFn: () => isImporting,
+  //   withResolver: true,
+  // });
+  const proceed = () => {};
+  const reset = () => {};
+  const status = "idle";
 
   const handleOkayClick = () => {
     void navigate({ to: "/" });

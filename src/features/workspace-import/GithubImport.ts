@@ -9,8 +9,8 @@ export class GithubImport implements WorkspaceImport {
   private branch: string;
   private client: GitHubClient;
 
-  constructor(repoPath: RelPath, branch: string = "main") {
-    const [owner, repo] = repoPath.split("/");
+  constructor(repoPath: RelPath) {
+    const [owner, repo, branch = "main"] = repoPath.split("/");
     if (!owner || !repo) throw new BadRequestError("Invalid repository path. Expected format: owner/repo");
     this.owner = owner;
     this.repo = repo;

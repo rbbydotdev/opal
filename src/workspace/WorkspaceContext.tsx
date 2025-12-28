@@ -102,8 +102,8 @@ export function useCurrentFilepath() {
   }
   const mimeType = getMimeType(filePath) || DEFAULT_MIME_TYPE;
 
-  const isBuildPath = filePath.startsWith(SpecialDirs.Build);
-  const inTrash = filePath.startsWith(SpecialDirs.Trash);
+  const isBuildPath = filePath.startsWith(SpecialDirs.Build + "/");
+  const inTrash = filePath.startsWith(SpecialDirs.Trash + "/");
   return {
     filePath,
     mimeType,
@@ -259,7 +259,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             (fileType === "file" && location.pathname === currentWorkspace.resolveFileUrl(oldPath)) ||
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
-            if (newPath.startsWith(SpecialDirs.Trash)) {
+            if (newPath.startsWith(SpecialDirs.Trash + "/")) {
               void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
               void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
                 void navigate({ to: firstFileUrl });

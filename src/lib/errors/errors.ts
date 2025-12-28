@@ -15,14 +15,26 @@ export class AbortError extends DOMException {
   }
 }
 
-export function isAbortError(error: unknown): error is Error & { message: string; name: "AbortError" } {
-  return (
-    (typeof error === "object" &&
-      error !== null &&
-      "name" in error &&
-      (error as Record<string, unknown>).name === "AbortError") ||
-    (error instanceof DOMException && error.name === "AbortError")
-  );
+export function isAbortError(error: unknown): boolean {
+  // direct AbortError
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return true;
+  }
+
+  // Errors explicitly named AbortError
+  if (typeof error === "object" && error !== null && "name" in error && (error as any).name === "AbortError") {
+    return true;
+  }
+
+  // Wrapped errors (e.g., HttpError, custom wrappers) that carry an AbortSignal or reason
+  const maybeObj = error as any;
+  if (maybeObj?.cause instanceof AbortSignal) return true;
+  if (maybeObj?.cause?.aborted) return true;
+  if (maybeObj?.cause?.name === "AbortError") return true;
+  if (maybeObj?.reason instanceof AbortSignal) return true;
+  if (maybeObj?.reason?.aborted) return true;
+
+  return false;
 }
 
 export function coerceError(error: unknown): Error {

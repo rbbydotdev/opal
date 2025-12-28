@@ -1,5 +1,5 @@
 import { OctokitClient } from "@/auth/OctokitClient";
-import { AbortError, isAbortError, mapToTypedError } from "@/lib/errors/errors";
+import { isAbortError, mapToTypedError } from "@/lib/errors/errors";
 import { DeployBundleTreeEntry, UniversalDeployFile } from "@/services/deploy/DeployBundle";
 import { Octokit } from "@octokit/core";
 
@@ -695,6 +695,9 @@ export class GitHubClient {
           size: item.size,
         }));
     } catch (e) {
+      console.log("??????????", e);
+      console.error(e);
+      console.log(isAbortError(e));
       if (isAbortError(e)) throw e;
       throw mapToTypedError(e, {
         message: `Failed to fetch repository tree for ${owner}/${repo}`,
@@ -740,9 +743,7 @@ export class GitHubClient {
       const files = await this.getRepositoryTree({ owner, repo, branch }, { signal });
 
       for (const file of files) {
-        if (signal?.aborted) {
-          throw new AbortError();
-        }
+        signal?.throwIfAborted();
 
         try {
           const content = await this.getFileContent({ owner, repo, path: file.path, branch }, { signal });
@@ -752,6 +753,7 @@ export class GitHubClient {
         }
       }
     } catch (e) {
+      console.log(":>>>>>>>>>>>>", e);
       if (isAbortError(e)) throw e;
       const error = mapToTypedError(e, {
         message: `Failed to fetch repository content for ${owner}/${repo}`,

@@ -123,6 +123,7 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
 
       this.target.status = "success";
     } catch (error) {
+      console.error(error);
       const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
       this.log(`Import failed: ${errMsg}`, "error");
       this.target.error = errMsg;

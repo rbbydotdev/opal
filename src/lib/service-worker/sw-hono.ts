@@ -6,7 +6,6 @@ import { marked } from "marked";
 import { z } from "zod";
 
 import { ENV } from "@/lib/env";
-import { BadRequestError, isError, NotFoundError } from "@/lib/errors/errors";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import { absPath } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
@@ -38,6 +37,8 @@ declare const self: ServiceWorkerGlobalScope;
 const LOG = initializeGlobalLogger(RemoteLoggerLogger("SW"));
 
 const app = new Hono<{ Variables: { workspaceName: string } }>();
+
+export type SWAppType = typeof app;
 
 // Workspace extractors - pure functions for different sources
 const extractWorkspaceFromUrl = (url: string): string | null => {
@@ -207,20 +208,20 @@ app.use("*", async (_c, next) => {
   }
 });
 
-// Error handler middleware
-app.onError((err, c) => {
-  LOG.error(`Handler error: ${err.message}`);
+// // Error handler middleware
+// app.onError((err, c) => {
+//   LOG.error(`Handler error: ${err.message}`);
 
-  if (isError(err, BadRequestError)) {
-    return c.json({ error: "Validation error", details: err.message }, 400);
-  }
+//   if (isError(err, BadRequestError)) {
+//     return c.json({ error: "Validation error", details: err.message }, 400);
+//   }
 
-  if (isError(err, NotFoundError)) {
-    return c.json({ error: "Not found" }, 404);
-  }
+//   if (isError(err, NotFoundError)) {
+//     return c.json({ error: "Not found" }, 404);
+//   }
 
-  return c.json({ error: "Internal server error" }, 500);
-});
+//   return c.json({ error: "Internal server error" }, 500);
+// });
 
 // Route handlers using Hono best practices
 
