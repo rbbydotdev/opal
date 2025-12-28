@@ -64,10 +64,7 @@ export function PublicationModalPublishContent({
   const { remoteAuths } = useRemoteAuths();
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
-  // const thing = useModalSignal(isOpen);
-  //use selected build but if is NullBuild try and get first build if possible
   const tryBuild = build.isNull ? builds[0] || build : build;
-
   const { runner, execute, logs } = useRunner<DeployRunner<any>>(DeployRunner.Show({ destination, deploy }), [
     destination,
     deploy,

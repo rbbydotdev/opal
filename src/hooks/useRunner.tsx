@@ -35,7 +35,7 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const currentRunnerRef = useRef(currentRunner);
   const cancel = useCallback(() => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      abortControllerRef.current.abort("Operation cancelled by user");
       abortControllerRef.current = null;
     }
     currentRunnerRef.current.cancel();

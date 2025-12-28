@@ -29,7 +29,7 @@ export function BuildModal({
 }) {
   const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
   const [isOpen, setIsOpen] = useState(false);
-  const abortController = useModalSignal(isOpen);
+  const abortController = useModalSignal(isOpen, "operation cancelled by user");
   const { storedValue: showTimestamps, setStoredValue: setShowTimestamps } = useLocalStorage(
     "BuildModal/showTimestamps",
     true,

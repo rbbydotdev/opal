@@ -1,4 +1,5 @@
 // EditHistoryMenu.tsx;
+import { useConfirm } from "@/components/ConfirmContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -160,15 +161,23 @@ function HistoryMenuToolbar({
   clearAll: () => void;
   setOpen: (open: boolean) => void;
 }) {
+  const { open: openConfirm } = useConfirm();
   return (
     <div className="border-b border-border p-2 flex gap-2">
       {Boolean(edits.length) ? (
         <Button
           variant={"secondary"}
           size="default"
-          onClick={() => {
-            void clearAll();
-            setOpen(false);
+          onClick={async () => {
+            const confirm = await openConfirm(
+              () => true,
+              "Clear Edit History",
+              "Are you sure you want to clear the edit history? This action cannot be undone."
+            );
+            if (confirm) {
+              void clearAll();
+              setOpen(false);
+            }
           }}
           className="text-left bg-primary border-2 p-2 rounded-xl text-primary-foreground hover:border-primary hover:bg-primary-foreground hover:text-primary"
         >
