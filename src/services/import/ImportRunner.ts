@@ -1,11 +1,12 @@
-import { Disk } from "@/data/disk/Disk";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
+import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { isApplicationError, unwrapError } from "@/lib/errors/errors";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { Runner } from "@/types/RunnerInterfaces";
+import { Workspace } from "@/workspace/Workspace";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
@@ -44,25 +45,36 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
     return new ImportRunner({ fullRepoPath: "recall/recall" });
   }
 
-  async writeMemDiskToDisk(realDisk: Disk): Promise<void> {
-    await this.tmpDisk.copyDiskToDisk(realDisk);
-    //no op for now
-    // const fileTree = await this.disk.triggerIndex();
-    // for (const file of fileTree.iterator()) {
-    //   if (file.isTreeFile()) {
-    //     await realDisk.writeFile(file.path, file.read());
+  async createWorkspaceFromTmpDisk(workspaceName: string): Promise<Workspace> {
+    await this.tmpDisk.tryFirstIndex();
+    const sourceTree = this.tmpDisk.fileTree.toSourceTree();
+    const workspace = await Workspace.CreateNew(workspaceName, sourceTree.iterator(), IndexedDbDisk.type);
+
+    // sourceTree.walkBFS((node,__,exit)=>{
+    //   if (node.isMarkdownFile()){
+    //     exit();
     //   }
-    // }
+
+    // })
+    // workspace.Repo
+    // workspace.playbook.initFromRemote("origin",)
+    return workspace;
+  }
+
+  async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
+    //womp womp needs cors
+    const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
+    await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
+    return workspace;
   }
 
   cancel(): void {
-    //when import is cancelled, we should clean up any partial files written to disk
-    //as a matter of fact we should use a MemoryDisk during import and only write to the real disk on success
-    //look in git history for MemoryDisk which has been remove
-    //would be nice to copy one disk to another easily which is already kind of done when we move files between disks
-    //we could use disk file tree iterator actually
-    // for (const file of this.disk.getFlatTree()){}
-    this.abortController.abort();
+    this.abortController.abort("Operation cancelled by user");
+  }
+
+  get repoInfo() {
+    const [owner, repo] = this.fullRepoPath.split("/");
+    return { owner, repo };
   }
 
   async execute({
@@ -83,7 +95,6 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
       }
 
       this.log("Starting repository import...", "info");
-
       for await (const file of importer.fetchFiles(allAbortSignal)) {
         if (abortSignal?.aborted) {
           this.log("Import cancelled", "error");
@@ -96,7 +107,20 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
         this.log(`Imported file: ${file.path}`, "info");
       }
 
-      this.log("Import completed successfully!", "info");
+      //create workspace and copy disk
+
+      this.log("Import completed successfully", "info");
+      // await this.createWorkspaceFromFromGitRemote(
+      //   this.fullRepoPath.replace("/", "-"),
+      //   `https://github.com/${stripLeadingSlash(this.fullRepoPath)}`
+      // );
+
+      const wsImportName = this.fullRepoPath.replace("/", "-");
+
+      this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
+      await this.createWorkspaceFromTmpDisk(wsImportName);
+      this.log("Workspace created successfully", "success");
+
       this.target.status = "success";
     } catch (error) {
       const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);

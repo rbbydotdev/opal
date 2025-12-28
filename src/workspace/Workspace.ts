@@ -34,7 +34,13 @@ import { WorkspaceScannable } from "@/workspace/WorkspaceScannable";
 import { DiskType } from "../data/disk/DiskType";
 //TODO move ww to different place
 //consider using event bus, or some kind of registration or interface to seperate outside logic from main workspace logic
-import { SourceDirTreeNode, SourceFileTreeNode, TreeDir, TreeNode } from "@/components/filetree/TreeNode";
+import {
+  SourceDirTreeNode,
+  SourceFileTreeNode,
+  SourceTreeNode,
+  TreeDir,
+  TreeNode,
+} from "@/components/filetree/TreeNode";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
@@ -43,6 +49,7 @@ import { HistoryDB } from "@/editors/history/HistoryDB";
 import { GitPlaybook } from "@/features/git-repo/GitPlaybook";
 import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
+import { isIterable } from "@/lib/isIterable";
 import { reduceLineage } from "@/lib/paths2";
 import debounce from "debounce";
 import mime from "mime-types";
@@ -229,15 +236,16 @@ export class Workspace {
 
   static async CreateNew(
     name: string,
-    files: WorkspaceTemplate["seedFiles"] = {},
+    files: WorkspaceTemplate["seedFiles"] | Iterable<SourceTreeNode>,
     diskType: DiskType,
-    diskOptions?: {
-      selectedDirectory: FileSystemDirectoryHandle | null;
-    }
+    diskOptions?: { selectedDirectory: FileSystemDirectoryHandle | null }
   ) {
-    let workspace: Workspace;
-    const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({ name, diskType });
-    //TODO: make this more elegant, too much special case inside of Workspace class
+    const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({
+      name,
+      diskType,
+    });
+
+    // Disk setup logic
     if (diskType === "OpFsDirMountDisk") {
       if (!diskOptions?.selectedDirectory) {
         throw new BadRequestError("selectedDirectory is required for OpFsDirMountDisk");
@@ -245,13 +253,28 @@ export class Workspace {
       const disk = DiskFromJSON(workspaceDAO.disk) as OpFsDirMountDisk;
       await disk.setDirectoryHandle(diskOptions.selectedDirectory);
     }
-    workspace = Workspace.FromDAO(workspaceDAO);
-    await workspace.newFiles(
-      Object.entries(files).map(([path, content]) => [
+
+    const workspace = Workspace.FromDAO(workspaceDAO);
+
+    // --- case 1: plain object seedFiles
+    if (!isIterable(files)) {
+      const mapped = Object.entries(files).map(([path, content]) => [
         absPath(path),
         typeof content === "function" ? content() : content,
-      ])
-    );
+      ]) as [AbsPath, string | Uint8Array | Blob | Promise<string | Uint8Array | Blob>][];
+      await workspace.newFiles(mapped);
+    }
+    // --- case 2: iterable of TreeNodes
+    else {
+      for (const node of files) {
+        const path = absPath(node.path);
+        if (node.isTreeFile()) {
+          await workspace.newFiles([[path, await node.read()]]);
+        } else {
+          await workspace.disk.mkdirRecursive(path);
+        }
+      }
+    }
 
     return workspace;
   }

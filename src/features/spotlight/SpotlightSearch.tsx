@@ -1147,6 +1147,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
       repo,
       setMode,
       setTheme,
+      setViewMode,
       trashFile,
       workspaceName,
     ]

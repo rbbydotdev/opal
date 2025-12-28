@@ -57,6 +57,7 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
   abstract clone(mutex?: Mutex): this;
 
   walk = (...args: Parameters<TreeDirRoot["walk"]>) => this.root.walk(...args);
+  walkBFS = (...args: Parameters<TreeDirRoot["walkBFS"]>) => this.root.walkBFS(...args);
   asyncWalk = (...args: Parameters<TreeDirRoot["asyncWalk"]>) => this.root.asyncWalk(...args);
 
   iterator(...args: Parameters<TreeDirRoot["iterator"]>) {
@@ -304,6 +305,11 @@ export class SourceFileTree extends BaseFileTree<SourceTreeDirRoot> {
 
   indexIter(): never {
     throw new Error("SourceFileTree indexing not implemented - use the original FileTree for indexing");
+  }
+
+  iterator(filterIn?: ((n: SourceTreeNode) => boolean | null) | undefined): IterableIterator<SourceTreeNode> {
+    const baseFilter = filterIn as ((n: TreeNode) => boolean | null) | undefined;
+    return this.root.iterator(baseFilter) as IterableIterator<SourceTreeNode>;
   }
 
   forceIndex(tree: SourceTreeDirRoot | TreeDirRootJType): void {

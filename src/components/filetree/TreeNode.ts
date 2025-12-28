@@ -230,6 +230,22 @@ export class TreeNode {
       .some((child) => child.isTreeDir());
   }
 
+  walkBFS = (cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown) => {
+    const queue: Array<{ node: TreeNode; depth: number }> = [{ node: this, depth: 0 }];
+    const status = { exit: false };
+    const exit = () => (status.exit = true);
+    let $stop_token = Symbol("stop_token");
+    while (queue.length > 0) {
+      const { node, depth } = queue.shift()!;
+      if (cb(node, depth, exit, $stop_token) === $stop_token) return;
+      if (node.isTreeDir()) {
+        for (const childNode of Object.values(node.children ?? {})) {
+          if (status.exit) break;
+          queue.push({ node: childNode, depth: depth + 1 });
+        }
+      }
+    }
+  };
   walk = (
     cb: (node: TreeNode, depth: number, exit: () => void, $stop_token: Symbol) => unknown,
     depth = 0,

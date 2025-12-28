@@ -93,32 +93,6 @@ export class GitPlaybook {
       message,
     });
   }
-  // async _____initialCommit() {
-  //   await this.repo.mustBeInitialized();
-  //   await this.repo.add(".");
-  //   //if were are in a bare repo some special things need to be done
-  //   //i think i need to create a slop branch for the working directory
-  //   const branches = await this.repo.getBranches().catch(() => []);
-  //   const main = gitAbbreviateRef(await this.repo.defaultMainBranch);
-  //   const newBranch = getUniqueSlug(main, branches);
-
-  //   await this.repo.addGitBranch({ branchName: newBranch });
-
-  //   // First commit to create the initial commit
-  //   const commitOid = await this.repo.commit({
-  //     message: "Initial commit",
-  //     // ref: newBranch,
-  //   });
-
-  //   // Now create the branch pointing to this commit
-  //   await this.repo.addGitBranch({
-  //     branchName: newBranch,
-  //     symbolicRef: commitOid,
-  //     checkout: false,
-  //   });
-
-  //   await this.repo.checkoutRef({ ref: newBranch, force: true });
-  // }
 
   merge = this.repo.merge.bind(this);
 
