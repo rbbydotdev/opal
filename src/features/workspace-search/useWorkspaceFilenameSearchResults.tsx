@@ -21,7 +21,6 @@ async function* fetchFilenameSearch({
   const url = new URL(joinPath(absPath("workspace-filename-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
-  url.searchParams.set("workspaceName", workspaceName);
   console.debug(`filename search url = ${url.toString()}`);
 
   let res = null;

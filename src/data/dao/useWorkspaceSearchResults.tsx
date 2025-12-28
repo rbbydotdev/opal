@@ -23,7 +23,6 @@ async function* fetchQuerySearch({
   const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
 
   url.searchParams.set("searchTerm", searchTerm);
-  url.searchParams.set("workspaceName", workspaceName);
   const regexpValue = (regexp ?? true) ? "1" : "0";
   url.searchParams.set("regexp", regexpValue);
   if (mode) {

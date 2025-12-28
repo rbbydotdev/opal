@@ -520,13 +520,13 @@ export class Workspace {
   }
 
   async uploadMultipleDocx(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const result = await Workspace.UploadMultipleDocxsFetch(files, targetDir, concurrency);
+    const result = await Workspace.UploadMultipleDocxsFetch(files, targetDir, this.name, concurrency);
     await this.indexAndEmitNewFiles(result);
     return result;
   }
 
   async uploadMultipleMarkdown(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const result = await Workspace.UploadMultipleMarkdownFetch(files, targetDir, concurrency);
+    const result = await Workspace.UploadMultipleMarkdownFetch(files, targetDir, this.name, concurrency);
     await this.indexAndEmitNewFiles(result);
     return result;
   }
@@ -534,6 +534,7 @@ export class Workspace {
   static async UploadMultipleMarkdownFetch(
     files: Iterable<File>,
     targetDir: AbsPath,
+    workspaceName: string,
     concurrency = 8
   ): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
@@ -544,7 +545,9 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-markdown"), targetDir, file!.name), {
+      const url = new URL(joinPath(absPath("/upload-markdown"), targetDir, file!.name), window.location.origin);
+      url.searchParams.set("workspaceName", workspaceName);
+      const res = await fetch(url.toString(), {
         method: "POST",
         headers: {
           "Content-Type": file!.type,
@@ -562,6 +565,7 @@ export class Workspace {
   static async UploadMultipleDocxsFetch(
     files: Iterable<File>,
     targetDir: AbsPath,
+    workspaceName: string,
     concurrency = 8
   ): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
@@ -572,7 +576,9 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-docx"), targetDir, file!.name), {
+      const url = new URL(joinPath(absPath("/upload-docx"), targetDir, file!.name), window.location.origin);
+      url.searchParams.set("workspaceName", workspaceName);
+      const res = await fetch(url.toString(), {
         method: "POST",
         headers: {
           "Content-Type": file!.type,
@@ -589,7 +595,7 @@ export class Workspace {
   }
 
   async uploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
-    const results = await Workspace.UploadMultipleImages(files, targetDir, concurrency);
+    const results = await Workspace.UploadMultipleImages(files, targetDir, this.name, concurrency);
     await this.indexAndEmitNewFiles(results);
     return results;
   }
@@ -750,7 +756,9 @@ export class Workspace {
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
     let res: AbsPath[] = [];
-    const response = await fetch("/replace-files", {
+    const url = new URL("/replace-files", window.location.origin);
+    url.searchParams.set("workspaceName", this.name);
+    const response = await fetch(url.toString(), {
       method: "POST",
       body: JSON.stringify(paths),
     });
@@ -773,7 +781,7 @@ export class Workspace {
     }
   }
 
-  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, concurrency = 8): Promise<AbsPath[]> {
+  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, workspaceName: string, concurrency = 8): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
@@ -782,7 +790,9 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const res = await fetch(joinPath(absPath("/upload-image"), targetDir, file!.name), {
+      const url = new URL(joinPath(absPath("/upload-image"), targetDir, file!.name), window.location.origin);
+      url.searchParams.set("workspaceName", workspaceName);
+      const res = await fetch(url.toString(), {
         method: "POST",
         headers: {
           "Content-Type": file!.type,

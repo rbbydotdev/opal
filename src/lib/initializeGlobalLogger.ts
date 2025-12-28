@@ -35,3 +35,5 @@ export function initializeGlobalLogger(
 
   return __ENABLE_LOG__ ? logger : NOOPS;
 }
+
+(globalThis as any).logger = NOOPS;

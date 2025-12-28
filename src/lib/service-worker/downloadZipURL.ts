@@ -15,10 +15,13 @@ export const downloadZipSchema = z.discriminatedUnion("type", [
     dir: z.string().transform(absPath).default("/"), // no need for .optional()
   }),
 ]);
-export function downloadWorkspaceZipURL() {
+export function downloadWorkspaceZipURL(workspaceName?: string) {
   const origin = window.location.origin;
   const downloadUrl = new URL("/download.zip", origin);
   downloadUrl.search = downloadZipURLParams({ type: "workspace", dir: absPath("/") }).toString();
+  if (workspaceName) {
+    downloadUrl.searchParams.set("workspaceName", workspaceName);
+  }
   return downloadUrl.toString().replace(origin, "");
 }
 export function downloadBuildZipURL(diskId: string, dir: AbsPath) {
