@@ -10,6 +10,7 @@ import { AbsPath, isAncestor } from "@/lib/paths2";
 import { slugifier } from "@/lib/slugifier";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { nanoid } from "nanoid";
 
 export class WorkspaceDAO {
@@ -23,6 +24,7 @@ export class WorkspaceDAO {
   remoteAuths: RemoteAuthDAO[] = [];
   timestamp: number;
   manifest: WorkspaceImportManifestType | null = null;
+  buildStrategy: BuildStrategy;
 
   toJSON() {
     return {
@@ -33,6 +35,7 @@ export class WorkspaceDAO {
       disk: this.disk,
       thumbs: this.thumbs,
       timestamp: this.timestamp,
+      buildStrategy: this.buildStrategy,
     };
   }
 
@@ -53,6 +56,7 @@ export class WorkspaceDAO {
       remoteAuths: json.remoteAuths,
       code: json.code,
       manifest: json.manifest,
+      buildStrategy: json.buildStrategy || "freeform",
     });
   }
 
@@ -97,6 +101,7 @@ export class WorkspaceDAO {
       code: this.code,
       timestamp: this.timestamp || Date.now(),
       manifest: this.manifest,
+      buildStrategy: this.buildStrategy,
     });
   };
   static async CreateNewWithDiskType(
@@ -104,10 +109,12 @@ export class WorkspaceDAO {
       name,
       diskType,
       remoteAuths = [],
+      buildStrategy = "freeform",
     }: {
       name: string;
       diskType?: DiskType;
       remoteAuths?: RemoteAuthDAO[];
+      buildStrategy?: BuildStrategy;
     },
     properties?: Pick<WorkspaceRecord, "manifest">
   ) {
@@ -119,6 +126,7 @@ export class WorkspaceDAO {
       remoteAuths,
       thumbs,
       disk,
+      buildStrategy,
     });
   }
 
@@ -130,12 +138,14 @@ export class WorkspaceDAO {
     thumbs = DiskDAO.CreateNew(),
     disk = DiskDAO.CreateNew(),
     manifest = null,
+    buildStrategy = "freeform",
   }: {
     name: string;
     remoteAuths?: RemoteAuthDAO[];
     thumbs?: DiskDAO;
     disk?: DiskDAO;
     manifest?: WorkspaceImportManifestType | null;
+    buildStrategy?: BuildStrategy;
   }) {
     const slugName = WorkspaceDAO.Slugify(name).toLowerCase();
     let uniqueName = slugName;
@@ -152,6 +162,7 @@ export class WorkspaceDAO {
       code: WS_OK,
       timestamp: Date.now(),
       manifest,
+      buildStrategy,
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
@@ -264,6 +275,7 @@ export class WorkspaceDAO {
     code,
     timestamp,
     manifest = null,
+    buildStrategy = "freeform",
   }: {
     guid: string;
     name: string;
@@ -273,6 +285,7 @@ export class WorkspaceDAO {
     code: WorkspaceStatusCode;
     timestamp: number;
     manifest?: WorkspaceImportManifestType | null;
+    buildStrategy?: BuildStrategy;
   }) {
     this.guid = guid;
     this.name = name;
@@ -282,5 +295,6 @@ export class WorkspaceDAO {
     this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
     this.timestamp = timestamp;
     this.manifest = manifest;
+    this.buildStrategy = buildStrategy;
   }
 }

@@ -1,4 +1,5 @@
 import { DefaultFile } from "@/lib/DefaultFile";
+import { BuildStrategy } from "@/data/dao/BuildRecord";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
 export type WorkspaceTemplate = {
   id: string;
@@ -6,6 +7,7 @@ export type WorkspaceTemplate = {
   description: string;
   seedFiles: Record<string, string | Promise<string> | (() => Promise<string>)>;
   navigate?: string;
+  buildStrategy?: BuildStrategy;
 };
 
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
@@ -18,12 +20,14 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
       "/global.css": globalSeedCss,
     },
     navigate: "/index.md",
+    buildStrategy: "freeform",
   },
   {
     id: "blank",
     name: "Blank",
     description: "Completely empty workspace with no files",
     seedFiles: {},
+    buildStrategy: "freeform",
   },
   {
     id: "basic",
@@ -32,6 +36,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     seedFiles: {
       "/global.css": globalSeedCss,
     },
+    buildStrategy: "freeform",
   },
   {
     id: "blog",
@@ -44,6 +49,7 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
       "/posts/getting-started.md": DefaultFile.BlogGettingStarted(),
       "/global.css": DefaultFile.GlobalCSS(),
     },
+    buildStrategy: "blog",
   },
 ];
 

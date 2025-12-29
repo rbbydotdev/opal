@@ -1,4 +1,5 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
+import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { Disk } from "@/data/disk/Disk";
 import {
   CreateDetails,
@@ -158,6 +159,7 @@ export class Workspace {
       code: this.connector.code,
       timestamp: this.connector.timestamp,
       manifest: this.connector.manifest,
+      buildStrategy: this.connector.buildStrategy,
     };
   }
   static FromJSON(json: WorkspaceJType) {
@@ -242,11 +244,13 @@ export class Workspace {
       files,
       diskType,
       diskOptions,
+      buildStrategy = "freeform",
     }: {
       name: string;
       files: WorkspaceTemplate["seedFiles"] | Iterable<SourceTreeNode>;
       diskType: DiskType;
       diskOptions?: { selectedDirectory: FileSystemDirectoryHandle | null };
+      buildStrategy?: BuildStrategy;
     },
     properties?: Pick<WorkspaceRecord, "manifest">
   ): Promise<Workspace> {
@@ -254,6 +258,7 @@ export class Workspace {
       {
         name,
         diskType,
+        buildStrategy,
       },
       properties
     );

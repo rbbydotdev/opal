@@ -109,6 +109,7 @@ export function NewWorkspaceDialog({
         name: workspaceName,
         files: template.seedFiles,
         diskType: fileSystem,
+        buildStrategy: template.buildStrategy,
         diskOptions: {
           selectedDirectory,
         },

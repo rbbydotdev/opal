@@ -309,7 +309,7 @@ export const EditorSidebarLayout = ({
           </>
         )}
       </div>
-      <div className="font-mono text-xs flex justify-end pr-4 items-center h-full">
+      <div className="font-mono text-xs flex justify-end pr-4 items-center h-6">
         {/*future status bar */}
         <MadeByMe />
       </div>
