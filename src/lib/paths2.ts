@@ -186,6 +186,14 @@ export function isStringish(path: AbsPath | RelPath | string | { toString(): str
   return StringMimeTypes.includes(mimeType);
 }
 
+export function isJSON(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  return getMimeType(relPath(String(path))) === "application/json";
+}
+
+export function isAllowedFileType(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  return [isHtml, isCss, isStringish, isMarkdown, isMustache, isTemplateFile, isImage, isJSON].every((fn) => fn(path));
+}
+
 // --- Ancestor/Lineage Utilities ---
 export function isAncestor({
   child: child,
@@ -196,8 +204,8 @@ export function isAncestor({
 }): boolean {
   if (child === parent) return true; // false?
   if (child === null || parent === null) return false;
-  const rootSegments = parent.split("/");
-  const pathSegments = child.split("/");
+  const rootSegments = absPath(parent).split("/");
+  const pathSegments = absPath(child).split("/");
   return pathSegments.slice(0, rootSegments.length).every((segment, i) => segment === rootSegments[i]);
 }
 
@@ -209,7 +217,7 @@ export function reduceLineage<T extends string | { toString(): string }>(range: 
   };
   for (const path of range) {
     let node: nodeType = tree.root;
-    for (const segment of path.toString().split("/").slice(0)) {
+    for (const segment of absPath(path.toString()).toString().split("/")) {
       node = node[segment] = (node[segment] as nodeType) ?? ({} as nodeType);
     }
     node[$end] = path;

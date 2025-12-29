@@ -4,7 +4,7 @@ import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
-import { absPath, relPath, stripLeadingSlash } from "@/lib/paths2";
+import { absPath, isAllowedFileType, relPath, stripLeadingSlash } from "@/lib/paths2";
 import { tryParseJSON } from "@/lib/tryParseJSON";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
@@ -36,8 +36,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     this.config = config;
   }
 
-  abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }>;
+  abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }>;
   abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
+  abstract fetchManifest(): Promise<WorkspaceImportManifestType>;
   abstract getWorkspaceName(): string;
   abstract preflight(): Promise<{
     abort: boolean;
@@ -89,13 +90,18 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log("Fetching files from source...", "info");
 
-      let manifest = {};
+      let manifest = this.fetchManifest();
+
       for await (const file of this.fetchFiles(allAbortSignal)) {
+        if (!isAllowedFileType(file.path)) continue;
+        /* filter files  */
+        // css html json md yml png webp
+
         abortSignal?.throwIfAborted();
         if (file.path === "manifest.json") {
-          manifest = tryParseJSON(file.content) || {};
+          manifest = tryParseJSON(await file.content()) || {};
         }
-        await this.tmpDisk.writeFileRecursive(absPath(file.path), file.content);
+        await this.tmpDisk.writeFileRecursive(absPath(file.path), await file.content());
         this.log(`Imported file: ${file.path}`, "info");
       }
 
@@ -105,14 +111,11 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
 
-      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta(manifest));
+      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta(await manifest));
 
       this.log("Workspace created successfully", "success");
       this.target.status = "success";
 
-      // FindAlikeImport
-
-      // return workspace;
       return workspace.href;
     } catch (error) {
       if (isAbortError(error)) {
@@ -152,9 +155,22 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     return { owner, repo };
   }
 
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }> {
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
     const importer = new GithubImport(relPath(this.config.fullRepoPath));
     yield* importer.fetchFiles(signal);
+  }
+
+  fetchManifest(): Promise<WorkspaceImportManifestType> {
+    return Promise.resolve({
+      version: 1,
+      description: "GitHub import",
+      type: "template",
+      ident: getIdent(this.config.fullRepoPath),
+      provider: "github",
+      details: {
+        url: pathModule.join("https://github.com", this.config.fullRepoPath),
+      },
+    });
   }
 
   createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
@@ -219,6 +235,18 @@ export class NullImportRunner extends GitHubImportRunner {
 
   async execute() {
     return absPath("/");
+  }
+  fetchManifest(): Promise<WorkspaceImportManifestType> {
+    return Promise.resolve({
+      version: 1,
+      description: "Null import",
+      type: "template",
+      ident: "null/null",
+      provider: "null",
+      details: {
+        url: "null://null",
+      },
+    });
   }
 }
 

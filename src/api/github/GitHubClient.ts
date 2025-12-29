@@ -720,7 +720,7 @@ export class GitHubClient {
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        return new TextDecoder('utf-8').decode(bytes);
+        return new TextDecoder("utf-8").decode(bytes);
       }
 
       return data.content || "";
@@ -736,7 +736,7 @@ export class GitHubClient {
   async *fetchRepositoryFiles(
     { owner, repo, branch = "main" }: { owner: string; repo: string; branch?: string },
     { signal }: { signal?: AbortSignal } = {}
-  ): AsyncGenerator<{ path: string; content: string }> {
+  ): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
     try {
       const files = await this.getRepositoryTree({ owner, repo, branch }, { signal });
 
@@ -744,7 +744,7 @@ export class GitHubClient {
         signal?.throwIfAborted();
 
         try {
-          const content = await this.getFileContent({ owner, repo, path: file.path, branch }, { signal });
+          const content = () => this.getFileContent({ owner, repo, path: file.path, branch }, { signal });
           yield { path: file.path, content };
         } catch (error) {
           console.warn(`Error fetching ${file.path}:`, error);

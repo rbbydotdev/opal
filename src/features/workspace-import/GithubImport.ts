@@ -18,7 +18,7 @@ export class GithubImport implements WorkspaceImport {
     this.client = new GitHubClient();
   }
 
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }> {
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
     yield* this.client.fetchRepositoryFiles({ owner: this.owner, repo: this.repo, branch: this.branch }, { signal });
   }
 }

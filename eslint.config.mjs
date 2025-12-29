@@ -23,21 +23,12 @@ const config = [
     },
     rules: {
       "@typescript-eslint/no-base-to-string": "error",
-      // Keep normal exhaustive-deps for built-in hooks
       "react-hooks/exhaustive-deps": [
         "warn",
         {
-          additionalHooks: "(useAsyncEffect)", // add any additional hooks you want to check
+          additionalHooks: "(useAsyncEffect|useRemoteResource|useRunner|useResource)", // add any additional hooks you want to check
         },
       ],
-
-      // Use our custom rule for our hooks
-      // "myhooks/exhaustive-deps": [
-      //   "warn",
-      //   {
-      //     hooks: ["useAsyncEffect"], // list your custom hooks here
-      //   },
-      // ],
 
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/ban-ts-comment": "off",
