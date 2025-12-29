@@ -713,7 +713,14 @@ export class GitHubClient {
       // Handle the case where the content is base64 encoded
       const data = response.data as any;
       if (data.encoding === "base64" && data.content) {
-        return atob(data.content.replace(/\s/g, ""));
+        // Use proper UTF-8 decoding instead of atob to preserve emojis and Unicode
+        const base64Content = data.content.replace(/\s/g, "");
+        const binaryString = atob(base64Content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new TextDecoder('utf-8').decode(bytes);
       }
 
       return data.content || "";

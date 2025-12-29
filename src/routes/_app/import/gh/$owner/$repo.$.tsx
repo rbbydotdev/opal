@@ -105,7 +105,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
           </ScrollArea>
         </div>
         <div className="flex gap-4 justify-center items-center w-full">
-          {isCompleted && successPath ? (
+          {isSuccess && successPath ? (
             <CountDownButton onClick={() => navigate({ to: successPath! })} />
           ) : (
             <Button
