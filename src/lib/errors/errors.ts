@@ -8,11 +8,11 @@ type ErrorWithCode = Error & {
 
 export class AbortError extends DOMException {
   constructor(message: string = "Operation aborted") {
-    // The second argument automatically makes err.name === "AbortError"
     super(message, "AbortError");
     Object.setPrototypeOf(this, AbortError.prototype);
   }
 }
+
 export function isAbortError(error: unknown): error is AbortError {
   if (error && typeof error === "object") {
     const e = error as any;

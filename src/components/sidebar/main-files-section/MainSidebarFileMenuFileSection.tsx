@@ -40,6 +40,7 @@ import {
   Ellipsis,
   FileCode2Icon,
   FileEditIcon,
+  FilePlusIcon,
   FileTextIcon,
   FolderPlus,
   Globe,
@@ -99,6 +100,9 @@ export function MainSidebarFileMenuFileSection({
               addEjsFile={() =>
                 expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs", DefaultFile.EJS()), true)
               }
+              addJsonFile={() =>
+                expandForNode(addDirFile("file", focused || absPath("/"), "data.json", DefaultFile.JSON()), true)
+              }
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
@@ -138,6 +142,7 @@ const FileMenuActionButtonRow = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addJsonFile,
   // addGlobalCssFile,
   setExpandAll,
   diskType,
@@ -153,6 +158,7 @@ const FileMenuActionButtonRow = ({
   addHtmlFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
+  addJsonFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -200,6 +206,9 @@ const FileMenuActionButtonRow = ({
       <ActionButton onClick={addEjsFile} aria-label="New EJS Template" title="New EJS Template">
         <FileTextIcon />
       </ActionButton>
+      <ActionButton onClick={addJsonFile} aria-label="New JSON File" title="New JSON File">
+        <FilePlusIcon />
+      </ActionButton>
       <ActionButton onClick={addDir} aria-label="Add Folder" title="New Folder">
         <FolderPlus />
       </ActionButton>
@@ -223,6 +232,7 @@ const FileMenuCompactActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
   setExpandAll,
@@ -239,6 +249,7 @@ const FileMenuCompactActions = ({
   addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
+  addJsonFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -289,6 +300,10 @@ const FileMenuCompactActions = ({
           <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
             <FileTextIcon className="w-4 h-4 mr-2" />
             New EJS Template
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={deferFn(addJsonFile)}>
+            <FilePlusIcon className="w-4 h-4 mr-2" />
+            New JSON File
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={deferFn(addDir)}>
             <FolderPlus className="w-4 h-4 mr-2" />
@@ -366,6 +381,7 @@ const SidebarFileMenuFilesActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
   setExpandAll,
@@ -380,6 +396,7 @@ const SidebarFileMenuFilesActions = ({
   addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
+  addJsonFile: () => void;
   addDir: () => void;
   dirName: string | null;
   setExpandAll: (expand: boolean) => void;
@@ -441,6 +458,7 @@ const SidebarFileMenuFilesActions = ({
           addMustacheFile={addMustacheFile}
           dirName={dirName}
           addEjsFile={addEjsFile}
+          addJsonFile={addJsonFile}
           addGlobalCssFile={addGlobalCssFile}
           addHtmlFile={addHtmlFile}
           setExpandAll={setExpandAll}
@@ -463,6 +481,7 @@ const SidebarFileMenuFilesActions = ({
         addMustacheFile={addMustacheFile}
         dirName={dirName}
         addEjsFile={addEjsFile}
+        addJsonFile={addJsonFile}
         // addGlobalCssFile={addGlobalCssFile}
         setExpandAll={setExpandAll}
         diskType={diskType}

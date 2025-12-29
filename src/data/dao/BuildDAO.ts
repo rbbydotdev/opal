@@ -213,8 +213,8 @@ export class BuildDAO implements BuildRecord {
     return this.getBuildPath();
   }
 
-  getDownloadBuildZipURL() {
-    return downloadBuildZipURL(this.disk.guid, this.buildPath);
+  getDownloadBuildZipURL(workspaceName: string): string {
+    return downloadBuildZipURL(workspaceName, this.disk.guid, this.buildPath);
   }
 
   async delete() {

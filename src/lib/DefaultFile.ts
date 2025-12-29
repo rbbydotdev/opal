@@ -46,6 +46,22 @@ export const DefaultFile = {
     return `<h1>Current date: {{helpers.now}}</h1>`;
   },
 
+  JSON: () => {
+    return `{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "A sample JSON file",
+  "data": {
+    "key": "value",
+    "number": 42,
+    "array": [1, 2, 3],
+    "nested": {
+      "property": true
+    }
+  }
+}`;
+  },
+
   Text: () => {
     return "";
   },
@@ -195,6 +211,10 @@ Start writing your own content and make this blog yours!
 
     if (pathStr.endsWith(".mustache")) {
       return DefaultFile.Mustache();
+    }
+
+    if (pathStr.endsWith(".json")) {
+      return DefaultFile.JSON();
     }
 
     return DefaultFile.Text();

@@ -137,6 +137,7 @@ export function SidebarFileMenuBuild({
                   setBuildId={setBuildId}
                   build={build}
                   handleDeleteBuild={handleDeleteBuild}
+                  currentWorkspace={currentWorkspace}
                   openNewPub={openNewPub}
                 />
               </div>
@@ -160,7 +161,7 @@ export function SidebarFileMenuBuild({
                 <div>{activeTab === "files" && <BuildSidebarFileExplorer build={build} />}</div>
                 <div>
                   {activeTab === "builds" && (
-                    <SidebarBuildsList workspaceId={currentWorkspace.guid}>
+                    <SidebarBuildsList currentWorkspace={currentWorkspace}>
                       <SelectableListItemAction
                         onSelect={(build) => {
                           setBuildId(build.guid);
@@ -209,6 +210,7 @@ function BuildManager({
   build,
   handleDeleteBuild,
   openNewPub,
+  currentWorkspace,
 }: {
   selectMode: "select" | "delete";
   builds: BuildDAO[];
@@ -217,6 +219,7 @@ function BuildManager({
   build: BuildDAO | null;
   openNewPub: (params: { build: BuildDAO }) => void;
   handleDeleteBuild: (buildGuid: string) => void;
+  currentWorkspace: Workspace;
 }) {
   const [open, setOpen] = useState(false);
   const { isBuildPath, buildId } = useCurrentFilepath();
@@ -227,7 +230,7 @@ function BuildManager({
     // hacky to make the workspace wide search work for builds for now, donut change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBuildPath, buildId, setBuildId]);
-  const downloadBuildURL = build ? build.getDownloadBuildZipURL() : "#";
+  const downloadBuildURL = build ? build.getDownloadBuildZipURL(currentWorkspace.name) : "#";
   return selectMode === "delete" ? (
     <SelectHighlight
       placeholder="Select Build to Delete"

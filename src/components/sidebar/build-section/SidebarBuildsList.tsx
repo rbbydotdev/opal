@@ -14,12 +14,19 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { coerceError } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
+import { Workspace } from "@/workspace/Workspace";
 import { Delete, Download, Eye } from "lucide-react";
 
-export function SidebarBuildsList({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
+export function SidebarBuildsList({
+  currentWorkspace,
+  children,
+}: {
+  currentWorkspace: Workspace;
+  children: React.ReactNode;
+}) {
   const { openEdit } = useBuildCreation();
   const errorToss = useErrorToss();
-  const { builds } = useBuilds({ workspaceId });
+  const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const handleDelete = async (buildId: string) => {
     try {
       await BuildDAO.delete(buildId);
@@ -52,7 +59,7 @@ export function SidebarBuildsList({ workspaceId, children }: { workspaceId: stri
               <SelectableListItemMenu>
                 {children}
                 <DropdownMenuItem asChild>
-                  <a href={build.getDownloadBuildZipURL()}>
+                  <a href={build.getDownloadBuildZipURL(currentWorkspace.name)}>
                     <Download className="w-2 h-2 mr-2" size={4} />
                     Download
                   </a>

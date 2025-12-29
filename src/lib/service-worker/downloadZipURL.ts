@@ -1,4 +1,5 @@
 import { AbsPath, absPath } from "@/lib/paths2";
+import { SWClient } from "@/lib/service-worker/SWClient";
 import z from "zod";
 
 export function downloadZipURLParams(params: z.infer<typeof downloadZipSchema>): URLSearchParams {
@@ -8,25 +9,37 @@ export const downloadZipSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("workspace"),
     dir: z.string().transform(absPath).default("/"), // no need for .optional()
+    workspaceName: z.string(),
   }),
   z.object({
     type: z.literal("build"),
     diskId: z.string(), //because we want build disks to exist outside of workspaces eventually
     dir: z.string().transform(absPath).default("/"), // no need for .optional()
+    workspaceName: z.string(),
   }),
 ]);
-export function downloadWorkspaceZipURL(workspaceName?: string) {
-  const origin = window.location.origin;
-  const downloadUrl = new URL("/download.zip", origin);
-  downloadUrl.search = downloadZipURLParams({ type: "workspace", dir: absPath("/") }).toString();
-  if (workspaceName) {
-    downloadUrl.searchParams.set("workspaceName", workspaceName);
-  }
-  return downloadUrl.toString().replace(origin, "");
+export function downloadWorkspaceZipURL(workspaceName: string) {
+  return SWClient["download.zip"]
+    .$url({
+      query: {
+        type: "workspace",
+        dir: "/",
+        workspaceName,
+      },
+    })
+    .toString()
+    .replace(origin, "");
 }
-export function downloadBuildZipURL(diskId: string, dir: AbsPath) {
-  const origin = window.location.origin;
-  const downloadUrl = new URL("/download.zip", origin);
-  downloadUrl.search = downloadZipURLParams({ type: "build", diskId, dir }).toString();
-  return downloadUrl.toString().replace(origin, "");
+export function downloadBuildZipURL(workspaceName: string, diskId: string, dir: AbsPath) {
+  return SWClient["download.zip"]
+    .$url({
+      query: {
+        type: "build",
+        diskId,
+        dir,
+        workspaceName,
+      },
+    })
+    .toString()
+    .replace(origin, "");
 }

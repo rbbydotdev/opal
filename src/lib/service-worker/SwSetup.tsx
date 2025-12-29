@@ -2,7 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { setupServiceWorkerLogger } from "./sw-logger-setup";
 
 export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(!!navigator.serviceWorker.controller);
 
   useLayoutEffect(() => {
     void setupServiceWorker().then(() => setReady(true));

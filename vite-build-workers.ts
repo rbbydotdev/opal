@@ -28,6 +28,14 @@ function createWorkerConfig({ name, entry, outFile }: WorkerConfig, isDev: boole
       nodePolyfills({
         protocolImports: false,
       }),
+      //   !isDev && visualizer({
+      //     filename: `${outFile}-analysis.html`,
+      //     title: `${name} Bundle Analysis`,
+      //     open: false,
+      //     gzipSize: true,
+      //     template: "treemap",
+      //   }),
+      // ].filter(Boolean),
     ],
     build: {
       minify: true,

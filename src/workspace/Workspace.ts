@@ -13,7 +13,7 @@ import { SpecialDirs } from "@/data/SpecialDirs";
 import { NamespacedThumb } from "@/data/Thumb";
 import { GitRepo } from "@/features/git-repo/GitRepo";
 import { createImage } from "@/lib/createImage";
-import { BadRequestError } from "@/lib/errors/errors";
+import { BadRequestError, errF } from "@/lib/errors/errors";
 import { isImageType } from "@/lib/fileType";
 import { getMimeType } from "@/lib/mimeType";
 import {
@@ -51,6 +51,7 @@ import { Channel } from "@/lib/channel";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
 import { isIterable } from "@/lib/isIterable";
 import { reduceLineage } from "@/lib/paths2";
+import { SWClient } from "@/lib/service-worker/SWClient";
 import debounce from "debounce";
 import mime from "mime-types";
 import { nanoid } from "nanoid";
@@ -545,16 +546,25 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const url = new URL(joinPath(absPath("/upload-markdown"), targetDir, file!.name), window.location.origin);
-      url.searchParams.set("workspaceName", workspaceName);
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: {
-          "Content-Type": file!.type,
-        },
-        body: file,
-      });
-      results[current] = absPath(await res.text());
+      await SWClient["upload-markdown"][":filePath{.+}"]
+        .$post({
+          query: {
+            workspaceName,
+          },
+          form: {
+            file: file!,
+          },
+          param: {
+            filePath: joinPath(targetDir, file!.name),
+          },
+        })
+        .then(async (res) => {
+          results[current] = absPath((await res.json()).path);
+        })
+        .catch((e) => {
+          console.error("Error uploading markdown file:", e);
+        });
+
       await uploadNext();
     };
 
@@ -576,16 +586,21 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const url = new URL(joinPath(absPath("/upload-docx"), targetDir, file!.name), window.location.origin);
-      url.searchParams.set("workspaceName", workspaceName);
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: {
-          "Content-Type": file!.type,
-        },
-        body: file,
-      });
-      results[current] = absPath(await res.text());
+      await SWClient["upload-docx"][":filePath{.+}"]
+        .$post({
+          query: {
+            workspaceName,
+          },
+          form: {
+            file: file!,
+          },
+          param: {
+            filePath: relPath(joinPath(targetDir, file!.name)),
+          },
+        })
+        .then(async (res) => {
+          results[current] = absPath((await res.json()).path);
+        });
       await uploadNext();
     };
 
@@ -755,33 +770,32 @@ export class Workspace {
 
   async renameMdImages(paths: [to: string, from: string][]) {
     if (paths.length === 0 || !paths.flat().length) return [];
-    let res: AbsPath[] = [];
-    const url = new URL("/replace-files", window.location.origin);
-    url.searchParams.set("workspaceName", this.name);
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      body: JSON.stringify(paths),
-    });
-    if (response.ok) {
-      try {
-        res = (await response.clone().json()) as AbsPath[];
-      } catch (e) {
-        console.error(`Error parsing JSON from /replace-files\n\n${await response.clone().text()}`, e);
-        res = [];
+    try {
+      const { paths: resultPaths } = await SWClient["replace-files"]
+        .$post({
+          query: {
+            workspaceName: this.name,
+          },
+          json: { paths },
+        })
+        .then((r) => r.json());
+
+      if (resultPaths.length) {
+        await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
+          filePaths: resultPaths,
+        });
       }
-    } else {
-      const bodyText = await response.text();
-      console.error(`Error renaming md images: ${response.status} ${response.statusText}\n${bodyText}`);
-      res = [];
-    }
-    if (res.length) {
-      await this.disk.local.emit(DiskEvents.OUTSIDE_WRITE, {
-        filePaths: res,
-      });
+    } catch (e) {
+      console.error(errF`Error renaming md images: ${e}`);
     }
   }
 
-  static async UploadMultipleImages(files: Iterable<File>, targetDir: AbsPath, workspaceName: string, concurrency = 8): Promise<AbsPath[]> {
+  static async UploadMultipleImages(
+    files: Iterable<File>,
+    targetDir: AbsPath,
+    workspaceName: string,
+    concurrency = 8
+  ): Promise<AbsPath[]> {
     const results: AbsPath[] = [];
     let index = 0;
     const filesArr = Array.from(files);
@@ -790,16 +804,25 @@ export class Workspace {
       if (index >= filesArr.length) return;
       const current = index++;
       const file = filesArr[current];
-      const url = new URL(joinPath(absPath("/upload-image"), targetDir, file!.name), window.location.origin);
-      url.searchParams.set("workspaceName", workspaceName);
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: {
-          "Content-Type": file!.type,
-        },
-        body: file,
-      });
-      results[current] = absPath(await res.text());
+      await SWClient["upload-image"][":filePath{.+}"]
+        .$post({
+          query: {
+            workspaceName,
+          },
+          form: {
+            file: file!,
+          },
+          param: {
+            filePath: relPath(joinPath(targetDir, file!.name)),
+          },
+        })
+        .then(async (res) => {
+          results[current] = absPath((await res.json()).path);
+        })
+        .catch((e) => {
+          console.error("Error uploading image file:", e);
+        });
+
       await uploadNext();
     };
 

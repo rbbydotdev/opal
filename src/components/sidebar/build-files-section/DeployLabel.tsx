@@ -20,7 +20,7 @@ export function DeployLabel({ deploy, className }: { deploy: DeployDAO; classNam
           {deploy.status === "error" && (
             <X className="w-4 h-4 text-destructive rounded-full border-destructive border-2 shrink-0" />
           )}
-          <WorkspaceIcon size={4} variant="round" input={deploy.buildId} className="w-3" />
+          <WorkspaceIcon size={4} variant="round" input={deploy.buildId} className="w-3 flex-shrink-0" />
           <RemoteAuthSourceIconComponent source={deploy.provider} />
           <span className="truncate min-w-0">{deploy.label}</span>
         </div>

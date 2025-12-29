@@ -222,7 +222,7 @@ export function BuildModal({
                     <UploadCloud /> Publish
                   </Button>
                   <Button className="flex items-center gap-2" variant="secondary" size="sm" asChild>
-                    <a href={runner.target.getDownloadBuildZipURL()}>
+                    <a href={runner.target.getDownloadBuildZipURL(currentWorkspace.name)}>
                       <Download /> Download
                     </a>
                   </Button>

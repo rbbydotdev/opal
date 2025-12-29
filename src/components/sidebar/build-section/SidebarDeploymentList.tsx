@@ -24,7 +24,7 @@ export function SidebarDeploymentList({ workspace }: { workspace: Workspace }) {
   const { openDeployment } = useBuildPublisher();
 
   const { setBuildId } = useBuildManager({ currentWorkspace: workspace });
-  const { activeTab, setActiveTab } = useBuildListMiniTabs();
+  const { setActiveTab } = useBuildListMiniTabs();
   const handleDelete = async (destId: string) => {
     try {
       await DeployDAO.delete(destId);

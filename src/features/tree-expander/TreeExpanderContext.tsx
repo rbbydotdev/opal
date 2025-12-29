@@ -1,7 +1,7 @@
 import { TreeExpanderValue } from "@/features/tree-expander/TreeExpanderTypes";
 import { createContext, useContext } from "react";
 
-const defaultExpander: TreeExpanderValue = {
+export const TreeExpanderContext = createContext<TreeExpanderValue>({
   expandSingle: (_path: string, _expanded: boolean) => {},
   expanded: {},
   setExpandAll: (_state: boolean) => {},
@@ -9,9 +9,8 @@ const defaultExpander: TreeExpanderValue = {
   expandForNode: (_node, _state: boolean) => {},
   isExpanded: (_node) => false,
   defaultExpanded: false,
-};
-
-export const TreeExpanderContext = createContext<TreeExpanderValue>(defaultExpander);
+  expandForFile: (_dirTree, _file, _exp) => (_exp = {}),
+});
 export function useTreeExpanderContext() {
   const context = useContext(TreeExpanderContext);
   if (!context) {

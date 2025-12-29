@@ -9,7 +9,7 @@ import { downloadEncryptedZipHelper } from "@/lib/service-worker/downloadEncrypt
 import { downloadWorkspaceZipURL } from "@/lib/service-worker/downloadZipURL";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Download, Info, Lock } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 
 // downloadZipURL will be calculated in component
 
@@ -17,7 +17,7 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
   const [expanded, setExpand] = useSingleItemExpander("export");
   const { currentWorkspace } = useWorkspaceContext();
 
-  const downloadZipURL = downloadWorkspaceZipURL(currentWorkspace.name);
+  const downloadZipURL = useMemo(() => downloadWorkspaceZipURL(currentWorkspace.name), [currentWorkspace.name]);
 
   return (
     <SidebarGroup {...props}>
@@ -46,7 +46,12 @@ export function SidebarFileMenuExport(props: React.ComponentProps<typeof Sidebar
             </Button>
             <EncryptedZipDialog
               onSubmit={(password) =>
-                downloadEncryptedZipHelper({ password, encryption: "aes", workspaceName: currentWorkspace.name, name: currentWorkspace.name })
+                downloadEncryptedZipHelper({
+                  password,
+                  encryption: "aes",
+                  workspaceName: currentWorkspace.name,
+                  name: currentWorkspace.name,
+                })
               }
             >
               <Button

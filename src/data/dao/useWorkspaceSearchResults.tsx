@@ -1,4 +1,6 @@
-import { absPath, AbsPath, joinPath } from "@/lib/paths2";
+import { isAbortError } from "@/lib/errors/errors";
+import { AbsPath } from "@/lib/paths2";
+import { SWClient } from "@/lib/service-worker/SWClient";
 import { WorkspaceSearchItem } from "@/workspace/WorkspaceScannable";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -20,37 +22,27 @@ async function* fetchQuerySearch({
   mode,
   signal,
 }: WorkspaceFetchParams): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
-  const url = new URL(joinPath(absPath("workspace-search"), workspaceName ?? ""), window.location.origin);
-
-  url.searchParams.set("searchTerm", searchTerm);
-  const regexpValue = (regexp ?? true) ? "1" : "0";
-  url.searchParams.set("regexp", regexpValue);
-  if (mode) {
-    url.searchParams.set("mode", mode);
-  }
-
-  let res = null;
   try {
-    res = await fetch(url.toString(), {
-      signal,
-    });
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      return; // Request was aborted, exit gracefully
-    }
-    throw err; // Re-throw other errors
-  }
-  if (res.status === 204) {
-    return; // No content, successful but empty stream
-  }
-  if (!res.ok) throw new Error(`Search failed: ${res.statusText}`);
-  if (!res.body) throw new Error("Response has no body to read.");
+    const res = await SWClient["workspace-search"][":workspaceName"].$get(
+      {
+        query: {
+          searchTerm,
+          regexp,
+          mode,
+        },
+        param: { workspaceName },
+      },
+      {
+        init: { signal },
+      }
+    );
+    if (res.status === 204) return; // No content, successful but empty stream
+    if (!res.body) return console.warn("Response has no body to read.");
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  try {
+    //process streaming results
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -66,13 +58,11 @@ async function* fetchQuerySearch({
       }
     }
   } catch (err) {
-    // Don't throw an error if the request was intentionally aborted
-    if (err instanceof DOMException && err.name === "AbortError") {
-      return;
-    }
-    throw err;
+    if (isAbortError(err)) return;
+    throw err; // Re-throw other errors
   }
 }
+
 export function useWorkspaceSearchResults(debounceMs = SEARCH_DEBOUNCE_MS) {
   const [hidden, setHidden] = useState<string[]>([]);
   const [ctx, setCtx] = useState<{

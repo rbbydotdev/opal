@@ -50,6 +50,10 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
         <FileTextIcon className="w-4 h-4 mr-2" />
         template.ejs
       </DropdownMenuItem>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("data.json", DefaultFile.JSON()))}>
+        <FileTextIcon className="w-4 h-4 mr-2" />
+        data.json
+      </DropdownMenuItem>
     </>
   );
 }

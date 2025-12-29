@@ -61,7 +61,7 @@ function useTreeExpander({
     setLocal({ ...setAllStates(state) });
     setStored({ ...setAllStates(state) });
   };
-
+  // disable
   useEffect(() => {
     if (activePath) {
       setLocal((prev) => ({ ...expandForFile(nodePaths, activePath, prev) }));
@@ -73,6 +73,7 @@ function useTreeExpander({
     expandSingle,
     expanded: all,
     setExpandAll,
+    expandForFile,
     expanderId,
     expandForNode,
     isExpanded: (node: TreeNode | string) => all[String(node)] === true,

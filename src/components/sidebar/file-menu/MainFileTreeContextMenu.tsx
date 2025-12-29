@@ -58,6 +58,7 @@ export const MainFileTreeContextMenu = ({
   const addEjsFile = () => addFile(fileNode, "template.ejs");
   const addMustacheFile = () => addFile(fileNode, "template.mustache");
   const addMarkdownFile = () => addFile(fileNode, "newfile.md");
+  const addJsonFile = () => addFile(fileNode, "data.json");
 
   // Stock file functions
   const addGlobalCssFile = () => addDirFile("file", fileNode.closestDir()!, "global.css", DefaultFile.GlobalCSS());
@@ -102,6 +103,10 @@ export const MainFileTreeContextMenu = ({
         <ContextMenuItem inset onSelect={deferredFn(() => addEjsFile())}>
           <FileTextIcon className="mr-3 h-4 w-4" />
           New EJS Template
+        </ContextMenuItem>
+        <ContextMenuItem inset onSelect={deferredFn(() => addJsonFile())}>
+          <FilePlusIcon className="mr-3 h-4 w-4" />
+          New JSON File
         </ContextMenuItem>
         <ContextMenuItem inset onSelect={deferredFn(() => addDir(fileNode))}>
           <FolderPlusIcon className="mr-3 h-4 w-4" />

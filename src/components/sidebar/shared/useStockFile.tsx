@@ -18,9 +18,7 @@ export function useStockFile() {
     dir?: TreeNode
   ) => {
     const node = addDirFile("file", dir?.path || focused || absPath("/"), filename, await unwrapContent(content));
-    if (expandForNode) {
-      expandForNode(node, true);
-    }
+    expandForNode(node, true);
   };
   return addStockFile;
 }

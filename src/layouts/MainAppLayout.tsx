@@ -54,7 +54,6 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
     <CustomQueryClientProvider>
       <ThemeProvider>
         <Background>
-          <ServiceWorker />
           <Toaster />
           <CompatibilityAlert />
           <AsyncWindowErrorBoundary>
@@ -72,16 +71,18 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                   <BuildCreationProvider>
                                     <PromptProvider>
                                       <RemoteMDXEditorRealmProvider>
-                                        <div className="w-full flex">
-                                          <ErrorBoundary fallback={ErrorPlaque}>
-                                            <div id={WS_BUTTON_BAR_ID} className="bg-muted">
-                                              <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                                <WorkspaceButtonBar />
-                                              </ErrorBoundary>
-                                            </div>
-                                            <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                          </ErrorBoundary>
-                                        </div>
+                                        <ServiceWorker>
+                                          <div className="w-full flex">
+                                            <ErrorBoundary fallback={ErrorPlaque}>
+                                              <div id={WS_BUTTON_BAR_ID} className="bg-muted">
+                                                <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                  <WorkspaceButtonBar />
+                                                </ErrorBoundary>
+                                              </div>
+                                              <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                            </ErrorBoundary>
+                                          </div>
+                                        </ServiceWorker>
                                       </RemoteMDXEditorRealmProvider>
                                     </PromptProvider>
                                   </BuildCreationProvider>

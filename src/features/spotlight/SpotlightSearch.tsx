@@ -993,6 +993,26 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             }
           }),
         ],
+        "New JSON File": [
+          NewCmdPrompt("json_file_name", "Enter JSON file name"),
+          NewCmdExec(async (context) => {
+            const name = context.json_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new JSON file");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".json");
+            const dir =
+              currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
+              ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.JSON());
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path),
+              });
+            }
+          }),
+        ],
         "Trash File": [
           NewCmdExec(async () => {
             if (!currentPath) {

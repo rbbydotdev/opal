@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { Context, Hono } from "hono";
+import { Hono } from "hono";
 import { logger as honoLogger } from "hono/logger";
 import { handle } from "hono/service-worker";
 import { marked } from "marked";
@@ -7,7 +7,6 @@ import { z } from "zod";
 
 import { ENV } from "@/lib/env";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
-import { absPath } from "@/lib/paths2";
 import { REQ_SIGNAL } from "@/lib/service-worker/request-signal-types";
 import { RemoteLoggerLogger, signalRequest } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
@@ -16,6 +15,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { ClientDb } from "@/data/db/DBInstance";
 import { Thumb } from "@/data/Thumb";
 import { HistoryDB } from "@/editors/history/HistoryDB";
+import { NotFoundError } from "@/lib/errors/errors";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
 import { handleDocxConvertRequest } from "@/lib/service-worker/handleDocxConvertRequest";
@@ -29,6 +29,7 @@ import { handleMdImageReplace } from "@/lib/service-worker/handleMdImageReplace"
 import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRequest";
 import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
 import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearch";
+import { resolveWorkspaceFromQueryOrContext } from "@/lib/service-worker/resolveWorkspaceFromQueryOrContext";
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
 import { SWWStore } from "@/lib/service-worker/SWWStore";
 import graymatter from "gray-matter";
@@ -38,93 +39,10 @@ initializeGlobalLogger(RemoteLoggerLogger("SW"));
 
 const app = new Hono<{ Variables: { workspaceName: string } }>();
 
-export type SWAppType = typeof app;
-
-// Workspace extractors - pure functions for different sources
-const extractWorkspaceFromUrl = (url: string): string | null => {
-  try {
-    const urlResult = Workspace.parseWorkspacePath(url);
-    return urlResult.workspaceName;
-  } catch {
-    return null;
-  }
-};
-
-const extractWorkspaceFromReferrer = (referrer: string | undefined): string | null => {
-  if (!referrer) return null;
-  try {
-    // Try referrer search params first
-    const referrerUrl = new URL(referrer);
-    const fromSearchParams = referrerUrl.searchParams.get("workspaceName");
-    if (fromSearchParams) return fromSearchParams;
-
-    // Try referrer path
-    const referrerResult = Workspace.parseWorkspacePath(referrer);
-    return referrerResult.workspaceName;
-  } catch {
-    return null;
-  }
-};
-
-// Workspace validator middleware factory
-const workspaceValidator = (
-  options: { required?: boolean } = {},
-  ...extractors: Array<(c: Context) => string | null>
-) => {
-  return async (c: Context, next: () => Promise<void>) => {
-    let workspaceName: string | null = null;
-
-    logger.log(`[WorkspaceValidator] Processing URL: ${c.req.url}`);
-    logger.log(`[WorkspaceValidator] Referrer: ${c.req.raw.referrer}`);
-    logger.log(`[WorkspaceValidator] Headers referer: ${c.req.header("referer")}`);
-    logger.log(`[WorkspaceValidator] Raw referrer: ${c.req.raw.referrer}`);
-
-    for (let i = 0; i < extractors.length; i++) {
-      const extractor = extractors[i]!;
-      workspaceName = extractor(c);
-      logger.log(`[WorkspaceValidator] Extractor ${i} result: ${workspaceName}`);
-      if (workspaceName) break;
-    }
-
-    if (options.required && !workspaceName) {
-      logger.error(`[WorkspaceValidator] Failed to resolve workspace for ${c.req.url}`);
-      return c.json({ error: "Workspace name could not be determined" }, 400);
-    }
-
-    logger.log(`[WorkspaceValidator] Final workspace: ${workspaceName}`);
-    c.set("workspaceName", workspaceName);
-    await next();
-  };
-};
-
-// Individual extractor functions for composition (only used by image/CSS routes)
-const extractFromSearchParams = (c: Context) => {
-  const url = new URL(c.req.url);
-  return url.searchParams.get("workspaceName");
-};
-
-const extractFromUrlPath = (c: Context) => extractWorkspaceFromUrl(c.req.url);
-
-const extractFromReferrer = (c: Context) => {
-  // In service worker, referrer comes from the request object, not headers
-  const referrer = c.req.raw.referrer;
-  logger.log(`Extracting from referrer: ${referrer}`);
-  return extractWorkspaceFromReferrer(referrer);
-};
-
-const resolveWorkspaceFromQueryOrContext = workspaceValidator(
-  { required: true },
-  extractFromSearchParams,
-  extractFromUrlPath,
-  extractFromReferrer
-);
-
 const searchSchema = z.object({
   searchTerm: z.string(),
-  regexp: z
-    .union([z.boolean(), z.literal("1"), z.literal("0")])
-    .optional()
-    .default(true),
+  regexp: z.boolean().optional().default(true),
+  mode: z.enum(["content", "filename"]).optional().default("content"),
 });
 
 const filenameSearchSchema = z.object({
@@ -143,15 +61,7 @@ const markdownRenderSchema = z.object({
 });
 
 // API route schemas for pure Zod validation
-const uploadImageSchema = z.object({
-  workspaceName: z.string(),
-});
-
-const replaceFilesSchema = z.object({
-  workspaceName: z.string(),
-});
-
-const downloadZipQuerySchema = z.object({
+const workspaceNameSchema = z.object({
   workspaceName: z.string(),
 });
 
@@ -212,178 +122,163 @@ app.use("*", async (_c, next) => {
   }
 });
 
-// // Error handler middleware
-// app.onError((err, c) => {
-//   LOG.error(`Handler error: ${err.message}`);
+const _Handlers = {
+  UploadImage: app.post(
+    "/upload-image/:filePath{.+}",
+    zValidator("query", workspaceNameSchema),
+    zValidator(
+      "form",
+      z.object({
+        file: z.instanceof(File),
+      })
+    ),
+    zValidator("param", z.object({ filePath: z.string() })),
+    async (c) => {
+      try {
+        const { workspaceName } = c.req.valid("query");
+        const filePath = c.req.param("filePath");
+        const { file } = c.req.valid("form");
+        const arrayBuffer = await file.arrayBuffer();
+        logger.log(`Handling image upload for: ${c.req.path}`);
+        return c.json({ path: await handleImageUpload(workspaceName, filePath, arrayBuffer) });
+      } catch (error) {
+        logger.error(`Upload image error: ${error}`);
+        throw error;
+      }
+    }
+  ),
 
-//   if (isError(err, BadRequestError)) {
-//     return c.json({ error: "Validation error", details: err.message }, 400);
-//   }
+  // DOCX upload handler
+  UploadDocX: app.post(
+    "/upload-docx/:filePath{.+}",
+    zValidator("query", workspaceNameSchema),
+    zValidator(
+      "form",
+      z.object({
+        file: z.instanceof(File),
+      })
+    ),
+    zValidator("param", z.object({ filePath: z.string() })),
+    async (c) => {
+      try {
+        const { workspaceName } = c.req.valid("query");
+        const filePath = c.req.param("filePath");
+        const { file } = c.req.valid("form");
+        const arrayBuffer = await file.arrayBuffer();
 
-//   if (isError(err, NotFoundError)) {
-//     return c.json({ error: "Not found" }, 404);
-//   }
+        logger.log(`Handling DOCX upload for: ${filePath}`);
 
-//   return c.json({ error: "Internal server error" }, 500);
-// });
+        return c.json({ path: await handleDocxConvertRequest(workspaceName, filePath, arrayBuffer) });
+      } catch (error) {
+        logger.error(`Upload DOCX error: ${error}`);
+        throw error;
+      }
+    }
+  ),
 
-// Route handlers using Hono best practices
+  // Markdown upload handler
+  UploadMarkdown: app.post(
+    "/upload-markdown/:filePath{.+}",
+    zValidator("query", workspaceNameSchema),
+    zValidator(
+      "form",
+      z.object({
+        file: z.instanceof(File), // validate the uploaded file
+      })
+    ),
 
-// Add a simple root route for testing
-app.post("/upload-image/*", zValidator("query", uploadImageSchema), async (c) => {
-  try {
-    const { workspaceName } = c.req.valid("query");
-    const url = new SuperUrl(c.req.url);
-    const filePath = absPath(url.decodedPathname.replace("/upload-image", ""));
-    const arrayBuffer = await c.req.arrayBuffer();
+    zValidator("param", z.object({ filePath: z.string() })),
 
-    logger.log(`Handling image upload for: ${url.pathname}`);
+    async (c) => {
+      try {
+        const { workspaceName } = c.req.valid("query");
+        const filePath = c.req.param("filePath");
+        const { file } = c.req.valid("form");
+        const arrayBuffer = await file.arrayBuffer();
 
-    const resultPath = await handleImageUpload(workspaceName, filePath, arrayBuffer);
+        logger.log(`Handling markdown upload for: ${new URL(c.req.url).pathname}`);
 
-    return new Response(resultPath, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain",
-      },
-    });
-  } catch (error) {
-    logger.error(`Upload image error: ${error}`);
-    throw error;
-  }
-});
+        const path = await handleDocxConvertRequest(workspaceName, filePath, arrayBuffer);
 
-// DOCX upload handler
-app.post("/upload-docx/*", zValidator("query", uploadImageSchema), async (c) => {
-  try {
-    const { workspaceName } = c.req.valid("query");
-    const url = new SuperUrl(c.req.url);
-    const fullPathname = absPath(url.decodedPathname.replace("/upload-docx", ""));
-    const arrayBuffer = await c.req.arrayBuffer();
-
-    logger.log(`Handling DOCX upload for: ${fullPathname}`);
-
-    const result = await handleDocxConvertRequest(workspaceName, fullPathname, arrayBuffer);
-    return result; // Returns a Response
-  } catch (error) {
-    logger.error(`Upload DOCX error: ${error}`);
-    throw error;
-  }
-});
-
-// Markdown upload handler
-app.post("/upload-markdown/*", zValidator("query", uploadImageSchema), async (c) => {
-  try {
-    const { workspaceName } = c.req.valid("query");
-    const url = new SuperUrl(c.req.url);
-    const fullPathname = absPath(url.decodedPathname.replace("/upload-markdown", ""));
-    const arrayBuffer = await c.req.arrayBuffer();
-
-    logger.log(`Handling markdown upload for: ${url.pathname}`);
-
-    const result = await handleDocxConvertRequest(workspaceName, fullPathname, arrayBuffer);
-    return result;
-  } catch (error) {
-    logger.error(`Upload markdown error: ${error}`);
-    throw error;
-  }
-});
-
-// MD image replacement handler
-app.post(
-  "/replace-md-images",
-  zValidator("query", replaceFilesSchema),
-  zValidator("json", z.array(z.tuple([z.string(), z.string()]))),
-  async (c) => {
+        return c.json({ path });
+      } catch (error) {
+        logger.error(`Upload markdown error: ${error}`);
+        throw error;
+      }
+    }
+  ),
+  // MD image replacement handler
+  ReplaceMarkdown: app.post(
+    "/replace-md-images",
+    zValidator("query", workspaceNameSchema),
+    zValidator("json", z.array(z.tuple([z.string(), z.string()]))),
+    async (c) => {
+      try {
+        const { workspaceName } = c.req.valid("query");
+        const findReplacePairs = c.req.valid("json");
+        logger.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
+        return c.json({
+          paths: await handleMdImageReplace(workspaceName, findReplacePairs, new URL(c.req.url).origin),
+        });
+      } catch (error) {
+        logger.error(`Replace MD images error: ${error}`);
+        throw error;
+      }
+    }
+  ),
+  // File replacement handler
+  ReplaceFiles: app.post(
+    "/replace-files",
+    zValidator("query", workspaceNameSchema),
+    zValidator("json", z.object({ paths: z.array(z.tuple([z.string(), z.string()])) })),
+    async (c) => {
+      try {
+        const { workspaceName } = c.req.valid("query");
+        const { paths } = c.req.valid("json");
+        logger.log(`Replacing files with: ${paths.length} pairs`);
+        return c.json({ paths: await handleFileReplace(new SuperUrl(c.req.url), workspaceName, paths) });
+      } catch (error) {
+        logger.error(`Replace files error: ${error}`);
+        throw error;
+      }
+    }
+  ),
+  // Workspace search handler
+  WorkspaceSearch: app.get("/workspace-search/:workspaceName", zValidator("query", searchSchema), async (c) => {
     try {
-      const { workspaceName } = c.req.valid("query");
-      const findReplacePairs = c.req.valid("json");
-      const url = new SuperUrl(c.req.url);
-
-      logger.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
-
-      const result = await handleMdImageReplace(url, workspaceName, findReplacePairs);
-      return result;
+      const workspaceName = c.req.param("workspaceName");
+      const { searchTerm, regexp, mode } = c.req.valid("query");
+      logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
+      return await handleWorkspaceSearch({ workspaceName, searchTerm, regexp, mode });
     } catch (error) {
-      logger.error(`Replace MD images error: ${error}`);
+      logger.error(`Workspace search error: ${error}`);
       throw error;
     }
-  }
-);
-
-// File replacement handler
-app.post(
-  "/replace-files",
-  zValidator("query", replaceFilesSchema),
-  zValidator("json", z.array(z.tuple([z.string(), z.string()]))),
-  async (c) => {
-    try {
-      const { workspaceName } = c.req.valid("query");
-      const findReplacePairs = c.req.valid("json");
-      const url = new SuperUrl(c.req.url);
-
-      logger.log(`Replacing files with: ${findReplacePairs.length} pairs`);
-
-      const result = await handleFileReplace(url, workspaceName, findReplacePairs);
-      return result;
-    } catch (error) {
-      logger.error(`Replace files error: ${error}`);
-      throw error;
+  }),
+  // Workspace filename search handler
+  WorkspaceFileNameSearch: app.get(
+    "/workspace-filename-search/:workspaceName",
+    zValidator("query", filenameSearchSchema),
+    zValidator("param", z.object({ workspaceName: z.string() })),
+    async (c) => {
+      try {
+        const workspaceName = c.req.param("workspaceName");
+        const { searchTerm } = c.req.valid("query");
+        logger.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
+        return await handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
+      } catch (error) {
+        logger.error(`Workspace filename search error: ${error}`);
+        throw error;
+      }
     }
-  }
-);
-
-// Workspace search handler
-app.get("/workspace-search/:workspaceName", zValidator("query", searchSchema), async (c) => {
-  try {
-    const workspaceName = c.req.param("workspaceName");
-    const { searchTerm, regexp } = c.req.valid("query");
-
-    // Convert regexp parameter
-    const regexpFlag = regexp === null ? true : regexp === "1" || regexp === true;
-
-    logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
-
-    const result = await handleWorkspaceSearch({ workspaceName, searchTerm, regexp: regexpFlag });
-    return result;
-  } catch (error) {
-    logger.error(`Workspace search error: ${error}`);
-    throw error;
-  }
-});
-
-// Workspace filename search handler
-app.get("/workspace-filename-search/:workspaceName", zValidator("query", filenameSearchSchema), async (c) => {
-  try {
-    const workspaceName = c.req.param("workspaceName");
-    const { searchTerm } = c.req.valid("query");
-
-    logger.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
-
-    const result = await handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
-
-    return result;
-  } catch (error) {
-    logger.error(`Workspace filename search error: ${error}`);
-    throw error;
-  }
-});
-
-// Markdown render handler
-app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c) => {
-  try {
+  ),
+  // Markdown render handler
+  MarkdownRender: app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c) => {
     const { workspaceName, documentId, editId } = c.req.valid("query");
-
     logger.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
-
-    // Get workspace to find workspaceId
     const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
-    if (!workspace) {
-      logger.error(`Workspace not found: ${workspaceName}`);
-      return c.json({ error: "Workspace not found" }, 404);
-    }
+    if (!workspace) throw new NotFoundError("Workspace not found");
 
-    // ---------- Cache Lookup ----------
     const cache = await Workspace.newCache(workspaceName).getCache();
     const cached = await cache.match(c.req.raw);
     if (cached) {
@@ -395,7 +290,7 @@ app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c)
     const edit = await ClientDb.historyDocs.get(editId);
     if (!edit) {
       logger.error(`Edit not found: ${editId}`);
-      return c.json({ error: "Edit not found" }, 404);
+      throw new NotFoundError("Edit not found");
     }
 
     let htmlContent: string;
@@ -421,79 +316,57 @@ app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c)
       historyDB.tearDown();
     }
 
-    // Create response
-    const response = new Response(htmlContent, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
+    await cache.put(
+      c.req.raw,
+      new Response(htmlContent, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      })
+    );
 
-    // ---------- Cache Store ----------
-    await cache.put(c.req.raw, response.clone());
+    return c.body(htmlContent);
+  }),
+  // Download handler
+  DownloadZip: app.get("/download.zip", zValidator("query", downloadZipSchema), async (c) => {
+    try {
+      const params = c.req.valid("query");
 
-    return response;
-  } catch (error) {
-    logger.error(`Markdown render error: ${error}`);
-    if (error instanceof Error && error.message.includes("not found")) {
-      return c.json({ error: "Edit not found" }, 404);
+      logger.log(`Handling download for: ${c.req.path}`);
+      logger.log(`Download payload: ${JSON.stringify(params)}`);
+
+      return await handleDownloadRequest(params);
+    } catch (error) {
+      logger.error(`Download error: ${error}`);
+      throw error;
     }
-    throw error;
-  }
-});
+  }),
+  // Encrypted download handler
+  DownloadEncrypted: app.post("/download-encrypted.zip", zValidator("query", workspaceNameSchema), async (c) => {
+    try {
+      const { workspaceName } = c.req.valid("query");
+      const password = c.req.header(PassHeader);
+      const encryption = c.req.header(EncHeader);
 
-// Download handler
-app.get("/download.zip", zValidator("query", downloadZipQuerySchema), async (c) => {
-  try {
-    const { workspaceName } = c.req.valid("query");
-    const url = new SuperUrl(c.req.url);
-
-    // Parse search params as download payload
-    const urlPayload: Record<string, unknown> = {};
-    url.searchParams.forEach((value, key) => {
-      try {
-        urlPayload[key] = JSON.parse(value);
-      } catch {
-        urlPayload[key] = value;
+      if (!password || !encryption) {
+        return c.json({ error: "Missing password or encryption headers" }, 400);
       }
-    });
 
-    // Validate the payload using the download schema
-    const validatedPayload = downloadZipSchema.parse(urlPayload);
+      const options = downloadEncryptedSchema.parse({ password, encryption });
 
-    logger.log(`Handling download for: ${url.href}`);
-    logger.log(`Download payload: ${JSON.stringify(validatedPayload)}`);
+      logger.log(`Handling encrypted download for workspace: ${workspaceName}`);
 
-    const result = await handleDownloadRequest(workspaceName, validatedPayload);
-    return result;
-  } catch (error) {
-    logger.error(`Download error: ${error}`);
-    throw error;
-  }
-});
-
-// Encrypted download handler
-app.post("/download-encrypted.zip", zValidator("query", downloadZipQuerySchema), async (c) => {
-  try {
-    const { workspaceName } = c.req.valid("query");
-    const password = c.req.header(PassHeader);
-    const encryption = c.req.header(EncHeader);
-
-    if (!password || !encryption) {
-      return c.json({ error: "Missing password or encryption headers" }, 400);
+      const result = await handleDownloadRequestEncrypted(workspaceName, options);
+      return result;
+    } catch (error) {
+      logger.error(`Encrypted download error: ${error}`);
+      throw error;
     }
+  }),
+};
 
-    const options = downloadEncryptedSchema.parse({ password, encryption });
-
-    logger.log(`Handling encrypted download for workspace: ${workspaceName}`);
-
-    const result = await handleDownloadRequestEncrypted(workspaceName, options);
-    return result;
-  } catch (error) {
-    logger.error(`Encrypted download error: ${error}`);
-    throw error;
-  }
-});
+export type SWAppType = (typeof _Handlers)[keyof typeof _Handlers];
 
 // Favicon handler for multiple paths
 app.on("GET", ["/favicon.svg", "/src/app/icon.svg", "/icon.svg"], resolveWorkspaceFromQueryOrContext, async (c) => {
@@ -519,14 +392,13 @@ app.get("*.css", resolveWorkspaceFromQueryOrContext, async (c) => {
 
 app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrContext, async (c) => {
   const workspaceName = c.get("workspaceName");
-  const _filename = c.req.param("file");
+  const filename = c.req.param("file");
   const url = new SuperUrl(c.req.url);
-  const pathname = url.decodedPathname;
 
   // Optional: log or inspect
-  logger.log(`Handling image request for: ${pathname}`);
+  logger.log(`Handling image request for: ${filename}`);
 
-  const isSVG = pathname.endsWith(".svg");
+  const isSVG = filename.endsWith(".svg");
   const isThumbnail = Thumb.isThumbURL(url);
 
   // ---------- Cache Lookup ----------
@@ -535,13 +407,13 @@ app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrConte
     cache = await Workspace.newCache(workspaceName).getCache();
     const cached = await cache.match(c.req.raw);
     if (cached) {
-      logger.log(`Cache hit for: ${pathname}`);
+      logger.log(`Cache hit for: ${filename}`);
       return cached;
     }
   }
 
   // ---------- Generate / Fetch Image ----------
-  const image = await handleImageRequest(pathname, workspaceName, isThumbnail);
+  const image = await handleImageRequest(filename, workspaceName, isThumbnail);
   if (!image?.contents) {
     return c.notFound();
   }

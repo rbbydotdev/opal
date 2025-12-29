@@ -14,20 +14,20 @@ import * as fflate from "fflate";
 import z from "zod";
 import { SWWStore } from "./SWWStore";
 
-export async function handleDownloadRequest(
-  workspaceName: string,
-  paramsPayload: z.infer<typeof downloadZipSchema>
-): Promise<Response> {
+export async function handleDownloadRequest({
+  workspaceName,
+  ...params
+}: z.infer<typeof downloadZipSchema>): Promise<Response> {
   try {
     const disk =
-      paramsPayload.type === "workspace"
-        ? (await SWWStore.tryWorkspace(workspaceName)).disk
-        : DiskFromJSON(await DiskDAO.FetchFromGuidOrThrow(paramsPayload.diskId));
+      params.type === "workspace"
+        ? (await SWWStore.tryWorkspace(workspaceName!)).disk
+        : DiskFromJSON(await DiskDAO.FetchFromGuidOrThrow(params.diskId));
 
     await disk.init({ skipListeners: true });
     await disk.refresh();
 
-    const workspaceDirName = absPath(strictPathname(workspaceName));
+    const workspaceDirName = absPath(strictPathname(workspaceName!));
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
 
@@ -42,14 +42,14 @@ export async function handleDownloadRequest(
     });
 
     // Create a translated filesystem that maps virtual paths to the actual directory
-    const translatedFs = TranslateFsTransform(disk.fs, paramsPayload.dir);
+    const translatedFs = TranslateFsTransform(disk.fs, params.dir);
 
     // Create a new FileTree using the translated filesystem
     const scopedTree = new FileTree(translatedFs, disk.guid, disk.mutex);
     await scopedTree.index();
 
     const fileNodes = [
-      ...scopedTree.iterator(paramsPayload.type === "workspace" ? FilterOutSpecialDirs : undefined),
+      ...scopedTree.iterator(params.type === "workspace" ? FilterOutSpecialDirs : undefined),
     ] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
