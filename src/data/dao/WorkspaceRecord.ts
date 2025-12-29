@@ -1,6 +1,7 @@
 import { DiskJType } from "@/data/disk/DiskType";
 import { RemoteAuthRecord } from "@/data/RemoteAuthTypes";
 import { WorkspaceStatusCode } from "@/data/WorkspaceStatusCode";
+import { WorkspaceImportManifestType } from "@/services/import/manifest";
 
 export class WorkspaceRecord {
   guid!: string;
@@ -10,11 +11,5 @@ export class WorkspaceRecord {
   code!: WorkspaceStatusCode;
   remoteAuths!: RemoteAuthRecord[];
   timestamp!: number;
-  import!: {
-    id: string;
-    provider: string;
-    details: {
-      url: string;
-    };
-  } | null;
+  manifest!: WorkspaceImportManifestType | null;
 }

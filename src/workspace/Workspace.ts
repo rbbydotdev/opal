@@ -157,7 +157,7 @@ export class Workspace {
       thumbs: this.thumbs.toJSON(),
       code: this.connector.code,
       timestamp: this.connector.timestamp,
-      import: this.connector.import,
+      manifest: this.connector.manifest,
     };
   }
   static FromJSON(json: WorkspaceJType) {
@@ -248,7 +248,7 @@ export class Workspace {
       diskType: DiskType;
       diskOptions?: { selectedDirectory: FileSystemDirectoryHandle | null };
     },
-    properties?: Pick<WorkspaceRecord, "import">
+    properties?: Pick<WorkspaceRecord, "manifest">
   ): Promise<Workspace> {
     const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType(
       {

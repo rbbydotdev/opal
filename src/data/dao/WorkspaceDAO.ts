@@ -9,6 +9,7 @@ import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { slugifier } from "@/lib/slugifier";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
+import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { nanoid } from "nanoid";
 
 export class WorkspaceDAO {
@@ -21,13 +22,7 @@ export class WorkspaceDAO {
   thumbs: DiskDAO;
   remoteAuths: RemoteAuthDAO[] = [];
   timestamp: number;
-  import: {
-    id: string;
-    provider: string;
-    details: {
-      url: string;
-    };
-  } | null = null;
+  manifest: WorkspaceImportManifestType | null = null;
 
   toJSON() {
     return {
@@ -57,6 +52,7 @@ export class WorkspaceDAO {
       thumbs: json.thumbs,
       remoteAuths: json.remoteAuths,
       code: json.code,
+      manifest: json.manifest,
     });
   }
 
@@ -100,7 +96,7 @@ export class WorkspaceDAO {
       thumbs: this.thumbs,
       code: this.code,
       timestamp: this.timestamp || Date.now(),
-      import: this.import,
+      manifest: this.manifest,
     });
   };
   static async CreateNewWithDiskType(
@@ -113,7 +109,7 @@ export class WorkspaceDAO {
       diskType?: DiskType;
       remoteAuths?: RemoteAuthDAO[];
     },
-    properties?: Pick<WorkspaceRecord, "import">
+    properties?: Pick<WorkspaceRecord, "manifest">
   ) {
     const disk = DiskDAO.CreateNew(diskType);
     const thumbs = DiskDAO.CreateNew(diskType);
@@ -133,11 +129,13 @@ export class WorkspaceDAO {
     remoteAuths = [],
     thumbs = DiskDAO.CreateNew(),
     disk = DiskDAO.CreateNew(),
+    manifest = null,
   }: {
     name: string;
     remoteAuths?: RemoteAuthDAO[];
     thumbs?: DiskDAO;
     disk?: DiskDAO;
+    manifest?: WorkspaceImportManifestType | null;
   }) {
     const slugName = WorkspaceDAO.Slugify(name).toLowerCase();
     let uniqueName = slugName;
@@ -153,6 +151,7 @@ export class WorkspaceDAO {
       remoteAuths,
       code: WS_OK,
       timestamp: Date.now(),
+      manifest,
     });
     await ClientDb.transaction("rw", ClientDb.disks, ClientDb.remoteAuths, ClientDb.workspaces, async () => {
       return await Promise.all([
@@ -246,6 +245,7 @@ export class WorkspaceDAO {
     remoteAuths = [],
     code,
     timestamp,
+    manifest = null,
   }: {
     guid: string;
     name: string;
@@ -254,6 +254,7 @@ export class WorkspaceDAO {
     remoteAuths: RemoteAuthJType[];
     code: WorkspaceStatusCode;
     timestamp: number;
+    manifest?: WorkspaceImportManifestType | null;
   }) {
     this.guid = guid;
     this.name = name;
@@ -262,5 +263,6 @@ export class WorkspaceDAO {
     this.thumbs = DiskDAO.FromJSON(thumbs);
     this.remoteAuths = remoteAuths.map((ra) => RemoteAuthDAO.FromJSON(ra));
     this.timestamp = timestamp;
+    this.manifest = manifest;
   }
 }

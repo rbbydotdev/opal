@@ -6,6 +6,7 @@ import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
 import { absPath, relPath } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
+import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
 import { NULL_WORKSPACE } from "@/workspace/NullWorkspace";
 import { Workspace } from "@/workspace/Workspace";
@@ -35,12 +36,12 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   }
 
   abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }>;
-  abstract createImportMeta(): NonNullable<WorkspaceRecord["import"]>;
+  abstract createImportMeta(): WorkspaceImportManifestType;
   abstract getWorkspaceName(): string;
 
   async createWorkspaceImport(
     workspaceName: string,
-    importMeta: NonNullable<WorkspaceRecord["import"]>
+    importMeta: WorkspaceImportManifestType
   ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
@@ -51,7 +52,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         diskType: IndexedDbDisk.type,
       },
       {
-        import: importMeta,
+        manifest: importMeta,
       }
     );
     return workspace;
@@ -133,10 +134,13 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     yield* importer.fetchFiles(signal);
   }
 
-  createImportMeta(): NonNullable<WorkspaceRecord["import"]> {
+  createImportMeta(): WorkspaceImportManifestType {
     return {
-      provider: "github",
+      version: 1,
+      description: "GitHub import",
+      type: "template",
       id: this.config.fullRepoPath,
+      provider: "github",
       details: {
         url: `https://github.com/${this.config.fullRepoPath}`,
       },
