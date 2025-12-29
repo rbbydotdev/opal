@@ -27,13 +27,13 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
   // const { initializeWithValue = true } = options;
   const optionsRef = useRef<UseLocalStorageOptions<T>>(options);
 
-  const serializer = (value: T) => {
+  const serializer = useCallback((value: T) => {
     if (optionsRef.current.serializer) {
       return optionsRef.current.serializer(value);
     }
 
     return JSON.stringify(value);
-  };
+  }, []);
 
   const deserializer = useCallback((value: string): T => {
     if (optionsRef.current.deserializer) {
@@ -88,28 +88,31 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
-  const setValue: typeof setStateValue = (value) => {
-    // Prevent build error "window is undefined" but keeps working
-    if (IS_SERVER) {
-      console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
-    }
+  const setValue: typeof setStateValue = useCallback(
+    (value) => {
+      // Prevent build error "window is undefined" but keeps working
+      if (IS_SERVER) {
+        console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
+      }
 
-    try {
-      // Allow value to be a function so we have the same API as useState
-      const newValue = value instanceof Function ? value(readValue()) : value;
+      try {
+        // Allow value to be a function so we have the same API as useState
+        const newValue = value instanceof Function ? value(readValue()) : value;
 
-      // Save to local storage
-      window.localStorage.setItem(key, serializer(newValue));
+        // Save to local storage
+        window.localStorage.setItem(key, serializer(newValue));
 
-      // Save state
-      setStateValue(newValue);
+        // Save state
+        setStateValue(newValue);
 
-      // We dispatch a custom event so every similar useLocalStorage hook is notified
-      window.dispatchEvent(new StorageEvent("local-storage", { key }));
-    } catch (error) {
-      console.warn(`Error setting localStorage key “${key}”:`, error);
-    }
-  };
+        // We dispatch a custom event so every similar useLocalStorage hook is notified
+        window.dispatchEvent(new StorageEvent("local-storage", { key }));
+      } catch (error) {
+        console.warn(`Error setting localStorage key “${key}”:`, error);
+      }
+    },
+    [key, readValue, serializer]
+  );
 
   const removeValue = useCallback(() => {
     // Prevent build error "window is undefined" but keeps working

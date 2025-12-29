@@ -11,8 +11,13 @@ import { Workspace } from "@/workspace/Workspace";
 export function useFiletreeMenuContextMenuActions({ currentWorkspace }: { currentWorkspace: Workspace }) {
   const handleFileMenuPaste = useFileMenuPaste({ currentWorkspace });
   const { setFileTreeCtx } = useFileTreeMenuCtx();
-  const { addDirFile, duplicateDirFile, trashFiles, untrashFiles, removeFiles } =
-    useWorkspaceFileMgmt(currentWorkspace);
+  const {
+    addNode: addDirFile,
+    duplicateDirFile,
+    trashFiles,
+    untrashFiles,
+    removeFiles,
+  } = useWorkspaceFileMgmt(currentWorkspace);
 
   const addFile = (fileNode: TreeNode, filename?: string) => addDirFile("file", fileNode.closestDir()!, filename);
   const addDir = (fileNode: TreeNode) => addDirFile("dir", fileNode.closestDir()!);

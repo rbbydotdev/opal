@@ -229,7 +229,11 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
     this.map.delete(oldNode.path);
     this.map.set(newNode.path, newNode);
   }
-  insertClosestVirtualNode(node: Pick<TreeNode, "basename" | "type">, selectedNode: TreeNode, virtualContent?: string) {
+  insertClosestVirtualNode(
+    node: Pick<TreeNode, "basename" | "type">,
+    selectedNode: TreeNode,
+    virtualContent?: () => Promise<string>
+  ) {
     const parent = selectedNode.closestDir() ?? this.root;
     const newNode = newVirtualTreeNode({ basename: node.basename, type: node.type, parent, virtualContent });
     while (this.nodeWithPathExists(newNode.path)) newNode.inc();
@@ -331,7 +335,7 @@ function newVirtualTreeNode(props: {
   type: "file" | "dir";
   basename: RelPath;
   parent: TreeDir;
-  virtualContent?: string;
+  virtualContent?: () => Promise<string>;
 }) {
   const path = joinPath(props.parent.path, props.basename);
   const depth = props.parent.depth + 1;

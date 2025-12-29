@@ -58,15 +58,17 @@ export function useEditable<T extends TreeFile | TreeDir>({
     }
   }, [expand, fullPath, isCurrentPath, isEditing, isFocused]);
 
-  useEffect(() => {
-    if (isCurrentPath && !isEditing && linkRef.current) {
-      setTimeout(() => {
-        if (linkRef.current && document.activeElement !== linkRef.current) {
-          linkRef.current?.focus();
-        }
-      }, 0);
-    }
-  }, [isCurrentPath, isEditing]);
+  // this helps to keep focus when editing is finished
+  // but also causes issues so its disabled for now
+  // useEffect(() => {
+  //   if (isCurrentPath && !isEditing && linkRef.current) {
+  //     setTimeout(() => {
+  //       if (linkRef.current && document.activeElement !== linkRef.current) {
+  //         linkRef.current?.focus();
+  //       }
+  //     }, 0);
+  //   }
+  // }, [isCurrentPath, isEditing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 2) {

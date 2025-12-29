@@ -260,9 +260,19 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
     [currentWorkspace, setFileTreeCtx]
   );
 
-  function addDirFile(type: "file", parent: TreeDir | AbsPath, fileName?: string, content?: string): TreeFile;
-  function addDirFile(type: "dir", parent: TreeDir | AbsPath, dirName?: string): TreeDir;
-  function addDirFile(type: TreeNode["type"], parent: TreeDir | AbsPath, name?: string, content?: string): TreeNode {
+  function addNode(
+    type: "file",
+    parent: TreeDir | AbsPath,
+    fileName?: string,
+    content?: () => Promise<string>
+  ): TreeFile;
+  function addNode(type: "dir", parent: TreeDir | AbsPath, dirName?: string): TreeDir;
+  function addNode(
+    type: TreeNode["type"],
+    parent: TreeDir | AbsPath,
+    name?: string,
+    content?: () => Promise<string>
+  ): TreeNode {
     let parentNode = currentWorkspace.nodeFromPath(absPath(parent)) ?? null;
 
     if (!parentNode) {
@@ -349,7 +359,9 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
             return (
               (await newFile(
                 wantPath,
-                origNode.isTreeNodeWithContent() ? origNode.virtualContent : defaultFileContentFromPath(wantPath),
+                origNode.isTreeNodeWithContent()
+                  ? await origNode.virtualContent()
+                  : defaultFileContentFromPath(wantPath),
                 {
                   redirect: true,
                 }
@@ -384,7 +396,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
     removeSelectedFiles,
     newDir,
     commitChange,
-    addDirFile,
+    addNode,
     trashSelectedFiles,
     removeFiles,
     removeFile,

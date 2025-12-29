@@ -47,7 +47,7 @@ export const MainFileTreeContextMenu = ({
   const { addFile, addDir, trash, copy, cut, paste, duplicate, rename } = useFiletreeMenuContextMenuActions({
     currentWorkspace,
   });
-  const { addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { addNode: addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
 
   const { selectedFocused } = useFileTreeMenuCtx();
   const { setExpandAll } = useTreeExpanderContext();
@@ -61,11 +61,14 @@ export const MainFileTreeContextMenu = ({
   const addJsonFile = () => addFile(fileNode, "data.json");
 
   // Stock file functions
-  const addGlobalCssFile = () => addDirFile("file", fileNode.closestDir()!, "global.css", DefaultFile.GlobalCSS());
-  const addHtmlFile = () => addDirFile("file", fileNode.closestDir()!, "index.html", DefaultFile.HTML());
+  const addGlobalCssFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "global.css", () => Promise.resolve(DefaultFile.GlobalCSS()));
+  const addHtmlFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "index.html", () => Promise.resolve(DefaultFile.HTML()));
   const addStockMustacheFile = () =>
-    addDirFile("file", fileNode.closestDir()!, "template.mustache", DefaultFile.Mustache());
-  const addStockEjsFile = () => addDirFile("file", fileNode.closestDir()!, "template.ejs", DefaultFile.EJS());
+    addDirFile("file", fileNode.closestDir()!, "template.mustache", () => Promise.resolve(DefaultFile.Mustache()));
+  const addStockEjsFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "template.ejs", () => Promise.resolve(DefaultFile.EJS()));
 
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {

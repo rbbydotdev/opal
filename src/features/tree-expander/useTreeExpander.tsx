@@ -4,7 +4,7 @@ import { ExpandMap } from "@/features/tree-expander/TreeExpanderTypes";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 
 function expandForFile(dirTree: string[], file: AbsPath | string | null, exp: ExpandMap) {
   if (!file) return exp;
@@ -37,15 +37,13 @@ function useTreeExpander({
   activePath?: string | null;
   expanderId: string;
 }) {
-  const [local, setLocal] = useState<ExpandMap>({});
   const setAllStates = (state: boolean) => nodePaths.reduce<ExpandMap>((acc, path) => ({ ...acc, [path]: state }), {});
   const { storedValue: stored, setStoredValue: setStored } = useLocalStorage<ExpandMap>(
     `TreeExpander/${expanderId}`,
-    local
+    {}
   );
 
   const expandSingle = (path: string, expanded: boolean) => {
-    setLocal((prev) => ({ ...prev, [path]: expanded }));
     setStored((prev) => ({ ...prev, [path]: expanded }));
   };
 
@@ -58,24 +56,21 @@ function useTreeExpander({
   };
 
   const setExpandAll = (state: boolean) => {
-    setLocal({ ...setAllStates(state) });
     setStored({ ...setAllStates(state) });
   };
-  // disable
   useEffect(() => {
     if (activePath) {
-      setLocal((prev) => ({ ...expandForFile(nodePaths, activePath, prev) }));
+      setStored((prev) => ({ ...expandForFile(nodePaths, activePath, prev) }));
     }
-  }, [activePath, nodePaths]);
+  }, [activePath, nodePaths, setStored]);
 
-  const all = { ...stored, ...local };
   return {
     expandSingle,
-    expanded: all,
+    expanded: stored,
     setExpandAll,
     expandForFile,
     expanderId,
     expandForNode,
-    isExpanded: (node: TreeNode | string) => all[String(node)] === true,
+    isExpanded: (node: TreeNode | string) => stored[String(node)] === true,
   };
 }

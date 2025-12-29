@@ -59,7 +59,7 @@ export function MainSidebarFileMenuFileSection({
 }) {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
-  const { trashSelectedFiles, addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { trashSelectedFiles, addNode: addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { setExpandAll, expandForNode } = useTreeExpanderContext();
 
   const { fileTreeDir, fileTree } = useFileTreeContext();
@@ -86,22 +86,38 @@ export function MainSidebarFileMenuFileSection({
               addFile={() => expandForNode(addDirFile("file", focused || absPath("/")), true)}
               addCssFile={() => expandForNode(addDirFile("file", focused || absPath("/"), "styles.css"), true)}
               addGlobalCssFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "global.css", DefaultFile.GlobalCSS()), true)
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "global.css", () =>
+                    Promise.resolve(DefaultFile.GlobalCSS())
+                  ),
+                  true
+                )
               }
               addHtmlFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "index.html", DefaultFile.HTML()), true)
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "index.html", () => Promise.resolve(DefaultFile.HTML())),
+                  true
+                )
               }
               addMustacheFile={() =>
                 expandForNode(
-                  addDirFile("file", focused || absPath("/"), "template.mustache", DefaultFile.Mustache()),
+                  addDirFile("file", focused || absPath("/"), "template.mustache", () =>
+                    Promise.resolve(DefaultFile.Mustache())
+                  ),
                   true
                 )
               }
               addEjsFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "template.ejs", DefaultFile.EJS()), true)
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "template.ejs", () => Promise.resolve(DefaultFile.EJS())),
+                  true
+                )
               }
               addJsonFile={() =>
-                expandForNode(addDirFile("file", focused || absPath("/"), "data.json", DefaultFile.JSON()), true)
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "data.json", () => Promise.resolve(DefaultFile.JSON())),
+                  true
+                )
               }
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}

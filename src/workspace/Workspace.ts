@@ -304,7 +304,7 @@ export class Workspace {
     type: TreeNode["type"];
     basename: TreeNode["basename"];
     selectedNode?: TreeNode | null;
-    virtualContent?: string;
+    virtualContent?: () => Promise<string>;
     source?: TreeNode;
   }) {
     return this.disk.addVirtualFile(options);

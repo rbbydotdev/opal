@@ -45,7 +45,7 @@ export type TreeNodeType = TreeFile | TreeDir;
 export class TreeNode {
   isVirtual?: boolean;
   source?: AbsPath; // For virtual nodes, this is the source path of the original file
-  virtualContent?: string; // For virtual nodes, this is the content of the file
+  virtualContent?: () => Promise<string>; // For virtual nodes, this is the content of the file
   type: "dir" | "file";
   private _parent: WeakRef<TreeDir> | null = null;
   depth: number;
@@ -335,7 +335,7 @@ export class TreeNode {
     path: AbsPath | string;
     depth?: number;
     source?: AbsPath;
-    virtualContent?: string;
+    virtualContent?: () => Promise<string>;
     fs?: CommonFileSystem;
   }) {
     this.type = type;
@@ -459,7 +459,7 @@ export class TreeNode {
     return this.type === "file";
   }
   isTreeNodeWithContent(): this is TreeNodeWithContent {
-    return this.isTreeFile() && typeof this.virtualContent === "string";
+    return this.isTreeFile() && typeof this.virtualContent === "function";
   }
   isTreeNodeWithSource(): this is TreeNodeWithSource {
     return typeof this.source === "string";
@@ -483,7 +483,7 @@ export class TreeNode {
   }
 }
 
-type TreeNodeWithContent = TreeFile & { virtualContent: string };
+type TreeNodeWithContent = TreeFile & { virtualContent: () => Promise<string> };
 type TreeNodeWithSource = TreeNode & { source: AbsPath };
 
 export class TreeDir extends TreeNode {
@@ -549,7 +549,7 @@ export class TreeDir extends TreeNode {
     path: AbsPath;
     depth: number;
     source?: AbsPath;
-    virtualContent?: string;
+    virtualContent?: () => Promise<string>;
     children: TreeDir["children"];
     fs?: CommonFileSystem;
   }) {
@@ -709,7 +709,7 @@ export class TreeFile extends TreeNode {
     depth: number;
     parent: TreeDir | null;
     source?: AbsPath;
-    virtualContent?: string;
+    virtualContent?: () => Promise<string>;
     fs?: CommonFileSystem;
   }) {
     super({ type: "file", parent, dirname, basename, path, depth, source, virtualContent, fs });

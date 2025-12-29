@@ -9,7 +9,7 @@ import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 export function useStockFile() {
   const { currentWorkspace } = useWorkspaceContext();
   const { focused } = useFileTreeMenuCtx();
-  const { addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
+  const { addNode: addDirFile } = useWorkspaceFileMgmt(currentWorkspace);
   const { expandForNode } = useTreeExpanderContext();
 
   const addStockFile = async (
@@ -17,7 +17,7 @@ export function useStockFile() {
     content: string | Promise<string> | (() => Promise<string>) | (() => string),
     dir?: TreeNode
   ) => {
-    const node = addDirFile("file", dir?.path || focused || absPath("/"), filename, await unwrapContent(content));
+    const node = addDirFile("file", dir?.path || focused || absPath("/"), filename, () => unwrapContent(content));
     expandForNode(node, true);
   };
   return addStockFile;
