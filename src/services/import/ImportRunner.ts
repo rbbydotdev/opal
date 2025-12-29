@@ -5,20 +5,21 @@ import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
 import { absPath, isAllowedFileType, relPath, stripLeadingSlash } from "@/lib/paths2";
-import { tryParseJSON } from "@/lib/tryParseJSON";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
-import { WorkspaceImportManifestType } from "@/services/import/manifest";
+import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
 import pathModule from "path";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
+  type: null | "showcase" | "template";
   logs: Array<{
     type: "info" | "error" | "warning" | "success";
     timestamp: number;
     message: string;
   }>;
+  confirmImport: boolean | null;
   error: string | null;
 };
 
@@ -31,22 +32,31 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     super({
       status: "idle",
       logs: [],
+      type: null,
       error: null,
+      confirmImport: null,
     });
     this.config = config;
   }
 
   abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }>;
   abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
-  abstract fetchManifest(): Promise<WorkspaceImportManifestType>;
+  abstract fetchManifest(
+    signal: AbortSignal,
+    onImportError?: (e: unknown) => void
+  ): Promise<WorkspaceImportManifestType>;
   abstract getWorkspaceName(): string;
-  abstract preflight(): Promise<{
+  abstract preflight(signal: AbortSignal): Promise<{
     abort: boolean;
     reason: string;
     navigate: string | null;
   }>;
 
-  async createWorkspaceImport(workspaceName: string, importMeta: WorkspaceImportManifestType): Promise<Workspace> {
+  async createWorkspaceImport(
+    workspaceName: string,
+    ident: string,
+    importMeta?: WorkspaceImportManifestType
+  ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
     const workspace = await Workspace.CreateNew(
@@ -56,7 +66,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         diskType: IndexedDbDisk.type,
       },
       {
-        manifest: importMeta,
+        manifest: importMeta || WorkspaceDefaultManifest(ident),
       }
     );
     return workspace;
@@ -81,39 +91,40 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log("Preflight...", "info");
 
-      const preflightResult = await this.preflight();
+      const preflightResult = await this.preflight(allAbortSignal);
       if (preflightResult.abort) {
         this.log(`Import aborted: ${preflightResult.reason}`, "warning");
         this.target.status = "success";
         return preflightResult.navigate ?? "/";
       }
 
-      this.log("Fetching files from source...", "info");
+      this.log("Fetching manifest...", "info");
 
-      let manifest = this.fetchManifest();
+      const manifest = await this.fetchManifest(allAbortSignal);
+
+      if (manifest.type === "template") {
+        await this.waitForTemplateConfirmation(allAbortSignal);
+      }
+
+      this.log("Fetching files from source...", "info");
 
       for await (const file of this.fetchFiles(allAbortSignal)) {
         if (!isAllowedFileType(file.path)) continue;
-        /* filter files  */
-        // css html json md yml png webp
-
         abortSignal?.throwIfAborted();
-        if (file.path === "manifest.json") {
-          manifest = tryParseJSON(await file.content()) || {};
-        }
         await this.tmpDisk.writeFileRecursive(absPath(file.path), await file.content());
         this.log(`Imported file: ${file.path}`, "info");
       }
 
       this.log("Import completed successfully", "info");
 
-      const wsImportName = this.getWorkspaceName();
+      const workspaceName = this.getWorkspaceName();
 
-      this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
+      this.log(`Creating workspace ${workspaceName} from imported files...`, "info");
 
-      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta(await manifest));
+      const workspace = await this.createWorkspaceImport(workspaceName, manifest.ident, manifest);
 
       this.log("Workspace created successfully", "success");
+
       this.target.status = "success";
 
       return workspace.href;
@@ -130,6 +141,35 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       this.target.status = "error";
       return "/";
     }
+  }
+  async waitForTemplateConfirmation(signal: AbortSignal) {
+    this.target.type = "template";
+    this.target.confirmImport = null;
+
+    const confirmation = await this.emitter.awaitEvent("confirmImport", signal);
+    // return new Promise((rs, rj) => {
+    //   this.emitter.once("confirmImport", (confirm) => {
+    //     if (confirm === null) return; // ignore nulls
+    //     if (confirm) {
+    //       rs(true);
+    //     } else {
+    //       this.log("Import cancelled by user", "error");
+    //       this.target.status = "error";
+    //       this.target.error = "Import cancelled by user";
+    //       rj(new AbortError("Operation cancelled by user"));
+    //     }
+    //   });
+    //   // this.target.on
+    //   signal.addEventListener(
+    //     "abort",
+    //     () => {
+    //       rj(new AbortError("Operation cancelled by user"));
+    //     },
+    //     {
+    //       signal,
+    //     }
+    //   );
+    // });
   }
 }
 
@@ -155,22 +195,22 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     return { owner, repo };
   }
 
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
-    const importer = new GithubImport(relPath(this.config.fullRepoPath));
-    yield* importer.fetchFiles(signal);
+  private _importer: GithubImport | null = null;
+  get importer() {
+    return (this._importer = this._importer || new GithubImport(relPath(this.config.fullRepoPath)));
   }
 
-  fetchManifest(): Promise<WorkspaceImportManifestType> {
-    return Promise.resolve({
-      version: 1,
-      description: "GitHub import",
-      type: "template",
-      ident: getIdent(this.config.fullRepoPath),
-      provider: "github",
-      details: {
-        url: pathModule.join("https://github.com", this.config.fullRepoPath),
-      },
-    });
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
+    yield* this.importer.fetchFiles(signal);
+  }
+
+  async fetchManifest(signal: AbortSignal, onImportError: (e: unknown) => void): Promise<WorkspaceImportManifestType> {
+    try {
+      return await this.importer.fetchManifest(signal);
+    } catch (e) {
+      onImportError(e);
+    }
+    return WorkspaceDefaultManifest(this.ident);
   }
 
   createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
@@ -178,13 +218,17 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
       version: 1,
       description: "GitHub import",
       type: "template",
-      ident: getIdent(this.config.fullRepoPath),
+      ident: this.ident,
       provider: "github",
       details: {
         url: pathModule.join("https://github.com", this.config.fullRepoPath),
       },
       ...importManifest,
     };
+  }
+
+  get ident() {
+    return getIdent(this.config.fullRepoPath);
   }
 
   async preflight(): Promise<{
@@ -194,7 +238,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
   }> {
     const ws = await WorkspaceDAO.FindAlikeImport({
       provider: "github",
-      ident: getIdent(this.config.fullRepoPath),
+      ident: this.ident,
       type: "showcase",
     });
     if (ws) {

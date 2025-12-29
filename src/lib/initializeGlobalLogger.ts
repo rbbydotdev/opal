@@ -6,6 +6,8 @@ const NOOPS = {
 };
 declare const __ENABLE_LOG__: boolean;
 declare const __LOG_LEVEL__: "debug" | "log" | "warn" | "error";
+
+(globalThis as any).logger = NOOPS;
 export function initializeGlobalLogger(
   logger: {
     log: (...msg: unknown[]) => void;
@@ -24,16 +26,13 @@ export function initializeGlobalLogger(
   const currentLevel = __LOG_LEVEL__;
   const shouldLog = (level: keyof typeof levelPriority) => levelPriority[level] >= levelPriority[currentLevel];
 
-  (globalThis as any).logger = __ENABLE_LOG__
+  return ((globalThis as any).logger = __ENABLE_LOG__
     ? {
+        ...console,
         log: shouldLog("log") ? logger.log.bind(logger) : NOOPS.log,
         debug: shouldLog("debug") ? logger.debug.bind(logger) : NOOPS.debug,
         error: shouldLog("error") ? logger.error.bind(logger) : NOOPS.error,
         warn: shouldLog("warn") ? logger.warn.bind(logger) : NOOPS.warn,
       }
-    : NOOPS;
-
-  return __ENABLE_LOG__ ? logger : NOOPS;
+    : NOOPS);
 }
-
-(globalThis as any).logger = NOOPS;

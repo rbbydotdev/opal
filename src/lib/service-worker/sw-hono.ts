@@ -1,6 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { logger as honoLogger } from "hono/logger";
 import { handle } from "hono/service-worker";
 import { marked } from "marked";
 import { z } from "zod";
@@ -29,6 +28,7 @@ import { handleMdImageReplace } from "@/lib/service-worker/handleMdImageReplace"
 import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRequest";
 import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
 import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearch";
+import { honoLogger2 } from "@/lib/service-worker/honoLogger2";
 import { resolveWorkspaceFromQueryOrContext } from "@/lib/service-worker/resolveWorkspaceFromQueryOrContext";
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
 import { SWWStore } from "@/lib/service-worker/SWWStore";
@@ -66,7 +66,9 @@ const workspaceNameSchema = z.object({
 });
 
 // Hono's built-in logger middleware
-app.use("*", honoLogger(logger.log.bind(logger)));
+// app.use("*", honoLogger(logger.log.bind(logger)));
+
+app.use("*", honoLogger2(logger.log.bind(logger)));
 
 // Custom logging for service worker specific info
 app.use("*", async (c, next) => {
@@ -384,10 +386,10 @@ app.on("GET", ["/favicon.svg", "/src/app/icon.svg", "/icon.svg"], resolveWorkspa
 });
 
 // CSS handler
-app.get("*.css", resolveWorkspaceFromQueryOrContext, async (c) => {
+app.get("/:path{.*\\.css}", resolveWorkspaceFromQueryOrContext, async (c) => {
   const workspaceName = c.get("workspaceName");
-  const url = new SuperUrl(c.req.url);
-  return handleStyleSheetRequest(url, workspaceName);
+  const path = c.req.param("path");
+  return handleStyleSheetRequest(path, workspaceName);
 });
 
 app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrContext, async (c) => {

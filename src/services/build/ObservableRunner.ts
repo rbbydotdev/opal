@@ -5,18 +5,17 @@ import { LogLine } from "@/types/RunnerTypes";
 export class ObservableRunner<TInner extends RunnerStates> {
   target: Observable<TInner>;
 
-  emitter = CreateSuperTypedEmitter<RunnerStates>();
+  emitter = CreateSuperTypedEmitter<TInner>();
 
   constructor(inner: TInner) {
-    this.target = observeMultiple<RunnerStates>(
-      inner,
-      {
-        logs: (newValue) => this.emitter.emit("logs", newValue),
-        status: (newValue) => this.emitter.emit("status", newValue),
-        error: (newValue) => this.emitter.emit("error", newValue as string),
-      },
-      { batch: true }
-    ) as Observable<TInner>;
+    const listeners = Object.entries(inner).map(([key]) => [
+      key,
+      this.emitter.emit.bind(this.emitter, key as keyof RunnerStates),
+    ]);
+
+    this.target = observeMultiple<RunnerStates>(inner, Object.fromEntries(listeners), {
+      batch: true,
+    }) as Observable<TInner>;
   }
 
   get status() {
@@ -56,6 +55,13 @@ export class ObservableRunner<TInner extends RunnerStates> {
 
     this.target.logs = [...this.target.logs, logLine];
   }
+
+  onUpdate = (callback: () => void): (() => void) => {
+    return this.emitter.on("*", callback);
+  };
+  getUpdate = () => {
+    return this.target;
+  };
 
   onLog = (callback: (logs: LogLine[]) => void): (() => void) => {
     return this.emitter.on("logs", callback);

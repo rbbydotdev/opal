@@ -54,16 +54,17 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
 
     on<K extends keyof ExtendedEvents>(
       event: K | (keyof Events)[],
-      listener: (payload: ExtendedEvents[K]) => void
+      listener: (payload: ExtendedEvents[K]) => void,
+      signal?: AbortSignal
     ): () => void {
       if (Array.isArray(event)) {
         const unsubscribers = event.map((e) => {
-          this.emitter.on(e as string | symbol, listener);
+          this.emitter.on(e as string | symbol, listener, signal);
           return () => this.emitter.off(e as string | symbol, listener);
         });
         return () => unsubscribers.forEach((unsub) => unsub());
       } else {
-        this.emitter.on(event as string | symbol, listener);
+        this.emitter.on(event as string | symbol, listener, signal);
         return () => this.emitter.off(event as string | symbol, listener);
       }
     }
@@ -75,8 +76,8 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
 
     emit<K extends keyof Events>(event: K, payload: Events[K] & Meta): void {
       // Special handling for error events
-      if (event === 'error') {
-        const errorListeners = this.emitter.listenerCount('error');
+      if (event === "error") {
+        const errorListeners = this.emitter.listenerCount("error");
         if (errorListeners === 0) {
           console.error(`Unhandled error event: ${payload}`);
           return;
@@ -99,13 +100,13 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       this.emitter.removeAllListeners();
     }
 
-    awaitEvent<K extends keyof ExtendedEvents>(event: K): Promise<ExtendedEvents[K]> {
+    awaitEvent<K extends keyof ExtendedEvents>(event: K, signal: AbortSignal): Promise<ExtendedEvents[K]> {
       return new Promise((resolve) => {
         const handler = (payload: ExtendedEvents[K]) => {
           this.emitter.off(event as string | symbol, handler);
           resolve(payload);
         };
-        this.on(event, handler);
+        this.on(event, handler, signal);
       });
     }
   };
@@ -144,8 +145,8 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
 
   emit<K extends keyof Events>(event: K, payload: Events[K]): void {
     // Special handling for error events
-    if (event === 'error') {
-      const errorListeners = this.emitter.listenerCount('error');
+    if (event === "error") {
+      const errorListeners = this.emitter.listenerCount("error");
       if (errorListeners === 0) {
         console.error(`Unhandled error event: ${payload}`);
         return;

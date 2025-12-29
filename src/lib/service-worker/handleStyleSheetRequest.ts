@@ -2,27 +2,19 @@ import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath } from "@/lib/paths2";
-import { SuperUrl } from "./SuperUrl";
 import { SWWStore } from "./SWWStore";
 
-export async function handleStyleSheetRequest(url: SuperUrl, workspaceName: string): Promise<Response> {
+export async function handleStyleSheetRequest(pathname: string, workspaceName: string): Promise<Response> {
   try {
-    const decodedPathname = url.decodedPathname;
-    logger.log(`Intercepted request for: 
-    decodedPathname: ${decodedPathname}
-    url.pathname: ${url.pathname}
-    href: ${url.href}
-  `);
     const workspace = await SWWStore.tryWorkspace(workspaceName);
 
     if (!workspace) throw new Error("Workspace not found " + workspaceName);
-    logger.log(`Using workspace: ${workspace.name} for request: ${url.href}`);
 
-    const contents = await workspace.readFile(absPath(decodedPathname));
+    const contents = await workspace.readFile(absPath(pathname));
 
     const response = new Response(coerceUint8Array(contents) as BodyInit, {
       headers: {
-        "Content-Type": getMimeType(decodedPathname),
+        "Content-Type": getMimeType(pathname),
         "Cache-Control": "no-store, no-cache, must-revalidate",
         Pragma: "no-cache",
         Expires: "0",

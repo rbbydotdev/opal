@@ -31,6 +31,7 @@ import {
   relPath,
   stringifyEntry,
 } from "@/lib/paths2";
+import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 
@@ -863,4 +864,5 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 
 export interface WorkspaceImport {
   fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }>;
+  fetchManifest(signal: AbortSignal): Promise<WorkspaceImportManifestType>;
 }

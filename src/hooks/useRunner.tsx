@@ -15,6 +15,11 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
   const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
+  // const state = useSyncExternalStore(currentRunner.onUpdate, () => ({
+  //   status: currentRunner.status,
+  //   logs: currentRunner.logs,
+  //   error: currentRunner.error,
+  // }));
 
   const execute = useCallback(
     (runner: T, options?: { signal?: AbortSignal }) => {
