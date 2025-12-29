@@ -5,7 +5,7 @@ export type WorkspaceImportManifestType = {
   description: string;
   navigate?: AbsPath;
   type: "showcase" | "template";
-  id: string;
+  ident: string; //less of an id more of identifier to check if the same import
   provider: string;
   details: {
     url: string;

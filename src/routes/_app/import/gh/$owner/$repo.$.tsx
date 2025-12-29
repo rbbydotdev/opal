@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
-import { stripLeadingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { GitHubImportRunner } from "@/services/import/ImportRunner";
+import { getRepoInfo, GitHubImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
@@ -16,14 +15,14 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
 });
 
 function useGithubImporter(fullRepoPath: string) {
-  const [successPath, setSuccessPath] = useState<string | null>(null);
+  const [gotoPath, setGotoPath] = useState<string | null>(null);
   const { runner, execute, cancel, logs, error } = useRunner(
     () => GitHubImportRunner.Show({ fullRepoPath }),
     [fullRepoPath]
   );
 
   useEffect(() => {
-    void execute(GitHubImportRunner.Create({ fullRepoPath })).then((workspace) => setSuccessPath(workspace.href));
+    void execute(GitHubImportRunner.Create({ fullRepoPath })).then((href) => setGotoPath(href));
     return () => cancel();
   }, [cancel, execute, fullRepoPath]);
 
@@ -32,7 +31,7 @@ function useGithubImporter(fullRepoPath: string) {
     error,
     importRunner: runner,
     cancel,
-    successPath,
+    successPath: gotoPath,
   };
 }
 
@@ -44,11 +43,6 @@ function RouteComponent() {
       <ImporterCard importPath={importPath} />;
     </div>
   );
-}
-
-function getRepoInfo(importPath: string) {
-  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(importPath).split("/");
-  return { owner, repo, branch, dir };
 }
 
 function ImporterCard({ importPath }: { importPath: string }) {
@@ -111,7 +105,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
           </ScrollArea>
         </div>
         <div className="flex gap-4 justify-center items-center w-full">
-          {isCompleted && successPath && false ? (
+          {isCompleted && successPath ? (
             <CountDownButton onClick={() => navigate({ to: successPath! })} />
           ) : (
             <Button
@@ -254,7 +248,7 @@ function CountDownButton({
   }, [remaining, onClick]);
 
   return (
-    <Button variant="default" className="w-full" {...buttonProps}>
+    <Button variant="default" className="w-full" {...buttonProps} onClick={onClick}>
       {title} {remaining}
     </Button>
   );

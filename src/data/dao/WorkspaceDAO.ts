@@ -8,8 +8,8 @@ import { BadRequestError, errF, NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
 import { slugifier } from "@/lib/slugifier";
-import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
+import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
 export class WorkspaceDAO {
@@ -212,6 +212,24 @@ export class WorkspaceDAO {
       throw new NotFoundError(errF`Workspace not found name:${name}`);
     }
     return WorkspaceDAO.FromJSON(ws);
+  }
+
+  static async FindAlikeImport({
+    provider,
+    ident,
+    type,
+  }: {
+    provider?: string;
+    ident?: string;
+    type?: "template" | "showcase";
+  }): Promise<WorkspaceDAO | undefined> {
+    const workspaces = await WorkspaceDAO.all();
+    return workspaces.find(
+      (ws) =>
+        (provider === undefined || ws.manifest?.provider === provider) &&
+        (ident === undefined || ws.manifest?.ident === ident) &&
+        (type === undefined || ws.manifest?.type === type)
+    );
   }
 
   rename(name: string) {

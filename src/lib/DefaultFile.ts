@@ -47,19 +47,7 @@ export const DefaultFile = {
   },
 
   JSON: () => {
-    return `{
-  "name": "example",
-  "version": "1.0.0",
-  "description": "A sample JSON file",
-  "data": {
-    "key": "value",
-    "number": 42,
-    "array": [1, 2, 3],
-    "nested": {
-      "property": true
-    }
-  }
-}`;
+    return `{}`;
   },
 
   Text: () => {

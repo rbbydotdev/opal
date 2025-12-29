@@ -73,23 +73,20 @@ export function decodePath<T extends string | { toString(): string } | AbsPath>(
     .join("/") as T;
 }
 
-// --- Join ---
 export function joinPath<T extends AbsPath | RelPath>(base: T, ...parts: (string | RelPath)[]): T {
-  // if (isRelPath(base)) {
-  if (!base.startsWith("/")) {
-    const joined = [base, ...parts.map(relPath)].join("/");
-    return relPath(joined) as T;
-  }
-  const joined = [base === "/" ? "" : base, ...parts.map(relPath)].join("/");
-  return absPath(pathModule.normalize(joined)) as T;
+  return pathModule.join(base, ...parts) as T;
+  // return pathModule.join(...[base, ...parts.map(relPath)]) as T;
+  // if (!base.startsWith("/")) {
+  //   const joined = pathModule.join(...[base, ...parts.map(relPath)]);
+  //   return relPath(joined) as T;
+  // }
+  // const joined = pathModule.join(...[base === "/" ? "" : base, ...parts.map(relPath)]);
+  // return absPath(pathModule.normalize(joined)) as T;
 }
-
-// --- Shift ---
 
 export function duplicatePath(path: AbsPath) {
   return changePrefix(path, prefix(path) + "-duplicate");
 }
-// --- Increment Path ---
 
 export function incPath<T extends AbsPath | RelPath>(path: T): T {
   // Split path into directory and filename

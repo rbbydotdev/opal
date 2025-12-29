@@ -1,15 +1,16 @@
-import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
+import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
-import { absPath, relPath } from "@/lib/paths2";
+import { absPath, relPath, stripLeadingSlash } from "@/lib/paths2";
+import { tryParseJSON } from "@/lib/tryParseJSON";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
-import { NULL_WORKSPACE } from "@/workspace/NullWorkspace";
 import { Workspace } from "@/workspace/Workspace";
+import pathModule from "path";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
@@ -36,13 +37,15 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   }
 
   abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }>;
-  abstract createImportMeta(): WorkspaceImportManifestType;
+  abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
   abstract getWorkspaceName(): string;
+  abstract preflight(): Promise<{
+    abort: boolean;
+    reason: string;
+    navigate: string | null;
+  }>;
 
-  async createWorkspaceImport(
-    workspaceName: string,
-    importMeta: WorkspaceImportManifestType
-  ): Promise<Workspace> {
+  async createWorkspaceImport(workspaceName: string, importMeta: WorkspaceImportManifestType): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
     const workspace = await Workspace.CreateNew(
@@ -73,11 +76,26 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       this.target.error = null;
 
       abortSignal?.throwIfAborted();
-
       this.log("Starting import...", "info");
+
+      this.log("Preflight...", "info");
+
+      const preflightResult = await this.preflight();
+      if (preflightResult.abort) {
+        this.log(`Import aborted: ${preflightResult.reason}`, "warning");
+        this.target.status = "success";
+        return preflightResult.navigate ?? "/";
+      }
+
+      this.log("Fetching files from source...", "info");
+
+      let manifest = {};
       for await (const file of this.fetchFiles(allAbortSignal)) {
         abortSignal?.throwIfAborted();
-        await this.tmpDisk.writeFile(absPath(file.path), file.content);
+        if (file.path === "manifest.json") {
+          manifest = tryParseJSON(file.content) || {};
+        }
+        await this.tmpDisk.writeFileRecursive(absPath(file.path), file.content);
         this.log(`Imported file: ${file.path}`, "info");
       }
 
@@ -87,22 +105,27 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
 
-      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta());
+      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta(manifest));
 
       this.log("Workspace created successfully", "success");
       this.target.status = "success";
-      return workspace;
+
+      // FindAlikeImport
+
+      // return workspace;
+      return workspace.href;
     } catch (error) {
       if (isAbortError(error)) {
         this.log("Import cancelled by user", "error");
         this.target.error = "Import cancelled by user";
       } else {
+        console.error(error);
         const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
         this.log(`Import failed: ${errMsg}`, "error");
         this.target.error = errMsg;
       }
       this.target.status = "error";
-      return NULL_WORKSPACE;
+      return "/";
     }
   }
 }
@@ -134,22 +157,57 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     yield* importer.fetchFiles(signal);
   }
 
-  createImportMeta(): WorkspaceImportManifestType {
+  createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
     return {
       version: 1,
       description: "GitHub import",
       type: "template",
-      id: this.config.fullRepoPath,
+      ident: getIdent(this.config.fullRepoPath),
       provider: "github",
       details: {
-        url: `https://github.com/${this.config.fullRepoPath}`,
+        url: pathModule.join("https://github.com", this.config.fullRepoPath),
       },
+      ...importManifest,
+    };
+  }
+
+  async preflight(): Promise<{
+    abort: boolean;
+    reason: string;
+    navigate: string | null;
+  }> {
+    const ws = await WorkspaceDAO.FindAlikeImport({
+      provider: "github",
+      ident: getIdent(this.config.fullRepoPath),
+      type: "showcase",
+    });
+    if (ws) {
+      return {
+        abort: true,
+        reason: "Workspace with the same GitHub import already exists.",
+        navigate: ws.href,
+      };
+    }
+    return {
+      abort: false,
+      reason: "",
+      navigate: null,
     };
   }
 
   getWorkspaceName(): string {
     return this.config.fullRepoPath.replace("/", "-");
   }
+}
+
+export function getIdent(importPath: string) {
+  const { owner, repo } = getRepoInfo(importPath);
+  return `${owner}/${repo}`;
+}
+
+export function getRepoInfo(importPath: string) {
+  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(importPath).split("/");
+  return { owner, repo, branch, dir };
 }
 
 export class NullImportRunner extends GitHubImportRunner {
@@ -160,7 +218,7 @@ export class NullImportRunner extends GitHubImportRunner {
   }
 
   async execute() {
-    return NULL_WORKSPACE;
+    return absPath("/");
   }
 }
 

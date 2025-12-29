@@ -688,10 +688,8 @@ export class GitHubClient {
           size: item.size,
         }));
     } catch (e) {
-      console.log("??????????", e);
-      console.error(e);
-      console.log(isAbortError(e));
       if (isAbortError(e)) throw e;
+      console.error(e);
       throw mapToTypedError(e, {
         message: `Failed to fetch repository tree for ${owner}/${repo}`,
         path: `${owner}/${repo}`,
@@ -746,7 +744,6 @@ export class GitHubClient {
         }
       }
     } catch (e) {
-      console.log(":>>>>>>>>>>>>", e);
       if (isAbortError(e)) throw e;
       const error = mapToTypedError(e, {
         message: `Failed to fetch repository content for ${owner}/${repo}`,
