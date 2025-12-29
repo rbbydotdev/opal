@@ -115,7 +115,7 @@ function LatestInfo({ info, currentWorkspace }: { info: WorkspaceRepoType; curre
                 {conflictingFiles.map((file) => (
                   <li key={file} className="truncate">
                     <span>
-                      <Link to={currentWorkspace.resolveFileUrl(file)}>{file}</Link>
+                      <Link to={currentWorkspace.resolveFileUrl(file).toString()}>{file}</Link>
                     </span>
                   </li>
                 ))}

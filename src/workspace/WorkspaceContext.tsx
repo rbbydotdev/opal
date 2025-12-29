@@ -260,12 +260,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
             (fileType === "dir" && isAncestor({ child: workspaceRoute.path, parent: oldPath }))
           ) {
             if (newPath.startsWith(SpecialDirs.Trash + "/")) {
-              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath).toString() });
               void currentWorkspace.tryFirstFileUrl().then((firstFileUrl) => {
-                void navigate({ to: firstFileUrl });
+                void navigate({ to: firstFileUrl.toString() });
               });
             } else {
-              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath) });
+              void navigate({ to: currentWorkspace.replaceUrlPath(location.pathname, oldPath, newPath).toString() });
             }
           }
         }
@@ -275,7 +275,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           const navPath = details.filePaths
             .map((path) => currentWorkspace.nodeFromPath(path))
             .find((n) => n?.isTreeFile())?.path;
-          if (navPath) void navigate({ to: currentWorkspace.resolveFileUrl(navPath) });
+          if (navPath) void navigate({ to: currentWorkspace.resolveFileUrl(navPath).toString() });
         }
       }),
       currentWorkspace.renameWorkspaceListener((payload) =>
@@ -287,7 +287,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           workspaceRoute.path &&
           details.filePaths.some((path) => isAncestor({ child: workspaceRoute.path, parent: path }))
         ) {
-          void navigate({ to: await currentWorkspace.tryFirstFileUrl() });
+          void navigate({ to: (await currentWorkspace.tryFirstFileUrl()).toString() });
         }
       }),
     ];

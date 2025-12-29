@@ -103,18 +103,22 @@ export class WorkspaceDAO {
       import: this.import,
     });
   };
-  static async CreateNewWithDiskType({
-    name,
-    diskType,
-    remoteAuths = [],
-  }: {
-    name: string;
-    diskType?: DiskType;
-    remoteAuths?: RemoteAuthDAO[];
-  }) {
+  static async CreateNewWithDiskType(
+    {
+      name,
+      diskType,
+      remoteAuths = [],
+    }: {
+      name: string;
+      diskType?: DiskType;
+      remoteAuths?: RemoteAuthDAO[];
+    },
+    properties?: Pick<WorkspaceRecord, "import">
+  ) {
     const disk = DiskDAO.CreateNew(diskType);
     const thumbs = DiskDAO.CreateNew(diskType);
     return WorkspaceDAO.CreateNew({
+      ...properties,
       name,
       remoteAuths,
       thumbs,

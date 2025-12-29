@@ -393,7 +393,7 @@ const CodeMirrorToolbar = memo(
     const handleNavigateToPreview = useCallback(() => {
       if (!previewNode) return;
       void router.navigate({
-        to: currentWorkspace.resolveFileUrl(previewNode.path),
+        to: currentWorkspace.resolveFileUrl(previewNode.path).toString(),
       });
     }, [router, currentWorkspace, previewNode]);
 

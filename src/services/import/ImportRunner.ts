@@ -1,3 +1,4 @@
+import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
@@ -19,54 +20,45 @@ type ImportState = {
   error: string | null;
 };
 
-export class ImportRunner extends ObservableRunner<ImportState> implements Runner {
-  // private tmpDisk: Disk;
+export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<ImportState> implements Runner {
   private tmpDisk = DiskFactoryByType(MemDisk.type);
   protected abortController: AbortController = new AbortController();
-  readonly fullRepoPath: string;
+  protected config: TConfig;
 
-  constructor({ fullRepoPath }: { fullRepoPath: string }) {
+  constructor(config: TConfig) {
     super({
       status: "idle",
       logs: [],
       error: null,
     });
-    this.fullRepoPath = fullRepoPath;
+    this.config = config;
   }
 
-  static Create({ fullRepoPath }: { fullRepoPath: string }): ImportRunner {
-    return new ImportRunner({ fullRepoPath });
-  }
+  abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }>;
+  abstract createImportMeta(): NonNullable<WorkspaceRecord["import"]>;
+  abstract getWorkspaceName(): string;
 
-  static Show(_: any): ImportRunner {
-    return new ImportRunner({ fullRepoPath: "show/show" });
-  }
-
-  static async Recall(): Promise<ImportRunner> {
-    return new ImportRunner({ fullRepoPath: "recall/recall" });
-  }
-
-  async createWorkspaceFromTmpDisk(workspaceName: string): Promise<Workspace> {
+  async createWorkspaceImport(
+    workspaceName: string,
+    importMeta: NonNullable<WorkspaceRecord["import"]>
+  ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
-    const workspace = await Workspace.CreateNew(workspaceName, sourceTree.iterator(), IndexedDbDisk.type);
+    const workspace = await Workspace.CreateNew(
+      {
+        name: workspaceName,
+        files: sourceTree.iterator(),
+        diskType: IndexedDbDisk.type,
+      },
+      {
+        import: importMeta,
+      }
+    );
     return workspace;
   }
 
-  // async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
-  //   //womp womp needs cors
-  //   const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
-  //   await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
-  //   return workspace;
-  // }
-
   cancel(): void {
     this.abortController.abort(new AbortError("Operation cancelled by user"));
-  }
-
-  get repoInfo() {
-    const [owner, repo] = this.fullRepoPath.split("/");
-    return { owner, repo };
   }
 
   async execute({
@@ -76,14 +68,13 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
   } = {}) {
     const allAbortSignal = AbortSignal.any([this.abortController.signal, abortSignal].filter(Boolean));
     try {
-      const importer = new GithubImport(relPath(this.fullRepoPath));
       this.target.status = "pending";
       this.target.error = null;
 
       abortSignal?.throwIfAborted();
 
-      this.log("Starting repository import...", "info");
-      for await (const file of importer.fetchFiles(allAbortSignal)) {
+      this.log("Starting import...", "info");
+      for await (const file of this.fetchFiles(allAbortSignal)) {
         abortSignal?.throwIfAborted();
         await this.tmpDisk.writeFile(absPath(file.path), file.content);
         this.log(`Imported file: ${file.path}`, "info");
@@ -91,10 +82,12 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
 
       this.log("Import completed successfully", "info");
 
-      const wsImportName = this.fullRepoPath.replace("/", "-");
+      const wsImportName = this.getWorkspaceName();
 
       this.log(`Creating workspace ${wsImportName} from imported files...`, "info");
-      const workspace = await this.createWorkspaceFromTmpDisk(wsImportName);
+
+      const workspace = await this.createWorkspaceImport(wsImportName, this.createImportMeta());
+
       this.log("Workspace created successfully", "success");
       this.target.status = "success";
       return workspace;
@@ -113,7 +106,49 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
   }
 }
 
-export class NullImportRunner extends ImportRunner {
+export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string }> {
+  constructor({ fullRepoPath }: { fullRepoPath: string }) {
+    super({ fullRepoPath });
+  }
+
+  static Create({ fullRepoPath }: { fullRepoPath: string }): GitHubImportRunner {
+    return new GitHubImportRunner({ fullRepoPath });
+  }
+
+  static Show(_: any): GitHubImportRunner {
+    return new GitHubImportRunner({ fullRepoPath: "show/show" });
+  }
+
+  static async Recall(): Promise<GitHubImportRunner> {
+    return new GitHubImportRunner({ fullRepoPath: "recall/recall" });
+  }
+
+  get repoInfo() {
+    const [owner, repo] = this.config.fullRepoPath.split("/");
+    return { owner, repo };
+  }
+
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: string }> {
+    const importer = new GithubImport(relPath(this.config.fullRepoPath));
+    yield* importer.fetchFiles(signal);
+  }
+
+  createImportMeta(): NonNullable<WorkspaceRecord["import"]> {
+    return {
+      provider: "github",
+      id: this.config.fullRepoPath,
+      details: {
+        url: `https://github.com/${this.config.fullRepoPath}`,
+      },
+    };
+  }
+
+  getWorkspaceName(): string {
+    return this.config.fullRepoPath.replace("/", "-");
+  }
+}
+
+export class NullImportRunner extends GitHubImportRunner {
   constructor() {
     super({
       fullRepoPath: "null/null",
@@ -126,3 +161,10 @@ export class NullImportRunner extends ImportRunner {
 }
 
 export const NULL_IMPORT_RUNNER = new NullImportRunner();
+
+// async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
+//   //womp womp needs cors
+//   const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
+//   await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
+//   return workspace;
+// }

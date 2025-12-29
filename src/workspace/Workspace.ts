@@ -41,6 +41,7 @@ import {
   TreeDir,
   TreeNode,
 } from "@/components/filetree/TreeNode";
+import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { DiskFromJSON } from "@/data/disk/DiskFactory";
 import { OpFsDirMountDisk } from "@/data/disk/OPFsDirMountDisk";
 import { WS_ERR_NONRECOVERABLE } from "@/data/WorkspaceStatusCode";
@@ -236,15 +237,26 @@ export class Workspace {
   }
 
   static async CreateNew(
-    name: string,
-    files: WorkspaceTemplate["seedFiles"] | Iterable<SourceTreeNode>,
-    diskType: DiskType,
-    diskOptions?: { selectedDirectory: FileSystemDirectoryHandle | null }
-  ) {
-    const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType({
+    {
       name,
+      files,
       diskType,
-    });
+      diskOptions,
+    }: {
+      name: string;
+      files: WorkspaceTemplate["seedFiles"] | Iterable<SourceTreeNode>;
+      diskType: DiskType;
+      diskOptions?: { selectedDirectory: FileSystemDirectoryHandle | null };
+    },
+    properties?: Pick<WorkspaceRecord, "import">
+  ): Promise<Workspace> {
+    const workspaceDAO = await WorkspaceDAO.CreateNewWithDiskType(
+      {
+        name,
+        diskType,
+      },
+      properties
+    );
 
     // Disk setup logic
     if (diskType === "OpFsDirMountDisk") {
@@ -281,7 +293,11 @@ export class Workspace {
   }
 
   static async CreateNewWithSeedFiles(name: string, diskType: DiskType) {
-    return Workspace.CreateNew(name, DefaultTemplate.seedFiles, diskType);
+    return Workspace.CreateNew({
+      name,
+      files: DefaultTemplate.seedFiles,
+      diskType,
+    });
   }
 
   replaceUrlPath(pathname: string, oldPath: AbsPath, newPath: AbsPath) {

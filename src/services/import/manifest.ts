@@ -5,10 +5,15 @@ export type WorkspaceImportManifestType = {
   description: string;
   navigate?: AbsPath;
   type: "showcase" | "template";
+  id: string;
+  provider: string;
+  details: {
+    url: string;
+  };
 };
 
-export const WorkspaceDefaultManifest = {
+export const WorkspaceDefaultManifest = () => ({
   version: 1,
   description: "import",
   type: "template",
-};
+});

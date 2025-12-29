@@ -958,7 +958,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             const path = await newFile(joinPath(dir, fileName), DefaultFile.Mustache());
             if (path) {
               void navigate({
-                to: currentWorkspace.resolveFileUrl(path),
+                to: currentWorkspace.resolveFileUrl(path).toString(),
               });
             }
           }),
@@ -968,7 +968,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             const path = await newFile(absPath("styles.css"));
             if (path) {
               void navigate({
-                to: currentWorkspace.resolveFileUrl(path),
+                to: currentWorkspace.resolveFileUrl(path).toString(),
               });
             }
           }),
@@ -988,7 +988,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             const path = await newFile(joinPath(dir, fileName), DefaultFile.EJS());
             if (path) {
               void navigate({
-                to: currentWorkspace.resolveFileUrl(path),
+                to: currentWorkspace.resolveFileUrl(path).toString(),
               });
             }
           }),
@@ -1008,7 +1008,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             const path = await newFile(joinPath(dir, fileName), DefaultFile.JSON());
             if (path) {
               void navigate({
-                to: currentWorkspace.resolveFileUrl(path),
+                to: currentWorkspace.resolveFileUrl(path).toString(),
               });
             }
           }),
@@ -1056,7 +1056,7 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             const path = await newFile(joinPath(dir, fileName), DefaultFile.MarkdownFromPath(fileName));
             if (path) {
               void navigate({
-                to: currentWorkspace.resolveFileUrl(path),
+                to: currentWorkspace.resolveFileUrl(path).toString(),
               });
             }
           }),

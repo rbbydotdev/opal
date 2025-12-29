@@ -21,7 +21,7 @@ export const FileError = ({ error }: { error: Error & Partial<ApplicationError> 
         </CardContent>
         <CardFooter className="flex justify-center">
           <Button asChild variant="destructive">
-            <Link to={tryFirstFile || "/"}>Sorry!</Link>
+            <Link to={tryFirstFile?.toString() || "/"}>Sorry!</Link>
           </Button>
         </CardFooter>
       </Card>

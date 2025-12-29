@@ -31,7 +31,7 @@ export function WorkspaceFilePage() {
 
   useEffect(() => {
     if (!currentWorkspace.isNull && filePath && currentWorkspace.nodeFromPath(filePath)?.isTreeDir()) {
-      void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path }));
+      void currentWorkspace.tryFirstFileUrl().then((path) => navigate({ to: path.toString() }));
     }
   }, [currentWorkspace, filePath, navigate]);
 

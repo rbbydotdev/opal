@@ -5,7 +5,7 @@ import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
 import { stripLeadingSlash } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
-import { ImportRunner } from "@/services/import/ImportRunner";
+import { GitHubImportRunner } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
@@ -15,28 +15,23 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
   component: RouteComponent,
 });
 
-function useImporter(fullRepoPath: string) {
+function useGithubImporter(fullRepoPath: string) {
   const [successPath, setSuccessPath] = useState<string | null>(null);
-  const { runner, execute, cancel, logs, error } = useRunner(() => ImportRunner.Show({ fullRepoPath }), [fullRepoPath]);
+  const { runner, execute, cancel, logs, error } = useRunner(
+    () => GitHubImportRunner.Show({ fullRepoPath }),
+    [fullRepoPath]
+  );
 
   useEffect(() => {
-    void execute(ImportRunner.Create({ fullRepoPath })).then((workspace) => setSuccessPath(workspace.href));
+    void execute(GitHubImportRunner.Create({ fullRepoPath })).then((workspace) => setSuccessPath(workspace.href));
     return () => cancel();
   }, [cancel, execute, fullRepoPath]);
-
-  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(fullRepoPath).split("/");
 
   return {
     logs,
     error,
     importRunner: runner,
     cancel,
-    repoInfo: { owner, repo, branch, dir },
-    isSuccess: runner.isSuccess,
-    isValidRepoRoute: true,
-    isImporting: runner.isPending,
-    isCompleted: runner.isCompleted,
-    isFailed: runner.isFailed,
     successPath,
   };
 }
@@ -51,10 +46,22 @@ function RouteComponent() {
   );
 }
 
+function getRepoInfo(importPath: string) {
+  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(importPath).split("/");
+  return { owner, repo, branch, dir };
+}
+
 function ImporterCard({ importPath }: { importPath: string }) {
   const navigate = useNavigate();
-  const { logs, successPath, cancel, repoInfo, isFailed, isImporting, isSuccess, isCompleted } =
-    useImporter(importPath);
+  const { logs, successPath, cancel, importRunner } = useGithubImporter(importPath);
+
+  const isSuccess = importRunner.isSuccess;
+  const isImporting = importRunner.isPending;
+  const isCompleted = importRunner.isCompleted;
+  const isFailed = importRunner.isFailed;
+
+  const repoInfo = getRepoInfo(importPath);
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -83,9 +90,6 @@ function ImporterCard({ importPath }: { importPath: string }) {
           >
             {repoInfo.owner}/{repoInfo.repo}
           </a>
-          {/* <div className="text-sm text-muted-foreground">
-              {getImportStatusText(isFailed, isCompleted, isImporting, error)}
-            </div> */}
 
           <ScrollArea className="font-mono text-xs space-y-1 flex-1 border rounded-md p-3 bg-muted/30 h-32 overflow-y-auto scrollbar-thin">
             {logs.length === 0 ? (

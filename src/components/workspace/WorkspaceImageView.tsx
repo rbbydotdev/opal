@@ -21,7 +21,7 @@ export function WorkspaceImageView({ currentWorkspace }: { currentWorkspace: Wor
               event: e,
               targetNode: ROOT_NODE,
             }).then(([filePath]) => {
-              if (filePath) return navigate({ to: currentWorkspace.resolveFileUrl(filePath) });
+              if (filePath) return navigate({ to: currentWorkspace.resolveFileUrl(filePath).toString() });
             })
           }
         >

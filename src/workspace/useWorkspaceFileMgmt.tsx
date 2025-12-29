@@ -35,7 +35,7 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
       try {
         const result = await currentWorkspace.newFile(dirname(path), basename(path), content);
         if (options.redirect) {
-          void navigate({ to: currentWorkspace.resolveFileUrl(result) });
+          void navigate({ to: currentWorkspace.resolveFileUrl(result).toString() });
         }
         return result;
       } catch (e) {

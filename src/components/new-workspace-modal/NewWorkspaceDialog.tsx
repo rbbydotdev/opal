@@ -105,8 +105,13 @@ export function NewWorkspaceDialog({
 
     setPending(true);
     try {
-      const workspace = await Workspace.CreateNew(workspaceName, template.seedFiles, fileSystem, {
-        selectedDirectory,
+      const workspace = await Workspace.CreateNew({
+        name: workspaceName,
+        files: template.seedFiles,
+        diskType: fileSystem,
+        diskOptions: {
+          selectedDirectory,
+        },
       });
 
       setPending(false);
