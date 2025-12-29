@@ -50,24 +50,15 @@ export class ImportRunner extends ObservableRunner<ImportState> implements Runne
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
     const workspace = await Workspace.CreateNew(workspaceName, sourceTree.iterator(), IndexedDbDisk.type);
-
-    // sourceTree.walkBFS((node,__,exit)=>{
-    //   if (node.isMarkdownFile()){
-    //     exit();
-    //   }
-
-    // })
-    // workspace.Repo
-    // workspace.playbook.initFromRemote("origin",)
     return workspace;
   }
 
-  async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
-    //womp womp needs cors
-    const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
-    await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
-    return workspace;
-  }
+  // async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
+  //   //womp womp needs cors
+  //   const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
+  //   await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
+  //   return workspace;
+  // }
 
   cancel(): void {
     this.abortController.abort(new AbortError("Operation cancelled by user"));
