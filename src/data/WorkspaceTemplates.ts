@@ -1,4 +1,5 @@
 import { DefaultFile } from "@/lib/DefaultFile";
+import { AbsPath } from "@/lib/paths2";
 import globalSeedCss from "@/seedfiles/global-seed.css?raw";
 export type WorkspaceTemplate = {
   id: string;
@@ -6,6 +7,13 @@ export type WorkspaceTemplate = {
   description: string;
   seedFiles: Record<string, string | Promise<string> | (() => Promise<string>)>;
   navigate?: string;
+};
+
+export type WorkspaceImportManifestType = {
+  version: number;
+  description: string;
+  navigate?: AbsPath;
+  type: "showcase" | "template";
 };
 
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [

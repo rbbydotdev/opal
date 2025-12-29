@@ -14,8 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/disk/DiskType";
-import { WORKSPACE_TEMPLATES, getDefaultTemplate, getTemplateById } from "@/data/WorkspaceTemplates";
-import { AbsPath } from "@/lib/paths2";
+import { getDefaultTemplate, getTemplateById, WORKSPACE_TEMPLATES } from "@/data/WorkspaceTemplates";
+import { absPath } from "@/lib/paths2";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { Workspace } from "@/workspace/Workspace";
 import { useNavigate } from "@tanstack/react-router";
@@ -111,7 +111,7 @@ export function NewWorkspaceDialog({
 
       setPending(false);
       setIsOpen(false);
-      void navigate({ to: workspace.resolveFileUrl(template.navigate as AbsPath) || String(workspace.home()) });
+      void navigate({ to: workspace.resolveFileUrl(absPath(template.navigate ?? "")) || String(workspace.home()) });
     } catch (error: any) {
       setPending(false);
       setDirectoryError(error.message || "Failed to create workspace");

@@ -728,7 +728,7 @@ export class Workspace {
     return this.href;
   }
   resolveFileUrl = (filePath: AbsPath) => {
-    return this.href + filePath;
+    return joinPath(this.href, filePath);
   };
 
   async tryFirstFileUrl() {

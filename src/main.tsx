@@ -12,6 +12,10 @@ const router = createRouter({
     redirect({ to: "/" });
     return null;
   },
+  defaultPreloadStaleTime: 0,
+  context: {
+    preserveViewMode: true,
+  },
 });
 
 declare module "@tanstack/react-router" {

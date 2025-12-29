@@ -1,18 +1,3 @@
-function shuffle(array: any[]) {
-  const arr = [...array];
-  let currentIndex = arr.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
-  }
-  return arr;
-}
 export const RandomSlugWords = (length = 3, { capitalize } = { capitalize: true }) => {
   return new Array(length)
     .fill(0)
