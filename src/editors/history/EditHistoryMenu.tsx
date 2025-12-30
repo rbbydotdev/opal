@@ -18,7 +18,7 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 function useEnabledEditHistory() {
@@ -29,13 +29,13 @@ function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | n
   if (selectedEdit !== null || pending) {
     return (
       <div key={selectedEdit?.edit_id} className="animate-pulse animation-iteration-once ">
-        <History size={20} className="-scale-x-100 inline-block !text-ring" />
+        <History size={20} className="-scale-x-100 inline-block !text-primary" />
       </div>
     );
   }
   return (
     <div>
-      <History size={20} className="-scale-x-100 inline-block !text-secondary group-hover:!text-ring" />
+      <History size={20} className="-scale-x-100 inline-block !text-secondary" />
     </div>
   );
 }
@@ -47,6 +47,8 @@ export function EditHistoryMenu() {
   const { storedValue: enabled } = useEnabledEditHistory();
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
+
+  const [hoverCardOpen, setHoverCardOpen] = useState(false);
 
   const { edits, pending, mode, edit: selectedEdit, accept, propose, restore, clearAll } = useDocHistory();
   const isSelectedEdit = (edit: HistoryDAO) => {

@@ -696,7 +696,7 @@ function MergeConflictSection({
             <Link
               key={file}
               className="truncate w-full block p-0.5"
-              to={currentWorkspace.resolveFileUrl(file) + '?viewMode="source"'}
+              to={currentWorkspace.resolveFileUrl(file) + "?viewMode=source"}
             >
               {file}
             </Link>
