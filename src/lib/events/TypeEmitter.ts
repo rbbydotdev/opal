@@ -1,3 +1,4 @@
+import { isAbortError } from "@/lib/errors/errors";
 import { IterableWeakSet } from "@/lib/IterableWeakSet";
 import { EventEmitter } from "events";
 
@@ -13,30 +14,82 @@ export function EmitterSymbol(description?: string): object {
 }
 
 type TypedEmitter<Events extends Record<string, any>> = {
-  on<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
-  once<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
+  on<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void, signal?: AbortSignal): EventEmitter;
+  once<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void, signal?: AbortSignal): EventEmitter;
   off<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): EventEmitter;
   emit<K extends keyof Events>(event: K, payload: Events[K]): boolean;
-  listen<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): () => void;
-  awaitEvent<K extends keyof Events>(event: K): Promise<Events[K]>;
+  listen<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void, signal?: AbortSignal): () => void;
+  awaitEvent<K extends keyof Events>(event: K, signal?: AbortSignal): Promise<Events[K]>;
 } & EventEmitter;
 
 export function CreateTypedEmitterClass<Events extends Record<string, any>>() {
   return class extends EventEmitter {
-    awaitEvent<K extends keyof Events>(event: K): Promise<Events[K]> {
-      return new Promise((resolve) => {
+    private signalCleanupMap = new WeakMap<AbortSignal, Set<() => void>>();
+
+    private handleSignal(signal: AbortSignal, cleanup: () => void): void {
+      if (signal.aborted) {
+        cleanup();
+        return;
+      }
+
+      if (!this.signalCleanupMap.has(signal)) {
+        this.signalCleanupMap.set(signal, new Set());
+
+        const abortHandler = () => {
+          const cleanupFns = this.signalCleanupMap.get(signal);
+          if (cleanupFns) {
+            cleanupFns.forEach((fn) => fn());
+            this.signalCleanupMap.delete(signal);
+          }
+        };
+
+        signal.addEventListener("abort", abortHandler, { once: true });
+      }
+
+      this.signalCleanupMap.get(signal)!.add(cleanup);
+    }
+
+    awaitEvent<K extends keyof Events>(event: K, signal?: AbortSignal): Promise<Events[K]> {
+      return new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+          reject(new Error("AbortError"));
+          return;
+        }
+
         const handler = (payload: Events[K]) => {
           this.off(event as string | symbol, handler);
           resolve(payload);
         };
+
         this.on(event as string | symbol, handler);
+
+        const cleanup = () => {
+          this.off(event as string | symbol, handler);
+          reject(new Error("AbortError"));
+        };
+
+        if (signal) {
+          this.handleSignal(signal, cleanup);
+        }
       });
     }
-    listen<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void): () => void {
+
+    listen<K extends keyof Events>(event: K, listener: (payload: Events[K]) => void, signal?: AbortSignal): () => void {
+      if (signal?.aborted) {
+        return () => {};
+      }
+
       super.on(event as string | symbol, listener);
-      return () => {
+
+      const unsubscribe = () => {
         super.off(event as string | symbol, listener);
       };
+
+      if (signal) {
+        this.handleSignal(signal, unsubscribe);
+      }
+
+      return unsubscribe;
     }
   };
 }
@@ -48,8 +101,33 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
 
   return class {
     private emitter = new EventEmitter();
+    private signalCleanupMap = new WeakMap<AbortSignal, Set<() => void>>();
+
     constructor() {
       this.emitter.setMaxListeners(100);
+    }
+
+    private handleSignal(signal: AbortSignal, cleanup: () => void): void {
+      if (signal.aborted) {
+        cleanup();
+        return;
+      }
+
+      if (!this.signalCleanupMap.has(signal)) {
+        this.signalCleanupMap.set(signal, new Set());
+
+        const abortHandler = () => {
+          const cleanupFns = this.signalCleanupMap.get(signal);
+          if (cleanupFns) {
+            cleanupFns.forEach((fn) => fn());
+            this.signalCleanupMap.delete(signal);
+          }
+        };
+
+        signal.addEventListener("abort", abortHandler, { once: true });
+      }
+
+      this.signalCleanupMap.get(signal)!.add(cleanup);
     }
 
     on<K extends keyof ExtendedEvents>(
@@ -57,15 +135,33 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       listener: (payload: ExtendedEvents[K]) => void,
       signal?: AbortSignal
     ): () => void {
+      if (signal?.aborted) {
+        return () => {};
+      }
+
       if (Array.isArray(event)) {
         const unsubscribers = event.map((e) => {
-          this.emitter.on(e as string | symbol, listener, signal);
+          this.emitter.on(e as string | symbol, listener);
           return () => this.emitter.off(e as string | symbol, listener);
         });
-        return () => unsubscribers.forEach((unsub) => unsub());
+
+        const unsubscribeAll = () => unsubscribers.forEach((unsub) => unsub());
+
+        if (signal) {
+          this.handleSignal(signal, unsubscribeAll);
+        }
+
+        return unsubscribeAll;
       } else {
-        this.emitter.on(event as string | symbol, listener, signal);
-        return () => this.emitter.off(event as string | symbol, listener);
+        this.emitter.on(event as string | symbol, listener);
+
+        const unsubscribe = () => this.emitter.off(event as string | symbol, listener);
+
+        if (signal) {
+          this.handleSignal(signal, unsubscribe);
+        }
+
+        return unsubscribe;
       }
     }
 
@@ -78,14 +174,15 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       // Special handling for error events
       if (event === "error") {
         const errorListeners = this.emitter.listenerCount("error");
-        if (errorListeners === 0) {
-          console.error(`Unhandled error event: ${payload}`);
-          return;
-        }
+        if (errorListeners === 0 && isAbortError(payload)) return;
       }
 
       this.emitter.emit(event as string | symbol, payload);
-      this.emitter.emit("*", { ...payload, eventName: event });
+      if (typeof payload === "string") {
+        this.emitter.emit("*", Object.assign(payload, { eventName: event, toString: () => payload }));
+      } else {
+        this.emitter.emit("*", Object.assign(payload, { eventName: event }));
+      }
     }
 
     off<K extends keyof ExtendedEvents>(event: K, listener: (payload: ExtendedEvents[K]) => void): void {
@@ -100,13 +197,28 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       this.emitter.removeAllListeners();
     }
 
-    awaitEvent<K extends keyof ExtendedEvents>(event: K, signal: AbortSignal): Promise<ExtendedEvents[K]> {
-      return new Promise((resolve) => {
+    awaitEvent<K extends keyof ExtendedEvents>(event: K, signal?: AbortSignal): Promise<ExtendedEvents[K]> {
+      return new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+          reject(new Error("AbortError"));
+          return;
+        }
+
         const handler = (payload: ExtendedEvents[K]) => {
           this.emitter.off(event as string | symbol, handler);
           resolve(payload);
         };
-        this.on(event, handler, signal);
+
+        this.emitter.on(event as string | symbol, handler);
+
+        const cleanup = () => {
+          this.emitter.off(event as string | symbol, handler);
+          reject(new Error("AbortError"));
+        };
+
+        if (signal) {
+          this.handleSignal(signal, cleanup);
+        }
       });
     }
   };
@@ -121,20 +233,67 @@ export function CreateSuperTypedEmitter<Events extends Record<string, any>, Meta
 }
 export class SuperEmitter<Events extends Record<string, any> = Record<string, any>> {
   private emitter = new EventEmitter();
+  private signalCleanupMap = new WeakMap<AbortSignal, Set<() => void>>();
+
   constructor() {
     this.emitter.setMaxListeners(100);
   }
 
-  on<K extends keyof Events>(event: K | (keyof Events)[], listener: (payload: Events[K]) => void): () => void {
+  private handleSignal(signal: AbortSignal, cleanup: () => void): void {
+    if (signal.aborted) {
+      cleanup();
+      return;
+    }
+
+    if (!this.signalCleanupMap.has(signal)) {
+      this.signalCleanupMap.set(signal, new Set());
+
+      const abortHandler = () => {
+        const cleanupFns = this.signalCleanupMap.get(signal);
+        if (cleanupFns) {
+          cleanupFns.forEach((fn) => fn());
+          this.signalCleanupMap.delete(signal);
+        }
+      };
+
+      signal.addEventListener("abort", abortHandler, { once: true });
+    }
+
+    this.signalCleanupMap.get(signal)!.add(cleanup);
+  }
+
+  on<K extends keyof Events>(
+    event: K | (keyof Events)[],
+    listener: (payload: Events[K]) => void,
+    signal?: AbortSignal
+  ): () => void {
+    if (signal?.aborted) {
+      return () => {};
+    }
+
     if (Array.isArray(event)) {
       const unsubscribers = event.map((e) => {
         this.emitter.on(e as string | symbol, listener);
         return () => this.emitter.off(e as string | symbol, listener);
       });
-      return () => unsubscribers.forEach((unsub) => unsub());
+
+      const unsubscribeAll = () => unsubscribers.forEach((unsub) => unsub());
+
+      if (signal) {
+        this.handleSignal(signal, unsubscribeAll);
+      }
+
+      return unsubscribeAll;
     } else {
       this.emitter.on(event as string | symbol, listener);
-      return () => this.emitter.off(event as string | symbol, listener);
+
+      const unsubscribe = () => this.emitter.off(event as string | symbol, listener);
+
+      if (signal) {
+        this.handleSignal(signal, unsubscribe);
+      }
+
+      return unsubscribe;
     }
   }
 
@@ -147,10 +306,7 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
     // Special handling for error events
     if (event === "error") {
       const errorListeners = this.emitter.listenerCount("error");
-      if (errorListeners === 0) {
-        console.error(`Unhandled error event: ${payload}`);
-        return;
-      }
+      if (errorListeners === 0 && isAbortError(payload)) return;
     }
 
     this.emitter.emit(event as string | symbol, payload);
@@ -168,13 +324,28 @@ export class SuperEmitter<Events extends Record<string, any> = Record<string, an
     this.emitter.removeAllListeners();
   }
 
-  awaitEvent<K extends keyof Events>(event: K): Promise<Events[K]> {
-    return new Promise((resolve) => {
+  awaitEvent<K extends keyof Events>(event: K, signal?: AbortSignal): Promise<Events[K]> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(new Error("AbortError"));
+        return;
+      }
+
       const handler = (payload: Events[K]) => {
         this.emitter.off(event as string | symbol, handler);
         resolve(payload);
       };
-      this.on(event, handler);
+
+      this.emitter.on(event as string | symbol, handler);
+
+      const cleanup = () => {
+        this.emitter.off(event as string | symbol, handler);
+        reject(new Error("AbortError"));
+      };
+
+      if (signal) {
+        this.handleSignal(signal, cleanup);
+      }
     });
   }
 }
@@ -233,50 +404,78 @@ export class OmniBusEmitter extends CreateSuperTypedEmitterClass<Record<string, 
   onType<Events extends Record<string, any>, K extends keyof Events>(
     classIdent: symbol,
     event: K | K[],
-    listener: (payload: Events[K]) => void
+    listener: (payload: Events[K]) => void,
+    signal?: AbortSignal
   ): () => void {
+    if (signal?.aborted) {
+      return () => {};
+    }
+
     if (Array.isArray(event)) {
       const unsubscribers = event.map((e) => {
-        return this.on("*" as any, (payload: any) => {
-          if (payload.eventName === e && payload.__sourceClass === classIdent) {
+        return this.on(
+          "*" as any,
+          (payload: any) => {
+            if (payload.eventName === e && payload.__sourceClass === classIdent) {
+              const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+              listener(cleanPayload as Events[K]);
+            }
+          },
+          signal
+        );
+      });
+
+      return () => unsubscribers.forEach((unsub) => unsub());
+    } else {
+      return this.on(
+        "*" as any,
+        (payload: any) => {
+          if (payload.eventName === event && payload.__sourceClass === classIdent) {
             const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
             listener(cleanPayload as Events[K]);
           }
-        });
-      });
-      return () => unsubscribers.forEach((unsub) => unsub());
-    } else {
-      return this.on("*" as any, (payload: any) => {
-        if (payload.eventName === event && payload.__sourceClass === classIdent) {
-          const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
-          listener(cleanPayload as Events[K]);
-        }
-      });
+        },
+        signal
+      );
     }
   }
 
   onInstance<Events extends Record<string, any>, K extends keyof Events>(
     instanceIdent: object,
     event: K | K[],
-    listener: (payload: Events[K]) => void
+    listener: (payload: Events[K]) => void,
+    signal?: AbortSignal
   ): () => void {
+    if (signal?.aborted) {
+      return () => {};
+    }
+
     if (Array.isArray(event)) {
       const unsubscribers = event.map((e) => {
-        return this.on("*" as any, (payload: any) => {
-          if (payload.eventName === e && payload.__sourceInstance === instanceIdent) {
+        return this.on(
+          "*" as any,
+          (payload: any) => {
+            if (payload.eventName === e && payload.__sourceInstance === instanceIdent) {
+              const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
+              listener(cleanPayload as Events[K]);
+            }
+          },
+          signal
+        );
+      });
+
+      return () => unsubscribers.forEach((unsub) => unsub());
+    } else {
+      return this.on(
+        "*" as any,
+        (payload: any) => {
+          if (payload.eventName === event && payload.__sourceInstance === instanceIdent) {
             const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
             listener(cleanPayload as Events[K]);
           }
-        });
-      });
-      return () => unsubscribers.forEach((unsub) => unsub());
-    } else {
-      return this.on("*" as any, (payload: any) => {
-        if (payload.eventName === event && payload.__sourceInstance === instanceIdent) {
-          const { eventName, __sourceClass, __sourceInstance, ...cleanPayload } = payload;
-          listener(cleanPayload as Events[K]);
-        }
-      });
+        },
+        signal
+      );
     }
   }
 
