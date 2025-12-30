@@ -1,5 +1,6 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
+import { SWClient } from "@/lib/service-worker/SWClient";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
@@ -10,15 +11,15 @@ function previewId({ workspaceId, editId }: { workspaceId: string; editId: strin
 
 export async function generateHtmlPreview(edit: HistoryDAO, workspaceName: string): Promise<Blob> {
   // Use the service worker endpoint to generate HTML
-  const url = new URL("/markdown-render", window.location.origin);
-  url.searchParams.set("workspaceName", workspaceName);
-  url.searchParams.set("documentId", edit.id);
-  url.searchParams.set("editId", edit.edit_id.toString());
 
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    throw new Error(`Failed to generate preview: ${response.statusText}`);
-  }
+  const response = await SWClient["markdown-render"].$get({
+    query: {
+      workspaceName,
+      documentId: edit.id,
+      editId: edit.edit_id.toString(),
+    },
+  });
+  console.log(response);
 
   return await response.blob();
 }
@@ -47,10 +48,7 @@ function useHtmlPreview({
   useEffect(() => {
     if (edit.preview === null) {
       generateHtmlPreview(edit, workspaceName)
-        .then(async (blob) => {
-          const html = await blob.text();
-          setHtmlContent(html);
-        })
+        .then(async (blob) => setHtmlContent(await blob.text()))
         .catch(console.error);
     } else {
       edit.preview.text().then(setHtmlContent).catch(console.error);

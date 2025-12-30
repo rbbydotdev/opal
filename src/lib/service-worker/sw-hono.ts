@@ -307,14 +307,10 @@ const _Handlers = {
       // Create HistoryDB instance and reconstruct document
       const historyDB = new HistoryDB();
       const markdownContent = await historyDB.reconstructDocument({ edit_id: editId });
-
       // Render markdown to HTML
       htmlContent = await marked(graymatter(markdownContent).content);
-
       // Store rendered HTML in edit.preview Blob field
-      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
-      await historyDB.updatePreviewForEditId(editId, htmlBlob);
-
+      await historyDB.updatePreviewForEditId(editId, new Blob([htmlContent], { type: "text/html" }));
       historyDB.tearDown();
     }
 

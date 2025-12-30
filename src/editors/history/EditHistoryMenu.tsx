@@ -157,7 +157,7 @@ function HistoryMenuToolbar({
   clearAll = async () => {},
   setOpen = (open: boolean) => {},
 }: {
-  edits: HistoryDAO[];
+  edits: readonly HistoryDAO[];
   clearAll: () => void;
   setOpen: (open: boolean) => void;
 }) {
