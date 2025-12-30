@@ -19,7 +19,6 @@ export async function generateHtmlPreview(edit: HistoryDAO, workspaceName: strin
       editId: edit.edit_id.toString(),
     },
   });
-  console.log(response);
 
   return await response.blob();
 }

@@ -7,7 +7,7 @@ import pDebounce from "p-debounce";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { liveQuery } from "dexie";
 import { createContext, useContext, useState } from "react";
-import { proxy, subscribe, useSnapshot } from "valtio";
+import { proxy, subscribe, useSnapshot, ref } from "valtio";
 
 export class HistoryPlugin {
   static defaultState = {
@@ -52,7 +52,12 @@ export class HistoryPlugin {
   }) => {
     if (typeof markdownSync === "string") {
       if (this.state.baseDoc === null) this.state.baseDoc = markdownSync;
-      if (this.state.editorDoc !== markdownSync) this.state.editorDoc = markdownSync;
+
+      // Don't sync editorDoc from external editor when in propose mode
+      // This prevents the cycle where propose() -> setEditorMarkdown() -> hook() -> backoff()
+      if (this.state.mode !== "propose" && this.state.editorDoc !== markdownSync) {
+        this.state.editorDoc = markdownSync;
+      }
     }
     if (setEditorMarkdown) this.setEditorMarkdown = setEditorMarkdown;
     if (writeMarkdown) this.writeMarkdown = writeMarkdown;
@@ -78,16 +83,21 @@ export class HistoryPlugin {
             .reverse()
             .sortBy("timestamp")
         ).subscribe((edits) => {
-          this.state.edits = [...edits];
+          this.state.edits = edits.map(edit => edit.preview ? { ...edit, preview: ref(edit.preview) } : edit);
         }).unsubscribe,
         subscribe(this.state, () => {
           const doc = this.state.editorDoc;
-          if (this.state.mode === "propose" && this.state.proposedDoc !== doc) this.backoff();
+          const proposedDoc = this.state.proposedDoc;
+          if (this.state.mode === "propose" && proposedDoc !== doc) {
+            this.backoff();
+          }
         }),
         //
         subscribe(this.state, () => {
           const doc = this.state.editorDoc;
-          if (this.state.mode === "edit") this.state.baseDoc = doc;
+          if (this.state.mode === "edit") {
+            this.state.baseDoc = doc;
+          }
         }),
       ]
     );
@@ -95,10 +105,15 @@ export class HistoryPlugin {
 
   propose = async (edit: HistoryDAO) => {
     const editText = await this.getTextForEdit(edit);
-    this.setEditorMarkdown(editText);
+
+    // Update state first, then sync to editor
     this.state.mode = "propose";
     this.state.proposedDoc = editText;
-    this.state.edit = edit;
+    this.state.editorDoc = editText; // Set our internal state
+    this.state.edit = edit.preview ? { ...edit, preview: ref(edit.preview) } : edit;
+
+    // Then update the external editor
+    this.setEditorMarkdown(editText);
   };
   accept = async () => {
     const proposedDoc = this.state.proposedDoc!;
