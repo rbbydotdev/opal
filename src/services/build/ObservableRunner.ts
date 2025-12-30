@@ -1,21 +1,12 @@
-import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
-import { Observable, observeMultiple } from "@/lib/Observable";
+import { RunnerState } from "@/types/RunnerInterfaces";
 import { LogLine } from "@/types/RunnerTypes";
+import { proxy } from "valtio";
 
-export class ObservableRunner<TInner extends RunnerStates> {
-  target: Observable<TInner>;
-
-  emitter = CreateSuperTypedEmitter<TInner>();
+export class ObservableRunner<TInner extends RunnerState> {
+  target: ReturnType<typeof proxy<TInner>>;
 
   constructor(inner: TInner) {
-    const listeners = Object.entries(inner).map(([key]) => [
-      key,
-      this.emitter.emit.bind(this.emitter, key as keyof RunnerStates),
-    ]);
-
-    this.target = observeMultiple<RunnerStates>(inner, Object.fromEntries(listeners), {
-      batch: true,
-    }) as Observable<TInner>;
+    this.target = proxy(inner);
   }
 
   get status() {
@@ -56,31 +47,22 @@ export class ObservableRunner<TInner extends RunnerStates> {
     this.target.logs = [...this.target.logs, logLine];
   }
 
-  onUpdate = (callback: () => void): (() => void) => {
-    return this.emitter.on("*", callback);
-  };
-  getUpdate = () => {
-    return this.target;
+  // No longer need these methods - Valtio handles subscriptions automatically
+  onLog = (): (() => void) => {
+    return () => {};
   };
 
-  onLog = (callback: (logs: LogLine[]) => void): (() => void) => {
-    return this.emitter.on("logs", callback);
+  onStatus = (): (() => void) => {
+    return () => {};
   };
 
-  onStatus = (callback: () => void): (() => void) => {
-    return this.emitter.on("status", callback);
-  };
-
-  onError = (callback: (error: string | null) => void): (() => void) => {
-    return this.emitter.on("error", callback);
+  onError = (): (() => void) => {
+    return () => {};
   };
 
   tearDown = () => {
-    this.emitter.clearListeners();
+    // No cleanup needed with Valtio
   };
 }
-type RunnerStates = {
-  status: "idle" | "success" | "pending" | "error";
-  logs: LogLine[];
-  error: string | null;
-};
+
+// RunnerState is now imported from RunnerInterfaces

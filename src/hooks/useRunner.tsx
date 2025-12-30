@@ -1,6 +1,7 @@
 import { AbortError } from "@/lib/errors/errors";
 import { Runner } from "@/types/RunnerInterfaces";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSnapshot } from "valtio";
 
 export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: any[], abortSignal?: AbortSignal) {
   const [currentRunner, setRunner] = useState<T>(initialValue);
@@ -8,18 +9,15 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
 
   useEffect(() => {
     setRunner(typeof initialValue === "function" ? initialValue() : initialValue);
-    return () => currentRunner.tearDown();
+    return currentRunner.tearDown;
   }, deps);
   useEffect(() => currentRunner.tearDown, [currentRunner]);
 
-  const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
-  const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
-  const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
-  // const state = useSyncExternalStore(currentRunner.onUpdate, () => ({
-  //   status: currentRunner.status,
-  //   logs: currentRunner.logs,
-  //   error: currentRunner.error,
-  // }));
+  // Use Valtio's useSnapshot for reactive state
+  const snapshot = useSnapshot(currentRunner.target);
+  const status = snapshot.status;
+  const logs = snapshot.logs;
+  const error = snapshot.error;
 
   const execute = useCallback(
     (runner: T, options?: { signal?: AbortSignal }) => {
@@ -48,6 +46,7 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
     execute,
     cancel,
     runner: currentRunner as Omit<T, "execute">,
+    snapshot,
     logs,
     status,
     error,

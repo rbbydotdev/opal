@@ -14,13 +14,13 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
   component: RouteComponent,
 });
 
+//this handle could be made generic later?
 function useGithubImporter(fullRepoPath: string) {
   const [gotoPath, setGotoPath] = useState<string | null>(null);
-  const { runner, execute, cancel, logs, error } = useRunner(
+  const { runner, execute, cancel, logs, error, snapshot } = useRunner(
     () => GitHubImportRunner.Show({ fullRepoPath }),
     [fullRepoPath]
   );
-
   useEffect(() => {
     void execute(GitHubImportRunner.Create({ fullRepoPath })).then((href) => setGotoPath(href));
     return () => cancel();
@@ -31,7 +31,10 @@ function useGithubImporter(fullRepoPath: string) {
     error,
     importRunner: runner,
     cancel,
+    setConfirm: runner.setConfirm.bind(runner),
     successPath: gotoPath,
+    type: snapshot.type,
+    confirmImport: snapshot.confirmImport,
   };
 }
 
@@ -47,7 +50,7 @@ function RouteComponent() {
 
 function ImporterCard({ importPath }: { importPath: string }) {
   const navigate = useNavigate();
-  const { logs, successPath, cancel, importRunner } = useGithubImporter(importPath);
+  const { logs, successPath, cancel, importRunner, type, confirmImport, setConfirm } = useGithubImporter(importPath);
 
   const isSuccess = importRunner.isSuccess;
   const isImporting = importRunner.isPending;
@@ -105,6 +108,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
           </ScrollArea>
         </div>
         <div className="flex gap-4 justify-center items-center w-full">
+          {confirmImport === "ask" && <Button onClick={() => setConfirm("yes")}>Confirm Import</Button>}
           {isSuccess && successPath ? (
             <CountDownButton onClick={() => navigate({ to: successPath! })} />
           ) : (

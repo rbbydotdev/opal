@@ -10,19 +10,21 @@ import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/service
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
 import pathModule from "path";
+import { subscribe } from "valtio";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
-  type: null | "showcase" | "template";
+  type: "showcase" | "template";
   logs: Array<{
     type: "info" | "error" | "warning" | "success";
     timestamp: number;
     message: string;
   }>;
-  confirmImport: boolean | null;
+  confirmImport: ConfirmImportType;
   error: string | null;
 };
 
+export type ConfirmImportType = "idle" | "ask" | "yes" | "no";
 export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<ImportState> implements Runner {
   private tmpDisk = DiskFactoryByType(MemDisk.type);
   protected abortController: AbortController = new AbortController();
@@ -32,9 +34,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     super({
       status: "idle",
       logs: [],
-      type: null,
+      type: "template",
       error: null,
-      confirmImport: null,
+      confirmImport: "idle",
     });
     this.config = config;
   }
@@ -100,9 +102,12 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log("Fetching manifest...", "info");
 
-      const manifest = await this.fetchManifest(allAbortSignal);
+      const manifest = await this.fetchManifest(allAbortSignal, (e) => {
+        console.error("Error fetching manifest:", unwrapError(e));
+      });
 
       if (manifest.type === "template") {
+        this.log("Confirming import", "info");
         await this.waitForTemplateConfirmation(allAbortSignal);
       }
 
@@ -142,34 +147,29 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       return "/";
     }
   }
-  async waitForTemplateConfirmation(signal: AbortSignal) {
-    this.target.type = "template";
-    this.target.confirmImport = null;
 
-    const confirmation = await this.emitter.awaitEvent("confirmImport", signal);
-    // return new Promise((rs, rj) => {
-    //   this.emitter.once("confirmImport", (confirm) => {
-    //     if (confirm === null) return; // ignore nulls
-    //     if (confirm) {
-    //       rs(true);
-    //     } else {
-    //       this.log("Import cancelled by user", "error");
-    //       this.target.status = "error";
-    //       this.target.error = "Import cancelled by user";
-    //       rj(new AbortError("Operation cancelled by user"));
-    //     }
-    //   });
-    //   // this.target.on
-    //   signal.addEventListener(
-    //     "abort",
-    //     () => {
-    //       rj(new AbortError("Operation cancelled by user"));
-    //     },
-    //     {
-    //       signal,
-    //     }
-    //   );
-    // });
+  setConfirm(value: ConfirmImportType) {
+    this.target.confirmImport = value;
+  }
+  waitForTemplateConfirmation(signal: AbortSignal) {
+    this.target.type = "template";
+    this.target.confirmImport = "ask";
+    console.log("Setting confirmImport to 'ask'");
+
+    // Use Valtio subscribe to wait for confirmImport change
+    return new Promise<ConfirmImportType>((resolve, reject) => {
+      const unsubscribe = subscribe(this.target, () => {
+        if (this.target.confirmImport !== "ask") {
+          unsubscribe();
+          resolve(this.target.confirmImport);
+        }
+      });
+
+      signal.addEventListener("abort", () => {
+        unsubscribe();
+        reject(signal.reason);
+      });
+    });
   }
 }
 
@@ -204,11 +204,11 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     yield* this.importer.fetchFiles(signal);
   }
 
-  async fetchManifest(signal: AbortSignal, onImportError: (e: unknown) => void): Promise<WorkspaceImportManifestType> {
+  async fetchManifest(signal: AbortSignal, onImportError?: (e: unknown) => void): Promise<WorkspaceImportManifestType> {
     try {
       return await this.importer.fetchManifest(signal);
     } catch (e) {
-      onImportError(e);
+      onImportError?.(e);
     }
     return WorkspaceDefaultManifest(this.ident);
   }
@@ -285,6 +285,7 @@ export class NullImportRunner extends GitHubImportRunner {
       version: 1,
       description: "Null import",
       type: "template",
+
       ident: "null/null",
       provider: "null",
       details: {
