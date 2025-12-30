@@ -100,7 +100,7 @@ export class DeployRunner<TBundle extends DeployBundleBase> extends ObservableRu
     this.log("Deployment cancelled by user", "error");
   }
 
-  async execute({
+  async run({
     abortSignal,
   }: {
     abortSignal?: AbortSignal;
@@ -166,7 +166,7 @@ export class NullDeployRunner extends DeployRunner<DeployBundle> {
     });
   }
 
-  async execute(): Promise<DeployDAO> {
+  async run(): Promise<DeployDAO> {
     return this.target;
   }
 }

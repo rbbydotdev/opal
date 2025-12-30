@@ -78,7 +78,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     this.abortController.abort(new AbortError("Operation cancelled by user"));
   }
 
-  async execute({
+  async run({
     abortSignal,
   }: {
     abortSignal?: AbortSignal;
@@ -277,7 +277,7 @@ export class NullImportRunner extends GitHubImportRunner {
     });
   }
 
-  async execute() {
+  async run() {
     return absPath("/");
   }
   fetchManifest(): Promise<WorkspaceImportManifestType> {

@@ -108,7 +108,6 @@ export function isFilePathsPayload(
 
 export class DiskEventsRemote extends Channel<DiskRemoteEventPayload> {}
 
-export const SIGNAL_ONLY = undefined;
 export const DiskEvents = {
   INSIDE_WRITE: "inside-write" as const, //for writes done by the editor or local process
 

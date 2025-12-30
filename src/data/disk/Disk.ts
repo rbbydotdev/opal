@@ -11,7 +11,6 @@ import {
   IndexTrigger,
   RemoteRenameFileType,
   RenameFileType,
-  SIGNAL_ONLY,
 } from "@/data/disk/DiskEvents";
 import { DiskType } from "@/data/disk/DiskType";
 import { CommonFileSystem, mkdirRecursive } from "@/data/fs/FileSystemTypes";
@@ -103,7 +102,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 
   initialIndexFromCache(cache: TreeNodeDirJType) {
     this.fileTree.forceIndex(cache);
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    void this.local.emit(DiskEvents.INDEX);
     return;
   }
 
@@ -112,7 +111,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
       await this.fileTreeIndex({
         writeIndexCache: false,
       });
-      void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+      void this.local.emit(DiskEvents.INDEX);
     } catch (e) {
       throw new ServiceUnavailableError(errF`Error initializing index ${e}`);
     }
@@ -129,7 +128,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 
   triggerIndex = async () => {
     await this.fileTreeIndex();
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    void this.local.emit(DiskEvents.INDEX);
     return this.fileTree;
   };
 
@@ -528,7 +527,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   removeVirtualFile(path: AbsPath) {
     this.fileTree.removeNodeByPath(path);
     //TODO donno why indexing
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    void this.local.emit(DiskEvents.INDEX);
   }
 
   addVirtualFile(options: {
@@ -550,7 +549,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
       node.tagSource(options.source);
     }
 
-    void this.local.emit(DiskEvents.INDEX, SIGNAL_ONLY);
+    void this.local.emit(DiskEvents.INDEX);
     return node;
   }
   async nextPath(fullPath: AbsPath) {

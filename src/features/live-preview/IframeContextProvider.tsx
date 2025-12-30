@@ -1,7 +1,7 @@
 import { WindowContext } from "@/features/live-preview/WindowContext";
 import { BrowserDetection } from "@/lib/BrowserDetection";
-import { CreateTypedEmitter } from "@/lib/events/TypeEmitter";
-import { useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useContext, useEffect, useMemo } from "react";
+import { proxy, useSnapshot, ref } from "valtio";
 
 export interface PreviewContext {
   document: Document | null;
@@ -12,9 +12,7 @@ export interface PreviewContext {
 
 // Interface for context providers (iframe vs window)
 interface PreviewContextProvider {
-  context: PreviewContext | null;
-  onReady: (callback: (ctx: PreviewContext | null) => void) => () => void;
-  getContext: () => PreviewContext | null;
+  state: { context: PreviewContext };
   teardown(): void;
 }
 
@@ -29,13 +27,6 @@ export type ExtCtxNotReadyContext = {
   ready: false;
 };
 
-const ExtCtxEvents = {
-  READY: "ready",
-} as const;
-
-type ExtCtxEventMap = {
-  [ExtCtxEvents.READY]: PreviewContext | null;
-};
 
 const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   document: null,
@@ -68,20 +59,13 @@ const CHROME_PREVIEW_HTML_INNER = `
 `;
 
 abstract class BaseContextProvider implements PreviewContextProvider {
-  protected _context: ExtCtxReadyContext | ExtCtxNotReadyContext = EMPTY_CONTEXT;
+  state: { context: ExtCtxReadyContext | ExtCtxNotReadyContext };
   protected unsubs: (() => void)[] = [];
-  protected events = CreateTypedEmitter<ExtCtxEventMap>();
   readonly workspaceName: string;
-
-  onReady = (callback: (ctx: PreviewContext | null) => void) => {
-    return this.events.listen(ExtCtxEvents.READY, callback);
-  };
-  getContext = () => {
-    return this._context;
-  };
 
   constructor({ workspaceName }: { workspaceName: string }) {
     this.workspaceName = workspaceName;
+    this.state = proxy({ context: ref(EMPTY_CONTEXT) });
   }
 
   abstract get doc(): Document | null;
@@ -92,16 +76,12 @@ abstract class BaseContextProvider implements PreviewContextProvider {
       return EMPTY_CONTEXT;
     }
 
-    this._context = {
+    return {
       document: this.doc,
       window: this.win,
       ready: true,
     } as ExtCtxReadyContext;
-
-    return this._context;
   }
-
-  // abstract init(): void;
 
   protected initializePreview = () => {
     if (!this.doc) {
@@ -116,12 +96,11 @@ abstract class BaseContextProvider implements PreviewContextProvider {
       this.doc.documentElement.innerHTML = CHROME_PREVIEW_HTML_INNER;
     }
 
-    this.events.emit(ExtCtxEvents.READY, this.context);
+    this.state.context = ref(this.context);
   };
 
   teardown(): void {
-    this.events.removeAllListeners();
-    this._context = EMPTY_CONTEXT;
+    this.state.context = ref(EMPTY_CONTEXT);
     this.unsubs.forEach((unsub) => unsub());
   }
 }
@@ -134,13 +113,14 @@ export function useIframeContextProvider({
   iframeRef: { current: HTMLIFrameElement | null };
 }) {
   const contextProvider = useMemo(() => new IframeManager({ workspaceName, iframeRef }), [iframeRef, workspaceName]);
-  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
+  // Use snapshot to trigger re-renders, but return the actual proxy state for mutable access
+  useSnapshot(contextProvider.state);
   useEffect(() => {
     contextProvider.init();
     return () => contextProvider.teardown();
   }, [contextProvider]);
 
-  return context;
+  return contextProvider.state.context;
 }
 
 export function useWindowContextProvider() {
@@ -190,19 +170,13 @@ class IframeManager extends BaseContextProvider {
 
 export class WindowManager extends BaseContextProvider {
   private windowRef: { current: Window | null } = { current: null };
-  private openEventEmitter = CreateTypedEmitter<{ openChange: boolean }>();
   private pollInterval: number | null = null;
+  openState: { isOpen: boolean };
 
   constructor({ workspaceName }: { workspaceName: string }) {
     super({ workspaceName });
+    this.openState = proxy({ isOpen: false });
   }
-
-  onOpenChange = (callback: (isOpen: boolean) => void) => {
-    return this.openEventEmitter.listen("openChange", callback);
-  };
-  getOpenState = () => {
-    return this.windowRef.current !== null && !this.windowRef.current.closed;
-  };
 
   get doc(): Document | null {
     return this.windowRef.current?.document || null;
@@ -225,7 +199,7 @@ export class WindowManager extends BaseContextProvider {
       }
     }
     this.windowRef.current.addEventListener("load", this.initializePreview);
-    this.openEventEmitter.emit("openChange", true);
+    this.openState.isOpen = true;
 
     const clearPoll = () => {
       if (this.pollInterval) {
@@ -236,7 +210,7 @@ export class WindowManager extends BaseContextProvider {
     // Poll to detect when window closes
     this.pollInterval = window.setInterval(() => {
       if (this.windowRef.current?.closed) {
-        this.openEventEmitter.emit("openChange", false);
+        this.openState.isOpen = false;
         clearPoll();
       }
     }, 1000);

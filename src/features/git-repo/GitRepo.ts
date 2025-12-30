@@ -23,6 +23,7 @@ import { Mutex } from "async-mutex";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { nanoid } from "nanoid";
+import { proxy } from "valtio";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
 export interface GitRemote {
@@ -181,6 +182,8 @@ export class GitRepo {
   // public readonly ready = this.$p.promise;
   private unsubs: (() => void)[] = [];
   private info: RepoInfoType | null = null;
+  infoState: { info: RepoInfoType | null };
+  pendingState: { isPending: boolean };
 
   private gitWpm = new WatchPromiseMembers(GIT);
   readonly git = this.gitWpm.watched;
@@ -310,7 +313,7 @@ export class GitRepo {
     return this.info;
   };
 
-  onPending = (cb: (pending: boolean) => void) => {
+  onPending = () => {
     return this.gitEvents.on(
       [
         "commit:start",
@@ -326,9 +329,11 @@ export class GitRepo {
         "writeRef:start",
       ],
       async (propName) => {
-        cb((this.globalPending = true));
+        this.globalPending = true;
+        this.pendingState.isPending = true;
         await new Promise((rs) => this.gitEvents.once(`${propName}:end`, rs));
-        cb((this.globalPending = false));
+        this.globalPending = false;
+        this.pendingState.isPending = false;
       }
     );
   };
@@ -355,6 +360,11 @@ export class GitRepo {
       void this.remote.emit(RepoEvents.GIT, SIGNAL_ONLY);
       void this.sync();
     }, 500);
+
+    // Set up pending state listeners for Valtio
+    const pendingUnsubscribe = this.onPending();
+    this.unsubs.push(pendingUnsubscribe);
+
     return this.gitEvents.on(
       [
         "commit:end",
@@ -538,6 +548,7 @@ export class GitRepo {
       return this.info; // No changes, return current info
     }
     this.info = newInfo;
+    this.infoState.info = newInfo;
     void this.local.emit(RepoEvents.INFO, newInfo);
     if (emitRemote) {
       void this.remote.emit(RepoEvents.INFO, newInfo);
@@ -626,6 +637,8 @@ export class GitRepo {
     this.dir = dir || this.dir;
     this.defaultMainBranch = defaultBranch || this.defaultMainBranch;
     this.author = author || this.author;
+    this.infoState = proxy({ info: null });
+    this.pendingState = proxy({ isPending: false });
     this.remote = new RepoEventsRemote(this.guid);
   }
 

@@ -13,21 +13,16 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   }, deps);
   useEffect(() => currentRunner.tearDown, [currentRunner]);
 
-  // Use Valtio's useSnapshot for reactive state
-  const snapshot = useSnapshot(currentRunner.target);
-  const status = snapshot.status;
-  const logs = snapshot.logs;
-  const error = snapshot.error;
-
+  const { status, logs, error } = useSnapshot(currentRunner.target);
   const execute = useCallback(
     (runner: T, options?: { signal?: AbortSignal }) => {
       // Create a new abort controller for this execution
       abortControllerRef.current = new AbortController();
 
       setRunner(runner);
-      return runner.execute({
+      return runner.run({
         abortSignal: AbortSignal.any([abortControllerRef.current.signal, abortSignal, options?.signal].filter(Boolean)),
-      }) as ReturnType<T["execute"]>;
+      }) as ReturnType<T["run"]>;
     },
     [abortSignal]
   );
@@ -46,7 +41,6 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
     execute,
     cancel,
     runner: currentRunner as Omit<T, "execute">,
-    snapshot,
     logs,
     status,
     error,

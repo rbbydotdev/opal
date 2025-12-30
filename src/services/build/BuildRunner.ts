@@ -102,7 +102,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  async execute({
+  async run({
     abortSignal,
   }: {
     abortSignal?: AbortSignal;
@@ -550,7 +550,7 @@ class NullBuildRunner extends BuildRunner {
     });
   }
 
-  async execute(): Promise<BuildDAO> {
+  async run(): Promise<BuildDAO> {
     return this.target;
   }
 }

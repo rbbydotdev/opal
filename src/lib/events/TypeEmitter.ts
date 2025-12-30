@@ -170,7 +170,7 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
       return () => this.emitter.off(event as string | symbol, listener);
     }
 
-    emit<K extends keyof Events>(event: K, payload: Events[K] & Meta): void {
+    emit<K extends keyof Events>(event: K, payload?: Events[K] & Meta): void {
       // Special handling for error events
       if (event === "error") {
         const errorListeners = this.emitter.listenerCount("error");
@@ -179,9 +179,9 @@ export function CreateSuperTypedEmitterClass<Events extends Record<string, any>,
 
       this.emitter.emit(event as string | symbol, payload);
       if (typeof payload === "string") {
-        this.emitter.emit("*", Object.assign(payload, { eventName: event, toString: () => payload }));
+        this.emitter.emit("*", Object.assign(payload ?? {}, { eventName: event, toString: () => payload }));
       } else {
-        this.emitter.emit("*", Object.assign(payload, { eventName: event }));
+        this.emitter.emit("*", Object.assign(payload ?? {}, { eventName: event }));
       }
     }
 

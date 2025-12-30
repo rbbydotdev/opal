@@ -12,7 +12,7 @@ import { PublicationModalProvider } from "@/components/publish-modal/PubicationM
 import { ErrorPopper } from "@/components/ui/error-popup";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DocHistoryProvider } from "@/editors/history/HistoryPlugin";
+import { DocHistoryProviderx } from "@/editors/history/HistoryPluginx";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { useZoom } from "@/hooks/useZoom";
@@ -61,7 +61,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
               <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
                 <WorkspaceProvider>
                   <ConfirmProvider>
-                    <DocHistoryProvider>
+                    <DocHistoryProviderx>
                       <TooltipProvider delayDuration={1000}>
                         <WindowContextProviderComponent>
                           <LivePreviewDialogProvider>
@@ -92,7 +92,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                           </LivePreviewDialogProvider>
                         </WindowContextProviderComponent>
                       </TooltipProvider>
-                    </DocHistoryProvider>
+                    </DocHistoryProviderx>
                   </ConfirmProvider>
                 </WorkspaceProvider>
               </ErrorBoundary>

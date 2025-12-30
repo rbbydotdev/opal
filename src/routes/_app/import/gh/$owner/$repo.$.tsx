@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_app/import/gh/$owner/$repo/$")({
 //this handle could be made generic later?
 function useGithubImporter(fullRepoPath: string) {
   const [gotoPath, setGotoPath] = useState<string | null>(null);
-  const { runner, execute, cancel, logs, error, snapshot } = useRunner(
+  const { runner, execute, cancel, logs, error } = useRunner(
     () => GitHubImportRunner.Show({ fullRepoPath }),
     [fullRepoPath]
   );
@@ -33,8 +33,8 @@ function useGithubImporter(fullRepoPath: string) {
     cancel,
     setConfirm: runner.setConfirm.bind(runner),
     successPath: gotoPath,
-    type: snapshot.type,
-    confirmImport: snapshot.confirmImport,
+    type: runner.target.type,
+    confirmImport: runner.target.confirmImport,
   };
 }
 
