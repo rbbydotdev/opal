@@ -191,7 +191,7 @@ export function isJSON(path: AbsPath | RelPath | string | { toString(): string }
 }
 
 export function isAllowedFileType(path: AbsPath | RelPath | string | { toString(): string }): boolean {
-  return [isHtml, isCss, isStringish, isMarkdown, isMustache, isTemplateFile, isImage, isJSON].every((fn) => fn(path));
+  return [isHtml, isCss, isStringish, isMarkdown, isMustache, isTemplateFile, isImage, isJSON].some((fn) => fn(path));
 }
 
 // --- Ancestor/Lineage Utilities ---

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { PingDot } from "@/components/PingDot";
 import React from "react";
 import { toast as sonnerToast, Toaster as SonnerToaster } from "sonner";
 
@@ -74,25 +74,7 @@ function Toast(props: ToastProps) {
         <div className="w-full flex flex-col justify-center">
           {title && (
             <span id={titleId} className="text-sm font-medium text-foreground leading-tight flex items-center gap-2">
-              <span
-                className={cn("block rounded-full w-2 h-2", {
-                  "bg-success": type === "success",
-                  "bg-destructive": type === "error",
-                  "bg-chart-1": type === "warning",
-                  "bg-chart-2": type === "info",
-                  "bg-chart-3": type === "default",
-                })}
-              >
-                <span
-                  className={cn("block w-2 h-2 animate-ping rounded-full", {
-                    "bg-success": type === "success",
-                    "bg-destructive": type === "error",
-                    "bg-chart-1": type === "warning",
-                    "bg-chart-2": type === "info",
-                    "bg-chart-3": type === "default",
-                  })}
-                ></span>
-              </span>
+              <PingDot type={type} />
               {title}
             </span>
           )}

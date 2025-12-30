@@ -1,15 +1,12 @@
-import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
-import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
-import { absPath, isAllowedFileType, relPath, stripLeadingSlash } from "@/lib/paths2";
+import { absPath, isAllowedFileType, stripLeadingSlash } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
-import pathModule from "path";
 import { subscribe } from "valtio";
 
 type ImportState = {
@@ -61,6 +58,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
+    console.log([...sourceTree.iterator()].map((n) => n.path));
     const workspace = await Workspace.CreateNew(
       {
         name: workspaceName,
@@ -114,8 +112,12 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       this.log("Fetching files from source...", "info");
 
       for await (const file of this.fetchFiles(allAbortSignal)) {
-        if (!isAllowedFileType(file.path)) continue;
+        if (!isAllowedFileType(file.path)) {
+          console.log(`Skipping file: ${file.path} (unsupported file type)`);
+          continue;
+        }
         abortSignal?.throwIfAborted();
+        console.log(`Importing file: ${file.path}`);
         await this.tmpDisk.writeFileRecursive(absPath(file.path), await file.content());
         this.log(`Imported file: ${file.path}`, "info");
       }
@@ -173,93 +175,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   }
 }
 
-export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string }> {
-  constructor({ fullRepoPath }: { fullRepoPath: string }) {
-    super({ fullRepoPath });
-  }
-
-  static Create({ fullRepoPath }: { fullRepoPath: string }): GitHubImportRunner {
-    return new GitHubImportRunner({ fullRepoPath });
-  }
-
-  static Show(_: any): GitHubImportRunner {
-    return new GitHubImportRunner({ fullRepoPath: "show/show" });
-  }
-
-  static async Recall(): Promise<GitHubImportRunner> {
-    return new GitHubImportRunner({ fullRepoPath: "recall/recall" });
-  }
-
-  get repoInfo() {
-    const [owner, repo] = this.config.fullRepoPath.split("/");
-    return { owner, repo };
-  }
-
-  private _importer: GithubImport | null = null;
-  get importer() {
-    return (this._importer = this._importer || new GithubImport(relPath(this.config.fullRepoPath)));
-  }
-
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
-    yield* this.importer.fetchFiles(signal);
-  }
-
-  async fetchManifest(signal: AbortSignal, onImportError?: (e: unknown) => void): Promise<WorkspaceImportManifestType> {
-    try {
-      return await this.importer.fetchManifest(signal);
-    } catch (e) {
-      onImportError?.(e);
-    }
-    return WorkspaceDefaultManifest(this.ident);
-  }
-
-  createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
-    return {
-      version: 1,
-      description: "GitHub import",
-      type: "template",
-      ident: this.ident,
-      provider: "github",
-      details: {
-        url: pathModule.join("https://github.com", this.config.fullRepoPath),
-      },
-      ...importManifest,
-    };
-  }
-
-  get ident() {
-    return getIdent(this.config.fullRepoPath);
-  }
-
-  async preflight(): Promise<{
-    abort: boolean;
-    reason: string;
-    navigate: string | null;
-  }> {
-    const ws = await WorkspaceDAO.FindAlikeImport({
-      provider: "github",
-      ident: this.ident,
-      type: "showcase",
-    });
-    if (ws) {
-      return {
-        abort: true,
-        reason: "Workspace with the same GitHub import already exists.",
-        navigate: ws.href,
-      };
-    }
-    return {
-      abort: false,
-      reason: "",
-      navigate: null,
-    };
-  }
-
-  getWorkspaceName(): string {
-    return this.config.fullRepoPath.replace("/", "-");
-  }
-}
-
 export function getIdent(importPath: string) {
   const { owner, repo } = getRepoInfo(importPath);
   return `${owner}/${repo}`;
@@ -269,37 +184,3 @@ export function getRepoInfo(importPath: string) {
   const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(importPath).split("/");
   return { owner, repo, branch, dir };
 }
-
-export class NullImportRunner extends GitHubImportRunner {
-  constructor() {
-    super({
-      fullRepoPath: "null/null",
-    });
-  }
-
-  async run() {
-    return absPath("/");
-  }
-  fetchManifest(): Promise<WorkspaceImportManifestType> {
-    return Promise.resolve({
-      version: 1,
-      description: "Null import",
-      type: "template",
-
-      ident: "null/null",
-      provider: "null",
-      details: {
-        url: "null://null",
-      },
-    });
-  }
-}
-
-export const NULL_IMPORT_RUNNER = new NullImportRunner();
-
-// async createWorkspaceFromFromGitRemote(workspaceName: string, remoteURL: string): Promise<Workspace> {
-//   //womp womp needs cors
-//   const workspace = await Workspace.CreateNew(workspaceName, {}, IndexedDbDisk.type);
-//   await workspace.playbook.initFromRemote({ name: "origin", url: remoteURL });
-//   return workspace;
-// }

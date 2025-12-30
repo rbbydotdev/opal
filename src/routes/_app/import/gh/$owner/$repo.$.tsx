@@ -1,10 +1,12 @@
+import { PingDot } from "@/components/PingDot";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
 import { cn } from "@/lib/utils";
-import { getRepoInfo, GitHubImportRunner } from "@/services/import/ImportRunner";
+import { GitHubImportRunner } from "@/services/import/GitHubImportRunner";
+import { getRepoInfo } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
@@ -59,6 +61,17 @@ function ImporterCard({ importPath }: { importPath: string }) {
 
   const repoInfo = getRepoInfo(importPath);
 
+  const {
+    remaining,
+    cancel: cancelCountdown,
+    enabled: isCountingDown,
+  } = useCountdown({
+    seconds: 5,
+    onComplete: () => {
+      if (successPath) void navigate({ to: successPath });
+    },
+    enabled: Boolean(isSuccess && successPath),
+  });
   const bottomRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,9 +121,19 @@ function ImporterCard({ importPath }: { importPath: string }) {
           </ScrollArea>
         </div>
         <div className="flex gap-4 justify-center items-center w-full">
-          {confirmImport === "ask" && <Button onClick={() => setConfirm("yes")}>Confirm Import</Button>}
-          {isSuccess && successPath ? (
-            <CountDownButton onClick={() => navigate({ to: successPath! })} />
+          {confirmImport === "ask" && (
+            <Button onClick={() => setConfirm("yes")} className="flex justify-center items-center gap-2">
+              <PingDot />
+              Confirm Import
+            </Button>
+          )}
+          {isCountingDown ? (
+            <>
+              <Button onClick={() => navigate({ to: successPath! })}>Redirecting in {remaining}</Button>
+              <Button variant="secondary" onClick={cancelCountdown}>
+                Wait
+              </Button>
+            </>
           ) : (
             <Button
               className="px-12"
@@ -226,34 +249,34 @@ function BlockedCard({ proceed, reset }: { proceed: () => void; reset: () => voi
   );
 }
 
-function CountDownButton({
-  onClick,
-  seconds = 5,
-  title = "Navigating in",
-  ...buttonProps
-}: {
-  onClick: () => void;
-  seconds?: number;
-  title?: string;
-} & React.ComponentProps<typeof Button>) {
+function useCountdown({ seconds, onComplete, enabled }: { seconds: number; onComplete: () => void; enabled: boolean }) {
   const [remaining, setRemaining] = useState(seconds);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const onCompleteRef = useRef(onComplete).current;
+  const isEnabledRef = useRef(enabled);
+  const [userCancelled, setUserCancelled] = useState(false);
+
+  const cancel = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      setRemaining(seconds);
+      isEnabledRef.current = false;
+      setUserCancelled(true);
+    }
+  };
 
   useEffect(() => {
-    if (remaining <= 0) {
-      onClick();
-      return;
-    }
-
-    const interval = setInterval(() => {
+    if (!enabled || userCancelled) return;
+    isEnabledRef.current = enabled;
+    if (remaining <= 0) return onCompleteRef();
+    const interval = (intervalRef.current = setInterval(() => {
       setRemaining((prev) => prev - 1);
-    }, 1000);
+    }, 1000));
+    return () => {
+      clearInterval(interval);
+      isEnabledRef.current = false;
+    };
+  }, [remaining, enabled, onCompleteRef, userCancelled]);
 
-    return () => clearInterval(interval);
-  }, [remaining, onClick]);
-
-  return (
-    <Button variant="default" className="w-full" {...buttonProps} onClick={onClick}>
-      {title} {remaining}
-    </Button>
-  );
+  return { remaining, cancel, enabled: enabled && !userCancelled };
 }

@@ -284,14 +284,13 @@ export class Workspace {
     }
     // --- case 2: iterable of TreeNodes
     else {
-      for (const node of files) {
-        const path = absPath(node.path);
-        if (node.isTreeFile()) {
-          await workspace.newFiles([[path, await node.read()]]);
-        } else {
-          await workspace.disk.mkdirRecursive(path);
-        }
-      }
+      await Promise.all(
+        [...files].map(async (n) =>
+          n.isTreeFile()
+            ? workspace.newFiles([[absPath(n.path), await n.read()]])
+            : workspace.mkdirRecursive(absPath(n.path))
+        )
+      );
     }
 
     return workspace;
