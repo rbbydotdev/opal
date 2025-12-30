@@ -30,7 +30,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from "@mdxeditor/editor";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useMemo } from "react";
 
 function SpellCheckSwitch() {
   const { storedValue: spellCheck, setStoredValue: setSpellCheck } = useLocalStorage("Editor/spellcheck", true);
@@ -49,24 +49,8 @@ function SpellCheckSwitch() {
   );
 }
 
-export function useAllPlugins({
-  currentWorkspace,
-  realmId,
-  mimeType,
-}: {
-  currentWorkspace: Workspace;
-  realmId: string;
-  mimeType: string;
-}) {
+export function useAllPlugins({ currentWorkspace, realmId }: { currentWorkspace: Workspace; realmId: string }) {
   const workspaceImagesPlugin = useImagesPlugin({ currentWorkspace });
-
-  useEffect(() => {
-    if (mimeType === "text/markdown") return;
-    document.body.classList.add("hide-rich-text");
-    return () => {
-      document.body.classList.remove("hide-rich-text");
-    };
-  }, [mimeType]);
 
   return useMemo(
     () =>
@@ -102,7 +86,7 @@ export function useAllPlugins({
 const EditorToolbar = memo(function EditorToolbar() {
   const { left } = useSidebarPanes();
 
-  const { isMainFile } = useCurrentFilepath();
+  const { isMainFile, isMarkdown } = useCurrentFilepath();
   return (
     <div
       className={cn("flex gap-1 w-full", {
@@ -112,7 +96,7 @@ const EditorToolbar = memo(function EditorToolbar() {
     >
       <SourceEditorButton />
       <LivePreviewButtons />
-      {isMainFile && <EditHistoryMenu />}
+      {isMainFile && isMarkdown && <EditHistoryMenu />}
       <MdxSearchToolbar />
 
       <div className="flex-grow flex justify-start ml-2">

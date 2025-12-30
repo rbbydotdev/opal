@@ -76,7 +76,6 @@ function EditorWithPlugins({
   const plugins = useAllPlugins({
     currentWorkspace,
     realmId: MainEditorRealmId,
-    mimeType: mimeType,
   });
 
   const { storedValue: spellCheck } = useLocalStorage("Editor/spellcheck", true);

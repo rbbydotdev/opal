@@ -439,7 +439,7 @@ const CodeMirrorToolbar = memo(
           </>
         )}
 
-        {isMainFile && <EditHistoryMenu />}
+        {isMainFile && isMarkdown && <EditHistoryMenu />}
         {hasConflicts && isMarkdown && <GitConflictNotice />}
         <div className="ml-auto flex items-center gap-4">
           {setConflictResolution && hasConflicts && (
