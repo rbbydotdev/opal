@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
+import { useCountdown } from "@/lib/useCountdown";
 import { cn } from "@/lib/utils";
 import { GitHubImportRunner } from "@/services/import/GitHubImportRunner";
 import { getRepoInfo } from "@/services/import/ImportRunner";
@@ -63,7 +64,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
 
   const {
     remaining,
-    cancel: cancelCountdown,
+    pauseCountdown,
     enabled: isCountingDown,
   } = useCountdown({
     seconds: 5,
@@ -130,7 +131,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
           {isCountingDown ? (
             <>
               <Button onClick={() => navigate({ to: successPath! })}>Redirecting in {remaining}</Button>
-              <Button variant="secondary" onClick={cancelCountdown}>
+              <Button variant="secondary" onClick={pauseCountdown}>
                 Wait
               </Button>
             </>
@@ -247,36 +248,4 @@ function BlockedCard({ proceed, reset }: { proceed: () => void; reset: () => voi
       </Card>
     </div>
   );
-}
-
-function useCountdown({ seconds, onComplete, enabled }: { seconds: number; onComplete: () => void; enabled: boolean }) {
-  const [remaining, setRemaining] = useState(seconds);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const onCompleteRef = useRef(onComplete).current;
-  const isEnabledRef = useRef(enabled);
-  const [userCancelled, setUserCancelled] = useState(false);
-
-  const cancel = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      setRemaining(seconds);
-      isEnabledRef.current = false;
-      setUserCancelled(true);
-    }
-  };
-
-  useEffect(() => {
-    if (!enabled || userCancelled) return;
-    isEnabledRef.current = enabled;
-    if (remaining <= 0) return onCompleteRef();
-    const interval = (intervalRef.current = setInterval(() => {
-      setRemaining((prev) => prev - 1);
-    }, 1000));
-    return () => {
-      clearInterval(interval);
-      isEnabledRef.current = false;
-    };
-  }, [remaining, enabled, onCompleteRef, userCancelled]);
-
-  return { remaining, cancel, enabled: enabled && !userCancelled };
 }

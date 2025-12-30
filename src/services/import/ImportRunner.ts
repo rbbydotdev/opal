@@ -58,7 +58,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
-    console.log([...sourceTree.iterator()].map((n) => n.path));
     const workspace = await Workspace.CreateNew(
       {
         name: workspaceName,
@@ -113,11 +112,10 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       for await (const file of this.fetchFiles(allAbortSignal)) {
         if (!isAllowedFileType(file.path)) {
-          console.log(`Skipping file: ${file.path} (unsupported file type)`);
+          this.log(`Skipping file: ${file.path} (unsupported file type)`);
           continue;
         }
         abortSignal?.throwIfAborted();
-        console.log(`Importing file: ${file.path}`);
         await this.tmpDisk.writeFileRecursive(absPath(file.path), await file.content());
         this.log(`Imported file: ${file.path}`, "info");
       }
@@ -156,7 +154,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
   waitForTemplateConfirmation(signal: AbortSignal) {
     this.target.type = "template";
     this.target.confirmImport = "ask";
-    console.log("Setting confirmImport to 'ask'");
 
     // Use Valtio subscribe to wait for confirmImport change
     return new Promise<ConfirmImportType>((resolve, reject) => {
@@ -180,7 +177,12 @@ export function getIdent(importPath: string) {
   return `${owner}/${repo}`;
 }
 
-export function getRepoInfo(importPath: string) {
-  const [owner, repo, branch = "main", dir = "/"] = stripLeadingSlash(importPath).split("/");
-  return { owner, repo, branch, dir };
+export function getRepoInfo(importPath: string, defaults: { branch?: string } = { branch: "main" }) {
+  const [owner, repo, branch, dir = "/"] = stripLeadingSlash(importPath).split("/");
+  return {
+    owner,
+    repo,
+    branch: branch || defaults.branch || undefined,
+    dir,
+  };
 }

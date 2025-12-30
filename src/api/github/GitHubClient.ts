@@ -666,6 +666,39 @@ export class GitHubClient {
     }
   }
 
+  async getRepositoryDefaultBranch(
+    { owner, repo }: { owner: string; repo: string },
+    { signal }: { signal?: AbortSignal } = {}
+  ): Promise<string> {
+    try {
+      const response = await this.octokit.request("GET /repos/{owner}/{repo}", {
+        owner,
+        repo,
+        request: { signal },
+      });
+
+      return response.data.default_branch || "main";
+    } catch (e) {
+      if (isAbortError(e)) throw e;
+      const error = mapToTypedError(e, {
+        message: `Failed to get default branch for ${owner}/${repo}`,
+        path: `${owner}/${repo}`,
+      });
+
+      if (error.code === 404) {
+        error.hint(`Repository ${owner}/${repo} not found. Please check the repository name.`);
+      } else if (error.code === 403) {
+        error.hint(`GitHub API rate limit exceeded. Please wait or authenticate to continue.`);
+      } else if (error.code === 401) {
+        error.hint(`Authentication failed. Please check your credentials.`);
+      } else {
+        error.hint(tryParseGitHubError(e));
+      }
+
+      throw error;
+    }
+  }
+
   async getRepositoryTree(
     { owner, repo, branch = "main" }: { owner: string; repo: string; branch?: string },
     { signal }: { signal?: AbortSignal } = {}

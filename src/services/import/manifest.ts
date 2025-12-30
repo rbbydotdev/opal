@@ -1,19 +1,23 @@
 import { AbsPath } from "@/lib/paths2";
 import { z } from "zod";
 
-export const WorkspaceImportManifestSchema = z.object({
-  version: z.number(),
-  description: z.string().optional(),
-  navigate: z.string().brand<AbsPath>().optional(),
-  type: z.union([z.literal("showcase"), z.literal("template")]),
-  ident: z.string(),
-  provider: z.string().optional(),
-  details: z
-    .object({
-      url: z.string(),
-    })
-    .optional(),
-});
+export const WorkspaceImportManifestSchema = z
+  .object({
+    version: z.number().default(1).catch(1),
+    description: z.string().default("import").catch("import"),
+    navigate: z.string().brand<AbsPath>().optional().catch(undefined),
+    type: z.union([z.literal("showcase"), z.literal("template")]).default("template").catch("template"),
+    ident: z.string().default("").catch(""),
+    provider: z.string().optional().catch(undefined),
+    defaultBranch: z.string().optional().catch(undefined),
+    details: z
+      .object({
+        url: z.string(),
+      })
+      .optional()
+      .catch(undefined),
+  })
+  .passthrough(); // Allow unrecognized keys
 
 export type WorkspaceImportManifestType = z.infer<typeof WorkspaceImportManifestSchema>;
 
