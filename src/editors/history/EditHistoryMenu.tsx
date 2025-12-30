@@ -18,7 +18,7 @@ import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 function useEnabledEditHistory() {
@@ -47,8 +47,6 @@ export function EditHistoryMenu() {
   const { storedValue: enabled } = useEnabledEditHistory();
   const [isOpen, setOpen] = useState(false);
   const { updateSelectedItemRef, scrollAreaRef } = useSelectedItemScroll({ isOpen });
-
-  const [hoverCardOpen, setHoverCardOpen] = useState(false);
 
   const { edits, pending, mode, edit: selectedEdit, accept, propose, restore, clearAll } = useDocHistory();
   const isSelectedEdit = (edit: HistoryDAO) => {

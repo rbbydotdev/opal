@@ -7,7 +7,7 @@ import pDebounce from "p-debounce";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { liveQuery } from "dexie";
 import { createContext, useContext, useState } from "react";
-import { proxy, subscribe, useSnapshot, ref } from "valtio";
+import { proxy, ref, subscribe, useSnapshot } from "valtio";
 
 export class HistoryPlugin {
   static defaultState = {
@@ -83,7 +83,7 @@ export class HistoryPlugin {
             .reverse()
             .sortBy("timestamp")
         ).subscribe((edits) => {
-          this.state.edits = edits.map(edit => edit.preview ? { ...edit, preview: ref(edit.preview) } : edit);
+          this.state.edits = edits.map((edit) => (edit.preview ? { ...edit, preview: ref(edit.preview) } : edit));
         }).unsubscribe,
         subscribe(this.state, () => {
           const doc = this.state.editorDoc;
@@ -159,7 +159,7 @@ export class HistoryPlugin {
     this.init();
   };
 
-  private onChangeDebounce = pDebounce(async (markdown: string, prevMarkdown?: string | null) => {
+  private onChange = async (markdown: string, prevMarkdown?: string | null) => {
     if (!this.documentId || !this.workspaceId) return;
     const documentId = this.documentId;
     const workspaceId = this.workspaceId;
@@ -169,7 +169,9 @@ export class HistoryPlugin {
       markdown,
       prevMarkdown,
     });
-  }, this.debounceMs);
+  };
+
+  private onChangeDebounce = pDebounce(this.onChange, this.debounceMs);
 
   tearDown = () => {
     while (this.unsubs.length) this.unsubs.pop()!();
@@ -179,7 +181,7 @@ export class HistoryPlugin {
 const defaultDocHistory = {
   DocHistory: new HistoryPlugin(),
   historyEnabled: false,
-  setHistoryEnabled: (enabled: boolean) => {},
+  setHistoryEnabled: (_enabled: boolean) => {},
 };
 
 const DocHistoryContext = createContext(defaultDocHistory);

@@ -1,14 +1,24 @@
 import { ViewMode } from "@mdxeditor/editor";
-import { useQueryState } from "nuqs";
-
-const viewModeParser = {
-  parse: (value: string): ViewMode | null => {
-    const validModes: Array<ViewMode> = ["rich-text", "source", "diff"];
-    return validModes.find((vm) => vm === value) || null;
-  },
-  serialize: (value: ViewMode | null): string => value || "",
-};
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 export function useWatchViewMode(): [ViewMode | null, (value: ViewMode | null) => void] {
-  return useQueryState("viewMode", viewModeParser);
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false });
+
+  const viewMode = (search.viewMode as ViewMode | null) || null;
+
+  const setViewMode = useCallback(
+    (value: ViewMode | null) => {
+      void navigate({
+        search: ((prev: typeof search) => ({
+          ...prev,
+          viewMode: value || undefined,
+        })) as any,
+      });
+    },
+    [navigate]
+  );
+
+  return [viewMode, setViewMode];
 }

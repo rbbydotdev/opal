@@ -111,8 +111,8 @@ const EditorToolbar = memo(function EditorToolbar() {
       })}
     >
       <SourceEditorButton />
-      {isMainFile && <EditHistoryMenu />}
       <LivePreviewButtons />
+      {isMainFile && <EditHistoryMenu />}
       <MdxSearchToolbar />
 
       <div className="flex-grow flex justify-start ml-2">

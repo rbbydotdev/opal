@@ -18,6 +18,6 @@ function RootComponent() {
 export const Route = createRootRoute({
   component: RootComponent,
   search: {
-    middlewares: [retainSearchParams(['viewMode'])],
+    middlewares: [retainSearchParams(["viewMode"])],
   },
 });

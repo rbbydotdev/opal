@@ -151,7 +151,7 @@ export const EditViewPreview = ({
   const [open, setOpen] = useState(false);
 
   return htmlContent !== null ? (
-    <HoverCard onOpenChange={setOpen} open={open}>
+    <HoverCard onOpenChange={setOpen} open={open} openDelay={100} closeDelay={300}>
       <HoverCardTrigger asChild>
         <div className={cn("w-12 h-12 border border-border bg-white cursor-pointer overflow-hidden", className)}>
           <div style={{ transform: "scale(0.1)", transformOrigin: "top left", width: "400px", height: "400px" }}>
@@ -160,7 +160,7 @@ export const EditViewPreview = ({
         </div>
       </HoverCardTrigger>
       <HoverCardContent
-        side="right"
+        side="left"
         className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden no-scrollbar"
         style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
       >
