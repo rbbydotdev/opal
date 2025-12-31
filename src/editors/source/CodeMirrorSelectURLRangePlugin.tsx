@@ -1,28 +1,4 @@
-import { useQueryState } from "nuqs";
-
-const RANGE_KEY = "HL";
-
-const rangesParser = {
-  parse: (value: string): [start: number, end: number][] | null => {
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return parsed.map((item: any) => {
-          if (Array.isArray(item) && item.length >= 2) {
-            return [parseInt(String(item[0])), parseInt(String(item[1]))];
-          }
-          return [0, 0]; // fallback
-        });
-      }
-    } catch {
-      console.warn(`Invalid range format: ${value}`);
-    }
-    return null;
-  },
-  serialize: (value: [start: number, end: number][] | null): string => {
-    return value ? JSON.stringify(value) : "";
-  },
-};
+import { useSearch } from "@tanstack/react-router";
 
 export function useURLRanges():
   | { start: number; end: number; hasRanges: true }
@@ -31,10 +7,13 @@ export function useURLRanges():
       end: null;
       hasRanges: false;
     } {
-  const [ranges] = useQueryState(RANGE_KEY, rangesParser);
-  const [start, end] = ranges?.at(0) ?? [];
-  if (start === undefined || end === undefined) {
-    return { start: null, end: null, hasRanges: false };
+  const search = useSearch({ from: "/_app/workspace/$workspaceName/$" });
+  const range = search.HL;
+
+  if (range && range.length === 2) {
+    const [start, end] = range;
+    return { start, end, hasRanges: true };
   }
-  return { start, end, hasRanges: true };
+
+  return { start: null, end: null, hasRanges: false };
 }

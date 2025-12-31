@@ -125,10 +125,6 @@ export async function handleWorkspaceSearch({
   activeSearches.set(searchKey, searchController);
 
   try {
-    if (!searchTerm) {
-      return new Response(null, { status: 204 });
-    }
-
     const timeoutSignal = AbortSignal.timeout(5_000);
     const combinedSignal = AbortSignal.any([searchController.signal, timeoutSignal]);
 

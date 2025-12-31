@@ -23,14 +23,14 @@ async function* fetchQuerySearch({
   signal,
 }: WorkspaceFetchParams): AsyncGenerator<WorkspaceSearchItem, void, unknown> {
   try {
-    const res = await SWClient["workspace-search"][":workspaceName"].$get(
+    const res = await SWClient["workspace-search"].$get(
       {
         query: {
           searchTerm,
           regexp,
           mode,
+          workspaceName,
         },
-        param: { workspaceName },
       },
       {
         init: { signal },

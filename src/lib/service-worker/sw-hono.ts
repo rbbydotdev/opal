@@ -41,7 +41,15 @@ const app = new Hono<{ Variables: { workspaceName: string } }>();
 
 const searchSchema = z.object({
   searchTerm: z.string(),
-  regexp: z.boolean().optional().default(true),
+  regexp: z
+    .union([z.boolean(), z.literal("true"), z.literal("false")])
+    .optional()
+    .transform((val) => {
+      if (val === undefined) return true; // default
+      if (typeof val === "boolean") return val;
+      return val === "true";
+    }),
+  workspaceName: z.string(),
   mode: z.enum(["content", "filename"]).optional().default("content"),
 });
 
@@ -246,10 +254,9 @@ const _Handlers = {
     }
   ),
   // Workspace search handler
-  WorkspaceSearch: app.get("/workspace-search/:workspaceName", zValidator("query", searchSchema), async (c) => {
+  WorkspaceSearch: app.get("/workspace-search", zValidator("query", searchSchema), async (c) => {
     try {
-      const workspaceName = c.req.param("workspaceName");
-      const { searchTerm, regexp, mode } = c.req.valid("query");
+      const { searchTerm, regexp, mode, workspaceName } = c.req.valid("query");
       logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
       return await handleWorkspaceSearch({ workspaceName, searchTerm, regexp, mode });
     } catch (error) {
