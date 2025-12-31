@@ -1,8 +1,11 @@
 import { GitRepo, RepoDefaultInfo } from "@/features/git-repo/GitRepo";
-import { useSnapshot } from "valtio";
+import { emitter } from "@/lib/Observable";
+import { useSyncExternalStore } from "react";
 
 export function useRepoInfo(repo: GitRepo) {
-  // Use snapshot to trigger re-renders
-  useSnapshot(repo.infoState);
-  return repo.infoState.info ?? RepoDefaultInfo;
+  const info = useSyncExternalStore(
+    (callback) => emitter(repo.infoState).on('info', callback),
+    () => repo.infoState.info
+  );
+  return info ?? RepoDefaultInfo;
 }

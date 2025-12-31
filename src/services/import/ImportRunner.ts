@@ -7,7 +7,6 @@ import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
-import { subscribe } from "valtio";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
@@ -155,9 +154,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     this.target.type = "template";
     this.target.confirmImport = "ask";
 
-    // Use Valtio subscribe to wait for confirmImport change
+    // Use Observable emitter to wait for confirmImport change
     return new Promise<ConfirmImportType>((resolve, reject) => {
-      const unsubscribe = subscribe(this.target, () => {
+      const unsubscribe = this.emitter.on('confirmImport', () => {
         if (this.target.confirmImport !== "ask") {
           unsubscribe();
           resolve(this.target.confirmImport);

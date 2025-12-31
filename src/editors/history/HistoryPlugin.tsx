@@ -4,10 +4,10 @@ import { HistoryDB } from "@/editors/history/HistoryDB";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
 
+import { observeMultiple, emitter } from "@/lib/Observable";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { liveQuery } from "dexie";
-import { createContext, useContext, useState } from "react";
-import { proxy, ref, subscribe, useSnapshot } from "valtio";
+import { createContext, useContext, useState, useSyncExternalStore } from "react";
 
 export class HistoryPlugin {
   static defaultState = {
@@ -24,7 +24,7 @@ export class HistoryPlugin {
 
   editStorage = new HistoryDB();
 
-  state = proxy({ ...HistoryPlugin.defaultState });
+  state = observeMultiple({ ...HistoryPlugin.defaultState }, {}, { batch: true });
 
   private documentId: string | null = null;
   private workspaceId: string | null = null;
@@ -83,9 +83,9 @@ export class HistoryPlugin {
             .reverse()
             .sortBy("timestamp")
         ).subscribe((edits) => {
-          this.state.edits = edits.map((edit) => (edit.preview ? { ...edit, preview: ref(edit.preview) } : edit));
+          this.state.edits = edits;
         }).unsubscribe,
-        subscribe(this.state, () => {
+        emitter(this.state).on('editorDoc', () => {
           const doc = this.state.editorDoc;
           const proposedDoc = this.state.proposedDoc;
           if (this.state.mode === "propose" && proposedDoc !== doc) {
@@ -93,7 +93,7 @@ export class HistoryPlugin {
           }
         }),
         //
-        subscribe(this.state, () => {
+        emitter(this.state).on('editorDoc', () => {
           const doc = this.state.editorDoc;
           if (this.state.mode === "edit") {
             this.state.baseDoc = doc;
@@ -110,7 +110,7 @@ export class HistoryPlugin {
     this.state.mode = "propose";
     this.state.proposedDoc = editText;
     this.state.editorDoc = editText; // Set our internal state
-    this.state.edit = edit.preview ? { ...edit, preview: ref(edit.preview) } : edit;
+    this.state.edit = edit;
 
     // Then update the external editor
     this.setEditorMarkdown(editText);
@@ -126,7 +126,7 @@ export class HistoryPlugin {
   };
   restore = () => {
     const baseDoc = this.state.baseDoc!;
-    this.setEditorMarkdown(this.state.baseDoc!);
+    this.setEditorMarkdown(baseDoc);
     this.state.mode = "edit";
     this.state.edit = null;
     this.state.proposedDoc = null;
@@ -234,8 +234,22 @@ export function useDocHistory(
     writeMarkdown,
   });
 
-  const state = useSnapshot(DocHistory.state);
-  const { edits, pending, mode, edit } = state;
+  const edits = useSyncExternalStore(
+    (callback) => emitter(DocHistory.state).on('edits', callback),
+    () => DocHistory.state.edits
+  );
+  const pending = useSyncExternalStore(
+    (callback) => emitter(DocHistory.state).on('pending', callback),
+    () => DocHistory.state.pending
+  );
+  const mode = useSyncExternalStore(
+    (callback) => emitter(DocHistory.state).on('mode', callback),
+    () => DocHistory.state.mode
+  );
+  const edit = useSyncExternalStore(
+    (callback) => emitter(DocHistory.state).on('edit', callback),
+    () => DocHistory.state.edit
+  );
 
   const { accept, propose, restore, backoff, clearAll } = DocHistory;
 

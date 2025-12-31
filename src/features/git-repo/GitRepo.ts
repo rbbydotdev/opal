@@ -23,7 +23,7 @@ import { Mutex } from "async-mutex";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { nanoid } from "nanoid";
-import { proxy } from "valtio";
+import { observeMultiple } from "@/lib/Observable";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
 export interface GitRemote {
@@ -637,8 +637,8 @@ export class GitRepo {
     this.dir = dir || this.dir;
     this.defaultMainBranch = defaultBranch || this.defaultMainBranch;
     this.author = author || this.author;
-    this.infoState = proxy({ info: null });
-    this.pendingState = proxy({ isPending: false });
+    this.infoState = observeMultiple({ info: null }, {}, { batch: true });
+    this.pendingState = observeMultiple({ isPending: false }, {}, { batch: true });
     this.remote = new RepoEventsRemote(this.guid);
   }
 

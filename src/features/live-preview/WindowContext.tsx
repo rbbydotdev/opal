@@ -4,8 +4,7 @@ import {
   WindowManager,
 } from "@/features/live-preview/IframeContextProvider";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import React, { createContext, useEffect, useMemo } from "react";
-import { useSnapshot } from "valtio";
+import React, { createContext, useEffect, useMemo, useSyncExternalStore } from "react";
 
 export const WindowContext = createContext<WindowContextValue | null>(null);
 // React Context for shared WindowManager
@@ -21,9 +20,8 @@ export function WindowContextProviderComponent({ children }: { children: React.R
     () => new WindowManager({ workspaceName: currentWorkspace.name }),
     [currentWorkspace.name]
   );
-  // Use snapshots to trigger re-renders
-  useSnapshot(contextProvider.state);
-  useSnapshot(contextProvider.openState);
+  const context = useSyncExternalStore(contextProvider.onReady, contextProvider.getContext);
+  const isOpen = useSyncExternalStore(contextProvider.onOpenChange, contextProvider.getOpenState);
 
   useEffect(() => {
     return () => contextProvider.teardown();
@@ -31,12 +29,12 @@ export function WindowContextProviderComponent({ children }: { children: React.R
 
   const value: WindowContextValue = useMemo(
     () => ({
-      ...contextProvider.state.context,
-      isOpen: contextProvider.openState.isOpen,
+      ...context,
+      isOpen,
       open: () => contextProvider.open(),
       close: () => contextProvider.close(),
     }),
-    [contextProvider]
+    [context, isOpen, contextProvider]
   );
 
   return <WindowContext.Provider value={value}>{children}</WindowContext.Provider>;

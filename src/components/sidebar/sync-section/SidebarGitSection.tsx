@@ -16,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
-import { useSnapshot } from "valtio";
+import { emitter } from "@/lib/Observable";
+import { useSyncExternalStore } from "react";
 
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/sidebar/sync-section/GitAuthorDialog";
@@ -393,7 +394,10 @@ export function SidebarGitSection({
     return "commit";
   })();
 
-  const globalPending = useSnapshot(repo.pendingState).isPending;
+  const globalPending = useSyncExternalStore(
+    (callback) => emitter(repo.pendingState).on('isPending', callback),
+    () => repo.pendingState.isPending
+  );
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();

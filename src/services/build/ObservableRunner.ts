@@ -1,12 +1,22 @@
+import { CreateSuperTypedEmitter } from "@/lib/events/TypeEmitter";
+import { Observable, observeMultiple } from "@/lib/Observable";
 import { RunnerState } from "@/types/RunnerInterfaces";
 import { LogLine } from "@/types/RunnerTypes";
-import { proxy, snapshot } from "valtio";
 
 export class ObservableRunner<TInner extends RunnerState> {
-  target: ReturnType<typeof proxy<TInner>>;
+  target: Observable<TInner>;
+
+  emitter = CreateSuperTypedEmitter<TInner>();
 
   constructor(inner: TInner) {
-    this.target = proxy(inner);
+    const listeners = Object.entries(inner).map(([key]) => [
+      key,
+      this.emitter.emit.bind(this.emitter, key as keyof TInner),
+    ]);
+
+    this.target = observeMultiple<RunnerState>(inner, Object.fromEntries(listeners), {
+      batch: true,
+    }) as Observable<TInner>;
   }
 
   get status() {
@@ -47,26 +57,26 @@ export class ObservableRunner<TInner extends RunnerState> {
     this.target.logs = [...this.target.logs, logLine];
   }
 
-  // No longer need these methods - Valtio handles subscriptions automatically
-  onLog = (): (() => void) => {
-    return () => {};
+  onUpdate = (callback: () => void): (() => void) => {
+    return this.emitter.on("*", callback);
+  };
+  getUpdate = () => {
+    return this.target;
   };
 
-  onStatus = (): (() => void) => {
-    return () => {};
+  onLog = (callback: (logs: LogLine[]) => void): (() => void) => {
+    return this.emitter.on("logs", callback);
   };
 
-  onError = (): (() => void) => {
-    return () => {};
+  onStatus = (callback: () => void): (() => void) => {
+    return this.emitter.on("status", callback);
+  };
+
+  onError = (callback: (error: string | null) => void): (() => void) => {
+    return this.emitter.on("error", callback);
   };
 
   tearDown = () => {
-    // No cleanup needed with Valtio
-  };
-
-  toJSON = () => {
-    return snapshot(this.target);
+    this.emitter.clearListeners();
   };
 }
-
-// RunnerState is now imported from RunnerInterfaces

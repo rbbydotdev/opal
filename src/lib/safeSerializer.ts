@@ -1,18 +1,5 @@
-import { getVersion } from 'valtio'
-
-const isValtioProxy = (obj: any) => typeof getVersion(obj) === 'number'
-
 export function safeSerializer<T>(val: T, seen: WeakSet<object> = new WeakSet()): any {
   if (val && typeof val === "object") {
-    // Handle Valtio proxies by unwrapping to plain object
-    if (isValtioProxy(val)) {
-      try {
-        // Convert Valtio proxy to plain object
-        val = JSON.parse(JSON.stringify(val)) as T;
-      } catch (e) {
-        // If conversion fails, continue with the original object
-      }
-    }
 
     if (seen.has(val as object)) return undefined; // no "[Circular]"
     seen.add(val as object);
