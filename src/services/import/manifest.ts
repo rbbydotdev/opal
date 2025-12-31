@@ -6,7 +6,10 @@ export const WorkspaceImportManifestSchema = z
     version: z.number().default(1).catch(1),
     description: z.string().default("import").catch("import"),
     navigate: z.string().brand<AbsPath>().optional().catch(undefined),
-    type: z.union([z.literal("showcase"), z.literal("template")]).default("template").catch("template"),
+    type: z
+      .union([z.literal("showcase"), z.literal("template")])
+      .default("template")
+      .catch("template"),
     ident: z.string().default("").catch(""),
     provider: z.string().optional().catch(undefined),
     defaultBranch: z.string().optional().catch(undefined),

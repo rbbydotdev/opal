@@ -4,7 +4,7 @@ import { HistoryDB } from "@/editors/history/HistoryDB";
 import { useResource } from "@/hooks/useResource";
 import pDebounce from "p-debounce";
 
-import { observeMultiple, emitter } from "@/lib/Observable";
+import { emitter, observeMultiple } from "@/lib/Observable";
 import { useCurrentFilepath, useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { liveQuery } from "dexie";
 import { createContext, useContext, useState, useSyncExternalStore } from "react";
@@ -63,17 +63,12 @@ export class HistoryPlugin {
     if (writeMarkdown) this.writeMarkdown = writeMarkdown;
   };
 
-  // Direct state access - no getters/setters needed with valtio
-
-  // Direct state access via valtio proxy - no setters/getters needed
-
   init() {
     if (!this.documentId || !this.workspaceId) return;
     this.editStorage = new HistoryDB();
     this.unsubs.push(
       ...[
         () => this.editStorage.tearDown(),
-        //
         liveQuery(() =>
           ClientDb.historyDocs
             .where({
@@ -82,22 +77,14 @@ export class HistoryPlugin {
             })
             .reverse()
             .sortBy("timestamp")
-        ).subscribe((edits) => {
-          this.state.edits = edits;
-        }).unsubscribe,
-        emitter(this.state).on('editorDoc', () => {
-          const doc = this.state.editorDoc;
-          const proposedDoc = this.state.proposedDoc;
-          if (this.state.mode === "propose" && proposedDoc !== doc) {
+        ).subscribe((edits) => (this.state.edits = edits)).unsubscribe,
+        emitter(this.state).on("editorDoc", () => {
+          if (this.state.mode === "propose" && this.state.proposedDoc !== this.state.editorDoc) {
             this.backoff();
           }
         }),
-        //
-        emitter(this.state).on('editorDoc', () => {
-          const doc = this.state.editorDoc;
-          if (this.state.mode === "edit") {
-            this.state.baseDoc = doc;
-          }
+        emitter(this.state).on("editorDoc", () => {
+          if (this.state.mode === "edit") this.state.baseDoc = this.state.editorDoc;
         }),
       ]
     );
@@ -161,11 +148,9 @@ export class HistoryPlugin {
 
   private onChange = async (markdown: string, prevMarkdown?: string | null) => {
     if (!this.documentId || !this.workspaceId) return;
-    const documentId = this.documentId;
-    const workspaceId = this.workspaceId;
     return this.editStorage.saveEdit({
-      documentId,
-      workspaceId,
+      documentId: this.documentId,
+      workspaceId: this.workspaceId,
       markdown,
       prevMarkdown,
     });
@@ -174,7 +159,7 @@ export class HistoryPlugin {
   private onChangeDebounce = pDebounce(this.onChange, this.debounceMs);
 
   tearDown = () => {
-    while (this.unsubs.length) this.unsubs.pop()!();
+    while (this.unsubs.length) this.unsubs.pop()?.();
   };
 }
 
@@ -235,19 +220,19 @@ export function useDocHistory(
   });
 
   const edits = useSyncExternalStore(
-    (callback) => emitter(DocHistory.state).on('edits', callback),
+    (callback) => emitter(DocHistory.state).on("edits", callback),
     () => DocHistory.state.edits
   );
   const pending = useSyncExternalStore(
-    (callback) => emitter(DocHistory.state).on('pending', callback),
+    (callback) => emitter(DocHistory.state).on("pending", callback),
     () => DocHistory.state.pending
   );
   const mode = useSyncExternalStore(
-    (callback) => emitter(DocHistory.state).on('mode', callback),
+    (callback) => emitter(DocHistory.state).on("mode", callback),
     () => DocHistory.state.mode
   );
   const edit = useSyncExternalStore(
-    (callback) => emitter(DocHistory.state).on('edit', callback),
+    (callback) => emitter(DocHistory.state).on("edit", callback),
     () => DocHistory.state.edit
   );
 

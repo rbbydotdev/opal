@@ -7,6 +7,7 @@ import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
+import { join } from "path";
 
 type ImportState = {
   status: "idle" | "success" | "pending" | "error";
@@ -37,6 +38,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     this.config = config;
   }
 
+  abstract get ident(): string;
   abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }>;
   abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
   abstract fetchManifest(
@@ -93,6 +95,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       if (preflightResult.abort) {
         this.log(`Import aborted: ${preflightResult.reason}`, "warning");
         this.target.status = "success";
+
         return preflightResult.navigate ?? "/";
       }
 
@@ -125,13 +128,13 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log(`Creating workspace ${workspaceName} from imported files...`, "info");
 
-      const workspace = await this.createWorkspaceImport(workspaceName, manifest.ident, manifest);
+      const workspace = await this.createWorkspaceImport(workspaceName, this.ident, manifest);
 
       this.log("Workspace created successfully", "success");
 
       this.target.status = "success";
 
-      return workspace.href;
+      return join(workspace.href, manifest.navigate || "");
     } catch (error) {
       if (isAbortError(error)) {
         this.log("Import cancelled by user", "error");
@@ -156,7 +159,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
     // Use Observable emitter to wait for confirmImport change
     return new Promise<ConfirmImportType>((resolve, reject) => {
-      const unsubscribe = this.emitter.on('confirmImport', () => {
+      const unsubscribe = this.emitter.on("confirmImport", () => {
         if (this.target.confirmImport !== "ask") {
           unsubscribe();
           resolve(this.target.confirmImport);

@@ -128,7 +128,7 @@ declare const __observableBrand: unique symbol;
 /**
  * Symbol for accessing the emitter on observable objects
  */
-export const __observableEmitter = Symbol('observableEmitter');
+export const __observableEmitter = Symbol("observableEmitter");
 
 /**
  * Helper function to access the observable's emitter functionality
@@ -143,7 +143,7 @@ export function emitter<T>(observable: Observable<T>) {
       // This will cause the observable to emit to all subscribers
       const currentValue = (observable as any)[key];
       (observable as any)[key] = currentValue;
-    }
+    },
   };
 }
 
@@ -180,9 +180,9 @@ export function observe<T extends Record<string, any>, K extends keyof T>(
  */
 export function observeMultiple<T extends Record<string, any>>(
   target: T,
-  observers: {
+  observers: Partial<{
     [K in keyof T]: PropertyChangeCallback<T, K>;
-  },
+  }>,
   options?: { batch?: boolean }
 ): Observable<T> {
   const shouldBatch = options?.batch ?? false;
@@ -233,7 +233,7 @@ export function observeMultiple<T extends Record<string, any>>(
         // Always emit to subscribers regardless of observers
         const listeners = emitter.get(prop as keyof T);
         if (listeners) {
-          listeners.forEach(listener => listener());
+          listeners.forEach((listener) => listener());
         }
 
         return true;
