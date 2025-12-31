@@ -8,6 +8,7 @@ import { NullDisk } from "@/data/disk/NullDisk";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
 import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";
@@ -70,21 +71,21 @@ export class BuildDAO implements BuildRecord {
   }
 
   toJSON() {
-    return {
+    return safeSerializer({
       buildPath: this.buildPath,
-      disk: this.disk instanceof Disk ? (this.disk.toJSON() as DiskJType) : this.disk,
+      disk: this.disk,
       error: this.error,
       fileCount: this.fileCount,
       guid: this.guid,
       label: this.label,
       logs: this.logs,
-      sourceDisk: this.sourceDisk instanceof Disk ? (this.sourceDisk.toJSON() as DiskJType) : this.sourceDisk,
+      sourceDisk: this.sourceDisk,
       sourcePath: this.sourcePath,
       status: this.status,
       strategy: this.strategy,
       timestamp: this.timestamp,
       workspaceId: this.workspaceId,
-    };
+    });
   }
 
   complete() {
@@ -205,13 +206,13 @@ export class BuildDAO implements BuildRecord {
     return (this.disk = this.disk instanceof Disk ? this.disk : DiskFromJSON(this.disk));
   }
 
-  getSourceDisk(): Disk {
+  getSourceDisk = (): Disk => {
     return this.sourceDisk instanceof Disk ? this.sourceDisk : DiskFromJSON(this.sourceDisk);
-  }
+  };
 
-  getOutputPath(): AbsPath {
+  getOutputPath = (): AbsPath => {
     return this.getBuildPath();
-  }
+  };
 
   getDownloadBuildZipURL(workspaceName: string): string {
     return downloadBuildZipURL(workspaceName, this.disk.guid, this.buildPath);

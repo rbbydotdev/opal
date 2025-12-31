@@ -147,6 +147,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
       if (virtual) {
         currentWorkspace.removeVirtualfile(virtual);
       }
+      setFileName(relPath(basename(fullPath)));
       setFileTreeCtx({
         anchorIndex: -1,
         editing: null,
@@ -246,6 +247,7 @@ export function useEditable<T extends TreeFile | TreeDir>({
   const handleBlur = (_e: React.FocusEvent<HTMLInputElement | HTMLAnchorElement>) => {
     if (virtual) currentWorkspace.removeVirtualfile(virtual);
 
+    setFileName(relPath(basename(fullPath)));
     setFileTreeCtx(({ anchorIndex, focused, selectedRange }) => ({
       anchorIndex,
       editing: null,

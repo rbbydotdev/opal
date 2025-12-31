@@ -50,7 +50,7 @@ export class GithubImport implements WorkspaceImport {
     }
   }
 
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }> {
     // First try to fetch manifest to resolve branch
     let manifest: { defaultBranch?: string } | undefined;
     try {
@@ -79,8 +79,9 @@ export class GithubImport implements WorkspaceImport {
       { owner: this.owner, repo: this.repo, branch, path: "manifest.json" },
       { signal }
     );
-    const m = tryParseJSON(response);
-    if (m === null) throw new BadRequestError("Invalid manifest.json file").hint(response.slice(0, 200));
+    const responseText = new TextDecoder("utf-8").decode(response);
+    const m = tryParseJSON(responseText);
+    if (m === null) throw new BadRequestError("Invalid manifest.json file").hint(responseText.slice(0, 200));
     return WorkspaceImportManifestSchema.parse(m);
   }
 }

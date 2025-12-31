@@ -1,4 +1,5 @@
 import { DestinationDAO, DestinationJType } from "@/data/dao/DestinationDAO";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { nanoid } from "nanoid";
 
 type PublishLogLine = {
@@ -47,11 +48,11 @@ export class PublicationDAO implements PublicationRecord {
   }
 
   toJSON() {
-    return {
+    return safeSerializer({
       destination: this.Destination.toJSON(),
       timestamp: this.timestamp,
       status: this.status,
       logs: this.logs,
-    };
+    });
   }
 }

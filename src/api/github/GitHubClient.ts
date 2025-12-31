@@ -733,7 +733,7 @@ export class GitHubClient {
   async getFileContent(
     { owner, repo, path, branch = "main" }: { owner: string; repo: string; path: string; branch?: string },
     { signal }: { signal?: AbortSignal } = {}
-  ): Promise<string> {
+  ): Promise<Uint8Array> {
     try {
       const response = await this.octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
         owner,
@@ -746,17 +746,19 @@ export class GitHubClient {
       // Handle the case where the content is base64 encoded
       const data = response.data as any;
       if (data.encoding === "base64" && data.content) {
-        // Use proper UTF-8 decoding instead of atob to preserve emojis and Unicode
+        // Decode base64 to raw bytes - consumer can decide if it's text or binary
         const base64Content = data.content.replace(/\s/g, "");
         const binaryString = atob(base64Content);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        return new TextDecoder("utf-8").decode(bytes);
+        return bytes;
       }
 
-      return data.content || "";
+      // If content is not base64 encoded, convert to bytes
+      const content = data.content || "";
+      return new TextEncoder().encode(content);
     } catch (e) {
       if (isAbortError(e)) throw e;
       throw mapToTypedError(e, {
@@ -769,7 +771,7 @@ export class GitHubClient {
   async *fetchRepositoryFiles(
     { owner, repo, branch = "main" }: { owner: string; repo: string; branch?: string },
     { signal }: { signal?: AbortSignal } = {}
-  ): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
+  ): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }> {
     try {
       const files = await this.getRepositoryTree({ owner, repo, branch }, { signal });
 

@@ -38,7 +38,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     this.config = config;
   }
 
-  abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }>;
+  abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }>;
   abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
   abstract fetchManifest(
     signal: AbortSignal,

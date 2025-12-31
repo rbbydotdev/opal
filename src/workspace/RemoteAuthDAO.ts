@@ -8,6 +8,7 @@ import {
   RemoteAuthType,
 } from "@/data/RemoteAuthTypes";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { nanoid } from "nanoid";
 
 export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements Omit<RemoteAuthRecord, "data"> {
@@ -101,7 +102,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
   }
 
   toJSON() {
-    return {
+    return safeSerializer({
       name: this.name,
       guid: this.guid,
       type: this.type,
@@ -109,7 +110,7 @@ export class RemoteAuthDAO<T extends RemoteAuthType = RemoteAuthType> implements
       tags: this.tags,
       data: this.data,
       timestamp: this.timestamp,
-    } as RemoteAuthJType;
+    }) as RemoteAuthJType;
   }
 
   static GetByGuid(guid: string): Promise<RemoteAuthDAO | null> {

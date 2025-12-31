@@ -1,3 +1,4 @@
+import { coerceGitHubRepoToURL } from "@/data/remote-auth/RemoteAuthGithubAgent";
 import z from "zod";
 
 export const gitRemoteSchema = z.object({
@@ -9,8 +10,7 @@ export const gitRemoteSchema = z.object({
   url: z
     .string()
     .min(1, "Remote URL is required")
-    .url("Remote URL must be a valid URL")
-    .regex(/^(https?|git|ssh|file):\/\/|^git@/, "Remote URL must be a valid Git URL"),
+    .transform((val) => coerceGitHubRepoToURL(val)),
   gitCorsProxy: z
     .string()
     .optional()

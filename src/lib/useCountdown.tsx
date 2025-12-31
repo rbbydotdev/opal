@@ -11,7 +11,8 @@ export function useCountdown({
 }) {
   const [remaining, setRemaining] = useState(seconds);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const onCompleteRef = useRef(onComplete).current;
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
   const isEnabledRef = useRef(enabled);
   const [userCancelled, setUserCancelled] = useState(false);
 
@@ -35,7 +36,7 @@ export function useCountdown({
   useEffect(() => {
     if (!enabled || userCancelled) return;
     isEnabledRef.current = enabled;
-    if (remaining <= 0) return onCompleteRef();
+    if (remaining <= 0) return onCompleteRef.current();
     const interval = (intervalRef.current = setInterval(() => {
       setRemaining((prev) => prev - 1);
     }, 1000));
@@ -43,7 +44,7 @@ export function useCountdown({
       clearInterval(interval);
       isEnabledRef.current = false;
     };
-  }, [remaining, enabled, onCompleteRef, userCancelled]);
+  }, [remaining, enabled, userCancelled]);
 
   return { remaining, cancel, enabled: enabled && !userCancelled, pauseCountdown };
 }

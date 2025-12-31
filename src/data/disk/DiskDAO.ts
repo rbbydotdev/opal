@@ -4,6 +4,7 @@ import { DefaultDiskType } from "@/data/disk/DiskDefaults";
 import { DiskRecord } from "@/data/disk/DiskRecord";
 import { DiskJType, DiskType } from "@/data/disk/DiskType";
 import { NotFoundError } from "@/lib/errors/errors";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { nanoid } from "nanoid";
 
 export class DiskDAO {
@@ -25,12 +26,12 @@ export class DiskDAO {
   }
 
   toJSON({ includeIndexCache = true }: { includeIndexCache?: boolean } = {}) {
-    return {
+    return safeSerializer({
       guid: this.guid,
       type: this.type,
       timestamp: this.timestamp,
       ...(includeIndexCache ? { indexCache: this.indexCache } : {}),
-    };
+    });
   }
 
   static CreateNew(type: DiskType = DefaultDiskType) {

@@ -52,7 +52,7 @@ export function MarkdownEditor({ currentWorkspace, path }: { currentWorkspace: W
           currentWorkspace={currentWorkspace}
           editorRef={editorRef}
           onChange={handleChange}
-          markdown={lazyContentsBody ?? ""}
+          markdown={lazyContentsBody}
           className={"bg-background flex-grow flex-col h-full "}
           contentEditableClassName="max-w-full content-editable prose dark:prose-invert bg-background"
         />
@@ -83,11 +83,12 @@ function EditorWithPlugins({
   return (
     <MDXEditor
       {...props}
+      readOnly={markdown === null}
       plugins={plugins}
       ref={editorRef}
       trim={false}
       onChange={onChange}
-      markdown={markdown}
+      markdown={markdown || ""}
       spellCheck={spellCheck}
     />
   );

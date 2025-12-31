@@ -119,11 +119,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
 
   toJSON() {
-    return {
-      guid: this.guid,
-      type: this.type,
-      indexCache: this.connector.indexCache,
-    };
+    return this.connector.toJSON({ includeIndexCache: false });
   }
 
   triggerIndex = async () => {
@@ -862,6 +858,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 }
 
 export interface WorkspaceImport {
-  fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }>;
+  fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }>;
   fetchManifest(signal: AbortSignal): Promise<WorkspaceImportManifestType>;
 }

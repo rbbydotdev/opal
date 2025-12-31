@@ -5,6 +5,7 @@ import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { NULL_REMOTE_AUTH, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
@@ -53,14 +54,14 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   toJSON() {
-    return {
+    return safeSerializer({
       remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
       meta: this.meta,
       label: this.label,
       timestamp: this.timestamp,
       destinationUrl: this.destinationUrl,
-    };
+    });
   }
 
   get RemoteAuth() {

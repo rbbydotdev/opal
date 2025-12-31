@@ -1,4 +1,5 @@
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { nanoid } from "nanoid";
 
 const ChannelSet = new Map<string, Channel>();
@@ -7,8 +8,6 @@ const DEBUG_CHANNELS = false;
 
 export class Channel<EventData extends Record<string, any> = Record<string, unknown>> {
   private emitter: SuperEmitter<EventData>;
-  // private listenerAddedSymbol = Symbol("listenerAdded");
-  // private listenerRemovedSymbol = Symbol("listenerRemoved");
   private channel: BroadcastChannel | null = null;
   private contextId: string = nanoid();
 
@@ -57,11 +56,12 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     { contextId }: { contextId?: string } = { contextId: this.contextId }
   ): void {
     // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
-    const message = JSON.stringify({ eventName, eventData, senderId: contextId });
+    const safeEventData = safeSerializer(eventData);
+    const message = { eventName, eventData: safeEventData, senderId: contextId };
     if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {
       if (this.channel) {
-        this.channel.postMessage(JSON.parse(message));
+        this.channel.postMessage(message);
       } else {
         console.warn("Channel is not initialized or has been closed.");
       }
@@ -106,7 +106,11 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     }
     ChannelSet.delete(this.channelName);
     if (this.channel) {
-      this.channel.close();
+      try {
+        this.channel.close();
+      } catch {
+        console.warn("error closing channel");
+      }
       this.channel = null;
     }
     this.emitter.clearListeners();

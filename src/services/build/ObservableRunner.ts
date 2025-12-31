@@ -1,6 +1,6 @@
 import { RunnerState } from "@/types/RunnerInterfaces";
 import { LogLine } from "@/types/RunnerTypes";
-import { proxy } from "valtio";
+import { proxy, snapshot } from "valtio";
 
 export class ObservableRunner<TInner extends RunnerState> {
   target: ReturnType<typeof proxy<TInner>>;
@@ -62,6 +62,10 @@ export class ObservableRunner<TInner extends RunnerState> {
 
   tearDown = () => {
     // No cleanup needed with Valtio
+  };
+
+  toJSON = () => {
+    return snapshot(this.target);
   };
 }
 

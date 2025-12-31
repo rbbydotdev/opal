@@ -47,7 +47,7 @@ export class TreeNode {
   source?: AbsPath; // For virtual nodes, this is the source path of the original file
   virtualContent?: () => Promise<string>; // For virtual nodes, this is the content of the file
   type: "dir" | "file";
-  private _parent: WeakRef<TreeDir> | null = null;
+  private _parentMap: WeakMap<TreeNode, TreeDir> = new WeakMap();
   depth: number;
   children?: Record<string, TreeNode>;
   fs: CommonFileSystem;
@@ -57,11 +57,11 @@ export class TreeNode {
   private _path: AbsPath;
 
   get parent(): TreeDir | null {
-    return this._parent?.deref() ?? null;
+    return this._parentMap.get(this) || null;
   }
 
   set parent(value: TreeDir | null) {
-    this._parent = value ? new WeakRef(value) : null;
+    this._parentMap.set(this, value!);
   }
 
   get dirname(): AbsPath {
@@ -192,7 +192,7 @@ export class TreeNode {
     this.type = newNode.type;
     this.path = newNode.path;
     this.depth = newNode.depth;
-    this._parent = newNode._parent;
+    this.parent = newNode.parent;
     this.children = newNode.children;
     this.isVirtual = newNode.isVirtual;
     this.source = newNode.source;
@@ -343,7 +343,7 @@ export class TreeNode {
     this._basename = typeof basename === "string" ? relPath(basename) : basename;
     this._path = typeof path === "string" ? absPath(path) : path;
     this.depth = typeof depth !== "undefined" ? depth : getDepth(this._path);
-    this._parent = parent ? new WeakRef(parent) : null;
+    this.parent = parent;
     this.source = source;
     this.virtualContent = virtualContent;
     this.fs = fs;

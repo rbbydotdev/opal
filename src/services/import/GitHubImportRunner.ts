@@ -32,7 +32,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     return (this._importer = this._importer || new GithubImport(relPath(this.config.fullRepoPath)));
   }
 
-  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<string> }> {
+  async *fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }> {
     yield* this.importer.fetchFiles(signal);
   }
 

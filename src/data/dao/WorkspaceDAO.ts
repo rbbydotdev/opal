@@ -7,6 +7,7 @@ import { WorkspaceStatusCode, WS_OK } from "@/data/WorkspaceStatusCode";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
+import { safeSerializer } from "@/lib/safeSerializer";
 import { slugifier } from "@/lib/slugifier";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
@@ -27,7 +28,7 @@ export class WorkspaceDAO {
   buildStrategy: BuildStrategy;
 
   toJSON() {
-    return {
+    return safeSerializer({
       name: this.name,
       guid: this.guid,
       code: this.code,
@@ -36,7 +37,7 @@ export class WorkspaceDAO {
       thumbs: this.thumbs,
       timestamp: this.timestamp,
       buildStrategy: this.buildStrategy,
-    };
+    });
   }
 
   //totally weird ot have this here since its a DB access obj no ?

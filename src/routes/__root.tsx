@@ -1,6 +1,5 @@
 import "@/styles/styles.css";
 import { createRootRoute, Outlet, retainSearchParams } from "@tanstack/react-router";
-// import { NuqsAdapter } from "nuqs/adapters/react";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 function RootComponent() {
