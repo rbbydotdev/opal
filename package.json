@@ -118,7 +118,7 @@
     "p-debounce": "^5.1.0",
     "patch-package": "^8.0.1",
     "prettier": "^3.6.2",
-    "react": "19.2.0",
+    "react": "^19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.62.0",
     "rehype-parse": "^9.0.1",
@@ -139,6 +139,7 @@
     "unified": "^11.0.5",
     "unist": "^0.0.1",
     "unist-util-visit": "^5.0.0",
+    "use-context-selector": "^2.0.0",
     "valtio": "^2.2.0",
     "zod": "^3.25.76"
   },

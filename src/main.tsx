@@ -1,3 +1,4 @@
+import { LocalStorageProvider } from "@/hooks/useLocalStorage";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import "@/polyfill/Promise";
 import { RouterProvider, createRouter, redirect } from "@tanstack/react-router";
@@ -27,7 +28,9 @@ if (!rootElement.innerHTML) {
   const root = createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <LocalStorageProvider>
+        <RouterProvider router={router} />
+      </LocalStorageProvider>
     </StrictMode>
   );
 }
