@@ -53,7 +53,7 @@ const extractFromUrlPath = (c: Context) => extractWorkspaceFromUrl(c.req.url);
 const extractFromReferrer = (c: Context) => {
   // In service worker, referrer comes from the request object, not headers
   const referrer = c.req.raw.referrer;
-  logger.log(`Extracting from referrer: ${referrer}`);
+  console.log(`Extracting from referrer: ${referrer}`);
   return extractWorkspaceFromReferrer(referrer);
 };
 export const resolveWorkspaceFromQueryOrContext = workspaceValidator(

@@ -53,7 +53,7 @@ export async function handleDownloadRequest({
     ] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
-      logger.warn("No files found in the workspace to download.");
+      console.warn("No files found in the workspace to download.");
       return new Response("No files to download", { status: 404 });
     }
     let fileCount = fileNodes.filter((node) => node.isTreeFile()).length;
@@ -63,7 +63,7 @@ export async function handleDownloadRequest({
       fileNodes.map(async (node) => {
         if (node.isTreeFile()) {
           try {
-            logger.log(`Adding file to zip: ${node.path}`);
+            console.log(`Adding file to zip: ${node.path}`);
             const fileStream = new fflate.ZipDeflate(joinPath(workspaceDirName, node.path), { level: 9 });
             zip.add(fileStream);
             //'stream' file by file
@@ -73,12 +73,12 @@ export async function handleDownloadRequest({
               .finally(() => {
                 fileCount--;
                 if (fileCount === 0) {
-                  logger.log(`All files processed for workspace: ${workspaceName}`);
+                  console.log(`All files processed for workspace: ${workspaceName}`);
                   signalRequest({ type: REQ_SIGNAL.END });
                 }
               }); // true = last chunk
           } catch (e) {
-            logger.error(`Failed to add file to zip: ${node.path}`, e);
+            console.error(`Failed to add file to zip: ${node.path}`, e);
           }
         } else if (node.type === "dir") {
           const emptyDir = new fflate.ZipPassThrough(joinPath(workspaceDirName, node.path) + "/");
@@ -87,10 +87,10 @@ export async function handleDownloadRequest({
         }
       })
     );
-    logger.log(`All files added to zip for workspace: ${workspaceName}`);
+    console.log(`All files added to zip for workspace: ${workspaceName}`);
 
     zip.end();
-    logger.log(`ZIP stream ended for workspace: ${workspaceName}`);
+    console.log(`ZIP stream ended for workspace: ${workspaceName}`);
 
     return new Response(readable, {
       headers: {
@@ -102,7 +102,7 @@ export async function handleDownloadRequest({
     if (isError(e, NotFoundError)) {
       return new Response(unwrapError(e), { status: 404 });
     }
-    logger.error(errF`Error in service worker: ${e}`);
+    console.error(errF`Error in service worker: ${e}`);
     return new Response(unwrapError(e), { status: 500 });
   }
 }

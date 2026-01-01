@@ -1,21 +1,14 @@
-const NOOPS = {
-  log: () => {},
-  debug: () => {},
-  error: () => {},
-  warn: () => {},
-};
 declare const __ENABLE_LOG__: boolean;
 declare const __LOG_LEVEL__: "debug" | "log" | "warn" | "error";
 
-(globalThis as any).logger = NOOPS;
-export function initializeGlobalLogger(
-  logger: {
-    log: (...msg: unknown[]) => void;
-    debug: (...msg: unknown[]) => void;
-    error: (...msg: unknown[]) => void;
-    warn: (...msg: unknown[]) => void;
-  } = console
-) {
+export function initializeGlobalLogger(remoteLogger: {
+  log: (...msg: unknown[]) => void;
+  debug: (...msg: unknown[]) => void;
+  error: (...msg: unknown[]) => void;
+  warn: (...msg: unknown[]) => void;
+}) {
+  if (!__ENABLE_LOG__) return globalThis.console;
+
   const levelPriority = {
     debug: 1,
     log: 2,
@@ -26,13 +19,11 @@ export function initializeGlobalLogger(
   const currentLevel = __LOG_LEVEL__;
   const shouldLog = (level: keyof typeof levelPriority) => levelPriority[level] >= levelPriority[currentLevel];
 
-  return ((globalThis as any).logger = __ENABLE_LOG__
-    ? {
-        ...console,
-        log: shouldLog("log") ? logger.log.bind(logger) : NOOPS.log,
-        debug: shouldLog("debug") ? logger.debug.bind(logger) : NOOPS.debug,
-        error: shouldLog("error") ? logger.error.bind(logger) : NOOPS.error,
-        warn: shouldLog("warn") ? logger.warn.bind(logger) : NOOPS.warn,
-      }
-    : NOOPS);
+  for (const level of ["log", "debug", "error", "warn"] as const) {
+    if (shouldLog(level)) {
+      globalThis.console[level] = remoteLogger[level].bind(remoteLogger);
+    }
+  }
+
+  return globalThis.console;
 }

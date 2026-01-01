@@ -40,7 +40,7 @@ export async function handleDownloadRequestEncrypted(
     const fileNodes = [...workspace.disk.fileTree.iterator(FilterOutSpecialDirs)] as TreeNode[];
 
     if (!fileNodes || fileNodes.length === 0) {
-      logger.log("{EncZip}: No files found in the workspace to download.");
+      console.log("{EncZip}: No files found in the workspace to download.");
       // Ensure the zipWriter is closed even if no files, to prevent hanging the stream
       await zipWriter.close();
       return new Response("No files to download", { status: 404 });
@@ -64,7 +64,7 @@ export async function handleDownloadRequestEncrypted(
 
           return { status: "fulfilled", path: node.path }; // Indicate success
         } catch (e) {
-          logger.error(`{EncZip}: [ZIP Error] Failed to add file to zip: ${node.path}`, e);
+          console.error(`{EncZip}: [ZIP Error] Failed to add file to zip: ${node.path}`, e);
           return { status: "rejected", path: node.path, reason: e }; // Indicate failure
         }
       });
@@ -85,7 +85,7 @@ export async function handleDownloadRequestEncrypted(
 
           return { status: "fulfilled", path: node.path };
         } catch (e) {
-          logger.error(`{EncZip}: [ZIP Error] Failed to add directory: ${node.path}`, e);
+          console.error(`{EncZip}: [ZIP Error] Failed to add directory: ${node.path}`, e);
           return { status: "rejected", path: node.path, reason: e };
         }
       });
@@ -94,7 +94,7 @@ export async function handleDownloadRequestEncrypted(
 
     const rejectedFiles = results.filter((result) => result.status === "rejected");
     if (rejectedFiles.length > 0) {
-      logger.error("{EncZip}: [ZIP Error] Some files/directories failed to add to the zip:", rejectedFiles);
+      console.error("{EncZip}: [ZIP Error] Some files/directories failed to add to the zip:", rejectedFiles);
       // Depending on your requirements, you might want to throw an error here
       // or still proceed with a partial zip. For now, we proceed to close.
     } else {
@@ -111,10 +111,10 @@ export async function handleDownloadRequestEncrypted(
     });
   } catch (e) {
     if (isError(e, NotFoundError)) {
-      logger.error("{EncZip}: Workspace not found error:", e);
+      console.error("{EncZip}: Workspace not found error:", e);
       return new Response("Error: Workspace not found", { status: 404 });
     }
-    logger.error(`{EncZip}: Uncaught error in handleDownloadRequestEncrypted:`, e);
+    console.error(`{EncZip}: Uncaught error in handleDownloadRequestEncrypted:`, e);
     // Attempt to return a response even if an error occurs to prevent hanging
     return new Response(`Error during download: ${e instanceof Error ? e.message : String(e)}`, { status: 500 });
   }

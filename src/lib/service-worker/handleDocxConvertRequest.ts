@@ -1,8 +1,8 @@
 import { convertImage } from "@/lib/createImage";
 import { renderHtmlToMarkdown } from "@/lib/markdown/renderHtmlToMarkdown";
 import { absPath, basename, dirname, extname, joinPath, prefix, relPath, strictPathname } from "@/lib/paths2";
+import { SWWStore } from "@/lib/service-worker/SWWStore";
 import mammoth from "mammoth";
-import { SWWStore } from "./SWWStore";
 
 export async function handleDocxConvertRequest(workspaceId: string, fullPathname: string, arrayBuffer: ArrayBuffer) {
   const workspace = await SWWStore.tryWorkspace(workspaceId);

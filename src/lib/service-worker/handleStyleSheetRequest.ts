@@ -26,7 +26,7 @@ export async function handleStyleSheetRequest(pathname: string, workspaceName: s
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    logger.error(errF`Error in service worker: ${e}`.toString());
+    console.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }

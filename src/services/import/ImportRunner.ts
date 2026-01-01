@@ -146,6 +146,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         console.error(error);
         const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
         this.log(`Import failed: ${errMsg}`, "error");
+        if (isApplicationError(error) && error.code === 404) {
+          this.log(`Ensure the resource is publically accessible.`, "error");
+        }
         this.target.error = errMsg;
       }
       this.target.status = "error";

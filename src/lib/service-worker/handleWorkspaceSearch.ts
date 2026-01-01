@@ -81,7 +81,7 @@ function createWorkspaceSearchStream({
               }
             }
           } catch (searchError) {
-            logger.error(`Search error in workspace ${workspace.name}:`, searchError);
+            console.error(`Search error in workspace ${workspace.name}:`, searchError);
             throw searchError;
           }
         });
@@ -98,7 +98,7 @@ function createWorkspaceSearchStream({
       }
     },
     cancel(reason) {
-      logger.log("Stream canceled by client:", reason);
+      console.log("Stream canceled by client:", reason);
       searchController.abort();
     },
   });
@@ -164,13 +164,13 @@ export async function handleWorkspaceSearch({
     activeSearches.delete(searchKey); // Clean up on pre-stream failure.
 
     if (e instanceof DOMException && e.name === "AbortError") {
-      logger.log(`Search aborted for: ${searchKey}`);
+      console.log(`Search aborted for: ${searchKey}`);
       return new Response(null, { status: 204, statusText: "search aborted" });
     }
     if (isError(e, NotFoundError)) {
       return new Response(e.message, { status: 404, statusText: "not found " + e.message });
     }
-    logger.error(errF`Error in service worker: ${e}`.toString());
+    console.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Internal Server Error", { status: 500, statusText: "application error" });
   }
 }

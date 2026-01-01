@@ -75,7 +75,7 @@ function createWorkspaceFilenameSearchStream({
               controller.enqueue(chunk);
             }
           } catch (searchError) {
-            logger.error(`Filename search error in workspace ${workspace.name}:`, searchError);
+            console.error(`Filename search error in workspace ${workspace.name}:`, searchError);
             throw searchError;
           }
         });
@@ -92,7 +92,7 @@ function createWorkspaceFilenameSearchStream({
       }
     },
     cancel(reason) {
-      logger.log("Filename search stream canceled by client:", reason);
+      console.log("Filename search stream canceled by client:", reason);
       searchController.abort();
     },
   });
@@ -158,13 +158,13 @@ export async function handleWorkspaceFilenameSearch({
     activeFilenameSearches.delete(searchKey);
 
     if (e instanceof DOMException && e.name === "AbortError") {
-      logger.log(`Filename search aborted for: ${searchKey}`);
+      console.log(`Filename search aborted for: ${searchKey}`);
       return new Response(null, { status: 204, statusText: "filename search aborted" });
     }
     if (isError(e, NotFoundError)) {
       return new Response(e.message, { status: 404, statusText: "not found " + e.message });
     }
-    logger.error(errF`Error in filename search service worker: ${e}`.toString());
+    console.error(errF`Error in filename search service worker: ${e}`.toString());
     return new Response("Internal Server Error", { status: 500, statusText: "application error" });
   }
 }

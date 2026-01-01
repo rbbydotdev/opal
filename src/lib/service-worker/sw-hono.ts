@@ -74,14 +74,14 @@ const workspaceNameSchema = z.object({
 });
 
 // Hono's built-in logger middleware
-// app.use("*", honoLogger(logger.log.bind(logger)));
+// app.use("*", honoLogger(console.log.bind(logger)));
 
-app.use("*", honoLogger2(logger.log.bind(logger)));
+app.use("*", honoLogger2(console.log.bind(logger)));
 
 // Custom logging for service worker specific info
 app.use("*", async (c, next) => {
   const request = c.req.raw;
-  logger.log(
+  console.log(
     `${c.req.method} ${c.req.url} | Mode: ${request.mode} | Destination: ${request.destination} | Referrer: ${request.referrer}`
   );
   await next();
@@ -94,13 +94,13 @@ app.use("*", async (c, next) => {
 
   // Skip non-host URLs
   if (!ENV.HOST_URLS.some((hostUrl) => url.startsWith(hostUrl))) {
-    logger.log(`Bypassing non-host URL: ${url}`);
+    console.log(`Bypassing non-host URL: ${url}`);
     return fetch(request);
   }
 
   // Skip navigation requests (except downloads)
   if (c.req.path !== "/download.zip" && (request.mode === "navigate" || !request.referrer)) {
-    logger.log(`Skipping navigation: ${url}`);
+    console.log(`Skipping navigation: ${url}`);
     return fetch(request);
   }
 
@@ -115,7 +115,7 @@ app.use("*", async (c, next) => {
     path === "/opal-lite.svg" ||
     request.destination === "script" // All script requests should bypass
   ) {
-    logger.log(`Skipping dev/static file: ${path}`);
+    console.log(`Skipping dev/static file: ${path}`);
     return fetch(request);
   }
 
@@ -149,10 +149,10 @@ const _Handlers = {
         const filePath = c.req.param("filePath");
         const { file } = c.req.valid("form");
         const arrayBuffer = await file.arrayBuffer();
-        logger.log(`Handling image upload for: ${c.req.path}`);
+        console.log(`Handling image upload for: ${c.req.path}`);
         return c.json({ path: await handleImageUpload(workspaceName, filePath, arrayBuffer) });
       } catch (error) {
-        logger.error(`Upload image error: ${error}`);
+        console.error(`Upload image error: ${error}`);
         throw error;
       }
     }
@@ -176,11 +176,11 @@ const _Handlers = {
         const { file } = c.req.valid("form");
         const arrayBuffer = await file.arrayBuffer();
 
-        logger.log(`Handling DOCX upload for: ${filePath}`);
+        console.log(`Handling DOCX upload for: ${filePath}`);
 
         return c.json({ path: await handleDocxConvertRequest(workspaceName, filePath, arrayBuffer) });
       } catch (error) {
-        logger.error(`Upload DOCX error: ${error}`);
+        console.error(`Upload DOCX error: ${error}`);
         throw error;
       }
     }
@@ -206,13 +206,13 @@ const _Handlers = {
         const { file } = c.req.valid("form");
         const arrayBuffer = await file.arrayBuffer();
 
-        logger.log(`Handling markdown upload for: ${new URL(c.req.url).pathname}`);
+        console.log(`Handling markdown upload for: ${new URL(c.req.url).pathname}`);
 
         const path = await handleDocxConvertRequest(workspaceName, filePath, arrayBuffer);
 
         return c.json({ path });
       } catch (error) {
-        logger.error(`Upload markdown error: ${error}`);
+        console.error(`Upload markdown error: ${error}`);
         throw error;
       }
     }
@@ -226,12 +226,12 @@ const _Handlers = {
       try {
         const { workspaceName } = c.req.valid("query");
         const findReplacePairs = c.req.valid("json");
-        logger.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
+        console.log(`Replacing images in MD with: ${findReplacePairs.length} pairs`);
         return c.json({
           paths: await handleMdImageReplace(workspaceName, findReplacePairs, new URL(c.req.url).origin),
         });
       } catch (error) {
-        logger.error(`Replace MD images error: ${error}`);
+        console.error(`Replace MD images error: ${error}`);
         throw error;
       }
     }
@@ -245,10 +245,10 @@ const _Handlers = {
       try {
         const { workspaceName } = c.req.valid("query");
         const { paths } = c.req.valid("json");
-        logger.log(`Replacing files with: ${paths.length} pairs`);
+        console.log(`Replacing files with: ${paths.length} pairs`);
         return c.json({ paths: await handleFileReplace(new SuperUrl(c.req.url), workspaceName, paths) });
       } catch (error) {
-        logger.error(`Replace files error: ${error}`);
+        console.error(`Replace files error: ${error}`);
         throw error;
       }
     }
@@ -257,10 +257,10 @@ const _Handlers = {
   WorkspaceSearch: app.get("/workspace-search", zValidator("query", searchSchema), async (c) => {
     try {
       const { searchTerm, regexp, mode, workspaceName } = c.req.valid("query");
-      logger.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
+      console.log(`Handling search in '${workspaceName}' for: '${searchTerm}'`);
       return await handleWorkspaceSearch({ workspaceName, searchTerm, regexp, mode });
     } catch (error) {
-      logger.error(`Workspace search error: ${error}`);
+      console.error(`Workspace search error: ${error}`);
       throw error;
     }
   }),
@@ -273,10 +273,10 @@ const _Handlers = {
       try {
         const workspaceName = c.req.param("workspaceName");
         const { searchTerm } = c.req.valid("query");
-        logger.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
+        console.log(`Handling filename search in '${workspaceName}' for: '${searchTerm}'`);
         return await handleWorkspaceFilenameSearch({ workspaceName, searchTerm });
       } catch (error) {
-        logger.error(`Workspace filename search error: ${error}`);
+        console.error(`Workspace filename search error: ${error}`);
         throw error;
       }
     }
@@ -284,21 +284,21 @@ const _Handlers = {
   // Markdown render handler
   MarkdownRender: app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c) => {
     const { workspaceName, documentId, editId } = c.req.valid("query");
-    logger.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
+    console.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
     const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
     if (!workspace) throw new NotFoundError("Workspace not found");
 
     const cache = await Workspace.newCache(workspaceName).getCache();
     const cached = await cache.match(c.req.raw);
     if (cached) {
-      logger.log(`Cache hit for markdown render: ${editId}`);
+      console.log(`Cache hit for markdown render: ${editId}`);
       return cached;
     }
 
     // Get edit from database to check for existing preview blob
     const edit = await ClientDb.historyDocs.get(editId);
     if (!edit) {
-      logger.error(`Edit not found: ${editId}`);
+      console.error(`Edit not found: ${editId}`);
       throw new NotFoundError("Edit not found");
     }
 
@@ -306,10 +306,10 @@ const _Handlers = {
 
     // Check if edit already has preview blob
     if (edit.preview) {
-      logger.log(`Using existing preview blob for edit: ${editId}`);
+      console.log(`Using existing preview blob for edit: ${editId}`);
       htmlContent = await edit.preview.text();
     } else {
-      logger.log(`Generating new HTML for edit: ${editId}`);
+      console.log(`Generating new HTML for edit: ${editId}`);
 
       // Create HistoryDB instance and reconstruct document
       const historyDB = new HistoryDB();
@@ -338,12 +338,12 @@ const _Handlers = {
     try {
       const params = c.req.valid("query");
 
-      logger.log(`Handling download for: ${c.req.path}`);
-      logger.log(`Download payload: ${JSON.stringify(params)}`);
+      console.log(`Handling download for: ${c.req.path}`);
+      console.log(`Download payload: ${JSON.stringify(params)}`);
 
       return await handleDownloadRequest(params);
     } catch (error) {
-      logger.error(`Download error: ${error}`);
+      console.error(`Download error: ${error}`);
       throw error;
     }
   }),
@@ -360,12 +360,12 @@ const _Handlers = {
 
       const options = downloadEncryptedSchema.parse({ password, encryption });
 
-      logger.log(`Handling encrypted download for workspace: ${workspaceName}`);
+      console.log(`Handling encrypted download for workspace: ${workspaceName}`);
 
       const result = await handleDownloadRequestEncrypted(workspaceName, options);
       return result;
     } catch (error) {
-      logger.error(`Encrypted download error: ${error}`);
+      console.error(`Encrypted download error: ${error}`);
       throw error;
     }
   }),
@@ -401,7 +401,7 @@ app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrConte
   const url = new SuperUrl(c.req.url);
 
   // Optional: log or inspect
-  logger.log(`Handling image request for: ${filename}`);
+  console.log(`Handling image request for: ${filename}`);
 
   const isSVG = filename.endsWith(".svg");
   const isThumbnail = Thumb.isThumbURL(url);
@@ -412,7 +412,7 @@ app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrConte
     cache = await Workspace.newCache(workspaceName).getCache();
     const cached = await cache.match(c.req.raw);
     if (cached) {
-      logger.log(`Cache hit for: ${filename}`);
+      console.log(`Cache hit for: ${filename}`);
       return cached;
     }
   }

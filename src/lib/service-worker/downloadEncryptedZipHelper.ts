@@ -25,7 +25,7 @@ export const downloadEncryptedZipHelper = async ({
   });
 
   if (!response.ok) {
-    logger.error("Download failed with status:", response.status, response.statusText);
+    console.error("Download failed with status:", response.status, response.statusText);
     throw new Error("Download failed");
   }
 
