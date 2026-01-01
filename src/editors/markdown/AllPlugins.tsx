@@ -8,7 +8,7 @@ import { searchPlugin } from "@/editors/markdown/searchPlugin";
 import { customCodeMirrorTheme } from "@/editors/source/codeMirrorCustomTheme";
 import { SourceEditorButton } from "@/editors/SourceEditorButton";
 import { useImagesPlugin } from "@/editors/useImagesPlugin";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";

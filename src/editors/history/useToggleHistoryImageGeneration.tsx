@@ -1,4 +1,4 @@
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 
 export function useToggleHistoryImageGeneration() {
   const { storedValue, setStoredValue } = useLocalStorage("app/EditHistoryImageGeneration", false);

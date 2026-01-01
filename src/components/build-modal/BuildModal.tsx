@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { WorkspaceIcon } from "@/components/workspace/WorkspaceIcon";
 import { NULL_BUILD } from "@/data/dao/BuildDAO";
 import { BuildStrategy } from "@/data/dao/BuildRecord";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
 import { useModalSignal } from "@/lib/useModalSignal";
 import { BuildRunner } from "@/services/build/BuildRunner";

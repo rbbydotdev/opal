@@ -1,6 +1,6 @@
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { DEFAULT_THEME_STATE, ResolvedTheme, ThemePreference, ThemeState } from "@/features/theme/theme-constants";
 import { ALL_THEMES, applyTheme, getThemeModePrefers } from "@/features/theme/theme-lib";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { ThemeContext, ThemeContextValue } from "@/layouts/ThemeContext";
 import React, { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
 

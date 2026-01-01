@@ -1,6 +1,6 @@
 import { MadeByMe } from "@/components/MadeByMe";
 import { Button } from "@/components/ui/button";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";

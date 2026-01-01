@@ -13,7 +13,7 @@ import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { EditViewPreview } from "@/editors/history/EditViewPreview";
 import { useDocHistory } from "@/editors/history/HistoryPlugin";
 import { useSelectedItemScroll } from "@/editors/history/useSelectedItemScroll";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";

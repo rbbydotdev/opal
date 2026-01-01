@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { BrowserCompatibility, type CompatibilityCheck } from "@/lib/BrowserCompatibility";
 import { BrowserDetection } from "@/lib/BrowserDetection";
 import { AlertTriangle, CheckCircle, ExternalLink, Smartphone, XCircle } from "lucide-react";

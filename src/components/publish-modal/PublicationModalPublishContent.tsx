@@ -14,7 +14,7 @@ import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { useBuilds } from "@/data/dao/useBuilds";
 import { useDestinations } from "@/data/dao/useDestinations";
 import { PartialRemoteAuthJType, RemoteAuthJType } from "@/data/RemoteAuthTypes";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
 import { DeployRunner } from "@/services/deploy/DeployRunner";
 import { Workspace } from "@/workspace/Workspace";

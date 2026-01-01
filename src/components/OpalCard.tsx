@@ -1,6 +1,6 @@
 import { Sticker } from "@/components/Sticker";
 import { Card } from "@/components/ui/card";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 
 export function OpalCard({ status }: { status?: React.ReactNode }) {
   const { storedValue, setStoredValue } = useLocalStorage("OpalCard/Enabled", true);

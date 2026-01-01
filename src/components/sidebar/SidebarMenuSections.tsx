@@ -25,10 +25,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarGroup, SidebarGroupAction, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { FilterInSpecialDirs } from "@/data/SpecialDirs";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { TreeExpanderProvider } from "@/features/tree-expander/useTreeExpander";
 import { useDoubleCmdFocus } from "@/hooks/useDoubleCmdFocus";
 import { handleDropFilesEventForNode } from "@/hooks/useFileTreeDragDrop";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { capitalizeFirst } from "@/lib/capitalizeFirst";
 import { IS_MAC } from "@/lib/isMac";
 import { Workspace } from "@/workspace/Workspace";

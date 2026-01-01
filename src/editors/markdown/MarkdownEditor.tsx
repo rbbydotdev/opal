@@ -3,7 +3,7 @@ import { MainEditorRealmId, MdxEditorScrollSelector } from "@/editors/EditorCons
 import { useDocHistory } from "@/editors/history/HistoryPlugin";
 import { useAllPlugins } from "@/editors/markdown/AllPlugins";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { AbsPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";

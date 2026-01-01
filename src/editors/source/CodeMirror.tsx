@@ -14,7 +14,7 @@ import { gitConflictEnhancedPlugin } from "@/editors/source/gitConflictEnhancedP
 import { useWatchViewMode } from "@/editors/view-mode/useWatchViewMode";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { ScrollSync } from "@/features/live-preview/useScrollSync";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { OpalMimeType } from "@/lib/fileType";

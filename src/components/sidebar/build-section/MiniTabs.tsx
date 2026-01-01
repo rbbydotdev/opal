@@ -1,4 +1,4 @@
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { cn } from "@/lib/utils";
 
 export const useBuildListMiniTabs = (id = "SidebarFileMenuBuild/activeTab") => {

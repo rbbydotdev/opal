@@ -4,7 +4,7 @@ import {
   ScrollSyncContext,
   useScrollSyncContext,
 } from "@/features/live-preview/useScrollSyncContext";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
 import { useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { nanoid } from "nanoid";

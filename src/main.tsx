@@ -1,9 +1,9 @@
-import { LocalStorageProvider } from "@/hooks/useLocalStorage";
 import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import "@/polyfill/Promise";
 import { RouterProvider, createRouter, redirect } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { LocalStorageProvider } from "./features/local-storage/LocalStorageProvider";
 import { routeTree } from "./routeTree.gen";
 import "./styles/styles.css";
 

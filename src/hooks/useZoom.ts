@@ -1,4 +1,4 @@
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useEffect } from "react";
 
 type ZoomLevel = 0.65 | 0.75 | 0.85 | 0.95 | 1;
