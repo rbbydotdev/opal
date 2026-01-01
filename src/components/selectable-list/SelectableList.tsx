@@ -333,15 +333,26 @@ export function SelectableListItem({ children, id }: SelectableListItemProps) {
             data-selectable-id={id}
             className="flex w-full rounded justify-center items-center relative"
           >
-            <SidebarMenuButton
-              className="flex-1 min-w-0 group h-full py-1"
-              onClick={(e) => handleSelect(sectionRef, e, id)}
-            >
-              <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
-                <div className="w-4 h-4 flex justify-center items-center #mr-0.5 shrink-0 ">
-                  {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
+            <SidebarMenuButton asChild className="flex-1 min-w-0 group h-full py-1">
+              <div
+                role="button"
+                onClick={(e) => handleSelect(sectionRef, e as any, id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSelect(sectionRef, e as any, id);
+                  }
+                }}
+                tabIndex={0}
+                className="cursor-pointer w-full text-left"
+                aria-pressed={isSelected(id)}
+              >
+                <div className="flex items-center flex-1 min-w-0 gap-1 text-xs ml-[0.17rem]">
+                  <div className="w-4 h-4 flex justify-center items-center #mr-0.5 shrink-0 ">
+                    {isSelected(id) && <Check className="w-3 h-3 rounded-full " />}
+                  </div>
+                  <span className="w-full truncate flex items-center gap-1">{otherChildren}</span>
                 </div>
-                <span className="w-full truncate flex items-center gap-1">{otherChildren}</span>
               </div>
             </SidebarMenuButton>
             {menuChild}

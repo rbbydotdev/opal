@@ -34,7 +34,7 @@ export function LivePreviewButtons() {
         </Button>
 
         <Button size="sm" className="rounded-l-none rounded-r-none" onClick={handlePrintClick}>
-          Print <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
+          Print / PDF <Printer className="stroke-primary-foreground flex-shrink !w-4 !h-4" />
         </Button>
         {!isOpen ? (
           <Button size="sm" className={"text-secondary rounded-l-none border-l-border"} onClick={openPreview} asChild>

@@ -4,6 +4,7 @@ import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-pr
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { Printer } from "lucide-react";
 import { createContext, ReactNode, useContext, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 interface LivePreviewDialogContextType {
   showDialog: (show: boolean) => void;
@@ -39,14 +40,26 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
   };
 
   const handleRenderBodyReady = () => {
-    if (!context.window) return;
-    if (!shouldPrintRef.current) return;
-    shouldPrintRef.current = false;
-    context.window.addEventListener("afterprint", () => context.window.close());
-    context.window.print();
-    setTimeout(() => {
+    flushSync(() => {
+      if (!context.window) return;
+      if (!shouldPrintRef.current) return;
+      shouldPrintRef.current = false;
+      context.window.addEventListener("afterprint", () => context.window.close());
+      context.window.print();
       showDialog(false);
-    }, 0);
+    });
+
+    // flushSync(() => {
+    //   setTimeout(() => {
+    //     w.print();
+    //     setTimeout(() => {
+    //       showDialog(false);
+    //     }, 0);
+    //   }, 0);
+    // });
+    // setTimeout(() => {
+    //   showDialog(false);
+    // }, 0);
   };
 
   return (

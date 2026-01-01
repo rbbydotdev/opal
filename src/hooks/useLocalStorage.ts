@@ -12,16 +12,6 @@ type UseLocalStorageOptions<T> = {
   initializeWithValue?: boolean;
 };
 
-const IS_SERVER = typeof window === "undefined";
-
-/**
- * Hook for persisting state to localStorage.
- *
- * @param {string} key - The key to use for localStorage.
- * @param {T | (() => T)} initialValue - The initial value to use, if not found in localStorage.
- * @param {UseLocalStorageOptions<T>} options - Options for the hook.
- * @returns A tuple of [storedValue, setValue, removeValue].
- */
 export function useLocalStorage<T>(key: string, initialValue: T | (() => T), options: UseLocalStorageOptions<T> = {}) {
   const initialValueRef = useRef<T | (() => T)>(initialValue);
   // const { initializeWithValue = true } = options;
@@ -65,9 +55,6 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
       initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
 
     // Prevent build error "window is undefined" but keep working
-    if (IS_SERVER) {
-      return initialValueToUse;
-    }
 
     try {
       const raw = window.localStorage.getItem(key);
@@ -91,9 +78,6 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
   const setValue: typeof setStateValue = useCallback(
     (value) => {
       // Prevent build error "window is undefined" but keeps working
-      if (IS_SERVER) {
-        console.warn(`Tried setting localStorage key “${key}” even though environment is not a client`);
-      }
 
       try {
         // Allow value to be a function so we have the same API as useState
@@ -115,11 +99,6 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
   );
 
   const removeValue = useCallback(() => {
-    // Prevent build error "window is undefined" but keeps working
-    if (IS_SERVER) {
-      console.warn(`Tried removing localStorage key “${key}” even though environment is not a client`);
-    }
-
     const defaultValue =
       initialValueRef.current instanceof Function ? initialValueRef.current() : initialValueRef.current;
 
