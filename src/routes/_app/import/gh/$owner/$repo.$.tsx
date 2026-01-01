@@ -46,7 +46,7 @@ function RouteComponent() {
   const importPath = useMemo(() => pathname.split("/import/gh/").pop() ?? "", [pathname]);
   return (
     <div className="flex items-center justify-center min-h-screen p-8 w-full">
-      <ImporterCard importPath={importPath} />;
+      <ImporterCard importPath={importPath} />
     </div>
   );
 }
@@ -97,7 +97,7 @@ function ImporterCard({ importPath }: { importPath: string }) {
           <a
             target="_blank"
             href={`https://github.com/${repoInfo.owner}/${repoInfo.repo}`}
-            className="font-medium bg-card-foreground/10 w-full rounded-lg py-2 block"
+            className="font-medium bg-card-foreground/10 w-full rounded-lg py-2 block truncate px-4"
           >
             {repoInfo.owner}/{repoInfo.repo}
           </a>

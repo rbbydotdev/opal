@@ -12,7 +12,6 @@ export const WorkspaceImportManifestSchema = z
       .catch("template"),
     ident: z.string().default("").catch(""),
     provider: z.string().optional().catch(undefined),
-    defaultBranch: z.string().optional().catch(undefined),
     details: z
       .object({
         url: z.string(),

@@ -30,7 +30,6 @@ import {
   relPath,
   stringifyEntry,
 } from "@/lib/paths2";
-import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Mutex } from "async-mutex";
 import { nanoid } from "nanoid";
 
@@ -823,7 +822,7 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
     }
   }
 
-  async Import(importer: WorkspaceImport, signal?: AbortSignal) {
+  async Import(importer: Importer, signal?: AbortSignal) {
     const files: AbsPath[] = [];
     for await (const file of importer.fetchFiles(signal || new AbortController().signal)) {
       await this.writeFile(absPath(file.path), await file.content());
@@ -857,7 +856,6 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
 }
 
-export interface WorkspaceImport {
+export interface Importer {
   fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }>;
-  fetchManifest(signal: AbortSignal): Promise<WorkspaceImportManifestType>;
 }

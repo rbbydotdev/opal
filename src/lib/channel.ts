@@ -1,5 +1,5 @@
 import { SuperEmitter } from "@/lib/events/TypeEmitter";
-import { safeSerializer } from "@/lib/safeSerializer";
+import { toJSON } from "@/lib/toJSON";
 import { nanoid } from "nanoid";
 
 const ChannelSet = new Map<string, Channel>();
@@ -56,7 +56,7 @@ export class Channel<EventData extends Record<string, any> = Record<string, unkn
     { contextId }: { contextId?: string } = { contextId: this.contextId }
   ): void {
     // if (eventName === this.listenerAddedSymbol || eventName === this.listenerRemovedSymbol) return;
-    const safeEventData = safeSerializer(eventData);
+    const safeEventData = toJSON(eventData);
     const message = { eventName, eventData: safeEventData, senderId: contextId };
     if (DEBUG_CHANNELS) console.debug("broadcast outgoing:", eventName);
     try {

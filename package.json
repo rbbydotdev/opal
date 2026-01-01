@@ -140,7 +140,6 @@
     "unist": "^0.0.1",
     "unist-util-visit": "^5.0.0",
     "valtio": "^2.2.0",
-    "xstate": "^5.25.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

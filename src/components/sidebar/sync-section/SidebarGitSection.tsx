@@ -16,8 +16,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
-import { emitter } from "@/lib/Observable";
-import { useSyncExternalStore } from "react";
 
 import { SidebarGripChevron } from "@/components/sidebar/build-section/SidebarGripChevron";
 import { GitAuthorDialog, useGitAuthorDialogCmd } from "@/components/sidebar/sync-section/GitAuthorDialog";
@@ -350,7 +348,7 @@ export function SidebarGitSection({
   currentWorkspace,
   ...props
 }: React.ComponentProps<typeof SidebarGroup> & { currentWorkspace: Workspace }) {
-  const { repo, playbook, info } = useWorkspaceGitRepo({ currentWorkspace });
+  const { repo, playbook, info, globalPending } = useWorkspaceGitRepo({ currentWorkspace });
   const [expanded, setExpand] = useSingleItemExpander("sync");
   const { cmdRef: commitRef } = useTooltipToastCmd();
   const { cmdRef: branchRef } = useTooltipToastCmd();
@@ -393,11 +391,6 @@ export function SidebarGitSection({
     if (currentGitRef?.type === "commit") return "detatched";
     return "commit";
   })();
-
-  const globalPending = useSyncExternalStore(
-    (callback) => emitter(repo.pendingState).on('isPending', callback),
-    () => repo.pendingState.isPending
-  );
 
   // Remote management functions
   const addRemoteCmdRef = useGitRemoteDialogCmd();

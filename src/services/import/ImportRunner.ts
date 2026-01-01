@@ -1,3 +1,4 @@
+import { Importer } from "@/data/disk/Disk";
 import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
@@ -40,7 +41,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
   abstract get ident(): string;
   abstract fetchFiles(signal: AbortSignal): AsyncGenerator<{ path: string; content: () => Promise<Uint8Array> }>;
-  abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
+  // abstract createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType;
   abstract fetchManifest(
     signal: AbortSignal,
     onImportError?: (e: unknown) => void
@@ -106,7 +107,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       });
 
       if (manifest.type === "template") {
-        this.log("Confirming import", "info");
+        this.log("Would you like to import:", "info");
+        this.log(this.ident + " ?", "info");
+
         await this.waitForTemplateConfirmation(allAbortSignal);
       }
 
@@ -187,4 +190,8 @@ export function getRepoInfo(importPath: string, defaults: { branch?: string } = 
     branch: branch || defaults.branch || undefined,
     dir,
   };
+}
+
+export interface WorkspaceImport extends Importer {
+  fetchManifest(signal: AbortSignal): Promise<WorkspaceImportManifestType>;
 }

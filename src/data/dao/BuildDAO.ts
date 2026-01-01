@@ -8,8 +8,8 @@ import { NullDisk } from "@/data/disk/NullDisk";
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { NotFoundError } from "@/lib/errors/errors";
 import { absPath, AbsPath, joinPath, relPath } from "@/lib/paths2";
-import { safeSerializer } from "@/lib/safeSerializer";
 import { downloadBuildZipURL } from "@/lib/service-worker/downloadZipURL";
+import { toJSON } from "@/lib/toJSON";
 import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";
 
@@ -71,7 +71,7 @@ export class BuildDAO implements BuildRecord {
   }
 
   toJSON() {
-    return safeSerializer({
+    return toJSON({
       buildPath: this.buildPath,
       disk: this.disk,
       error: this.error,

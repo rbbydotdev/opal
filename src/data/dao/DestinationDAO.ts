@@ -5,7 +5,7 @@ import { RemoteAuthJType } from "@/data/RemoteAuthTypes";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug, getUniqueSlugAsync } from "@/lib/getUniqueSlug";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
-import { safeSerializer } from "@/lib/safeSerializer";
+import { toJSON } from "@/lib/toJSON";
 import { NULL_REMOTE_AUTH, RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
 import { nanoid } from "nanoid";
 
@@ -46,15 +46,17 @@ export class DestinationDAO<T = unknown> implements DestinationRecord<T> {
   }
 
   static FromJSON<T>(json: Optional<DestinationJType<T>, "timestamp"> | DestinationRecord<T>) {
-    return new DestinationDAO<T>({
-      ...json,
-      destinationUrl: json.destinationUrl ?? null,
-      timestamp: json.timestamp ?? Date.now(),
-    });
+    const full: DestinationRecord<T> & { destinationUrl?: string | null } = {
+      ...(json as DestinationRecord<T>),
+      destinationUrl: (json as any).destinationUrl ?? null,
+      timestamp: (json as any).timestamp ?? Date.now(),
+    };
+
+    return new DestinationDAO<T>(full);
   }
 
   toJSON() {
-    return safeSerializer({
+    return toJSON({
       remoteAuth: this.RemoteAuth.toJSON(),
       guid: this.guid,
       meta: this.meta,

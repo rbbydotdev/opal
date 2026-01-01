@@ -25,8 +25,7 @@ export default defineConfig(({ command, mode }) => {
     },
     esbuild: isProd
       ? {
-          drop: ["console"],
-          pure: ["console.log", "console.debug", "console.info"],
+          pure: ["console.log", "console.debug", "console.info", "console.trace"],
         }
       : undefined,
     // Disable Hot Module Replacement

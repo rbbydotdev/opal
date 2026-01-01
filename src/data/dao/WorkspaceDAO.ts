@@ -1,3 +1,4 @@
+import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { WorkspaceRecord } from "@/data/dao/WorkspaceRecord";
 import { ClientDb } from "@/data/db/DBInstance";
 import { DiskDAO } from "@/data/disk/DiskDAO";
@@ -7,11 +8,10 @@ import { WorkspaceStatusCode, WS_OK } from "@/data/WorkspaceStatusCode";
 import { BadRequestError, errF, NotFoundError } from "@/lib/errors/errors";
 import { getUniqueSlug } from "@/lib/getUniqueSlug";
 import { AbsPath, isAncestor } from "@/lib/paths2";
-import { safeSerializer } from "@/lib/safeSerializer";
 import { slugifier } from "@/lib/slugifier";
+import { toJSON } from "@/lib/toJSON";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
 import { RemoteAuthDAO } from "@/workspace/RemoteAuthDAO";
-import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { nanoid } from "nanoid";
 
 export class WorkspaceDAO {
@@ -28,7 +28,7 @@ export class WorkspaceDAO {
   buildStrategy: BuildStrategy;
 
   toJSON() {
-    return safeSerializer({
+    return toJSON({
       name: this.name,
       guid: this.guid,
       code: this.code,

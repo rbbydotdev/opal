@@ -3,7 +3,6 @@ import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { relPath } from "@/lib/paths2";
 import { BaseImportRunner, getIdent } from "@/services/import/ImportRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
-import pathModule from "path";
 
 export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string }> {
   constructor({ fullRepoPath }: { fullRepoPath: string }) {
@@ -45,19 +44,19 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     return WorkspaceDefaultManifest(this.ident);
   }
 
-  createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
-    return {
-      version: 1,
-      description: "GitHub import",
-      type: "template",
-      ident: this.ident,
-      provider: "github",
-      details: {
-        url: pathModule.join("https://github.com", this.config.fullRepoPath),
-      },
-      ...importManifest,
-    };
-  }
+  // createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
+  //   return {
+  //     version: 1,
+  //     description: "GitHub import",
+  //     type: "template",
+  //     ident: this.ident,
+  //     provider: "github",
+  //     details: {
+  //       url: pathModule.join("https://github.com", this.config.fullRepoPath),
+  //     },
+  //     ...importManifest,
+  //   };
+  // }
 
   get ident() {
     return getIdent(this.config.fullRepoPath);

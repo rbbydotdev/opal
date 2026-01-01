@@ -18,12 +18,12 @@ import { RemoteAuthGithubAgent } from "@/data/remote-auth/RemoteAuthGithubAgent"
 import { SpecialDirs } from "@/data/SpecialDirs";
 import { CreateSuperTypedEmitterClass } from "@/lib/events/TypeEmitter";
 import { isWebWorker } from "@/lib/isServiceWorker";
+import { Observable, observeMultiple } from "@/lib/Observable";
 import { absPath, AbsPath, joinPath } from "@/lib/paths2";
 import { Mutex } from "async-mutex";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { nanoid } from "nanoid";
-import { observeMultiple } from "@/lib/Observable";
 import { gitAbbreviateRef } from "./gitAbbreviateRef";
 
 export interface GitRemote {
@@ -182,8 +182,7 @@ export class GitRepo {
   // public readonly ready = this.$p.promise;
   private unsubs: (() => void)[] = [];
   private info: RepoInfoType | null = null;
-  infoState: { info: RepoInfoType | null };
-  pendingState: { isPending: boolean };
+  $state: Observable<{ isPending: boolean; info: RepoInfoType | null }>;
 
   private gitWpm = new WatchPromiseMembers(GIT);
   readonly git = this.gitWpm.watched;
@@ -330,10 +329,10 @@ export class GitRepo {
       ],
       async (propName) => {
         this.globalPending = true;
-        this.pendingState.isPending = true;
+        this.$state.isPending = true;
         await new Promise((rs) => this.gitEvents.once(`${propName}:end`, rs));
         this.globalPending = false;
-        this.pendingState.isPending = false;
+        this.$state.isPending = false;
       }
     );
   };
@@ -347,7 +346,7 @@ export class GitRepo {
       }
     });
     this.disk.dirtyListener(() => {
-      if (this.info?.conflictingFiles.length) {
+      if (this.$state.info?.conflictingFiles.length) {
         void this.sync();
       }
     });
@@ -544,16 +543,12 @@ export class GitRepo {
 
   sync = async ({ emitRemote = true } = {}) => {
     const newInfo = { ...(await this.tryInfo()) };
-    if (deepEqual(this.info, newInfo)) {
-      return this.info; // No changes, return current info
+    if (deepEqual(this.$state.info, newInfo)) {
+      return this.$state.info; // No changes, return current info
     }
-    this.info = newInfo;
-    this.infoState.info = newInfo;
+    this.$state.info = newInfo;
     void this.local.emit(RepoEvents.INFO, newInfo);
-    if (emitRemote) {
-      void this.remote.emit(RepoEvents.INFO, newInfo);
-    }
-
+    if (emitRemote) this.remote.emit(RepoEvents.INFO, newInfo);
     return newInfo;
   };
 
@@ -637,8 +632,18 @@ export class GitRepo {
     this.dir = dir || this.dir;
     this.defaultMainBranch = defaultBranch || this.defaultMainBranch;
     this.author = author || this.author;
-    this.infoState = observeMultiple({ info: null }, {}, { batch: true });
-    this.pendingState = observeMultiple({ isPending: false }, {}, { batch: true });
+    // this.infoState = observeMultiple({ info: null }, {}, { batch: true });
+    // this.pendingState = observeMultiple({ isPending: false }, {}, { batch: true });
+
+    this.$state = observeMultiple(
+      {
+        info: null,
+        isPending: false,
+      },
+      {},
+      { batch: true }
+    );
+
     this.remote = new RepoEventsRemote(this.guid);
   }
 
@@ -951,12 +956,8 @@ export class GitRepo {
       })
       .catch(async (e) => {
         if (isMergeConflictError(e)) {
-          // console.log("Merge conflict detected:", e);
           await this.setMergeState(await GIT.resolveRef({ fs: this.fs, dir: this.dir, ref: from }));
-          // console.log((await this.fs.readFile("/.git/HEAD")).toString());
-
           await this.setMergeMsg(`Merge branch '${from}' into '${into}'`);
-
           return structuredClone(e.data);
         } else {
           throw e;

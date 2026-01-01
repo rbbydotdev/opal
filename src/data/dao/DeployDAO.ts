@@ -4,7 +4,7 @@ import { DestinationDAO } from "@/data/dao/DestinationDAO";
 import { ClientDb } from "@/data/db/DBInstance";
 import { DestinationType } from "@/data/DestinationSchemaMap";
 import { NotFoundError } from "@/lib/errors/errors";
-import { safeSerializer } from "@/lib/safeSerializer";
+import { toJSON } from "@/lib/toJSON";
 import { LogLine } from "@/types/RunnerTypes";
 import { nanoid } from "nanoid";
 
@@ -73,7 +73,7 @@ export class DeployDAO<T = any> implements DeployRecord<T> {
   }
 
   toJSON() {
-    return safeSerializer({
+    return toJSON({
       guid: this.guid,
       label: this.label,
       timestamp: this.timestamp,

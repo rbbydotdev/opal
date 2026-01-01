@@ -49,7 +49,6 @@ export function GitCommitManager({
         items={commits.map((commit) => ({ value: commit.oid, label: <CommitLabel commitData={commit} /> }))}
         placeholder="Select Commit"
         itemClassName={cn("focus:!bg-ring focus:!text-primary-foreground [&_*]:focus:text-primary-foreground")}
-        // onSelect={resetHardHandler}
         onSelect={(value) => {
           setSelectCommit(false);
           resetHard(value);

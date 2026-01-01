@@ -5,6 +5,7 @@ import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editors/prettifyMime";
 import { TemplateManager } from "@/features/templating/TemplateManager";
+import { DataflowGraph } from "@/lib/DataFlow";
 import { getMimeType } from "@/lib/mimeType";
 import { absPath, AbsPath, basename, dirname, extname, isTemplateFile, joinPath, relPath, RelPath } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
@@ -15,6 +16,18 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
+
+interface BuildContext {
+  outputDirectoryReady?: boolean;
+  sourceFilesIndexed?: boolean;
+  assetsReady?: boolean;
+  pages?: PageData[];
+  posts?: PageData[];
+  templatesProcessed?: boolean;
+  bookGenerated?: boolean;
+  blogIndexGenerated?: boolean;
+  blogPostsGenerated?: boolean;
+}
 
 export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   //build,template,template etc should make generic build and deploy objects so observable etc can be shared
@@ -115,10 +128,6 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       this.log(`Starting ${this.strategy} build, id ${this.target.guid}...`, "info");
       this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
       this.log(`Output path: ${this.outputPath}`, "info");
-      // await new Promise((resolve, rj) => {
-      //   setTimeout(resolve, 100000);
-      //   allAbortSignal?.addEventListener("abort", () => rj(new Error("Aborted")));
-      // }); // allow log to flush
 
       if (allAbortSignal?.aborted) {
         this.log("Build cancelled", "error");
@@ -127,42 +136,9 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       }
 
       this.log("Starting build process...", "info");
-      this.log("Building file tree...", "info");
 
-      // Index the source directory
-      this.log("Indexing source files...", "info");
-      await this.sourceDisk.triggerIndex();
-
-      const fileTree = this.sourceDisk.fileTree;
-      this.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
-
-      await this.ensureOutputDirectory();
-
-      if (allAbortSignal?.aborted) {
-        this.log("Build cancelled", "error");
-        return this.target.update({
-          logs: this.logs,
-          status: "error",
-          error: "Build was cancelled.",
-        });
-      }
-
-      this.log(`Executing ${this.strategy} build strategy...`, "info");
-      switch (this.strategy) {
-        case "freeform":
-          await this.buildFreeform();
-          break;
-        case "book":
-          await this.buildBook();
-          break;
-        case "blog":
-          await this.buildBlog();
-          break;
-        default:
-          this.strategy satisfies never;
-          throw new TypeError(`Unknown build strategy: ${this.strategy}`);
-      }
-      this.log(`${this.strategy} build strategy completed`, "info");
+      const buildGraph = this.createBuildGraph();
+      const context = await buildGraph.run({});
 
       allAbortSignal?.throwIfAborted();
 
@@ -190,55 +166,81 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
+  private createBuildGraph(): DataflowGraph<BuildContext> {
+    let graph = new DataflowGraph<BuildContext>()
+      .node("indexSourceFiles", undefined, async () => {
+        this.log("Indexing source files...", "info");
+        await this.sourceDisk.triggerIndex();
+        const fileTree = this.sourceDisk.fileTree;
+        this.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
+        return { sourceFilesIndexed: true };
+      })
+      .node("ensureOutputDirectory", undefined, async () => {
+        await this.ensureOutputDirectory();
+        return { outputDirectoryReady: true };
+      })
+      .node("copyAssets", ["indexSourceFiles", "ensureOutputDirectory"], async () => {
+        await this.copyAssets();
+        return { assetsReady: true };
+      });
+
+    if (this.strategy === "freeform") {
+      graph = graph.node("processTemplatesAndMarkdown", ["copyAssets"], async () => {
+        await this.processTemplatesAndMarkdown();
+        return { templatesProcessed: true };
+      });
+    } else if (this.strategy === "book") {
+      graph = graph
+        .node("loadPages", ["indexSourceFiles"], async () => {
+          const pages = await this.loadPagesFromDirectory(relPath("_pages"));
+          if (pages.length === 0) {
+            throw new Error("No pages found in _pages directory for book strategy");
+          }
+          return { pages };
+        })
+        .node("generateBook", ["loadPages", "copyAssets"], async (ctx: BuildContext & { pages: PageData[] }) => {
+          const tableOfContents = this.generateTableOfContents(ctx.pages);
+          const combinedContent = ctx.pages.map((page) => page.htmlContent).join('\n<div class="page-break"></div>\n');
+
+          const bookLayout = await this.loadTemplate(relPath("book.mustache"));
+          const globalCssPath = await this.getGlobalCssPath();
+          const bookHtml = mustache.render(bookLayout, {
+            tableOfContents,
+            content: combinedContent,
+            globalCssPath,
+          });
+
+          const indexPath = joinPath(this.outputPath, relPath("index.html"));
+          await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
+          this.log("Book page generated", "info");
+          return { bookGenerated: true };
+        });
+    } else if (this.strategy === "blog") {
+      graph = graph
+        .node("loadPosts", ["indexSourceFiles"], async () => {
+          const posts = await this.loadPostsFromDirectory(relPath("posts"));
+          return { posts };
+        })
+        .node("generateBlogIndex", ["loadPosts", "copyAssets"], async (ctx: BuildContext & { posts: PageData[] }) => {
+          await this.generateBlogIndex(ctx.posts);
+          return { blogIndexGenerated: true };
+        })
+        .node("generateBlogPosts", ["loadPosts", "copyAssets"], async (ctx: BuildContext & { posts: PageData[] }) => {
+          await this.generateBlogPosts(ctx.posts);
+          return { blogPostsGenerated: true };
+        });
+    } else {
+      throw new TypeError(`Unknown build strategy: ${this.strategy}`);
+    }
+
+    return graph;
+  }
+
   private async ensureOutputDirectory(): Promise<void> {
     this.log("Creating output directory...", "info");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
 
-  private async buildFreeform(): Promise<void> {
-    this.log("Building with freeform strategy...", "info");
-
-    await this.copyAssets();
-    await this.processTemplatesAndMarkdown();
-  }
-
-  private async buildBook(): Promise<void> {
-    this.log("Building with book strategy...", "info");
-
-    await this.copyAssets();
-
-    const pages = await this.loadPagesFromDirectory(relPath("_pages"));
-
-    if (pages.length === 0) {
-      throw new Error("No pages found in _pages directory for book strategy");
-    }
-
-    const tableOfContents = this.generateTableOfContents(pages);
-    const combinedContent = pages.map((page) => page.htmlContent).join('\n<div class="page-break"></div>\n');
-
-    const bookLayout = await this.loadTemplate(relPath("book.mustache"));
-    const globalCssPath = await this.getGlobalCssPath();
-    const bookHtml = mustache.render(bookLayout, {
-      tableOfContents,
-      content: combinedContent,
-      globalCssPath,
-    });
-
-    const indexPath = joinPath(this.outputPath, relPath("index.html"));
-    await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
-    this.log("Book page generated", "info");
-  }
-
-  private async buildBlog(): Promise<void> {
-    this.log("Building with blog strategy...", "info");
-
-    await this.copyAssets();
-
-    const posts = await this.loadPostsFromDirectory(relPath("posts"));
-
-    await this.generateBlogIndex(posts);
-    await this.generateBlogPosts(posts);
-  }
 
   private async copyAssets(): Promise<void> {
     this.log("Copying assets...", "info");

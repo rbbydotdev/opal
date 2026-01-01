@@ -4,8 +4,8 @@ import { useSyncExternalStore } from "react";
 
 export function useRepoInfo(repo: GitRepo) {
   const info = useSyncExternalStore(
-    (callback) => emitter(repo.infoState).on('info', callback),
-    () => repo.infoState.info
+    (callback) => emitter(repo.$state).on("info", callback),
+    () => repo.$state.info
   );
   return info ?? RepoDefaultInfo;
 }
