@@ -45,8 +45,8 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
       if (!shouldPrintRef.current) return;
       shouldPrintRef.current = false;
       context.window.addEventListener("afterprint", () => context.window.close());
+      queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
       context.window.print();
-      showDialog(false);
     });
 
     // flushSync(() => {
@@ -71,7 +71,7 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
         currentWorkspace={currentWorkspace}
         onRenderBodyReady={handleRenderBodyReady}
       />
-      <Dialog open={isDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={showDialog}>
         <DialogContent>
           <DialogTitle className="sr-only">Print Dialog Open</DialogTitle>
           <DialogHeader className="flex justify-center items-center">
