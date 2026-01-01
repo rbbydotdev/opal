@@ -641,9 +641,9 @@ export class GitHubClient {
     };
   }
 
-  async verifyRepositoryExists({ owner, repo }: { owner: string; repo: string }) {
+  async verifyRepositoryExists({ owner, repo, signal }: { owner: string; repo: string; signal?: AbortSignal }) {
     try {
-      await this.octokit.request("GET /repos/{owner}/{repo}", { owner, repo });
+      await this.octokit.request("GET /repos/{owner}/{repo}", { owner, repo, request: { signal } });
     } catch (e) {
       const error = mapToTypedError(e, {
         message: `Repository ${owner}/${repo} not found`,

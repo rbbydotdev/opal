@@ -1,7 +1,7 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { relPath } from "@/lib/paths2";
-import { BaseImportRunner, getIdent } from "@/services/import/ImportRunner";
+import { BaseImportRunner, getIdent, ImportState } from "@/services/import/ImportRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 
 export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string }> {
@@ -44,20 +44,6 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     return WorkspaceDefaultManifest(this.ident);
   }
 
-  // createImportMeta(importManifest: Partial<WorkspaceImportManifestType>): WorkspaceImportManifestType {
-  //   return {
-  //     version: 1,
-  //     description: "GitHub import",
-  //     type: "template",
-  //     ident: this.ident,
-  //     provider: "github",
-  //     details: {
-  //       url: pathModule.join("https://github.com", this.config.fullRepoPath),
-  //     },
-  //     ...importManifest,
-  //   };
-  // }
-
   get ident() {
     return getIdent(this.config.fullRepoPath);
   }
@@ -66,7 +52,17 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     abort: boolean;
     reason: string;
     navigate: string | null;
+    status: ImportState["status"];
   }> {
+    if ((await this.importer.repoExists(this.abortController.signal)) === false) {
+      return {
+        abort: true,
+        reason: "The specified GitHub repository does not exist or is inaccessible.",
+        status: "error",
+        navigate: null,
+      };
+    }
+
     const ws = await WorkspaceDAO.FindAlikeImport({
       provider: "github",
       ident: this.ident,
@@ -77,12 +73,14 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
         abort: true,
         reason: "Workspace with the same GitHub import already exists.",
         navigate: ws.href,
+        status: "pending",
       };
     }
     return {
       abort: false,
       reason: "",
       navigate: null,
+      status: "pending",
     };
   }
 

@@ -25,7 +25,9 @@ function useGithubImporter(fullRepoPath: string) {
     [fullRepoPath]
   );
   useEffect(() => {
-    void execute(GitHubImportRunner.Create({ fullRepoPath })).then((href) => setGotoPath(href));
+    void execute(GitHubImportRunner.Create({ fullRepoPath })).then((href) => {
+      if (href) setGotoPath(href);
+    });
     return () => cancel();
   }, [cancel, execute, fullRepoPath]);
 
@@ -53,7 +55,7 @@ function RouteComponent() {
 
 function ImporterCard({ importPath }: { importPath: string }) {
   const navigate = useNavigate();
-  const { logs, successPath, cancel, importRunner, type, confirmImport, setConfirm } = useGithubImporter(importPath);
+  const { logs, successPath, cancel, importRunner, confirmImport, setConfirm } = useGithubImporter(importPath);
 
   const isSuccess = importRunner.isSuccess;
   const isImporting = importRunner.isPending;

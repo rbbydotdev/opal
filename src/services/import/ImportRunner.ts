@@ -10,7 +10,7 @@ import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
 import { join } from "path";
 
-type ImportState = {
+export type ImportState = {
   status: "idle" | "success" | "pending" | "error";
   type: "showcase" | "template";
   logs: Array<{
@@ -51,6 +51,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     abort: boolean;
     reason: string;
     navigate: string | null;
+    status: ImportState["status"];
   }>;
 
   async createWorkspaceImport(
@@ -95,10 +96,11 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       const preflightResult = await this.preflight(allAbortSignal);
       if (preflightResult.abort) {
         this.log(`Import aborted: ${preflightResult.reason}`, "warning");
-        this.target.status = "success";
-
-        return preflightResult.navigate ?? "/";
+        this.target.status = preflightResult.status;
+        return preflightResult.navigate;
       }
+
+      //check if repo exists and is accessible
 
       this.log("Fetching manifest...", "info");
 

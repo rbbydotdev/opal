@@ -1,5 +1,5 @@
 import { GitHubClient } from "@/api/github/GitHubClient";
-import { BadRequestError } from "@/lib/errors/errors";
+import { BadRequestError, isApplicationError } from "@/lib/errors/errors";
 import { RelPath } from "@/lib/paths2";
 import { tryParseJSON } from "@/lib/tryParseJSON";
 import { getRepoInfo, WorkspaceImport } from "@/services/import/ImportRunner";
@@ -20,6 +20,17 @@ export class GithubImport implements WorkspaceImport {
     this.client = new GitHubClient();
   }
 
+  repoExists = async (signal: AbortSignal): Promise<boolean> => {
+    try {
+      await this.client.verifyRepositoryExists({ owner: this.owner, repo: this.repo, signal });
+      return true;
+    } catch (error) {
+      if (isApplicationError(error) && error.code === 404) {
+        return false;
+      }
+      throw error;
+    }
+  };
   private async resolveBranch(signal: AbortSignal): Promise<string> {
     if (this.resolvedBranch) return this.resolvedBranch;
 
