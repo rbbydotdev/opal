@@ -43,9 +43,7 @@ const EMPTY_CONTEXT: ExtCtxNotReadyContext = {
   ready: false,
 };
 
-const FIREFOX_PREVIEW_HTML = `
-
-<!DOCTYPE html>
+const FIREFOX_PREVIEW_HTML = `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -56,6 +54,7 @@ const FIREFOX_PREVIEW_HTML = `
   </body>
 </html>
 `;
+</html>`;
 
 const CHROME_PREVIEW_HTML_INNER = `
   <head>
