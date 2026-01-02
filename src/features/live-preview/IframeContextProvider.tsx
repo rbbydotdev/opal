@@ -230,7 +230,7 @@ export class WindowManager extends BaseContextProvider {
         this.events.emit("open", false);
         clearPoll();
       }
-    }, 1000);
+    }, 250);
 
     if (this.windowRef.current.document.readyState === "complete") {
       this.initializePreview();
@@ -240,7 +240,8 @@ export class WindowManager extends BaseContextProvider {
     if (this.windowRef.current && this.windowRef.current !== window) {
       this.windowRef.current.close();
       // Don't set to null immediately - let polling detect the close
-      // this.windowRef.current = null;
+      this.windowRef.current = null;
+      this.events.emit("open", false);
     }
   }
 

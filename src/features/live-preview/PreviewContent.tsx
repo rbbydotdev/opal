@@ -9,7 +9,8 @@ import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, isTemplateType
 import { Workspace } from "@/workspace/Workspace";
 import { useEffect, useState } from "react";
 
-// Reusable component for render body container
+import React, { useMemo, useRef } from "react";
+
 function RenderBodyContainer({
   html,
   renderBodyRef,
@@ -19,15 +20,23 @@ function RenderBodyContainer({
   renderBodyRef: React.RefObject<HTMLDivElement | null>;
   mode?: "pane" | "external";
 }) {
-  return (
-    <div
-      ref={renderBodyRef}
-      id="render-body"
-      style={mode === "pane" ? { width: "100%", height: "100%", overflow: "auto" } : {}}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  const stableHtmlRef = useRef<string | null>(null);
+
+  if (mode === "external") {
+    if (html && !stableHtmlRef.current) {
+      stableHtmlRef.current = html;
+    }
+    if (!html && stableHtmlRef.current) {
+      html = stableHtmlRef.current;
+    }
+  }
+
+  const style = useMemo(() => (mode === "pane" ? { width: "100%", height: "100%", overflow: "auto" } : {}), [mode]);
+
+  return <div ref={renderBodyRef} id="render-body" style={style} dangerouslySetInnerHTML={{ __html: html }} />;
 }
+
+export default React.memo(RenderBodyContainer);
 
 export const getBaseHref = (href: string): string => href.split("?")[0]!;
 

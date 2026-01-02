@@ -36,27 +36,26 @@ export function LivePreviewProvider({ children }: LivePreviewProviderProps) {
   const handleRenderBodyReady = useCallback(() => {
     if (!context.window) return;
     context.window.addEventListener("afterprint", () => context.window.close());
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
-        context.window.print();
-      });
-    });
+    queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
+    setTimeout(() => context.window.print(), 500);
   }, [context.window]);
 
-  const open = async ({ print }: { print?: boolean } = {}) => {
-    if (extPreviewCtrl.current) {
-      extPreviewCtrl.current.open();
-      if (print) {
-        await emitter.once("render-body-ready", () => handleRenderBodyReady);
+  const open = useCallback(
+    async ({ print }: { print?: boolean } = {}) => {
+      if (extPreviewCtrl.current) {
+        extPreviewCtrl.current.open();
+        if (print) {
+          await emitter.once("render-body-ready", () => handleRenderBodyReady);
+        }
       }
-    }
-  };
-  const close = () => {
+    },
+    [emitter, handleRenderBodyReady]
+  );
+  const close = useCallback(() => {
     if (extPreviewCtrl.current) {
       extPreviewCtrl.current.close();
     }
-  };
+  }, []);
 
   return (
     <LivePreviewContext.Provider value={{ showDialog, extPreviewCtrl, open, close }}>
