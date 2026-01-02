@@ -126,21 +126,11 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       await this.target.save();
       await this.sourceDisk.refresh();
       this.log(
-        `Starting ${this.strategy} build, id ${this.target.guid}...
-      Source disk: ${this.sourceDisk.guid}
-      Output path: ${this.outputPath}`,
+        `Starting ${this.strategy} build, id ${this.target.guid} - Source disk: ${this.sourceDisk.guid} - Output path: ${this.outputPath}`,
         "info"
       );
-
-      allAbortSignal?.throwIfAborted();
-
       this.log("Starting build process...", "info");
-
-      const buildGraph = this.createBuildGraph();
-      const _result = await buildGraph.run({});
-
-      allAbortSignal?.throwIfAborted();
-
+      await this.createBuildGraph().run({});
       this.log("Build completed successfully!", "info");
 
       // Re-index output disk and calculate file count before final update
@@ -148,7 +138,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       this.log(`Build saved with ID: ${this.target.guid}`, "info");
       const count =
         this.outputDisk.fileTree.nodeFromPath(this.outputPath)?.countChildren({
-          filterIn: Filter.only(SpecialDirs.Build).$,
+          filterIn: Filter.only(SpecialDirs.Build),
         }) ?? 0;
 
       this.log(`Total files in build output: ${count}`, "info");
@@ -167,14 +157,18 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
 
   private createBuildGraph(): DataflowGraph<BuildContext> {
     let graph = new DataflowGraph<BuildContext>()
-      .node("indexSourceFiles", undefined, async () => {
+      .node("init", [], async () => {
+        this.log("Initializing build...", "info");
+        return {};
+      })
+      .node("indexSourceFiles", [], async () => {
         this.log("Indexing source files...", "info");
         await this.sourceDisk.triggerIndex();
         const fileTree = this.sourceDisk.fileTree;
         this.log(`File tree loaded with ${fileTree ? "files found" : "no files"}`, "info");
         return { sourceFilesIndexed: true };
       })
-      .node("ensureOutputDirectory", undefined, async () => {
+      .node("ensureOutputDirectory", [], async () => {
         await this.ensureOutputDirectory();
         return { outputDirectoryReady: true };
       })
@@ -186,7 +180,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     if (this.strategy === "freeform") {
       graph = graph.node("processTemplatesAndMarkdown", ["copyAssets"], async () => {
         await this.processTemplatesAndMarkdown();
-        return { templatesProcessed: true };
+        return { templatesProcessed: true, strategy: this.strategy };
       });
     } else if (this.strategy === "book") {
       graph = graph
@@ -212,7 +206,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
           const indexPath = joinPath(this.outputPath, relPath("index.html"));
           await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
           this.log("Book page generated", "info");
-          return { bookGenerated: true };
+          return { bookGenerated: true, strategy: this.strategy };
         });
     } else if (this.strategy === "blog") {
       graph = graph
@@ -220,13 +214,13 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
           const posts = await this.loadPostsFromDirectory(relPath("posts"));
           return { posts };
         })
-        .node("generateBlogIndex", ["loadPosts", "copyAssets"], async (ctx: BuildContext & { posts: PageData[] }) => {
+        .node("generateBlogIndex", ["loadPosts", "copyAssets"], async (ctx) => {
           await this.generateBlogIndex(ctx.posts);
           return { blogIndexGenerated: true };
         })
-        .node("generateBlogPosts", ["loadPosts", "copyAssets"], async (ctx: BuildContext & { posts: PageData[] }) => {
+        .node("generateBlogPosts", ["loadPosts", "copyAssets"], async (ctx) => {
           await this.generateBlogPosts(ctx.posts);
-          return { blogPostsGenerated: true };
+          return { blogPostsGenerated: true, strategy: this.strategy };
         });
     } else {
       throw new TypeError(`Unknown build strategy: ${this.strategy}`);

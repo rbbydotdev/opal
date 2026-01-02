@@ -56,8 +56,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
   async createWorkspaceImport(
     workspaceName: string,
-    ident: string,
-    importMeta?: WorkspaceImportManifestType
+    importMeta: Partial<WorkspaceImportManifestType>
   ): Promise<Workspace> {
     await this.tmpDisk.superficialIndex();
     const sourceTree = this.tmpDisk.fileTree.toSourceTree();
@@ -68,7 +67,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         diskType: IndexedDbDisk.type,
       },
       {
-        manifest: importMeta || WorkspaceDefaultManifest(ident),
+        manifest: Object.assign(importMeta, WorkspaceDefaultManifest(this.ident)),
       }
     );
     return workspace;
@@ -99,8 +98,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         this.target.status = preflightResult.status;
         return preflightResult.navigate;
       }
-
-      //check if repo exists and is accessible
 
       this.log("Fetching manifest...", "info");
 
@@ -133,7 +130,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       this.log(`Creating workspace ${workspaceName} from imported files...`, "info");
 
-      const workspace = await this.createWorkspaceImport(workspaceName, this.ident, manifest);
+      const workspace = await this.createWorkspaceImport(workspaceName, manifest);
 
       this.log("Workspace created successfully", "success");
 
