@@ -7,8 +7,6 @@ export function initializeGlobalLogger(remoteLogger: {
   error: (...msg: unknown[]) => void;
   warn: (...msg: unknown[]) => void;
 }) {
-  if (!__ENABLE_LOG__) return globalThis.console;
-
   const levelPriority = {
     debug: 1,
     log: 2,
@@ -20,6 +18,10 @@ export function initializeGlobalLogger(remoteLogger: {
   const shouldLog = (level: keyof typeof levelPriority) => levelPriority[level] >= levelPriority[currentLevel];
 
   for (const level of ["log", "debug", "error", "warn"] as const) {
+    if (!__ENABLE_LOG__) {
+      globalThis.console[level] = () => {};
+      continue;
+    }
     if (shouldLog(level)) {
       globalThis.console[level] = remoteLogger[level].bind(remoteLogger);
     }

@@ -7,7 +7,7 @@
     "build": "npm run build:workers && npm run build:app",
     "build:app": "vite build",
     "build:workers": "ENABLE_WORKER_LOGS=false tsx vite-build-workers.ts",
-    "build:workers:dev": "tsx vite-build-workers.ts dev",
+    "build:workers:dev": "ENABLE_WORKER_LOGS=true tsx vite-build-workers.ts dev",
     "dev:workerlog": "tsx ./src/workerlog/index.ts",
     "dev": "vite",
     "dev:all": "npm-run-all --parallel dev:app build:workers:dev",
