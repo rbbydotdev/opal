@@ -162,7 +162,10 @@ export const EditViewPreview = ({
       <HoverCardContent
         side="left"
         className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden no-scrollbar"
-        style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
+        style={{
+          boxShadow: "0 4px 12px 0 oklch(var(--foreground))",
+          zIndex: 9999
+        }}
       >
         <div style={{ transform: "scale(0.9)", transformOrigin: "top left", width: "400px" }}>
           <ShadowDomPreview htmlContent={htmlContent} />
