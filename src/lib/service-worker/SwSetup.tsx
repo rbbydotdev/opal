@@ -1,12 +1,16 @@
+import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
 import { useLayoutEffect, useState } from "react";
 import { setupServiceWorkerLogger } from "./sw-logger-setup";
 
 export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
   const [ready, setReady] = useState(!!navigator.serviceWorker.controller);
+  const { hasFeature } = useBrowserCompat();
 
   useLayoutEffect(() => {
+    if (!hasFeature("canUseServiceWorker")) setReady(true); // If service workers are not supported, consider SW as ready
     void setupServiceWorker().then(() => setReady(true));
-  }, []);
+  }, [hasFeature]);
+
   if (!ready) return null;
   return <>{children}</>;
 };

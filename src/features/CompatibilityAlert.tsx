@@ -8,17 +8,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
-import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { AlertTriangle, CheckCircle, ExternalLink, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function CompatibilityAlert() {
   let [isOpen, setIsOpen] = useState(false);
-  const { storedValue: isDismissed, setStoredValue: setIsDismissed } = useLocalStorage(
-    "compatibility-alert-dismissed",
-    false,
-    { initializeWithValue: true }
-  );
+  // const { storedValue: isDismissed, setStoredValue: setIsDismissed } = useLocalStorage(
+  //   "compatibility-alert-dismissed",
+  //   false,
+  //   { initializeWithValue: true }
+  // );
+  const [isDismissed, setIsDismissed] = useState(false);
 
   const { hasCompatibilityIssues, features } = useBrowserCompat();
 
@@ -41,7 +41,7 @@ export function CompatibilityAlert() {
     }
   };
 
-  if (!hasCompatibilityIssues && isDismissed) {
+  if (!hasCompatibilityIssues || isDismissed) {
     return null;
   }
 

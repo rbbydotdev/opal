@@ -1,5 +1,5 @@
 import { BrowserAbility, BrowserAbilityCheckAll, REQUIRED_BROWSER_FEATURES } from "@/lib/BrowserAbility";
-import React, { createContext, Suspense, use, useContext } from "react";
+import React, { createContext, Suspense, use, useCallback, useContext } from "react";
 
 const cachedBrowserCheck = BrowserAbilityCheckAll();
 
@@ -14,6 +14,7 @@ interface BrowserCompatContextValue {
   capabilities: Record<keyof typeof BrowserAbility, boolean>;
   hasCompatibilityIssues: boolean;
   features: BrowserCompatibilityFeature[];
+  hasFeature: (featureKey: keyof typeof BrowserAbility) => boolean;
 }
 
 const BrowserCompatContext = createContext<BrowserCompatContextValue | null>(null);
@@ -55,12 +56,20 @@ function BrowserCompatProviderInternal({ children }: { children: React.ReactNode
     }
   );
 
+  const hasFeature = useCallback(
+    (featureKey: keyof typeof BrowserAbility) => {
+      return capabilities[featureKey];
+    },
+    [capabilities]
+  );
+
   const hasCompatibilityIssues = REQUIRED_BROWSER_FEATURES.some((feature) => !capabilities[feature]);
 
   const contextValue: BrowserCompatContextValue = {
     capabilities,
     hasCompatibilityIssues,
     features,
+    hasFeature,
   };
 
   return <BrowserCompatContext.Provider value={contextValue}>{children}</BrowserCompatContext.Provider>;
