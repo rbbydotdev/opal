@@ -203,7 +203,25 @@ export abstract class DeployBundleBase<TMeta = unknown> {
 export class DeployBundle extends DeployBundleBase {
   // Expose raw file objects for client-specific conversion
   async getFiles(): Promise<UniversalDeployFile[]> {
-    return this.getDeployFiles();
+    const files = await this.getDeployFiles();
+
+    // Add minimal favicon if none exists
+    const hasFavicon = files.some(file => file.path === "favicon.ico");
+    if (!hasFavicon) {
+      // Minimal 1x1 transparent PNG as base64 (smallest possible favicon)
+      const minimalFaviconBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+      const faviconFile = new UniversalDeployFile(
+        "favicon.ico",
+        async () => Buffer.from(minimalFaviconBase64, "base64"),
+        "base64"
+      );
+
+      files.push(faviconFile);
+    }
+
+    return files;
   }
 
   async preDeployAction(tree: FileTree): Promise<void> {

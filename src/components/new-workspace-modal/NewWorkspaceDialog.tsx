@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DefaultDiskType } from "@/data/disk/DiskDefaults";
-import { DiskCanUseMap, DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/disk/DiskType";
+import { DiskEnabledFSTypes, DiskLabelMap, DiskType } from "@/data/disk/DiskType";
 import { getDefaultTemplate, getTemplateById, WORKSPACE_TEMPLATES } from "@/data/WorkspaceTemplates";
+import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
 import { absPath } from "@/lib/paths2";
 import { RandomSlugWords } from "@/lib/randomSlugWords";
 import { Workspace } from "@/workspace/Workspace";
@@ -36,6 +37,16 @@ export function NewWorkspaceDialog({
   const [selectedDirectory, setSelectedDirectory] = useState<FileSystemDirectoryHandle | null>(null);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(getDefaultTemplate().id);
+  const { hasFeature } = useBrowserCompat();
+
+  const canUseDiskTable = useMemo(
+    () => ({
+      IndexedDbDisk: hasFeature("canUseIndexedDB"),
+      OpFsDisk: hasFeature("canUseOPFS"),
+      OpFsDirMountDisk: hasFeature("canUseOPFS") && "showDirectoryPicker" in window,
+    }),
+    [hasFeature]
+  );
 
   const defaultValue = useMemo(() => RandomSlugWords() /*nanoid()*/, []);
   const navigate = useNavigate();
@@ -170,7 +181,7 @@ export function NewWorkspaceDialog({
                 </SelectTrigger>
                 <SelectContent id="fileSystem-1">
                   {DiskEnabledFSTypes.map((diskType) => (
-                    <SelectItem key={diskType} value={diskType} disabled={!DiskCanUseMap[diskType]()}>
+                    <SelectItem key={diskType} value={diskType} disabled={!canUseDiskTable[diskType]}>
                       {DiskLabelMap[diskType]}
                     </SelectItem>
                   ))}

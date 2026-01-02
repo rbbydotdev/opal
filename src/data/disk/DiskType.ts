@@ -1,5 +1,4 @@
 import { TreeDirRootJType } from "@/components/filetree/TreeNode";
-import { BrowserAbility } from "@/lib/BrowserAbility";
 
 export type DiskJType = { guid: string; type: DiskType; indexCache?: TreeDirRootJType | null; timestamp?: number };
 
@@ -26,10 +25,10 @@ export const DiskLabelMap: Record<DiskType, string> = {
   NullDisk: "Null",
   MemDisk: "Memory",
 };
-export const DiskCanUseMap: Record<DiskEnabledFSType, () => boolean> = {
-  IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
-  OpFsDisk: () => BrowserAbility.canUseOPFS(),
-  OpFsDirMountDisk: () => BrowserAbility.canUseOPFS() && "showDirectoryPicker" in window,
-};
+// export const DiskCanUseMap: Record<DiskEnabledFSType, () => boolean> = {
+//   IndexedDbDisk: () => BrowserAbility.canUseIndexedDB(), //typeof indexedDB !== "undefined",
+//   OpFsDisk: () => BrowserAbility.canUseOPFS(),
+//   OpFsDirMountDisk: () => BrowserAbility.canUseOPFS() && "showDirectoryPicker" in window,
+// };
 
 export type DiskType = (typeof DiskKinds)[number];

@@ -1,5 +1,6 @@
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
+import { ViewUrlButton } from "@/components/publish-modal/ViewUrlButton";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
@@ -23,7 +24,6 @@ import {
   ArrowUpRightIcon,
   CheckCircle,
   Clock,
-  Globe,
   Loader,
   Pencil,
   Plus,
@@ -260,28 +260,19 @@ export function PublicationModalPublishContent({
                 Okay
               </Button>
               {destination?.destinationUrl && (
-                <Button className="flex items-center gap-2" asChild variant="outline">
-                  <a href={destination.destinationUrl} target="_blank" rel="noopener noreferrer">
-                    <Globe size={16} />
-                    View
-                  </a>
-                </Button>
+                <ViewUrlButton url={destination.destinationUrl} variant="outline">
+                  View
+                </ViewUrlButton>
               )}
               {runner?.target.deploymentUrl && runner.target.deploymentUrl !== destination?.destinationUrl && (
-                <Button className="flex items-center gap-2" asChild>
-                  <a href={runner.target.deploymentUrl} target="_blank" rel="noopener noreferrer">
-                    <Globe size={16} />
-                    View Deploy
-                  </a>
-                </Button>
+                <ViewUrlButton url={runner.target.deploymentUrl}>
+                  View Deploy
+                </ViewUrlButton>
               )}
               {!destination?.destinationUrl && runner?.target.effectiveUrl && (
-                <Button className="flex items-center gap-2" asChild>
-                  <a href={runner.target.effectiveUrl || "#"} target="_blank" rel="noopener noreferrer">
-                    <ArrowUpRightIcon size={16} />
-                    View
-                  </a>
-                </Button>
+                <ViewUrlButton url={runner.target.effectiveUrl}>
+                  View
+                </ViewUrlButton>
               )}
             </div>
           </div>
