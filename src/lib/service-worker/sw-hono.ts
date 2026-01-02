@@ -73,10 +73,12 @@ const workspaceNameSchema = z.object({
   workspaceName: z.string(),
 });
 
-// Hono's built-in logger middleware
-// app.use("*", honoLogger(console.log.bind(logger)));
-
-app.use("*", honoLogger2(console.log.bind(logger)));
+app.use(
+  "*",
+  honoLogger2((...msg) => {
+    console.log(...msg);
+  })
+);
 
 // Custom logging for service worker specific info
 app.use("*", async (c, next) => {
