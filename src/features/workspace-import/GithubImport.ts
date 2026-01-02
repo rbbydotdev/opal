@@ -2,7 +2,8 @@ import { GitHubClient } from "@/api/github/GitHubClient";
 import { BadRequestError, isApplicationError } from "@/lib/errors/errors";
 import { RelPath } from "@/lib/paths2";
 import { tryParseJSON } from "@/lib/tryParseJSON";
-import { getRepoInfo, WorkspaceImport } from "@/services/import/ImportRunner";
+import { getRepoInfo } from "@/services/import/getRepoInfo";
+import { WorkspaceImport } from "@/services/import/ImportRunner";
 import { WorkspaceImportManifestSchema, WorkspaceImportManifestType } from "@/services/import/manifest";
 export class GithubImport implements WorkspaceImport {
   private owner: string;
@@ -13,6 +14,7 @@ export class GithubImport implements WorkspaceImport {
 
   constructor(repoPath: RelPath) {
     const { owner, repo, branch } = getRepoInfo(repoPath, {}); // Pass empty defaults to get undefined when no branch in URL
+    // console.log(repoPath, { owner, repo, branch });
     if (!owner || !repo) throw new BadRequestError("Invalid repository path. Expected format: owner/repo");
     this.owner = owner;
     this.repo = repo;

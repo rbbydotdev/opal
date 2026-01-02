@@ -1,8 +1,10 @@
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { GithubImport } from "@/features/workspace-import/GithubImport";
 import { relPath } from "@/lib/paths2";
-import { BaseImportRunner, getIdent, ImportState } from "@/services/import/ImportRunner";
+import { getRepoInfo } from "@/services/import/getRepoInfo";
+import { BaseImportRunner, ImportState } from "@/services/import/ImportRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
+import { join } from "path";
 
 export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string }> {
   constructor({ fullRepoPath }: { fullRepoPath: string }) {
@@ -28,6 +30,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
 
   private _importer: GithubImport | null = null;
   get importer() {
+    console.log(">>>>>>", this.config.fullRepoPath);
     return (this._importer = this._importer || new GithubImport(relPath(this.config.fullRepoPath)));
   }
 
@@ -45,7 +48,8 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
   }
 
   get ident() {
-    return getIdent(this.config.fullRepoPath);
+    const { owner, repo } = getRepoInfo(this.config.fullRepoPath);
+    return `github:${owner}/${repo}`;
   }
 
   async preflight(): Promise<{
@@ -54,6 +58,17 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     navigate: string | null;
     status: ImportState["status"];
   }> {
+    const ws = await WorkspaceDAO.FindAlikeImport({
+      ident: this.ident,
+    });
+    if (ws) {
+      return {
+        abort: true,
+        reason: "Workspace with the same GitHub import already exists.",
+        navigate: join(ws.href, ws.manifest?.navigate || ""),
+        status: "pending",
+      };
+    }
     if ((await this.importer.repoExists(this.abortController.signal)) === false) {
       return {
         abort: true,
@@ -63,19 +78,6 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
       };
     }
 
-    const ws = await WorkspaceDAO.FindAlikeImport({
-      provider: "github",
-      ident: this.ident,
-      type: "showcase",
-    });
-    if (ws) {
-      return {
-        abort: true,
-        reason: "Workspace with the same GitHub import already exists.",
-        navigate: ws.href,
-        status: "pending",
-      };
-    }
     return {
       abort: false,
       reason: "",

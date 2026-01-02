@@ -3,7 +3,7 @@ import { DiskFactoryByType } from "@/data/disk/DiskFactory";
 import { IndexedDbDisk } from "@/data/disk/IndexedDbDisk";
 import { MemDisk } from "@/data/disk/MemDisk";
 import { AbortError, isAbortError, isApplicationError, unwrapError } from "@/lib/errors/errors";
-import { absPath, isAllowedFileType, stripLeadingSlash } from "@/lib/paths2";
+import { absPath, isAllowedFileType } from "@/lib/paths2";
 import { ObservableRunner } from "@/services/build/ObservableRunner";
 import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/services/import/manifest";
 import { Runner } from "@/types/RunnerInterfaces";
@@ -94,8 +94,8 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
 
       const preflightResult = await this.preflight(allAbortSignal);
       if (preflightResult.abort) {
-        this.log(`Import aborted: ${preflightResult.reason}`, "warning");
-        this.target.status = preflightResult.status;
+        this.log(`Import aborted: ${preflightResult.reason}`, "error");
+        this.target.status = "success";
         return preflightResult.navigate;
       }
 
@@ -177,21 +177,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       });
     });
   }
-}
-
-export function getIdent(importPath: string) {
-  const { owner, repo } = getRepoInfo(importPath);
-  return `${owner}/${repo}`;
-}
-
-export function getRepoInfo(importPath: string, defaults: { branch?: string } = { branch: "main" }) {
-  const [owner, repo, branch, dir = "/"] = stripLeadingSlash(importPath).split("/");
-  return {
-    owner,
-    repo,
-    branch: branch || defaults.branch || undefined,
-    dir,
-  };
 }
 
 export interface WorkspaceImport extends Importer {

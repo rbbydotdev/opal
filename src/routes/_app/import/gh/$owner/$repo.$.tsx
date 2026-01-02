@@ -6,8 +6,8 @@ import { useRunner } from "@/hooks/useRunner";
 import Github from "@/icons/github.svg?react";
 import { useCountdown } from "@/lib/useCountdown";
 import { cn } from "@/lib/utils";
+import { getRepoInfo } from "@/services/import/getRepoInfo";
 import { GitHubImportRunner } from "@/services/import/GitHubImportRunner";
-import { getRepoInfo } from "@/services/import/ImportRunner";
 import { LogLine } from "@/types/RunnerTypes";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRightFromSquare, CheckCircle, Loader, TriangleAlert } from "lucide-react";
@@ -25,11 +25,13 @@ function useGithubImporter(fullRepoPath: string) {
     [fullRepoPath]
   );
   useEffect(() => {
+    // if (fullRepoPath)
     void execute(GitHubImportRunner.Create({ fullRepoPath })).then((href) => {
       if (href) setGotoPath(href);
     });
     return () => cancel();
-  }, [cancel, execute, fullRepoPath]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cancel, execute]);
 
   return {
     logs,

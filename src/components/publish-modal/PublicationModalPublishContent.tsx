@@ -65,10 +65,15 @@ export function PublicationModalPublishContent({
   const { builds } = useBuilds({ workspaceId: currentWorkspace.id });
   const { destinations } = useDestinations();
   const tryBuild = build.isNull ? builds[0] || build : build;
-  const { runner, execute, logs } = useRunner<DeployRunner<any>>(DeployRunner.Show({ destination, deploy }), [
-    destination,
-    deploy,
-  ]);
+
+  const { runner, execute, logs } = useRunner<DeployRunner<any>>(
+    () => DeployRunner.Show({ destination, deploy }),
+    [destination, deploy]
+  );
+  // const { runner, execute, logs } = useRunner<DeployRunner<any>>(DeployRunner.Show({ destination, deploy }), [
+  //   destination,
+  //   deploy,
+  // ]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

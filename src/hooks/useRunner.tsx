@@ -21,9 +21,15 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
       abortControllerRef.current = new AbortController();
 
       setRunner(runner);
-      return runner.run({
-        abortSignal: AbortSignal.any([abortControllerRef.current.signal, abortSignal, options?.signal].filter(Boolean)),
-      }) as ReturnType<T["run"]>;
+      return runner
+        .run({
+          abortSignal: AbortSignal.any(
+            [abortControllerRef.current.signal, abortSignal, options?.signal].filter(Boolean)
+          ),
+        })
+        .finally(() => {
+          abortControllerRef.current?.abort();
+        }) as ReturnType<T["run"]>;
     },
     [abortSignal]
   );

@@ -2,7 +2,7 @@ import { absPath } from "@/lib/paths2";
 import { GitHubImportRunner } from "@/services/import/GitHubImportRunner";
 import { WorkspaceImportManifestType } from "@/services/import/manifest";
 
-export class NullImportRunner extends GitHubImportRunner {
+export class NullGithubImportRunner extends GitHubImportRunner {
   constructor() {
     super({
       fullRepoPath: "null/null",
@@ -27,4 +27,4 @@ export class NullImportRunner extends GitHubImportRunner {
   }
 }
 
-export const NULL_IMPORT_RUNNER = new NullImportRunner();
+export const NULL_IMPORT_RUNNER = new NullGithubImportRunner();
