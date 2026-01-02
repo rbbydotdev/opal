@@ -112,6 +112,7 @@ app.use("*", async (c, next) => {
     path.startsWith("/@") || // Vite special files (@vite/client, @static/, etc.)
     path.startsWith("/node_modules/") || // Vite deps
     path.startsWith("/src/") || // Source files
+    path === "/sadmac.jpg" ||
     path === "/opal.svg" ||
     path === "/opal-blank.svg" ||
     path === "/opal-lite.svg" ||
