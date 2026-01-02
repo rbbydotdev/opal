@@ -23,6 +23,10 @@ function BrowserCompatProviderInternal({ children }: { children: React.ReactNode
   const capabilities = use(cachedBrowserCheck);
 
   const featureLabels: Record<keyof typeof BrowserAbility, { name: string; description: string }> = {
+    isDesktopBrowser: {
+      name: "Desktop Browser Required",
+      description: "Mobile browsers are not supported due to feature limitations",
+    },
     canUseIndexedDB: {
       name: "IndexedDB Support",
       description: "Required for document and application data storage",
@@ -41,20 +45,17 @@ function BrowserCompatProviderInternal({ children }: { children: React.ReactNode
     },
   };
 
-  const features: BrowserCompatibilityFeature[] = Object.entries(featureLabels).map(
-    ([featureKey, { name, description }]) => {
-      const typedFeatureKey = featureKey as keyof typeof BrowserAbility;
-      const isRequired = REQUIRED_BROWSER_FEATURES.includes(typedFeatureKey);
-      const passed = capabilities[typedFeatureKey];
+  const features: BrowserCompatibilityFeature[] = Object.entries(capabilities).map(([featureKey, passed]) => {
+    const typedFeatureKey = featureKey as keyof typeof BrowserAbility;
+    const labels = featureLabels[typedFeatureKey];
 
-      return {
-        name,
-        description,
-        passed,
-        required: isRequired,
-      };
-    }
-  );
+    return {
+      name: labels?.name ?? typedFeatureKey,
+      description: labels?.description ?? "",
+      passed,
+      required: REQUIRED_BROWSER_FEATURES.includes(typedFeatureKey),
+    };
+  });
 
   const hasFeature = useCallback(
     (featureKey: keyof typeof BrowserAbility) => {

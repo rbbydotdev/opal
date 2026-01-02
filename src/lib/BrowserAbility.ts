@@ -1,3 +1,4 @@
+import { BrowserDetection } from "@/lib/BrowserDetection";
 import { setupServiceWorker } from "@/lib/service-worker/SwSetup";
 
 export const canUseOPFS = async (mode = "runtime") => {
@@ -83,14 +84,25 @@ const canUseLocalStroage = async () => {
     return false;
   }
 };
+
+const isDesktopBrowser = async () => {
+  // Return true if NOT mobile (desktop is required)
+  return !BrowserDetection.isMobile();
+};
 export const BrowserAbility = {
   canUseIndexedDB: canUseIndexedDB,
   canUseLocalStorage: canUseLocalStroage,
   canUseServiceWorker: canUseServiceWorker,
   canUseOPFS: canUseOPFS,
+  isDesktopBrowser: isDesktopBrowser,
 };
 
-export const REQUIRED_BROWSER_FEATURES = ["canUseIndexedDB", "canUseLocalStorage", "canUseServiceWorker"] as const;
+export const REQUIRED_BROWSER_FEATURES = [
+  "canUseIndexedDB",
+  "canUseLocalStorage",
+  "canUseServiceWorker",
+  "isDesktopBrowser",
+] as const;
 
 export async function BrowserAbilityCheckAll() {
   const entries = Object.entries(BrowserAbility) as [keyof typeof BrowserAbility, () => Promise<boolean>][];
@@ -101,5 +113,6 @@ export async function BrowserAbilityCheckAll() {
       required: REQUIRED_BROWSER_FEATURES.includes(name),
     }))
   );
-  return Object.fromEntries(results.map((r) => [r.name, r.check])) as Record<keyof typeof BrowserAbility, boolean>;
+  const sorted = [...results].sort((a, b) => Number(a.check) - Number(b.check));
+  return Object.fromEntries(sorted.map((r) => [r.name, r.check])) as Record<keyof typeof BrowserAbility, boolean>;
 }

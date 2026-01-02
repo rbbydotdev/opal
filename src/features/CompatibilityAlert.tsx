@@ -67,7 +67,9 @@ export function CompatibilityAlert() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{feature.name}</span>
                   {feature.required && !feature.passed && (
-                    <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded">Required</span>
+                    <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">
+                      Required
+                    </span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
@@ -76,8 +78,8 @@ export function CompatibilityAlert() {
           ))}
         </div>
 
-        <DialogFooter className="flex-shrink-0 flex-col gap-3 pt-4">
-          <div className="flex items-center space-x-2">
+        <DialogFooter className="!flex-col sm:space-x-0">
+          <div className="flex items-center gap-2 mb-2">
             <Checkbox
               id="remember-dismissal"
               checked={rememberDismissal}
@@ -90,18 +92,24 @@ export function CompatibilityAlert() {
               Don't show this again
             </label>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => window.open("https://github.com/rbbydotdev/opal", "_blank")}
-              className="w-full sm:w-auto"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Learn More
-            </Button>
-            <Button onClick={handleDismiss} className="w-full sm:w-auto">
-              Dismiss
-            </Button>
+          <div className="flex-shrink-0 flex-col gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="secondary" className="w-full sm:w-auto">
+                <ExternalLink className="h-4 w-4" />
+                Watch Demo
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.open("https://github.com/rbbydotdev/opal", "_blank")}
+                className="w-full sm:w-auto"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Learn More
+              </Button>
+              <Button onClick={handleDismiss} className="w-full sm:w-auto">
+                Dismiss
+              </Button>
+            </div>
           </div>
         </DialogFooter>
       </DialogContent>
