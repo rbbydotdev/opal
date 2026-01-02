@@ -75,9 +75,25 @@ function BrowserCompatProviderInternal({ children }: { children: React.ReactNode
   return <BrowserCompatContext.Provider value={contextValue}>{children}</BrowserCompatContext.Provider>;
 }
 
+// const CheckingBrowserFallbackCard = () => (
+//   <div className="h-full flex justify-center items-center">
+//     <Card className="w-96 h-96">
+//       <CardHeader className="sr-only">
+//         <h2 className="text-lg font-medium ">Browser Compatibility Check</h2>
+//       </CardHeader>
+//       <CardContent className="w-full h-full flex justify-center items-center">
+//         <div className="flex justify-center items-center flex-col gap-4 font-mono">
+//           <Loader className="animate-spin" size={48} />
+//           <p className="mt-4 text-center">Checking browser compatibility...</p>
+//         </div>
+//       </CardContent>
+//     </Card>
+//   </div>
+// );
+
 export function BrowserCompatProvider({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div>Checking browser compatibility...</div>}>
+    <Suspense fallback={null}>
       <BrowserCompatProviderInternal>{children}</BrowserCompatProviderInternal>
     </Suspense>
   );

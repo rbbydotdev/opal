@@ -6,7 +6,7 @@ function RootComponent() {
   return (
     <>
       <NuqsAdapter>
-        <div className="font-sans antialiased w-full h-full">
+        <div className="font-sans antialiased w-full h-screen">
           <Outlet />
         </div>
       </NuqsAdapter>

@@ -8,7 +8,9 @@ export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
 
   useLayoutEffect(() => {
     if (!hasFeature("canUseServiceWorker")) setReady(true); // If service workers are not supported, consider SW as ready
-    void setupServiceWorker().then(() => setReady(true));
+    void setupServiceWorker()
+      .then(() => setReady(true))
+      .catch(() => setReady(true));
   }, [hasFeature]);
 
   if (!ready) return null;
