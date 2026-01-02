@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useToggleHistoryImageGeneration } from "./useToggleHistoryImageGeneration";
 
+import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
+
 function previewId({ workspaceId, editId }: { workspaceId: string; editId: string }) {
   return `${workspaceId}/${editId}`;
 }
@@ -159,15 +161,17 @@ export const EditViewPreview = ({
           </div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent
-        side="left"
-        className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden no-scrollbar"
-        style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
-      >
-        <div style={{ transform: "scale(0.9)", transformOrigin: "top left", width: "400px" }}>
-          <ShadowDomPreview htmlContent={htmlContent} />
-        </div>
-      </HoverCardContent>
+      <HoverCardPrimitive.Portal>
+        <HoverCardContent
+          side="left"
+          className="p-2 bg-white border border-gray-200 shadow-lg rounded w-96 h-96 overflow-y-auto overflow-x-hidden no-scrollbar"
+          style={{ boxShadow: "0 4px 12px 0 oklch(var(--foreground))" }}
+        >
+          <div style={{ transform: "scale(0.9)", transformOrigin: "top left", width: "400px" }}>
+            <ShadowDomPreview htmlContent={htmlContent} />
+          </div>
+        </HoverCardContent>
+      </HoverCardPrimitive.Portal>
     </HoverCard>
   ) : (
     <div className={cn("w-12 h-12 border border-border", className)}></div>

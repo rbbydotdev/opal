@@ -1,6 +1,7 @@
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
 import { ViewUrlButton } from "@/components/publish-modal/ViewUrlButton";
+import { ViewDeployButton } from "@/components/publish-modal/ViewDeployButton";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
 import { useRemoteAuths } from "@/components/remote-auth/useRemoteAuths";
@@ -265,9 +266,9 @@ export function PublicationModalPublishContent({
                 </ViewUrlButton>
               )}
               {runner?.target.deploymentUrl && runner.target.deploymentUrl !== destination?.destinationUrl && (
-                <ViewUrlButton url={runner.target.deploymentUrl}>
+                <ViewDeployButton url={runner.target.deploymentUrl}>
                   View Deploy
-                </ViewUrlButton>
+                </ViewDeployButton>
               )}
               {!destination?.destinationUrl && runner?.target.effectiveUrl && (
                 <ViewUrlButton url={runner.target.effectiveUrl}>

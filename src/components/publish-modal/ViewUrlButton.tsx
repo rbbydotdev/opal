@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUrlStatusPoll } from "@/hooks/useUrlStatusPoll";
 import { AlertTriangle, Globe, Loader } from "lucide-react";
 
@@ -12,14 +11,12 @@ interface ViewUrlButtonProps {
 
 export function ViewUrlButton({ url, children, variant = "outline", className }: ViewUrlButtonProps) {
   const { status, error } = useUrlStatusPoll(url);
-  // https://rbbydotdev.github.io/purposeful-404
-  // const { status, error } = useUrlStatusPoll("https://rbbydotdev.github.io/purposeful-404");
 
   const showError = status === "error" && error;
   const showLoading = status === "checking";
   const isDisabled = status === "disabled";
 
-  const buttonContent = (
+  return (
     <Button
       className={className}
       variant={showError ? "destructive" : variant}
@@ -43,19 +40,4 @@ export function ViewUrlButton({ url, children, variant = "outline", className }:
       )}
     </Button>
   );
-
-  if (showError) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
-          <TooltipContent>
-            <p>{error}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  return buttonContent;
 }

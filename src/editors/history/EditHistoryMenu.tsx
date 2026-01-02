@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollAreaViewportRef } from "@/components/ui/scroll-area-viewport-ref";
 import { Separator } from "@/components/ui/separator";
 import { HistoryDAO } from "@/data/dao/HistoryDOA";
 import { EditViewPreview } from "@/editors/history/EditViewPreview";
@@ -17,9 +16,9 @@ import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
 import { cn } from "@/lib/utils";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
-import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
-import { Fragment, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Check, CheckCircle2, ChevronDown, Circle, Clock, History } from "lucide-react";
+import { useRef, useState } from "react";
 import { timeAgo } from "short-time-ago";
 
 function useEnabledEditHistory() {
@@ -75,15 +74,15 @@ function VirtualizedEditList({
       ref={parentRef}
       className="h-96 overflow-auto"
       style={{
-        contain: 'layout style',
+        contain: "layout style",
       }}
     >
       <div className="p-1 font-mono">
         <div
           style={{
             height: virtualizer.getTotalSize(),
-            width: '100%',
-            position: 'relative',
+            width: "100%",
+            position: "relative",
           }}
         >
           {virtualizer.getVirtualItems().map((virtualItem) => {
@@ -98,10 +97,10 @@ function VirtualizedEditList({
                 data-index={virtualItem.index}
                 ref={virtualizer.measureElement}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  width: '100%',
+                  width: "100%",
                   transform: `translateY(${virtualItem.start}px)`,
                 }}
               >
