@@ -36,8 +36,10 @@ export function LivePreviewProvider({ children }: LivePreviewProviderProps) {
   const handleRenderBodyReady = useCallback(() => {
     if (!context.window) return;
     context.window.addEventListener("afterprint", () => context.window.close());
-    queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
-    setTimeout(() => context.window.print(), 500);
+    setTimeout(() => {
+      queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
+      context.window.print();
+    }, 500);
   }, [context.window]);
 
   const open = useCallback(
