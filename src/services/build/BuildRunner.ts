@@ -125,20 +125,19 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       this.target.status = "pending";
       await this.target.save();
       await this.sourceDisk.refresh();
-      this.log(`Starting ${this.strategy} build, id ${this.target.guid}...`, "info");
-      this.log(`Source disk: ${this.sourceDisk.guid}`, "info");
-      this.log(`Output path: ${this.outputPath}`, "info");
+      this.log(
+        `Starting ${this.strategy} build, id ${this.target.guid}...
+      Source disk: ${this.sourceDisk.guid}
+      Output path: ${this.outputPath}`,
+        "info"
+      );
 
-      if (allAbortSignal?.aborted) {
-        this.log("Build cancelled", "error");
-        this.target.error = "Build was cancelled.";
-        this.target.status = "error";
-      }
+      allAbortSignal?.throwIfAborted();
 
       this.log("Starting build process...", "info");
 
       const buildGraph = this.createBuildGraph();
-      const context = await buildGraph.run({});
+      const _result = await buildGraph.run({});
 
       allAbortSignal?.throwIfAborted();
 
@@ -240,7 +239,6 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     this.log("Creating output directory...", "info");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
-
 
   private async copyAssets(): Promise<void> {
     this.log("Copying assets...", "info");

@@ -25,64 +25,27 @@ function FilterDirs(path: AbsPath | TreeNode, dirs: AbsPath[]): boolean {
   return dirs.some((dir) => String(path) === dir || String(path).startsWith(dir + "/"));
 }
 
-// Fluent filter builder
-export class Filter {
-  constructor(private predicate: (path: AbsPath | TreeNode) => boolean) {}
+// The core functional filter builder
+export const Filter = (() => {
+  type Predicate = (path: AbsPath | TreeNode) => boolean;
 
-  static only(...dirs: AbsPath[]) {
-    return new Filter((path) => FilterDirs(path, dirs));
-  }
+  const make = (predicate: Predicate) => {
+    const fn = (path: AbsPath | TreeNode) => predicate(path);
 
-  static except(...dirs: AbsPath[]) {
-    return new Filter((path) => !FilterDirs(path, dirs));
-  }
+    // Compose filters
+    fn.and = (other: ReturnType<typeof make>) => make((path) => predicate(path) && other(path));
 
-  static all() {
-    return new Filter(() => true);
-  }
+    fn.or = (other: ReturnType<typeof make>) => make((path) => predicate(path) || other(path));
 
-  static none() {
-    return new Filter(() => false);
-  }
+    fn.not = () => make((path) => !predicate(path));
 
-  and(other: Filter) {
-    return new Filter((path) => this.predicate(path) && other.predicate(path));
-  }
+    return fn;
+  };
 
-  or(other: Filter) {
-    return new Filter((path) => this.predicate(path) || other.predicate(path));
-  }
+  make.only = (...dirs: AbsPath[]) => make((path) => FilterDirs(path, dirs));
+  make.except = (...dirs: AbsPath[]) => make((path) => !FilterDirs(path, dirs));
+  make.all = () => make(() => true);
+  make.none = () => make(() => false);
 
-  not() {
-    return new Filter((path) => !this.predicate(path));
-  }
-
-  // Getter that returns a bound function - preserves this context
-  get $() {
-    return (path: AbsPath | TreeNode) => this.predicate(path);
-  }
-}
-
-// Usage examples:
-// Filter.only(SpecialDirs.Build).$
-// Filter.except(SpecialDirs.Git, SpecialDirs.Trash).$
-// Filter.only(SpecialDirs.Build).or(Filter.only(SpecialDirs.Storage)).$
-// Filter.all().except(SpecialDirs.Git).and(Filter.only(SpecialDirs.Build)).$
-// Filter.except(SpecialDirs.Git).not().$
-
-// const BuildIgnoreDirs = [
-//   relPath("node_modules"),
-//   relPath(".vscode"),
-//   relPath(".next"),
-//   relPath("build"),
-//   relPath("dist"),
-//   relPath("coverage"),
-//   relPath(".cache"),
-//   relPath(".env"),
-//   relPath(".vercel"),
-//   relPath("playwright-report"),
-//   relPath(".tanstack"),
-//   relPath(".github"),
-//   relPath(".DS_Store"),
-//   relPath("*.log"),
-// ];
+  return make;
+})();
