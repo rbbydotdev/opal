@@ -2,35 +2,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useWindowContextProvider } from "@/features/live-preview/IframeContextProvider";
 import { WindowPreviewComponent, WindowPreviewHandler } from "@/features/live-preview/PreviewComponent";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
+import EventEmitter from "events";
 import { Printer } from "lucide-react";
-import { createContext, ReactNode, useContext, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-interface LivePreviewDialogContextType {
+interface LivePreviewContextType {
   showDialog: (show: boolean) => void;
   extPreviewCtrl: React.RefObject<WindowPreviewHandler | null>;
   open: (params?: { print: boolean }) => void;
   close: () => void;
 }
 
-const LivePreviewDialogContext = createContext<LivePreviewDialogContextType | undefined>(undefined);
+const LivePreviewContext = createContext<LivePreviewContextType | undefined>(undefined);
 
-interface LivePreviewDialogProviderProps {
+interface LivePreviewProviderProps {
   children: ReactNode;
 }
 
-export function LivePreviewDialogProvider({ children }: LivePreviewDialogProviderProps) {
+export function LivePreviewProvider({ children }: LivePreviewProviderProps) {
   const [isDialogOpen, showDialog] = useState(false);
   const { path } = useWorkspaceRoute();
   const { currentWorkspace } = useWorkspaceContext();
-  const shouldPrintRef = useRef(false);
+  const emitter = useMemo(() => new EventEmitter(), []);
+  useEffect(() => {
+    return () => {
+      emitter.removeAllListeners();
+    };
+  }, [emitter]);
 
   const context = useWindowContextProvider();
   const extPreviewCtrl = useRef<WindowPreviewHandler | null>(null);
-  const open = ({ print }: { print?: boolean } = {}) => {
+
+  const handleRenderBodyReady = useCallback(() => {
+    if (!context.window) return;
+    context.window.addEventListener("afterprint", () => context.window.close());
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
+        context.window.print();
+      });
+    });
+  }, [context.window]);
+
+  const open = async ({ print }: { print?: boolean } = {}) => {
     if (extPreviewCtrl.current) {
-      shouldPrintRef.current = print ?? false;
       extPreviewCtrl.current.open();
+      if (print) {
+        await emitter.once("render-body-ready", () => handleRenderBodyReady);
+      }
     }
   };
   const close = () => {
@@ -39,31 +58,8 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
     }
   };
 
-  const handleRenderBodyReady = () => {
-    flushSync(() => {
-      if (!context.window) return;
-      if (!shouldPrintRef.current) return;
-      shouldPrintRef.current = false;
-      context.window.addEventListener("afterprint", () => context.window.close());
-      queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
-      context.window.print();
-    });
-
-    // flushSync(() => {
-    //   setTimeout(() => {
-    //     w.print();
-    //     setTimeout(() => {
-    //       showDialog(false);
-    //     }, 0);
-    //   }, 0);
-    // });
-    // setTimeout(() => {
-    //   showDialog(false);
-    // }, 0);
-  };
-
   return (
-    <LivePreviewDialogContext.Provider value={{ showDialog, extPreviewCtrl, open, close }}>
+    <LivePreviewContext.Provider value={{ showDialog, extPreviewCtrl, open, close }}>
       {children}
       <WindowPreviewComponent
         path={path!}
@@ -83,12 +79,12 @@ export function LivePreviewDialogProvider({ children }: LivePreviewDialogProvide
           </div>
         </DialogContent>
       </Dialog>
-    </LivePreviewDialogContext.Provider>
+    </LivePreviewContext.Provider>
   );
 }
 
 export function useLivePreviewDialog() {
-  const context = useContext(LivePreviewDialogContext);
+  const context = useContext(LivePreviewContext);
   if (context === undefined) {
     throw new Error("useLivePreviewDialog must be used within a LivePreviewDialogProvider");
   }

@@ -6,7 +6,7 @@ import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { ErrorMiniPlaque, ErrorPlaque } from "@/components/errors/ErrorPlaque";
 import { WorkspaceErrorBoundaryFallback } from "@/components/errors/WorkspaceErrorBoundaryFallback";
 import { GitStatusProvider } from "@/components/GitStatusModal";
-import { LivePreviewDialogProvider } from "@/components/LivePreviewProvider";
+import { LivePreviewProvider } from "@/components/LivePreviewProvider";
 import { PromptProvider } from "@/components/Prompt";
 import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
 import { ErrorPopper } from "@/components/ui/error-popup";
@@ -64,7 +64,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                     <DocHistoryProvider>
                       <TooltipProvider delayDuration={1000}>
                         <WindowContextProviderComponent>
-                          <LivePreviewDialogProvider>
+                          <LivePreviewProvider>
                             <GitStatusProvider>
                               <PublicationModalProvider>
                                 <SidebarProvider>
@@ -89,7 +89,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                                 </SidebarProvider>
                               </PublicationModalProvider>
                             </GitStatusProvider>
-                          </LivePreviewDialogProvider>
+                          </LivePreviewProvider>
                         </WindowContextProviderComponent>
                       </TooltipProvider>
                     </DocHistoryProvider>
