@@ -30,9 +30,6 @@ export async function setupServiceWorker(): Promise<void> {
     setupServiceWorkerLogger();
   } catch (error) {
     console.error("Error setting up Service Worker", error);
-    //log stack trace in development mode
-    if (process.env.NODE_ENV !== "development") {
-      throw error;
-    }
+    throw error;
   }
 }

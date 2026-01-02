@@ -1,3 +1,5 @@
+import { setupServiceWorker } from "@/lib/service-worker/SwSetup";
+
 export const canUseOPFS = async (mode = "runtime") => {
   const supported =
     typeof navigator !== "undefined" && "storage" in navigator && typeof navigator.storage.getDirectory === "function";
@@ -48,23 +50,18 @@ const canUseIndexedDB = async (mode = "runtime") => {
   }
 };
 
-const canUseServiceWorker = async (mode = "runtime") => {
+const canUseServiceWorker = async () => {
   const supported = "serviceWorker" in navigator;
 
   if (!supported) return false;
-  if (mode === "support-only") return true;
 
   // runtime test - try to register a minimal service worker
   try {
     // Create a minimal service worker blob
-    const swBlob = new Blob(['self.addEventListener("install", () => {});'], { type: "application/javascript" });
-    const swUrl = URL.createObjectURL(swBlob);
-
-    const registration = await navigator.serviceWorker.register(swUrl);
-    await registration.unregister();
-    URL.revokeObjectURL(swUrl);
+    await setupServiceWorker();
     return true;
-  } catch {
+  } catch (e) {
+    console.log(e);
     return false;
   }
 };
