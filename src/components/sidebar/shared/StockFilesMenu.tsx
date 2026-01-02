@@ -5,6 +5,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,14 +45,30 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
         <Globe className="w-4 h-4 mr-2" />
         index.html
       </DropdownMenuItem>
-      <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.mustache", DefaultFile.Mustache()))}>
-        <FileTextIcon className="w-4 h-4 mr-2" />
-        template.mustache
-      </DropdownMenuItem>
-      <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.ejs", DefaultFile.EJS()))}>
-        <FileTextIcon className="w-4 h-4 mr-2" />
-        template.ejs
-      </DropdownMenuItem>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>
+          <FileTextIcon className="w-4 h-4 mr-2" />
+          Templates
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.mustache", DefaultFile.Mustache()))}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            template.mustache
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.ejs", DefaultFile.EJS()))}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            template.ejs
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.njk", DefaultFile.Nunchucks()))}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            template.njk
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={deferFn(() => addStockFile("template.liquid", DefaultFile.Liquid()))}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            template.liquid
+          </DropdownMenuItem>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
       <DropdownMenuItem onSelect={deferFn(() => addStockFile("data.json", DefaultFile.JSON()))}>
         <FileTextIcon className="w-4 h-4 mr-2" />
         data.json

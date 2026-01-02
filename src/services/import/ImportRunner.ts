@@ -52,6 +52,7 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
     reason: string;
     navigate: string | null;
     status: ImportState["status"];
+    allowShowcase: boolean;
   }>;
 
   async createWorkspaceImport(
@@ -108,9 +109,13 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
       if (manifest.type === "template") {
         this.log("Would you like to import:", "info");
         this.log(this.ident + " ?", "info");
-
         await this.waitForTemplateConfirmation(allAbortSignal);
+      } else if (manifest.type === "showcase") {
+        if (preflightResult.allowShowcase === false) {
+          throw new Error("Showcase imports are not allowed from this source.");
+        }
       }
+      // if (manifest.type === "showcase"){}
 
       this.log("Fetching files from source...", "info");
 
@@ -142,7 +147,6 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
         this.log("Import cancelled by user", "error");
         this.target.error = "Import cancelled by user";
       } else {
-        console.error(error);
         const errMsg = isApplicationError(error) ? error.getHint() : unwrapError(error);
         this.log(`Import failed: ${errMsg}`, "error");
         if (isApplicationError(error) && error.code === 404) {

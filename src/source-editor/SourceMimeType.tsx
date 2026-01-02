@@ -11,6 +11,8 @@ export type SourceMimeType = Extract<
   | "text/plain"
   | "text/x-ejs"
   | "text/x-mustache"
+  | "text/x-nunchucks"
+  | "text/x-liquid"
 >;
 export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =>
   [
@@ -23,4 +25,6 @@ export const isSourceMimeType = (mimeType: string): mimeType is SourceMimeType =
     "text/plain",
     "text/x-ejs",
     "text/x-mustache",
+    "text/x-nunchucks",
+    "text/x-liquid",
   ].includes(mimeType);

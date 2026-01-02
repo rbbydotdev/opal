@@ -119,6 +119,22 @@ export function MainSidebarFileMenuFileSection({
                   true
                 )
               }
+              addNunchucksFile={() =>
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "template.njk", () =>
+                    Promise.resolve(DefaultFile.Nunchucks())
+                  ),
+                  true
+                )
+              }
+              addLiquidFile={() =>
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "template.liquid", () =>
+                    Promise.resolve(DefaultFile.Liquid())
+                  ),
+                  true
+                )
+              }
               addDir={() => expandForNode(addDirFile("dir", focused || absPath("/")), true)}
               setExpandAll={setExpandAll}
               diskType={diskType}
@@ -144,6 +160,60 @@ const ActionButton = ({
   );
 };
 
+const TemplateDropdownMenu = ({
+  addMustacheFile,
+  addEjsFile,
+  addNunchucksFile,
+  addLiquidFile,
+}: {
+  addMustacheFile?: () => void;
+  addEjsFile?: () => void;
+  addNunchucksFile?: () => void;
+  addLiquidFile?: () => void;
+}) => {
+  const deferredFn = useRef<null | (() => void)>(null);
+  const deferFn = (fn: () => void) => {
+    return () => (deferredFn.current = fn);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <ActionButton aria-label="New Template" title="New Template">
+          <FileTextIcon />
+        </ActionButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        onCloseAutoFocus={(e) => {
+          if (deferredFn.current) {
+            e.preventDefault();
+            deferredFn.current();
+            deferredFn.current = null;
+          }
+        }}
+      >
+        <DropdownMenuItem onSelect={addMustacheFile ? deferFn(addMustacheFile) : undefined}>
+          <FileTextIcon className="w-4 h-4 mr-2" />
+          Mustache Template
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={addEjsFile ? deferFn(addEjsFile) : undefined}>
+          <FileTextIcon className="w-4 h-4 mr-2" />
+          EJS Template
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={addNunchucksFile ? deferFn(addNunchucksFile) : undefined}>
+          <FileTextIcon className="w-4 h-4 mr-2" />
+          Nunchucks Template
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={addLiquidFile ? deferFn(addLiquidFile) : undefined}>
+          <FileTextIcon className="w-4 h-4 mr-2" />
+          Liquid Template
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 const DirNameLabel = ({ dirName }: { dirName: string | null }) => {
   return (
     <span className="whitespace-nowrap inline-block max-w-[12ch] overflow-hidden text-ellipsis align-middle font-bold">
@@ -158,6 +228,8 @@ const FileMenuActionButtonRow = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addNunchucksFile,
+  addLiquidFile,
   addJsonFile,
   // addGlobalCssFile,
   setExpandAll,
@@ -174,6 +246,8 @@ const FileMenuActionButtonRow = ({
   addHtmlFile?: () => void;
   addMustacheFile?: () => void;
   addEjsFile?: () => void;
+  addNunchucksFile?: () => void;
+  addLiquidFile?: () => void;
   addJsonFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
@@ -210,21 +284,21 @@ const FileMenuActionButtonRow = ({
       <ActionButton onClick={trashSelectedFiles} aria-label="Trash Files" title="Trash Files">
         <Trash2 />
       </ActionButton>
-      <ActionButton onClick={addMustacheFile} aria-label="New Mustache Template" title="New Mustache Template">
-        <FileTextIcon />
-      </ActionButton>
       <ActionButton onClick={addFile} aria-label="New Markdown File" title="New Markdown File">
         <FileEditIcon />
       </ActionButton>
       <ActionButton onClick={addCssFile} aria-label="New Css File" title="New Css File">
         <FileCode2Icon />
       </ActionButton>
-      <ActionButton onClick={addEjsFile} aria-label="New EJS Template" title="New EJS Template">
-        <FileTextIcon />
-      </ActionButton>
       <ActionButton onClick={addJsonFile} aria-label="New JSON File" title="New JSON File">
         <FilePlusIcon />
       </ActionButton>
+      <TemplateDropdownMenu
+        addMustacheFile={addMustacheFile}
+        addEjsFile={addEjsFile}
+        addNunchucksFile={addNunchucksFile}
+        addLiquidFile={addLiquidFile}
+      />
       <ActionButton onClick={addDir} aria-label="Add Folder" title="New Folder">
         <FolderPlus />
       </ActionButton>
@@ -248,6 +322,8 @@ const FileMenuCompactActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addNunchucksFile,
+  addLiquidFile,
   addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
@@ -265,6 +341,8 @@ const FileMenuCompactActions = ({
   addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
+  addNunchucksFile: () => void;
+  addLiquidFile: () => void;
   addJsonFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
@@ -301,10 +379,6 @@ const FileMenuCompactActions = ({
             }
           }}
         >
-          <DropdownMenuItem className="whitespace-nowrap" onSelect={addMustacheFile}>
-            <FileTextIcon className="w-4 h-4 mr-2" />
-            New Mustache Template
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={deferFn(addFile)}>
             <FileEditIcon className="w-4 h-4 mr-2" />
             New Markdown File
@@ -313,14 +387,34 @@ const FileMenuCompactActions = ({
             <FileCode2Icon className="w-4 h-4 mr-2" />
             New CSS File
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
-            <FileTextIcon className="w-4 h-4 mr-2" />
-            New EJS Template
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={deferFn(addJsonFile)}>
             <FilePlusIcon className="w-4 h-4 mr-2" />
             New JSON File
           </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FileTextIcon className="w-4 h-4 mr-2" />
+              New Template
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onSelect={deferFn(addMustacheFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                Mustache Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                EJS Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={deferFn(addNunchucksFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                Nunchucks Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={deferFn(addLiquidFile)}>
+                <FileTextIcon className="w-4 h-4 mr-2" />
+                Liquid Template
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuItem onSelect={deferFn(addDir)}>
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
@@ -343,10 +437,30 @@ const FileMenuCompactActions = ({
                 <FileTextIcon className="w-4 h-4 mr-2" />
                 template.mustache
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
-                <FileTextIcon className="w-4 h-4 mr-2" />
-                template.ejs
-              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <FileTextIcon className="w-4 h-4 mr-2" />
+                  Templates
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onSelect={deferFn(addMustacheFile)}>
+                    <FileTextIcon className="w-4 h-4 mr-2" />
+                    template.mustache
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={deferFn(addEjsFile)}>
+                    <FileTextIcon className="w-4 h-4 mr-2" />
+                    template.ejs
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={deferFn(addNunchucksFile)}>
+                    <FileTextIcon className="w-4 h-4 mr-2" />
+                    template.njk
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={deferFn(addLiquidFile)}>
+                    <FileTextIcon className="w-4 h-4 mr-2" />
+                    template.liquid
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
@@ -397,6 +511,8 @@ const SidebarFileMenuFilesActions = ({
   addCssFile,
   addMustacheFile,
   addEjsFile,
+  addNunchucksFile,
+  addLiquidFile,
   addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
@@ -412,6 +528,8 @@ const SidebarFileMenuFilesActions = ({
   addHtmlFile: () => void;
   addMustacheFile: () => void;
   addEjsFile: () => void;
+  addNunchucksFile: () => void;
+  addLiquidFile: () => void;
   addJsonFile: () => void;
   addDir: () => void;
   dirName: string | null;
@@ -474,6 +592,8 @@ const SidebarFileMenuFilesActions = ({
           addMustacheFile={addMustacheFile}
           dirName={dirName}
           addEjsFile={addEjsFile}
+          addNunchucksFile={addNunchucksFile}
+          addLiquidFile={addLiquidFile}
           addJsonFile={addJsonFile}
           addGlobalCssFile={addGlobalCssFile}
           addHtmlFile={addHtmlFile}
@@ -497,6 +617,8 @@ const SidebarFileMenuFilesActions = ({
         addMustacheFile={addMustacheFile}
         dirName={dirName}
         addEjsFile={addEjsFile}
+        addNunchucksFile={addNunchucksFile}
+        addLiquidFile={addLiquidFile}
         addJsonFile={addJsonFile}
         // addGlobalCssFile={addGlobalCssFile}
         setExpandAll={setExpandAll}

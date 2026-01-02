@@ -20,7 +20,9 @@ import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { OpalMimeType } from "@/lib/fileType";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
+import { liquid } from "@/source-editor/liquidLanguage";
 import { mustache } from "@/source-editor/mustacheLanguage";
+import { nunchucks } from "@/source-editor/nunchucksLanguage";
 import { SourceMimeType } from "@/source-editor/SourceMimeType";
 import { Workspace } from "@/workspace/Workspace";
 import { useCurrentFilepath, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
@@ -46,6 +48,8 @@ const getLanguageExtension = (
     | "text/javascript"
     | "text/x-ejs"
     | "text/x-mustache"
+    | "text/x-nunchucks"
+    | "text/x-liquid"
     | "text/html"
     | "application/json"
     | string
@@ -63,6 +67,10 @@ const getLanguageExtension = (
       return ejs();
     case "text/x-mustache":
       return mustache();
+    case "text/x-nunchucks":
+      return nunchucks();
+    case "text/x-liquid":
+      return liquid();
     case "application/json":
       return json();
     case "text/plain":

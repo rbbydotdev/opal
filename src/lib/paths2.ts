@@ -153,7 +153,7 @@ export function isEjs(path: AbsPath | RelPath | string | { toString(): string })
   return getMimeType(relPath(String(path))) === "text/x-ejs";
 }
 
-export const templateMimeTypes = ["text/x-ejs", "text/x-mustache", "text/html"] as const;
+export const templateMimeTypes = ["text/x-ejs", "text/x-mustache", "text/x-nunchucks", "text/x-liquid", "text/html"] as const;
 
 export type TemplateType = (typeof templateMimeTypes)[number];
 
@@ -161,10 +161,16 @@ export const isTemplateType = (type: string): type is TemplateType => {
   return templateMimeTypes.includes(type);
 };
 export function isTemplateFile(path: AbsPath | RelPath | string | { toString(): string }): boolean {
-  return isEjs(path) || isMustache(path);
+  return isEjs(path) || isMustache(path) || isNunchucks(path) || isLiquid(path);
 }
 export function isMustache(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/x-mustache";
+}
+export function isNunchucks(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  return getMimeType(relPath(String(path))) === "text/x-nunchucks";
+}
+export function isLiquid(path: AbsPath | RelPath | string | { toString(): string }): boolean {
+  return getMimeType(relPath(String(path))) === "text/x-liquid";
 }
 export function isHtml(path: AbsPath | RelPath | string | { toString(): string }): boolean {
   return getMimeType(relPath(String(path))) === "text/html";
@@ -191,7 +197,7 @@ export function isJSON(path: AbsPath | RelPath | string | { toString(): string }
 }
 
 export function isAllowedFileType(path: AbsPath | RelPath | string | { toString(): string }): boolean {
-  return [isHtml, isCss, isStringish, isMarkdown, isMustache, isTemplateFile, isImage, isJSON].some((fn) => fn(path));
+  return [isHtml, isCss, isStringish, isMarkdown, isMustache, isNunchucks, isLiquid, isTemplateFile, isImage, isJSON].some((fn) => fn(path));
 }
 
 // --- Ancestor/Lineage Utilities ---

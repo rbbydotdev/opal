@@ -993,6 +993,46 @@ function useSpotlightCommandPalette({ currentWorkspace }: { currentWorkspace: Wo
             }
           }),
         ],
+        "New Nunchucks Template": [
+          NewCmdPrompt("nunchucks_file_name", "Enter Nunchucks template file name"),
+          NewCmdExec(async (context) => {
+            const name = context.nunchucks_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new Nunchucks template");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".njk");
+            const dir =
+              currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
+              ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.Nunchucks());
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path).toString(),
+              });
+            }
+          }),
+        ],
+        "New Liquid Template": [
+          NewCmdPrompt("liquid_file_name", "Enter Liquid template file name"),
+          NewCmdExec(async (context) => {
+            const name = context.liquid_file_name as string;
+            if (!name) {
+              console.warn("No file name provided for new Liquid template");
+              return;
+            }
+            const fileName = absPath(strictPrefix(name) + ".liquid");
+            const dir =
+              currentWorkspace.nodeFromPath(focused || currentPath || ("/" as AbsPath))?.closestDirPath() ??
+              ("/" as AbsPath);
+            const path = await newFile(joinPath(dir, fileName), DefaultFile.Liquid());
+            if (path) {
+              void navigate({
+                to: currentWorkspace.resolveFileUrl(path).toString(),
+              });
+            }
+          }),
+        ],
         "New JSON File": [
           NewCmdPrompt("json_file_name", "Enter JSON file name"),
           NewCmdExec(async (context) => {

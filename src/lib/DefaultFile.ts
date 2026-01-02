@@ -46,6 +46,14 @@ export const DefaultFile = {
     return `<h1>Current date: {{helpers.now}}</h1>`;
   },
 
+  Nunchucks: () => {
+    return `<h1>Current date: {{ now() }}</h1>`;
+  },
+
+  Liquid: () => {
+    return `<h1>Current date: {% now %}</h1>`;
+  },
+
   JSON: () => {
     return `{}`;
   },
@@ -199,6 +207,14 @@ Start writing your own content and make this blog yours!
 
     if (pathStr.endsWith(".mustache")) {
       return DefaultFile.Mustache();
+    }
+
+    if (pathStr.endsWith(".njk") || pathStr.endsWith(".nunjucks")) {
+      return DefaultFile.Nunchucks();
+    }
+
+    if (pathStr.endsWith(".liquid")) {
+      return DefaultFile.Liquid();
     }
 
     if (pathStr.endsWith(".json")) {

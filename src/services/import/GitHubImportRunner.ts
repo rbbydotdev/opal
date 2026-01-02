@@ -30,7 +30,6 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
 
   private _importer: GithubImport | null = null;
   get importer() {
-    console.log(">>>>>>", this.config.fullRepoPath);
     return (this._importer = this._importer || new GithubImport(relPath(this.config.fullRepoPath)));
   }
 
@@ -57,7 +56,10 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     reason: string;
     navigate: string | null;
     status: ImportState["status"];
+    allowShowcase: boolean;
   }> {
+    const allowShowcase = this.repoInfo.owner === "rbbydotdev";
+
     const ws = await WorkspaceDAO.FindAlikeImport({
       ident: this.ident,
     });
@@ -67,6 +69,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
         reason: "Workspace with the same GitHub import already exists.",
         navigate: join(ws.href, ws.manifest?.navigate || ""),
         status: "pending",
+        allowShowcase,
       };
     }
     if ((await this.importer.repoExists(this.abortController.signal)) === false) {
@@ -75,6 +78,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
         reason: "The specified GitHub repository does not exist or is inaccessible.",
         status: "error",
         navigate: null,
+        allowShowcase,
       };
     }
 
@@ -83,6 +87,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
       reason: "",
       navigate: null,
       status: "pending",
+      allowShowcase,
     };
   }
 

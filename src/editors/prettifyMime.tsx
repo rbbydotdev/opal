@@ -33,6 +33,8 @@ export function prettifyMime(mimeType: OpalMimeType, content: string): Promise<s
       });
     case "text/x-ejs":
     case "text/x-mustache":
+    case "text/x-nunchucks":
+    case "text/x-liquid":
     case "text/html":
       return prettier.format(content, {
         parser: "html",
@@ -45,7 +47,7 @@ export function prettifyMime(mimeType: OpalMimeType, content: string): Promise<s
 export function canPrettifyMime(mimeType: OpalMimeType | null | undefined): boolean {
   if (!mimeType) return false;
   return (
-    ["text/css", "text/javascript", "application/json", "text/markdown", "text/x-mustache", "text/x-ejs", "text/html"] satisfies Array<
+    ["text/css", "text/javascript", "application/json", "text/markdown", "text/x-mustache", "text/x-ejs", "text/x-nunchucks", "text/x-liquid", "text/html"] satisfies Array<
       typeof mimeType | "text/javascript" | "application/json"
     >
   ).includes(mimeType);

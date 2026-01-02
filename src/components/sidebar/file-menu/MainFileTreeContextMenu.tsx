@@ -57,6 +57,8 @@ export const MainFileTreeContextMenu = ({
   const addCssFile = () => addFile(fileNode, "styles.css");
   const addEjsFile = () => addFile(fileNode, "template.ejs");
   const addMustacheFile = () => addFile(fileNode, "template.mustache");
+  const addNunchucksFile = () => addFile(fileNode, "template.njk");
+  const addLiquidFile = () => addFile(fileNode, "template.liquid");
   const addMarkdownFile = () => addFile(fileNode, "newfile.md");
   const addJsonFile = () => addFile(fileNode, "data.json");
 
@@ -69,6 +71,10 @@ export const MainFileTreeContextMenu = ({
     addDirFile("file", fileNode.closestDir()!, "template.mustache", () => Promise.resolve(DefaultFile.Mustache()));
   const addStockEjsFile = () =>
     addDirFile("file", fileNode.closestDir()!, "template.ejs", () => Promise.resolve(DefaultFile.EJS()));
+  const addStockNunchucksFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "template.njk", () => Promise.resolve(DefaultFile.Nunchucks()));
+  const addStockLiquidFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "template.liquid", () => Promise.resolve(DefaultFile.Liquid()));
 
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
@@ -91,10 +97,30 @@ export const MainFileTreeContextMenu = ({
           }
         }}
       >
-        <ContextMenuItem inset onSelect={deferredFn(() => addMustacheFile())}>
-          <FileTextIcon className="mr-3 h-4 w-4" />
-          New Mustache Template
-        </ContextMenuItem>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger inset>
+            <FileTextIcon className="mr-3 h-4 w-4" />
+            New Template
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            <ContextMenuItem onSelect={deferredFn(() => addMustacheFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              Mustache Template
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={deferredFn(() => addEjsFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              EJS Template
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={deferredFn(() => addNunchucksFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              Nunchucks Template
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={deferredFn(() => addLiquidFile())}>
+              <FileTextIcon className="mr-3 h-4 w-4" />
+              Liquid Template
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
         <ContextMenuItem inset onSelect={deferredFn(() => addMarkdownFile())} className="w-full flex justify-start">
           <FileEditIcon className="mr-3 h-4 w-4" />
           New Markdown File
@@ -134,10 +160,30 @@ export const MainFileTreeContextMenu = ({
               <FileTextIcon className="mr-3 h-4 w-4" />
               template.mustache
             </ContextMenuItem>
-            <ContextMenuItem onSelect={deferredFn(() => addStockEjsFile())}>
-              <FileTextIcon className="mr-3 h-4 w-4" />
-              template.ejs
-            </ContextMenuItem>
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <FileTextIcon className="mr-3 h-4 w-4" />
+                Templates
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent>
+                <ContextMenuItem onSelect={deferredFn(() => addStockMustacheFile())}>
+                  <FileTextIcon className="mr-3 h-4 w-4" />
+                  template.mustache
+                </ContextMenuItem>
+                <ContextMenuItem onSelect={deferredFn(() => addStockEjsFile())}>
+                  <FileTextIcon className="mr-3 h-4 w-4" />
+                  template.ejs
+                </ContextMenuItem>
+                <ContextMenuItem onSelect={deferredFn(() => addStockNunchucksFile())}>
+                  <FileTextIcon className="mr-3 h-4 w-4" />
+                  template.njk
+                </ContextMenuItem>
+                <ContextMenuItem onSelect={deferredFn(() => addStockLiquidFile())}>
+                  <FileTextIcon className="mr-3 h-4 w-4" />
+                  template.liquid
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
           </ContextMenuSubContent>
         </ContextMenuSub>
 

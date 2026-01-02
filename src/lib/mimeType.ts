@@ -14,6 +14,16 @@ export const getMimeType = (path: string): OpalMimeType => {
     return MimeTypes.MUSTACHE;
   }
 
+  // Handle .njk files specially since mime-types doesn't recognize them
+  if (filePath.endsWith(".njk") || filePath.endsWith(".nunjucks")) {
+    return MimeTypes.NUNCHUCKS;
+  }
+
+  // Handle .liquid files specially since mime-types doesn't recognize them
+  if (filePath.endsWith(".liquid")) {
+    return MimeTypes.LIQUID;
+  }
+
   // Handle .html files
   if (filePath.endsWith(".html") || filePath.endsWith(".htm")) {
     return MimeTypes.HTML;

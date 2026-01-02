@@ -1,15 +1,17 @@
 import { DefaultFile } from "@/lib/DefaultFile";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, isEjs, isMustache, isTemplateType, TemplateType } from "@/lib/paths2";
+import { AbsPath, isEjs, isMustache, isNunchucks, isLiquid, isTemplateType, TemplateType } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { BaseRenderer } from "./BaseRenderer";
 import { EtaRenderer, TemplateData } from "./EtaRenderer";
 import { HtmlRenderer, HtmlTemplateData } from "./HtmlRenderer";
+import { LiquidRenderer, LiquidTemplateData } from "./LiquidRenderer";
 import { MustacheRenderer, MustacheTemplateData } from "./MustacheRenderer";
+import { NunchucksRenderer, NunchucksTemplateData } from "./NunchucksRenderer";
 
 export class TemplateManager {
   static canHandleFile(path: AbsPath): boolean {
-    return isEjs(path) || isMustache(path) || path.endsWith(".html");
+    return isEjs(path) || isMustache(path) || isNunchucks(path) || isLiquid(path) || path.endsWith(".html");
   }
 
   private renderers: Record<TemplateType, BaseRenderer>;
@@ -20,6 +22,8 @@ export class TemplateManager {
     this.renderers = {
       "text/x-ejs": new EtaRenderer(workspace), // EJS and .eta files both use ETA renderer internally
       "text/x-mustache": new MustacheRenderer(workspace),
+      "text/x-nunchucks": new NunchucksRenderer(workspace),
+      "text/x-liquid": new LiquidRenderer(workspace),
       "text/html": new HtmlRenderer(workspace), // HTML stub renderer (no templating)
     };
   }
@@ -34,7 +38,7 @@ export class TemplateManager {
 
   async renderTemplate(
     templatePath: AbsPath,
-    customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {}
+    customData: TemplateData | MustacheTemplateData | NunchucksTemplateData | LiquidTemplateData | HtmlTemplateData = {}
   ): Promise<string> {
     try {
       const renderer = this.getRenderer(templatePath);
@@ -48,7 +52,7 @@ export class TemplateManager {
 
   renderString(
     templateContent: string,
-    customData: TemplateData | MustacheTemplateData | HtmlTemplateData = {},
+    customData: TemplateData | MustacheTemplateData | NunchucksTemplateData | LiquidTemplateData | HtmlTemplateData = {},
     templateType: TemplateType = "text/html"
   ): string {
     const renderer = this.renderers[templateType];
@@ -64,8 +68,8 @@ export class TemplateManager {
       const renderer = this.getRenderer(templatePath);
       const templateType = getMimeType(templatePath);
 
-      if (templateType === "text/x-mustache" || templateType === "text/html") {
-        // Mustache and HTML don't support markdown imports, fallback to regular rendering
+      if (templateType === "text/x-mustache" || templateType === "text/x-nunchucks" || templateType === "text/x-liquid" || templateType === "text/html") {
+        // Mustache, Nunchucks, Liquid, and HTML don't support markdown imports, fallback to regular rendering
         return await renderer.renderTemplate(templatePath, customData);
       } else {
         // For EJS templates, use renderWithMarkdown to support markdown imports
@@ -89,8 +93,8 @@ export class TemplateManager {
     try {
       const renderer = this.renderers[templateType];
 
-      if (templateType === "text/x-mustache" || templateType === "text/html") {
-        // Mustache and HTML don't support markdown imports, fallback to regular rendering
+      if (templateType === "text/x-mustache" || templateType === "text/x-nunchucks" || templateType === "text/x-liquid" || templateType === "text/html") {
+        // Mustache, Nunchucks, Liquid, and HTML don't support markdown imports, fallback to regular rendering
         return renderer.renderString(templateContent, customData);
       } else {
         return await (renderer as EtaRenderer).renderWithMarkdown(templateContent, customData, markdownPaths);
@@ -111,6 +115,9 @@ export class TemplateManager {
           (node.path.endsWith(".eta") ||
             node.path.endsWith(".ejs") ||
             node.path.endsWith(".mustache") ||
+            node.path.endsWith(".njk") ||
+            node.path.endsWith(".nunjucks") ||
+            node.path.endsWith(".liquid") ||
             node.path.endsWith(".html"))
       )
       .map((node) => node.path);
