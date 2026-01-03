@@ -111,9 +111,40 @@ function SidebarTreeViewMenuContent({
   const { isExpanded, expandSingle } = useTreeExpanderContext();
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | "inside">("before");
+  const [draggedNodeIds, setDraggedNodeIds] = useState<string[]>([]);
 
   const realm = useRemoteMDXEditorRealm(MainEditorRealmId);
   const editor = useCellValueForRealm(rootEditor$, realm);
+
+  const findNodeByViewId = (searchRoot: LexicalTreeViewNode, nodeId: string): LexicalTreeViewNode | null => {
+    if (searchRoot.id === nodeId) {
+      return searchRoot;
+    }
+
+    if (searchRoot.children) {
+      for (const child of searchRoot.children) {
+        const found = findNodeByViewId(child, nodeId);
+        if (found) return found;
+      }
+    }
+
+    return null;
+  };
+
+  const findNodeByLexicalId = (searchRoot: LexicalTreeViewNode, lexicalNodeId: string): LexicalTreeViewNode | null => {
+    if (searchRoot.lexicalNodeId === lexicalNodeId) {
+      return searchRoot;
+    }
+
+    if (searchRoot.children) {
+      for (const child of searchRoot.children) {
+        const found = findNodeByLexicalId(child, lexicalNodeId);
+        if (found) return found;
+      }
+    }
+
+    return null;
+  };
 
   const getListTypeSecure = (listItemNode: lexical.LexicalNode): string | null => {
     if ($isListItemNode(listItemNode)) {
@@ -354,9 +385,61 @@ function SidebarTreeViewMenuContent({
     }
   };
 
+  const getHierarchyAwareDropPosition = (
+    draggedNode: LexicalTreeViewNode,
+    targetNode: LexicalTreeViewNode,
+    mousePosition: "before" | "after" | "inside"
+  ): "before" | "after" | "inside" => {
+    // Section (heading) logic
+    if (draggedNode.type === "section" && targetNode.type === "section") {
+      const draggedLevel = draggedNode.depth || 1;
+      const targetLevel = targetNode.depth || 1;
+
+      // If dropping "inside", check if it makes hierarchical sense
+      if (mousePosition === "inside") {
+        // Can only go inside if the dragged heading is deeper than target
+        if (draggedLevel > targetLevel) {
+          return "inside";
+        } else {
+          // Convert to "after" if levels don't allow nesting
+          return "after";
+        }
+      }
+
+      return mousePosition; // before/after are always valid for sections
+    }
+
+    // Content inside section logic
+    if (draggedNode.type !== "section" && targetNode.type === "section") {
+      // Content can only go inside sections, not before/after
+      return "inside";
+    }
+
+    // Section to content logic
+    if (draggedNode.type === "section" && targetNode.type !== "section") {
+      // Sections should move relative to their parent section, not content
+      return mousePosition === "inside" ? "after" : mousePosition;
+    }
+
+    // Content to content logic
+    return mousePosition;
+  };
+
   const handleDragOver = (e: React.DragEvent, nodeId: string) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!draggedNodeIds.length) {
+      return;
+    }
+
+    // Find the nodes in the tree
+    const targetNode = findNodeByViewId(parent, nodeId);
+    const draggedNode = findNodeByLexicalId(parent, draggedNodeIds[0]);
+
+    if (!draggedNode || !targetNode) {
+      return;
+    }
 
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
@@ -364,20 +447,21 @@ function SidebarTreeViewMenuContent({
     // Calculate coverage percentage
     const yCoverage = y / rect.height;
 
-    // Only use Y coverage to determine if user wants to embed inside
-    // High Y coverage means they're covering most of the element vertically
-    const shouldEmbedInside = yCoverage > 0.9;
+    // Determine raw mouse position intention
+    const shouldEmbedInside = yCoverage > 0.8;
+    let rawPosition: "before" | "after" | "inside";
 
-    let position: "before" | "after" | "inside";
-
-    if (shouldEmbedInside) {
-      position = "inside";
+    if (shouldEmbedInside && isContainer(targetNode)) {
+      rawPosition = "inside";
     } else {
-      position = y < rect.height / 2 ? "before" : "after";
+      rawPosition = y < rect.height / 2 ? "before" : "after";
     }
 
+    // Apply hierarchy-aware logic
+    const finalPosition = getHierarchyAwareDropPosition(draggedNode, targetNode, rawPosition);
+
     setDragOverId(nodeId);
-    setDropPosition(position);
+    setDropPosition(finalPosition);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -392,6 +476,7 @@ function SidebarTreeViewMenuContent({
   const clearDragState = () => {
     setDragOverId(null);
     setDropPosition("before");
+    setDraggedNodeIds([]);
   };
 
   return (
@@ -418,8 +503,12 @@ function SidebarTreeViewMenuContent({
               >
                 <CollapsibleTrigger asChild>
                   <div>
-                    <SidebarMenuButton asChild className="h-6">
-                      <TreeViewMenuParent depth={depth} node={displayNode}>
+                    <SidebarMenuButton className="h-6">
+                      <TreeViewMenuParent
+                        depth={depth}
+                        node={displayNode}
+                        onDragStart={(nodeIds) => setDraggedNodeIds(nodeIds)}
+                      >
                         <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                           <span className="hover:underline flex" title={displayNode.type}>
                             {displayNode.displayText ?? displayNode.type}
@@ -446,8 +535,13 @@ function SidebarTreeViewMenuContent({
                 </CollapsibleContent>
               </Collapsible>
             ) : isLeaf(displayNode) ? (
-              <SidebarMenuButton asChild>
-                <TreeViewTreeMenuChild depth={depth} node={displayNode} className="h-6">
+              <SidebarMenuButton>
+                <TreeViewTreeMenuChild
+                  depth={depth}
+                  node={displayNode}
+                  className="h-6"
+                  onDragStart={(nodeIds) => setDraggedNodeIds(nodeIds)}
+                >
                   <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                     <div className="py-1 hover:underline font-mono text-2xs w-full truncate">
                       {displayNode.displayText}
@@ -494,21 +588,27 @@ const TreeViewMenuParent = ({
   node,
   children,
   onClick,
+  onDragStart,
 }: {
   depth: number;
   className?: string;
   children?: React.ReactNode;
   node: LexicalTreeViewNode;
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
+  onDragStart?: (nodeIds: string[]) => void;
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
-    console.log("drag start", node.lexicalNodeId);
     const nodes: string[] = [];
     inorderWalk(node, (n) => {
       nodes.push(n.lexicalNodeId);
     });
     e.dataTransfer.setData("text/plain", nodes.join(","));
     e.dataTransfer.effectAllowed = "move";
+    onDragStart?.(nodes);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    onDragStart?.([]);
   };
 
   return (
@@ -516,7 +616,9 @@ const TreeViewMenuParent = ({
       tabIndex={0}
       onClick={onClick}
       draggable
+      data-sidebar="menu-button"
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className={twMerge(className, "w-full flex cursor-pointer select-none group/dir my-0")}
       style={{ paddingLeft: depth + "rem" }}
     >
@@ -542,18 +644,25 @@ const TreeViewTreeMenuChild = ({
   node,
   className,
   children,
+  onDragStart,
 }: {
   node: LexicalTreeViewNode;
   className?: string;
   depth: number;
   children?: React.ReactNode;
+  onDragStart?: (nodeIds: string[]) => void;
 }) => {
   if (!node.displayText) return null;
 
   const handleDragStart = (e: React.DragEvent) => {
-    console.log("drag start", node.lexicalNodeId);
     e.dataTransfer.setData("text/plain", node.lexicalNodeId);
     e.dataTransfer.effectAllowed = "move";
+    const nodeIds = [node.lexicalNodeId];
+    onDragStart?.(nodeIds);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    onDragStart?.([]);
   };
 
   return (
@@ -563,7 +672,9 @@ const TreeViewTreeMenuChild = ({
         tabIndex={0}
         title={node.type}
         draggable
+        data-sidebar="menu-button"
         onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         <div className="w-full">
           <div style={{ paddingLeft: depth + "rem" }} className="truncate w-full flex items-center">
