@@ -761,6 +761,18 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
 
     return fullPath;
   }
+
+  async newFileQuiet(fullPath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
+    await this.ready;
+
+    while (await this.pathExists(fullPath)) {
+      fullPath = incPath(fullPath);
+    }
+    await this.writeFileRecursive(fullPath, content);
+
+    return fullPath;
+  }
+
   async writeFileRecursive(filePath: AbsPath, content: string | Uint8Array | Blob) {
     await this.ready;
     // console.log(`writeFileRecursive: Creating directory for ${dirname(filePath)}`);

@@ -204,7 +204,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
           });
 
           const indexPath = joinPath(this.outputPath, relPath("index.html"));
-          await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", bookHtml));
+          await this.writeFile(indexPath, await prettifyMime("text/html", bookHtml));
           this.log("Book page generated", "info");
           return { bookGenerated: true, strategy: this.strategy };
         });
@@ -296,7 +296,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     await this.ensureDirectoryExists(dirname(outputPath));
 
     const content = await this.sourceDisk.readFile(node.path);
-    await this.outputDisk.writeFile(outputPath, content);
+    await this.writeFile(outputPath, content);
 
     this.log(`Copied asset: ${relativePath}`, "info");
   }
@@ -330,7 +330,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       html = mustache.render(content, { globalCssPath });
     }
 
-    await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
+    await this.writeFile(outputPath, await prettifyMime("text/html", html));
     this.log(`Template processed: ${relativePath}`, "info");
   }
 
@@ -355,7 +355,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     const relativePath = relPath(node.path);
     const outputPath = this.getOutputPathForMarkdown(relativePath);
     await this.ensureDirectoryExists(dirname(outputPath));
-    await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
+    await this.writeFile(outputPath, await prettifyMime("text/html", html));
 
     this.log(`Markdown processed: ${relativePath}`, "info");
   }
@@ -418,7 +418,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     });
 
     const indexPath = joinPath(this.outputPath, relPath("index.html"));
-    await this.outputDisk.writeFile(indexPath, prettifyMime("text/html", html));
+    await this.writeFile(indexPath, await prettifyMime("text/html", html));
     this.log("Blog index generated", "info");
   }
 
@@ -454,7 +454,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
       });
 
       const outputPath = joinPath(postsOutputPath, relPath(basename(post.path).replace(".md", ".html")));
-      await this.outputDisk.writeFile(outputPath, prettifyMime("text/html", html));
+      await this.writeFile(outputPath, await prettifyMime("text/html", html));
 
       this.log(`Blog post generated: ${post.path}`, "info");
     }
@@ -496,7 +496,12 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   }
 
   private getOutputPathForTemplate(relativePath: RelPath): AbsPath {
-    const outputRelativePath = relativePath.replace(".mustache", ".html").replace(".ejs", ".html");
+    const outputRelativePath = relativePath
+      .replace(".mustache", ".html")
+      .replace(".ejs", ".html")
+      .replace(".njk", ".html")
+      .replace(".nunchucks", ".html")
+      .replace(".liquid", ".html");
     return joinPath(this.outputPath, relPath(outputRelativePath));
   }
 
@@ -507,6 +512,11 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
 
   private async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
     await this.outputDisk.mkdirRecursive(dirPath);
+  }
+
+  private async writeFile(filePath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
+    // Use newFileQuiet to handle filename incrementing without events
+    return await this.outputDisk.newFileQuiet(filePath, content);
   }
 
   private sortPagesByPrefix(pages: PageData[]): PageData[] {

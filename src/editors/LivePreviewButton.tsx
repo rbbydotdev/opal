@@ -4,6 +4,7 @@ import { useResolvePathForPreview } from "@/features/live-preview/useResolvePath
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
 import { ExternalLink, Printer, X, Zap } from "lucide-react";
+import { IS_MAC } from "../lib/isMac";
 
 export function LivePreviewButtons() {
   const { right } = useSidebarPanes();
@@ -17,7 +18,13 @@ export function LivePreviewButtons() {
   return (
     <>
       <div className={"flex items-center justify-center flex-nowrap"}>
-        <Button size="sm" className="rounded-r-none" onClick={() => right.setIsCollapsed((prev) => !prev)} asChild>
+        <Button
+          size="sm"
+          className="rounded-r-none"
+          onClick={() => right.setIsCollapsed((prev) => !prev)}
+          asChild
+          title={(IS_MAC ? "cmd" : "ctrl") + " + |"}
+        >
           <div>
             {right.isCollapsed ? (
               <div className="flex items-center justify-center gap-2">
