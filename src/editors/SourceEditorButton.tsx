@@ -7,7 +7,7 @@ export const SourceEditorButton = () => {
   const [, setViewMode] = useWatchViewMode();
 
   return (
-    <Button variant="outline" onClick={() => setViewMode("source")} title={`${IS_MAC ? "cmd" : "ctrl"} + ;`}>
+    <Button variant="outline" size="sm" onClick={() => setViewMode("source")} title={`${IS_MAC ? "cmd" : "ctrl"} + ;`}>
       <span className="text-xs flex justify-center items-center gap-1">
         Source
         <FileText size={12} />

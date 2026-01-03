@@ -139,21 +139,6 @@ function VirtualizedEditList({
   );
 }
 
-function HistoryStatus({ selectedEdit, pending }: { selectedEdit: HistoryDAO | null; pending: boolean }) {
-  if (selectedEdit !== null || pending) {
-    return (
-      <div key={selectedEdit?.edit_id} className="animate-pulse animation-iteration-once ">
-        <History size={20} className="-scale-x-100 inline-block !text-primary" />
-      </div>
-    );
-  }
-  return (
-    <div>
-      <History size={20} className="-scale-x-100 inline-block !text-secondary" />
-    </div>
-  );
-}
-
 export function EditHistoryMenu() {
   const { currentWorkspace } = useWorkspaceContext();
   const workspaceId = currentWorkspace.id; // Use the stable workspace GUID, not the name
@@ -181,23 +166,27 @@ export function EditHistoryMenu() {
       data-component="EditHistoryMenu"
     >
       <DropdownMenu open={isOpen} onOpenChange={setOpen}>
-        <div className="h-full absolute left-4 flex justify-center items-center">
-          <button
-            onClick={() => {}}
-            className="text-primary text-4xl leading-4 group hover:scale-125 active:scale-100 transform transition-all duration-150 pl-1"
-          >
-            <HistoryStatus selectedEdit={selectedEdit} pending={pending} />
-          </button>
-        </div>
         <DropdownMenuTrigger asChild disabled={!enabled}>
           <Button
             tabIndex={0}
-            className="mx-1 h-8 flex items-center p-1"
+            className="mx-1 h-8 flex items-center p-1 pl-2"
             title={"Edit History" + (edits.length ? ` (${edits.length} edits)` : "")}
           >
-            <div className="pl-8 mr-2 flex items-center space-x-2 ">
-              <span className="whitespace-nowrap">Edit history {timeAgoStr}</span>
+            <div
+              key={selectedEdit?.edit_id}
+              className={cn({
+                "animate-pulse animation-iteration-once": selectedEdit !== null || pending,
+              })}
+            >
+              <History
+                size={20}
+                className={cn(
+                  "-scale-x-100 inline-block",
+                  selectedEdit !== null || pending ? "!text-card" : "!text-secondary"
+                )}
+              />
             </div>
+            <div className="whitespace-nowrap flex items-center space-x-2 ">{timeAgoStr}</div>
             <ChevronDown size={12} />
           </Button>
         </DropdownMenuTrigger>
@@ -313,50 +302,3 @@ function EditHistoryMenuDisabled() {
     </div>
   );
 }
-
-// const restore = useCallback(
-//   (oldText: string) => {
-//     flushSync(() => {
-//       setMode("edit");
-//       selectEdit(null);
-//       setEditorMarkdown(oldText);
-//       proposedContent.current = null;
-//     });
-//   },
-//   [setEditorMarkdown]
-// );
-
-// const accept = useCallback(
-//   async (newText: string) => {
-//     await docHistory.transaction(async () => {
-//       await flushSync(async () => {
-//         setMode("edit");
-//         selectEdit(null);
-//         proposedContent.current = null;
-//         baseContent.current = newText;
-//       });
-//     });
-//   },
-//   [docHistory]
-// );
-// const propose = useCallback(
-//   async (edit: HistoryDocRecord) => {
-//     await docHistory.transaction(async () => {
-//       await flushSync(async () => {
-//         const editText = await docHistory.getTextForEdit(edit);
-//         setMode("propose");
-//         proposedContent.current = editText;
-//         selectEdit(edit);
-//         setEditorMarkdown(editText);
-//       });
-//     });
-//   },
-//   [docHistory, setEditorMarkdown]
-// );
-
-// const clearHistory = useCallback(async () => {
-//   if (selectedEdit) {
-//     await restore(baseContent.current!);
-//   }
-//   await docHistory.clearAll();
-// }, [docHistory, restore, selectedEdit]);

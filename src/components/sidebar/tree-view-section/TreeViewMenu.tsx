@@ -502,6 +502,7 @@ const TreeViewMenuParent = ({
   onClick?: (e: React.MouseEvent<Element, MouseEvent>) => void;
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
+    console.log("drag start", node.lexicalNodeId);
     const nodes: string[] = [];
     inorderWalk(node, (n) => {
       nodes.push(n.lexicalNodeId);
@@ -511,7 +512,7 @@ const TreeViewMenuParent = ({
   };
 
   return (
-    <span
+    <div
       tabIndex={0}
       onClick={onClick}
       draggable
@@ -532,7 +533,7 @@ const TreeViewMenuParent = ({
           <div className="truncate text-2xs font-bold font-mono">{children}</div>
         </div>
       </div>
-    </span>
+    </div>
   );
 };
 
@@ -550,6 +551,7 @@ const TreeViewTreeMenuChild = ({
   if (!node.displayText) return null;
 
   const handleDragStart = (e: React.DragEvent) => {
+    console.log("drag start", node.lexicalNodeId);
     e.dataTransfer.setData("text/plain", node.lexicalNodeId);
     e.dataTransfer.effectAllowed = "move";
   };

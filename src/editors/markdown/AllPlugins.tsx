@@ -89,7 +89,7 @@ const EditorToolbar = memo(function EditorToolbar() {
   const { isMainFile, isMarkdown } = useCurrentFilepath();
   return (
     <div
-      className={cn("flex gap-1 w-full", {
+      className={cn("flex gap-2 w-full items-center", {
         "ml-0": !left.isCollapsed,
         "ml-16": left.isCollapsed,
       })}
