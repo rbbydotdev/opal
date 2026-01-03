@@ -33,7 +33,11 @@ export const StringMimeTypes = [
   "application/json",
 ] as const satisfies Partial<OpalMimeType>[];
 
-const MimeTypeExt = {
+export const ExtForMimeType = (mime: OpalMimeType) => {
+  return (MimeTypeExt as any)[mime] || "bin";
+};
+
+export const MimeTypeExt = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/gif": "gif",

@@ -3,7 +3,7 @@ import { TreeFile, TreeNode } from "@/components/filetree/TreeNode";
 import { ImageFileHoverCard } from "@/components/ImageFileHoverCard";
 import { Thumb } from "@/data/Thumb";
 import { useEditable } from "@/hooks/useEditable";
-import { AbsPath, equals, isImage, prefix, relPath, RelPath } from "@/lib/paths2";
+import { AbsPath, equals, extname, isImage, prefix, relPath, RelPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { WorkspaceRouteType } from "@/workspace/WorkspaceContext";
@@ -111,7 +111,7 @@ export const EditableFile = ({
                 className="w-6 h-6 border border-border flex-shrink-0 bg-white mr-2"
               />
             ) : (
-              <FileText className="w-3 h-3 flex-shrink-0 mr-2" />
+              <IconForTreeNode treeNode={treeNode} />
             )}
             <input
               ref={inputRef}
@@ -155,6 +155,14 @@ const ActiveLink = ({
   return <div {...props} />;
 };
 
+function TemplateIcon({ letters = "LIQ" }: { letters?: string }) {
+  return (
+    <div className="relative w-5 h-5 text-2xs flex-shrink-0 mr-2 overflow-clip text-chart-3 p-0.5 rounded flex justify-center items-center font-mono font-bold">
+      {letters.slice(0, 3).toUpperCase()}
+    </div>
+  );
+}
+
 function IconForTreeNode({ treeNode }: { treeNode: TreeNode }) {
   switch (treeNode.getMimeType()) {
     case "text/markdown":
@@ -170,6 +178,9 @@ function IconForTreeNode({ treeNode }: { treeNode: TreeNode }) {
     case "image/webp":
       return <ImageNodeIcon treeNode={treeNode} />;
     default:
+      if (treeNode.isTemplateFile()) {
+        return <TemplateIcon letters={extname(treeNode.path).slice(1, 4)} />;
+      }
       return <FileText className="w-3 h-3 flex-shrink-0 mr-2" />;
   }
 }
