@@ -5,7 +5,6 @@
       "source": "/download.zip",
       "destination": "/download.zip"
     },
-
     { "source": "/@static/(.*)", "destination": "/@static/$1" },
     {
       "source": "/auth/(.*)",
@@ -33,6 +32,10 @@
     },
     {
       "source": "/newWorkspace",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/import/(.*)",
       "destination": "/index.html"
     }
   ],
