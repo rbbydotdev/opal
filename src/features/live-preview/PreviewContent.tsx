@@ -5,7 +5,7 @@ import { TemplateManager } from "@/features/templating";
 import { stripFrontmatter } from "@/lib/markdown/frontMatter";
 import { renderMarkdownToHtml } from "@/lib/markdown/renderMarkdownToHtml";
 import { getMimeType } from "@/lib/mimeType";
-import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, isTemplateType, prefix, relPath } from "@/lib/paths2";
+import { AbsPath, isEjs, isHtml, isImage, isMarkdown, isMustache, isNunchucks, isLiquid, isTemplateFile, isTemplateType, prefix, relPath } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useEffect, useState } from "react";
 
@@ -69,7 +69,7 @@ export function PreviewContent({
     return <img src={path} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} />;
   }
 
-  if (isMustache(path) || isEjs(path)) {
+  if (isTemplateFile(path)) {
     return (
       <TemplateRenderer
         mode={mode}

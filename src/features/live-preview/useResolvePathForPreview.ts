@@ -13,10 +13,12 @@ export function useResolvePathForPreview({
   const previewNode = useMemo(() => {
     if (!path) return null;
     const currentNode = currentWorkspace.nodeFromPath(path);
-    // Prioritize mustache files first
+    // Prioritize template files first
     if (currentNode?.isMustache()) return currentNode;
-    if (currentNode?.isMarkdownFile()) return currentNode;
     if (currentNode?.isEjsFile()) return currentNode;
+    if (currentNode?.isNunchucksFile()) return currentNode;
+    if (currentNode?.isLiquidFile()) return currentNode;
+    if (currentNode?.isMarkdownFile()) return currentNode;
     if (currentNode?.isHtmlFile()) return currentNode;
     if (currentNode?.isImageFile()) return null;
     return (

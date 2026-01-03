@@ -16,8 +16,10 @@ import {
   isEjs,
   isHtml,
   isImage,
+  isLiquid,
   isMarkdown,
   isMustache,
+  isNunchucks,
   isPreviewable,
   isTemplateFile,
   isText,
@@ -135,6 +137,14 @@ export class TreeNode {
   isEjsFile() {
     if (this.isTreeDir()) return false;
     return isEjs(this.path);
+  }
+  isNunchucksFile() {
+    if (this.isTreeDir()) return false;
+    return isNunchucks(this.path);
+  }
+  isLiquidFile() {
+    if (this.isTreeDir()) return false;
+    return isLiquid(this.path);
   }
   isHtmlFile() {
     if (this.isTreeDir()) return false;
