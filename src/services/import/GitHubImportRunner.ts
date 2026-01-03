@@ -66,7 +66,7 @@ export class GitHubImportRunner extends BaseImportRunner<{ fullRepoPath: string 
     if (ws) {
       return {
         abort: true,
-        reason: "Workspace with the same GitHub import already exists.",
+        reason: "Workspace with the same GitHub import already exists \nRedirecting...",
         navigate: join(ws.href, ws.manifest?.navigate || ""),
         status: "pending",
         allowShowcase,

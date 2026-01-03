@@ -18,6 +18,7 @@ import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useWatchElement } from "@/hooks/useWatchElement";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { OpalMimeType } from "@/lib/fileType";
+import { IS_MAC } from "@/lib/isMac";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
 import { liquid } from "@/source-editor/liquidLanguage";
@@ -335,7 +336,7 @@ export const CodeMirrorEditor = ({
 };
 
 const RichButton = memo(({ onClick }: { onClick: () => void }) => (
-  <Button variant="outline" size="sm" onClick={onClick}>
+  <Button variant="outline" size="sm" onClick={onClick} title={`${IS_MAC ? "cmd" : "ctrl"} + ;`}>
     <span className="text-xs flex justify-center items-center gap-1">
       <ChevronLeftIcon size={12} />
       <FileText size={12} /> Rich Text

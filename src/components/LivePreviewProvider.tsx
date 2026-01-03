@@ -32,27 +32,23 @@ export function LivePreviewProvider({ children }: LivePreviewProviderProps) {
 
   const context = useWindowContextProvider();
   const extPreviewCtrl = useRef<WindowPreviewHandler | null>(null);
+  const printWhenReady = useRef<boolean>(false);
 
   const handleRenderBodyReady = useCallback(() => {
     if (!context.window) return;
+    if (!printWhenReady.current) return;
+    printWhenReady.current = false;
     context.window.addEventListener("afterprint", () => context.window.close());
-    setTimeout(() => {
-      queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
-      context.window.print();
-    }, 500);
+    queueMicrotask(() => showDialog(false)); //hides in firefox because firefox does not lock main thread
+    setTimeout(() => context.window.print(), 500);
   }, [context.window]);
 
-  const open = useCallback(
-    async ({ print }: { print?: boolean } = {}) => {
-      if (extPreviewCtrl.current) {
-        extPreviewCtrl.current.open();
-        if (print) {
-          await emitter.once("render-body-ready", () => handleRenderBodyReady);
-        }
-      }
-    },
-    [emitter, handleRenderBodyReady]
-  );
+  const open = useCallback(async ({ print }: { print?: boolean } = {}) => {
+    if (extPreviewCtrl.current) {
+      extPreviewCtrl.current.open();
+      printWhenReady.current = !!print;
+    }
+  }, []);
   const close = useCallback(() => {
     if (extPreviewCtrl.current) {
       extPreviewCtrl.current.close();
