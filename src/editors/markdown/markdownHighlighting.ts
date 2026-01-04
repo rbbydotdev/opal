@@ -1,4 +1,3 @@
-/* beware: vibe coded */
 import { getCSSVariableColor, hexToRgb, oklchStringToRgb, rgbToHex } from "@/lib/colorUtils";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { yamlFrontmatter } from "@codemirror/lang-yaml";

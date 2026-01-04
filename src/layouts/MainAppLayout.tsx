@@ -16,6 +16,7 @@ import { DocHistoryProvider } from "@/editors/history/HistoryPlugin";
 import { BrowserCompatProvider } from "@/features/compat-checker/CompatChecker";
 import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
+import { LocalStorageProvider } from "@/features/local-storage/LocalStorageProvider";
 import { useZoom } from "@/hooks/useZoom";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { ThemeProvider } from "@/layouts/ThemeProvider";
@@ -52,57 +53,59 @@ const Background = ({ children }: { children: React.ReactNode }) => {
 export function MainAppLayout({ children }: MainAppLayoutProps) {
   useZoom();
   return (
-    <CustomQueryClientProvider>
-      <ThemeProvider>
-        <Background>
-          <BrowserCompatProvider>
-            <Toaster />
-            <CompatibilityAlert />
-            <AsyncWindowErrorBoundary>
-              <ErrorPopper>
-                <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
-                  <WorkspaceProvider>
-                    <ConfirmProvider>
-                      <DocHistoryProvider>
-                        <TooltipProvider delayDuration={1000}>
-                          <WindowContextProviderComponent>
-                            <LivePreviewProvider>
-                              <GitStatusProvider>
-                                <PublicationModalProvider>
-                                  <SidebarProvider>
-                                    <BuildCreationProvider>
-                                      <PromptProvider>
-                                        <RemoteMDXEditorRealmProvider>
-                                          <ServiceWorker>
-                                            <div className="w-full flex">
-                                              <ErrorBoundary fallback={ErrorPlaque}>
-                                                <div id={WS_BUTTON_BAR_ID} className="bg-muted">
-                                                  <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                                    <WorkspaceButtonBar />
-                                                  </ErrorBoundary>
-                                                </div>
-                                                <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                              </ErrorBoundary>
-                                            </div>
-                                          </ServiceWorker>
-                                        </RemoteMDXEditorRealmProvider>
-                                      </PromptProvider>
-                                    </BuildCreationProvider>
-                                  </SidebarProvider>
-                                </PublicationModalProvider>
-                              </GitStatusProvider>
-                            </LivePreviewProvider>
-                          </WindowContextProviderComponent>
-                        </TooltipProvider>
-                      </DocHistoryProvider>
-                    </ConfirmProvider>
-                  </WorkspaceProvider>
-                </ErrorBoundary>
-              </ErrorPopper>
-            </AsyncWindowErrorBoundary>
-          </BrowserCompatProvider>
-        </Background>
-      </ThemeProvider>
-    </CustomQueryClientProvider>
+    <LocalStorageProvider>
+      <CustomQueryClientProvider>
+        <ThemeProvider>
+          <Background>
+            <BrowserCompatProvider>
+              <Toaster />
+              <CompatibilityAlert />
+              <AsyncWindowErrorBoundary>
+                <ErrorPopper>
+                  <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>
+                    <WorkspaceProvider>
+                      <ConfirmProvider>
+                        <DocHistoryProvider>
+                          <TooltipProvider delayDuration={1000}>
+                            <WindowContextProviderComponent>
+                              <LivePreviewProvider>
+                                <GitStatusProvider>
+                                  <PublicationModalProvider>
+                                    <SidebarProvider>
+                                      <BuildCreationProvider>
+                                        <PromptProvider>
+                                          <RemoteMDXEditorRealmProvider>
+                                            <ServiceWorker>
+                                              <div className="w-full flex">
+                                                <ErrorBoundary fallback={ErrorPlaque}>
+                                                  <div id={WS_BUTTON_BAR_ID} className="bg-muted">
+                                                    <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                      <WorkspaceButtonBar />
+                                                    </ErrorBoundary>
+                                                  </div>
+                                                  <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                                </ErrorBoundary>
+                                              </div>
+                                            </ServiceWorker>
+                                          </RemoteMDXEditorRealmProvider>
+                                        </PromptProvider>
+                                      </BuildCreationProvider>
+                                    </SidebarProvider>
+                                  </PublicationModalProvider>
+                                </GitStatusProvider>
+                              </LivePreviewProvider>
+                            </WindowContextProviderComponent>
+                          </TooltipProvider>
+                        </DocHistoryProvider>
+                      </ConfirmProvider>
+                    </WorkspaceProvider>
+                  </ErrorBoundary>
+                </ErrorPopper>
+              </AsyncWindowErrorBoundary>
+            </BrowserCompatProvider>
+          </Background>
+        </ThemeProvider>
+      </CustomQueryClientProvider>
+    </LocalStorageProvider>
   );
 }

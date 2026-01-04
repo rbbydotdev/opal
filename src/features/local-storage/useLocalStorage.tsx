@@ -51,7 +51,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
       }
       return value;
     },
-    [options.serializer]
+    [options]
   );
 
   const deserializer = useCallback(
@@ -66,7 +66,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T), opt
 
       return value as T;
     },
-    [options.deserializer, getDefaultValue]
+    [options, getDefaultValue]
   );
 
   const contextSetState = useContextSelector(LocalStorageContext, (ctx) => ctx.setState);

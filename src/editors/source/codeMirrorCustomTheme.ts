@@ -1,4 +1,3 @@
-/* beware: vibe coded */
 import { getContrastSafeColor } from "@/editors/markdown/markdownHighlighting";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Extension } from "@codemirror/state";

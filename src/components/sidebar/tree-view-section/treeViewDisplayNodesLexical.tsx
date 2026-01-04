@@ -60,7 +60,14 @@ function convertLexicalContentNode(
       break;
     case "paragraph":
       viewNode.isContainer = true;
-      viewNode.displayText = "[paragraph]";
+      viewNode.displayText = (
+        <span
+          title={displayText}
+          className="text-xs truncate whitespace-nowrap w-full block text-gray-600"
+        >
+          {truncatedText || "[empty paragraph]"}
+        </span>
+      );
       viewNode.children = (lexicalNode.getChildren() as lexical.ElementNode[])
         .map((child) => convertLexicalContentNode(child, currentDepth + 1, maxLength))
         .filter((n): n is LexicalTreeViewNode => n !== null);
