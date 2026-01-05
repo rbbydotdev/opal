@@ -1,7 +1,5 @@
 import { TreeNode } from "@/components/filetree/TreeNode";
 import { BuildDAO, NULL_BUILD } from "@/data/dao/BuildDAO";
-import { BuildStrategy } from "@/data/dao/BuildRecord";
-import { Disk } from "@/data/disk/Disk";
 import { Filter, FilterOutSpecialDirs, SpecialDirs } from "@/data/SpecialDirs";
 import { prettifyMime } from "@/editors/prettifyMime";
 import { TemplateManager } from "@/features/templating/TemplateManager";
@@ -19,13 +17,11 @@ import {
   RelPath
 } from "@/lib/paths2";
 import { PageData } from "@/services/build/builder-types";
-import { ObservableRunner } from "@/services/build/ObservableRunner";
-import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
 import matter from "gray-matter";
 import { marked } from "marked";
 import mustache from "mustache";
-import slugify from "slugify";
+import { BuildRunner } from "./BuildRunner";
 
 interface EleventyConfig {
   dir: {
@@ -55,38 +51,7 @@ interface EleventyPageData extends PageData {
   url: string;
 }
 
-export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements Runner {
-  protected abortController: AbortController = new AbortController();
-
-  private templateManager?: TemplateManager;
-
-  get sourceDisk(): Disk {
-    return this.target.getSourceDisk();
-  }
-
-  get strategy(): BuildStrategy {
-    return this.target.strategy;
-  }
-
-  get outputDisk(): Disk {
-    return this.target.getSourceDisk();
-  }
-
-  get outputPath(): AbsPath {
-    return this.target.getOutputPath();
-  }
-
-  get sourcePath(): AbsPath {
-    return this.target.sourcePath;
-  }
-
-  get fileTree() {
-    return this.sourceDisk.fileTree;
-  }
-
-  get buildId() {
-    return this.target.guid;
-  }
+export class EleventyBuildRunner extends BuildRunner {
 
   private config: EleventyConfig = {
     dir: {
@@ -114,13 +79,11 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
   static Create({
     workspace,
     label,
-    strategy,
     build,
     config,
   }: {
     workspace: Workspace;
     label: string;
-    strategy: BuildStrategy;
     build?: BuildDAO;
     config?: Partial<EleventyConfig>;
   }): EleventyBuildRunner {
@@ -131,7 +94,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
         workspaceId: workspace.guid,
         disk: workspace.disk,
         sourceDisk: workspace.disk,
-        strategy,
+        strategy: "eleventy",
       });
 
     return new EleventyBuildRunner({
@@ -141,19 +104,14 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     });
   }
 
-  cancel(): void {
-    this.abortController.abort();
-  }
 
   constructor({ build, workspace, config }: {
     build: BuildDAO;
     workspace?: Workspace;
     config?: Partial<EleventyConfig>;
   }) {
-    super(build);
-    if (workspace) {
-      this.templateManager = new TemplateManager(workspace);
-    }
+    super({ build, workspace });
+    // TemplateManager is now set in the base class
 
     // Merge custom config with defaults
     if (config?.dir) {
@@ -201,7 +159,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     }
   }
 
-  private createBuildGraph(): DataflowGraph<EleventyBuildContext> {
+  protected createBuildGraph(): DataflowGraph<EleventyBuildContext> {
     return new DataflowGraph<EleventyBuildContext>()
       .node("init", [], async () => {
         this.log("Initializing Eleventy build...", "info");
@@ -242,13 +200,14 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
       });
   }
 
-  private async ensureOutputDirectory(): Promise<void> {
-    this.log("Creating output directory...", "info");
+  protected async ensureOutputDirectory(): Promise<void> {
+    await super.ensureOutputDirectory();
+    this.log("Creating Eleventy output directory...", "info");
     const outputPath = joinPath(this.sourcePath, relPath(this.config.dir.output));
     await this.outputDisk.mkdirRecursive(outputPath);
   }
 
-  private async loadGlobalData(): Promise<Record<string, any>> {
+  protected async loadGlobalData(): Promise<Record<string, any>> {
     const globalData: Record<string, any> = {};
     const dataDir = joinPath(this.sourcePath, relPath(this.config.dir.data));
 
@@ -283,7 +242,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     return globalData;
   }
 
-  private async loadDirectoryData(): Promise<Map<string, any>> {
+  protected async loadDirectoryData(): Promise<Map<string, any>> {
     const directoryData = new Map<string, any>();
 
     // Load template and directory data files
@@ -313,7 +272,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     return directoryData;
   }
 
-  private async copyStaticFiles(): Promise<void> {
+  protected async copyStaticFiles(): Promise<void> {
     this.log("Copying static files...", "info");
 
     // Copy all files that are not templates, markdown, or in special directories
@@ -326,7 +285,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     }
   }
 
-  private shouldCopyStaticFile(node: TreeNode): boolean {
+  protected shouldCopyStaticFile(node: TreeNode): boolean {
     const path = relPath(node.path);
     const dirName = dirname(path);
 
@@ -349,7 +308,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     return true;
   }
 
-  private async copyFileToOutput(node: TreeNode): Promise<void> {
+  protected async copyFileToOutput(node: TreeNode): Promise<void> {
     const relativePath = this.getRelativePathFromInput(node.path);
     const outputPath = joinPath(
       this.sourcePath,
@@ -365,7 +324,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     this.log(`Copied static file: ${relativePath}`, "info");
   }
 
-  private async processAllTemplates(
+  protected async processAllTemplates(
     globalData: Record<string, any>,
     directoryData: Map<string, any>
   ): Promise<void> {
@@ -381,7 +340,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     }
   }
 
-  private shouldProcessFile(node: TreeNode): boolean {
+  protected shouldProcessFile(node: TreeNode): boolean {
     const path = relPath(node.path);
 
     // Skip files in special directories (except for direct access)
@@ -393,7 +352,7 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     return this.isMarkdownFile(node) || this.isTemplateFile(node);
   }
 
-  private async processFile(
+  protected async processFile(
     node: TreeNode,
     globalData: Record<string, any>,
     directoryData: Map<string, any>
@@ -581,19 +540,19 @@ export class EleventyBuildRunner extends ObservableRunner<BuildDAO> implements R
     return "/" + url;
   }
 
-  private async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
+  protected async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
     await this.outputDisk.mkdirRecursive(dirPath);
   }
 
-  private async writeFile(filePath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
+  protected async writeFile(filePath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
     return await this.outputDisk.newFileQuiet(filePath, content);
   }
 
-  private isMarkdownFile(node: TreeNode): boolean {
+  protected isMarkdownFile(node: TreeNode): boolean {
     return extname(node.path) === ".md";
   }
 
-  private isTemplateFile(node: TreeNode): boolean {
+  protected isTemplateFile(node: TreeNode): boolean {
     return isTemplateFile(node.path);
   }
 }

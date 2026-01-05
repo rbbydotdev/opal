@@ -12,13 +12,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Opal Editor" />
   <link rel="apple-touch-icon" href="/opal.svg" />
-  <meta name="description" content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
+  <meta name="description"
+    content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://opaledx.com" />
   <meta property="og:title" content="Opal Editor - Local-First Markdown Editor" />
-  <meta property="og:description" content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
+  <meta property="og:description"
+    content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
   <meta property="og:image" content="/ogimage.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -28,7 +30,8 @@
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://opaledx.com" />
   <meta property="twitter:title" content="Opal Editor - Local-First Markdown Editor" />
-  <meta property="twitter:description" content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
+  <meta property="twitter:description"
+    content="A in-browser, local-first, no-server/serverless markdown editor with images and publishing capabilities" />
   <meta property="twitter:image" content="/ogimage.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,6 +55,11 @@
 
 <body>
   <div id="root"></div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

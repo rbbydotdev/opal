@@ -160,7 +160,7 @@ export function EditHistoryMenu() {
   }
   return (
     <div
-      className={cn("relative flex items-center pl-2 gap-2 font-mono text-sm mx-2", {
+      className={cn("relative flex items-center pl-2 gap-2 text-sm", {
         "opacity-50": !enabled,
       })}
       data-component="EditHistoryMenu"
@@ -172,22 +172,25 @@ export function EditHistoryMenu() {
             className="mx-1 h-8 flex items-center p-1 pl-2"
             title={"Edit History" + (edits.length ? ` (${edits.length} edits)` : "")}
           >
-            <div
-              key={selectedEdit?.edit_id}
-              className={cn({
-                "animate-pulse animation-iteration-once": selectedEdit !== null || pending,
-              })}
-            >
-              <History
-                size={20}
-                className={cn(
-                  "-scale-x-100 inline-block",
-                  selectedEdit !== null || pending ? "!text-card" : "!text-secondary"
-                )}
-              />
+            <div className="flex justify-center items-center gap-2 ml-1">
+              <div
+                key={selectedEdit?.edit_id}
+                className={cn({
+                  "animate-pulse animation-iteration-once": selectedEdit !== null || pending,
+                })}
+              >
+                <History
+                  size={20}
+                  className={cn(
+                    "-scale-x-100 inline-block",
+                    selectedEdit !== null || pending ? "!text-card" : "!text-secondary"
+                  )}
+                />
+              </div>
+              History
             </div>
             <div className="whitespace-nowrap flex items-center space-x-2 ">{timeAgoStr}</div>
-            <ChevronDown size={12} />
+            <ChevronDown size={12} className="!text-primary-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

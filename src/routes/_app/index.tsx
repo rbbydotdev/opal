@@ -23,6 +23,7 @@ function Index() {
         cmdMap={cmdMap}
         placeholder="Spotlight Search..."
         useFilenameSearch={true}
+        cleanupThemePreview={() => {}}
       />
     </div>
   );

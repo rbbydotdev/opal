@@ -10,7 +10,7 @@ import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { useRunner } from "@/hooks/useRunner";
 import { useModalSignal } from "@/lib/useModalSignal";
-import { BuildRunner } from "@/services/build/BuildRunner";
+import { BuildRunnerFactory } from "@/services/build/BuildRunnerFactory";
 import { LogLine } from "@/types/RunnerTypes";
 import { Workspace } from "@/workspace/Workspace";
 import { AlertTriangle, Clock, Download, Loader, UploadCloud, X } from "lucide-react";
@@ -39,11 +39,11 @@ export function BuildModal({
 
   const { runner, execute, setRunner, logs } = useRunner(
     () =>
-      BuildRunner.Show({
+      BuildRunnerFactory.Show({
         build: NULL_BUILD,
         workspace: currentWorkspace,
       }),
-    [isOpen /* will reset when modal is opened/closed */],
+    [currentWorkspace],
     abortController.current?.signal
   );
 
@@ -60,7 +60,7 @@ export function BuildModal({
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {
       setIsOpen(true);
-      setRunner(await BuildRunner.Recall({ buildId, workspace: currentWorkspace }));
+      setRunner(await BuildRunnerFactory.Recall({ buildId, workspace: currentWorkspace }));
     },
     [currentWorkspace, setRunner]
   );
@@ -68,7 +68,7 @@ export function BuildModal({
   const handleBuild = async () => {
     abortController.current = new AbortController();
     return execute(
-      BuildRunner.Create({
+      BuildRunnerFactory.Create({
         workspace: currentWorkspace,
         label: `Build ${new Date().toLocaleString()}`,
         strategy,
@@ -79,7 +79,6 @@ export function BuildModal({
 
   const { open: openPubModal } = useBuildPublisher();
 
-  // const { open, cmdRef: confirmCmd } = useConfirmCmd();
   const { open: openConfirm } = useConfirm();
 
   const handleClose = useCallback(async () => {

@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { handle } from "hono/service-worker";
-import { marked } from "marked";
 import { z } from "zod";
 
 import { ENV } from "@/lib/env";
@@ -11,10 +10,7 @@ import { RemoteLoggerLogger, signalRequest } from "@/lib/service-worker/utils";
 import { Workspace } from "@/workspace/Workspace";
 
 // Import pure handler functions
-import { ClientDb } from "@/data/db/DBInstance";
 import { Thumb } from "@/data/Thumb";
-import { HistoryDB } from "@/editors/history/HistoryDB";
-import { NotFoundError } from "@/lib/errors/errors";
 import { EncHeader, PassHeader } from "@/lib/service-worker/downloadEncryptedZipHelper";
 import { downloadZipSchema } from "@/lib/service-worker/downloadZipURL";
 import { handleDocxConvertRequest } from "@/lib/service-worker/handleDocxConvertRequest";
@@ -24,6 +20,7 @@ import { handleFaviconRequest } from "@/lib/service-worker/handleFaviconRequest"
 import { handleFileReplace } from "@/lib/service-worker/handleFileReplace";
 import { handleImageRequest } from "@/lib/service-worker/handleImageRequest";
 import { handleImageUpload } from "@/lib/service-worker/handleImageUpload";
+import { handleMarkdownRender } from "@/lib/service-worker/handleMarkdownRender";
 import { handleMdImageReplace } from "@/lib/service-worker/handleMdImageReplace";
 import { handleStyleSheetRequest } from "@/lib/service-worker/handleStyleSheetRequest";
 import { handleWorkspaceFilenameSearch } from "@/lib/service-worker/handleWorkspaceFilenameSearch";
@@ -31,8 +28,6 @@ import { handleWorkspaceSearch } from "@/lib/service-worker/handleWorkspaceSearc
 import { honoLogger2 } from "@/lib/service-worker/honoLogger2";
 import { resolveWorkspaceFromQueryOrContext } from "@/lib/service-worker/resolveWorkspaceFromQueryOrContext";
 import { SuperUrl } from "@/lib/service-worker/SuperUrl";
-import { SWWStore } from "@/lib/service-worker/SWWStore";
-import graymatter from "gray-matter";
 
 declare const self: ServiceWorkerGlobalScope;
 initializeGlobalLogger(RemoteLoggerLogger("SW"));
@@ -287,54 +282,7 @@ const _Handlers = {
   // Markdown render handler
   MarkdownRender: app.get("/markdown-render", zValidator("query", markdownRenderSchema), async (c) => {
     const { workspaceName, documentId, editId } = c.req.valid("query");
-    console.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
-    const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
-    if (!workspace) throw new NotFoundError("Workspace not found");
-
-    const cache = await Workspace.newCache(workspaceName).getCache();
-    const cached = await cache.match(c.req.raw);
-    if (cached) {
-      console.log(`Cache hit for markdown render: ${editId}`);
-      return cached;
-    }
-
-    // Get edit from database to check for existing preview blob
-    const edit = await ClientDb.historyDocs.get(editId);
-    if (!edit) {
-      console.error(`Edit not found: ${editId}`);
-      throw new NotFoundError("Edit not found");
-    }
-
-    let htmlContent: string;
-
-    // Check if edit already has preview blob
-    if (edit.preview) {
-      console.log(`Using existing preview blob for edit: ${editId}`);
-      htmlContent = await edit.preview.text();
-    } else {
-      console.log(`Generating new HTML for edit: ${editId}`);
-
-      // Create HistoryDB instance and reconstruct document
-      const historyDB = new HistoryDB();
-      const markdownContent = await historyDB.reconstructDocument({ edit_id: editId });
-      // Render markdown to HTML
-      htmlContent = await marked(graymatter(markdownContent).content);
-      // Store rendered HTML in edit.preview Blob field
-      await historyDB.updatePreviewForEditId(editId, new Blob([htmlContent], { type: "text/html" }));
-      historyDB.tearDown();
-    }
-
-    await cache.put(
-      c.req.raw,
-      new Response(htmlContent, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      })
-    );
-
-    return c.body(htmlContent);
+    return handleMarkdownRender(c.req.raw, workspaceName, documentId, editId);
   }),
   // Download handler
   DownloadZip: app.get("/download.zip", zValidator("query", downloadZipSchema), async (c) => {

@@ -17,10 +17,13 @@ import { marked } from "marked";
 import mustache from "mustache";
 import slugify from "slugify";
 
-interface BuildContext {
+export interface BaseBuildContext {
   outputDirectoryReady?: boolean;
   sourceFilesIndexed?: boolean;
   assetsReady?: boolean;
+}
+
+interface BuildContext extends BaseBuildContext {
   pages?: PageData[];
   posts?: PageData[];
   templatesProcessed?: boolean;
@@ -29,12 +32,12 @@ interface BuildContext {
   blogPostsGenerated?: boolean;
 }
 
-export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
+export abstract class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   //build,template,template etc should make generic build and deploy objects so observable etc can be shared
 
   protected abortController: AbortController = new AbortController();
 
-  private templateManager?: TemplateManager;
+  protected templateManager?: TemplateManager;
 
   get sourceDisk(): Disk {
     return this.target.getSourceDisk();
@@ -56,48 +59,8 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return this.target.sourcePath;
   }
 
-  static Show({ build, workspace }: { build: BuildDAO; workspace: Workspace }): BuildRunner {
-    return NULL_BUILD_RUNNER;
-  }
-
-  static async Recall({ buildId, workspace }: { buildId: string; workspace?: Workspace }): Promise<BuildRunner> {
-    const build = await BuildDAO.FetchFromGuid(buildId);
-    if (!build) throw new Error(`Build with ID ${buildId} not found`);
-    return new BuildRunner({
-      build,
-      workspace,
-    });
-  }
-
   cancel(): void {
     this.abortController.abort();
-  }
-
-  static Create({
-    workspace,
-    label,
-    strategy,
-    build,
-  }: {
-    workspace: Workspace;
-    label: string;
-    strategy: BuildStrategy;
-    build?: BuildDAO;
-  }): BuildRunner {
-    const realBuild =
-      build ??
-      BuildDAO.CreateNew({
-        label,
-        workspaceId: workspace.guid,
-        disk: workspace.disk,
-        sourceDisk: workspace.disk,
-        strategy,
-      });
-
-    return new BuildRunner({
-      build: realBuild,
-      workspace,
-    });
   }
 
   get fileTree() {
@@ -155,8 +118,10 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  private createBuildGraph(): DataflowGraph<BuildContext> {
-    let graph = new DataflowGraph<BuildContext>()
+  protected abstract createBuildGraph(): DataflowGraph<any>;
+
+  protected createBaseBuildGraph<T extends BaseBuildContext>(): DataflowGraph<T> {
+    return new DataflowGraph<T>()
       .node("init", [], async () => {
         this.log("Initializing build...", "info");
         return {};
@@ -176,65 +141,14 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
         await this.copyAssets();
         return { assetsReady: true };
       });
-
-    if (this.strategy === "freeform") {
-      graph = graph.node("processTemplatesAndMarkdown", ["copyAssets"], async () => {
-        await this.processTemplatesAndMarkdown();
-        return { templatesProcessed: true, strategy: this.strategy };
-      });
-    } else if (this.strategy === "book") {
-      graph = graph
-        .node("loadPages", ["indexSourceFiles"], async () => {
-          const pages = await this.loadPagesFromDirectory(relPath("_pages"));
-          if (pages.length === 0) {
-            throw new Error("No pages found in _pages directory for book strategy");
-          }
-          return { pages };
-        })
-        .node("generateBook", ["loadPages", "copyAssets"], async (ctx: BuildContext & { pages: PageData[] }) => {
-          const tableOfContents = this.generateTableOfContents(ctx.pages);
-          const combinedContent = ctx.pages.map((page) => page.htmlContent).join('\n<div class="page-break"></div>\n');
-
-          const bookLayout = await this.loadTemplate(relPath("book.mustache"));
-          const globalCssPath = await this.getGlobalCssPath();
-          const bookHtml = mustache.render(bookLayout, {
-            tableOfContents,
-            content: combinedContent,
-            globalCssPath,
-          });
-
-          const indexPath = joinPath(this.outputPath, relPath("index.html"));
-          await this.writeFile(indexPath, await prettifyMime("text/html", bookHtml));
-          this.log("Book page generated", "info");
-          return { bookGenerated: true, strategy: this.strategy };
-        });
-    } else if (this.strategy === "blog") {
-      graph = graph
-        .node("loadPosts", ["indexSourceFiles"], async () => {
-          const posts = await this.loadPostsFromDirectory(relPath("posts"));
-          return { posts };
-        })
-        .node("generateBlogIndex", ["loadPosts", "copyAssets"], async (ctx) => {
-          await this.generateBlogIndex(ctx.posts);
-          return { blogIndexGenerated: true };
-        })
-        .node("generateBlogPosts", ["loadPosts", "copyAssets"], async (ctx) => {
-          await this.generateBlogPosts(ctx.posts);
-          return { blogPostsGenerated: true, strategy: this.strategy };
-        });
-    } else {
-      throw new TypeError(`Unknown build strategy: ${this.strategy}`);
-    }
-
-    return graph;
   }
 
-  private async ensureOutputDirectory(): Promise<void> {
+  protected async ensureOutputDirectory(): Promise<void> {
     this.log("Creating output directory...", "info");
     await this.outputDisk.mkdirRecursive(this.outputPath);
   }
 
-  private async copyAssets(): Promise<void> {
+  protected async copyAssets(): Promise<void> {
     this.log("Copying assets...", "info");
 
     // Copy all files except templates, markdown, and files in _ directories
@@ -247,7 +161,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  private async processTemplatesAndMarkdown(): Promise<void> {
+  protected async processTemplatesAndMarkdown(): Promise<void> {
     this.log("Processing templates and markdown...", "info");
 
     for (const node of this.sourceDisk.fileTree.iterator(
@@ -263,17 +177,17 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  shouldCopyAsset(node: TreeNode): boolean {
+  protected shouldCopyAsset(node: TreeNode): boolean {
     const path = relPath(node.path);
     return !path.startsWith("_") && !this.isTemplateFile(node) && !this.isMarkdownFile(node);
   }
 
-  shouldIgnoreFile(node: TreeNode): boolean {
+  protected shouldIgnoreFile(node: TreeNode): boolean {
     const path = relPath(node.path);
     return path.startsWith("_");
   }
 
-  isTemplateFile(node: TreeNode): boolean {
+  protected isTemplateFile(node: TreeNode): boolean {
     return isTemplateFile(node.path);
   }
 
@@ -284,11 +198,11 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   //   return null;
   // }
 
-  isMarkdownFile(node: TreeNode): boolean {
+  protected isMarkdownFile(node: TreeNode): boolean {
     return extname(node.path) === ".md";
   }
 
-  async copyFileToOutput(node: TreeNode): Promise<void> {
+  protected async copyFileToOutput(node: TreeNode): Promise<void> {
     const relativePath = relPath(node.path);
     const outputPath = joinPath(this.outputPath, relativePath);
 
@@ -301,7 +215,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     this.log(`Copied asset: ${relativePath}`, "info");
   }
 
-  async processTemplate(node: TreeNode): Promise<void> {
+  protected async processTemplate(node: TreeNode): Promise<void> {
     const content = String(await this.sourceDisk.readFile(node.path));
     const relativePath = relPath(node.path);
     const outputPath = this.getOutputPathForTemplate(relativePath);
@@ -334,7 +248,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     this.log(`Template processed: ${relativePath}`, "info");
   }
 
-  async processMarkdown(node: TreeNode): Promise<void> {
+  protected async processMarkdown(node: TreeNode): Promise<void> {
     const content = String(await this.sourceDisk.readFile(node.path));
     const { data: frontMatter, content: markdownContent } = matter(content);
     const layout = !frontMatter.layout
@@ -360,7 +274,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     this.log(`Markdown processed: ${relativePath}`, "info");
   }
 
-  async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
+  protected async loadPagesFromDirectory(dirPath: RelPath): Promise<PageData[]> {
     const pages: PageData[] = [];
     const fullDirPath = joinPath(this.sourcePath, dirPath);
 
@@ -386,12 +300,12 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return this.sortPagesByPrefix(pages);
   }
 
-  async loadPostsFromDirectory(dirPath: RelPath): Promise<PageData[]> {
+  protected async loadPostsFromDirectory(dirPath: RelPath): Promise<PageData[]> {
     const posts = await this.loadPagesFromDirectory(dirPath);
     return this.sortPostsByDate(posts);
   }
 
-  generateTableOfContents(pages: PageData[]): string {
+  protected generateTableOfContents(pages: PageData[]): string {
     const tocItems = pages.map((page) => {
       const title = page.frontMatter.title || basename(page.path).replace(".md", "");
       const slug = slugify(title, { lower: true, strict: true });
@@ -401,7 +315,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return `<ul class="table-of-contents">${tocItems.join("\n")}</ul>`;
   }
 
-  async generateBlogIndex(posts: PageData[]): Promise<void> {
+  protected async generateBlogIndex(posts: PageData[]): Promise<void> {
     const indexLayout = await this.loadTemplate(relPath("blog-index.mustache"));
 
     const postSummaries = posts.map((post) => ({
@@ -422,7 +336,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     this.log("Blog index generated", "info");
   }
 
-  async processLayout(post: PageData): Promise<{ layout: string; type: "text/x-mustache" | "text/x-ejs" }> {
+  protected async processLayout(post: PageData): Promise<{ layout: string; type: "text/x-mustache" | "text/x-ejs" }> {
     if (post.frontMatter.layout && !isTemplateFile(post.frontMatter.layout)) {
       throw new Error(`Unknown template type for layout: ${post.frontMatter.layout}`);
     }
@@ -435,7 +349,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
         }
       : { layout: DefaultPageLayout, type: "text/x-mustache" };
   }
-  async generateBlogPosts(posts: PageData[]): Promise<void> {
+  protected async generateBlogPosts(posts: PageData[]): Promise<void> {
     const postsOutputPath = joinPath(this.outputPath, relPath("posts"));
     await this.ensureDirectoryExists(postsOutputPath);
 
@@ -460,7 +374,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  async loadTemplate(templatePath: RelPath): Promise<string> {
+  protected async loadTemplate(templatePath: RelPath): Promise<string> {
     const fullPath = joinPath(this.sourcePath, templatePath);
     try {
       return String(await this.sourceDisk.readFile(fullPath));
@@ -469,7 +383,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  async getGlobalCssPath(): Promise<string | null> {
+  protected async getGlobalCssPath(): Promise<string | null> {
     try {
       const globalCssPath = joinPath(this.sourcePath, relPath("global.css"));
       await this.sourceDisk.readFile(globalCssPath);
@@ -479,7 +393,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     }
   }
 
-  async getAdditionalStylePaths(styleFiles: string[]): Promise<string[]> {
+  protected async getAdditionalStylePaths(styleFiles: string[]): Promise<string[]> {
     const validPaths: string[] = [];
 
     for (const styleFile of styleFiles) {
@@ -495,7 +409,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return validPaths;
   }
 
-  private getOutputPathForTemplate(relativePath: RelPath): AbsPath {
+  protected getOutputPathForTemplate(relativePath: RelPath): AbsPath {
     const outputRelativePath = relativePath
       .replace(".mustache", ".html")
       .replace(".ejs", ".html")
@@ -505,21 +419,21 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     return joinPath(this.outputPath, relPath(outputRelativePath));
   }
 
-  private getOutputPathForMarkdown(relativePath: RelPath): AbsPath {
+  protected getOutputPathForMarkdown(relativePath: RelPath): AbsPath {
     const outputRelativePath = relativePath.replace(".md", ".html");
     return joinPath(this.outputPath, relPath(outputRelativePath));
   }
 
-  private async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
+  protected async ensureDirectoryExists(dirPath: AbsPath): Promise<void> {
     await this.outputDisk.mkdirRecursive(dirPath);
   }
 
-  private async writeFile(filePath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
+  protected async writeFile(filePath: AbsPath, content: string | Uint8Array | Blob): Promise<AbsPath> {
     // Use newFileQuiet to handle filename incrementing without events
     return await this.outputDisk.newFileQuiet(filePath, content);
   }
 
-  private sortPagesByPrefix(pages: PageData[]): PageData[] {
+  protected sortPagesByPrefix(pages: PageData[]): PageData[] {
     return pages.sort((a, b) => {
       const aName = basename(a.path);
       const bName = basename(b.path);
@@ -538,7 +452,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
     });
   }
 
-  private sortPostsByDate(posts: PageData[]): PageData[] {
+  protected sortPostsByDate(posts: PageData[]): PageData[] {
     return posts.sort((a, b) => {
       const aDate = new Date(a.frontMatter.date || 0);
       const bDate = new Date(b.frontMatter.date || 0);
@@ -547,18 +461,7 @@ export class BuildRunner extends ObservableRunner<BuildDAO> implements Runner {
   }
 }
 
-class NullBuildRunner extends BuildRunner {
-  constructor() {
-    super({
-      build: NULL_BUILD,
-    });
-  }
-
-  async run(): Promise<BuildDAO> {
-    return this.target;
-  }
-}
-export const NULL_BUILD_RUNNER = new NullBuildRunner();
+// NullBuildRunner moved to BuildRunnerFactory
 
 const DefaultPageLayout = /* html */ `<!DOCTYPE html>
 <html lang="en">

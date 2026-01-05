@@ -1,5 +1,7 @@
 # 11ty (Eleventy) Build Runner Architecture
 
+**Security-First Implementation**: This build runner prioritizes security by restricting JavaScript execution. Only static JSON data files are supported - no JavaScript data files or front matter execution is allowed.
+
 ## 11ty Key Features to Implement
 
 ### 1. Data Cascade
@@ -29,7 +31,8 @@ Multiple template engines supported out of the box:
 Front matter can be in multiple formats:
 - **YAML** (default): Standard YAML syntax
 - **JSON**: `---json { "title": "My page title" } ---`
-- **JavaScript**: Arbitrary JavaScript with exported variables
+
+**Security Note**: JavaScript front matter is NOT supported for security reasons. Only static YAML and JSON are allowed.
 
 ### 5. Layout System
 - **Layout Inheritance**: Layouts can have their own layouts (chaining)
@@ -112,9 +115,9 @@ The implementation supports the standard Eleventy directory structure:
 
 ```
 project/
-├── _data/              # Global data files (JSON/JS)
+├── _data/              # Global data files (JSON only)
 │   ├── site.json      # Available as {{ site.* }}
-│   └── nav.js         # Available as {{ nav.* }}
+│   └── nav.json       # Available as {{ nav.* }}
 ├── _includes/         # Layouts, partials, macros
 │   ├── base.njk       # Base layout
 │   └── post.njk       # Post layout
@@ -131,9 +134,10 @@ project/
 ### Data Processing
 
 #### Global Data Loading
-- Scans `_data/` directory for `.json` and `.js` files
+- Scans `_data/` directory for `.json` files only
 - Makes data available globally as `{{ filename.* }}`
 - Gracefully handles missing `_data/` directory
+- **Security Note**: JavaScript data files (`.js`) are NOT supported for security reasons
 
 #### Directory Data Loading
 - Processes `directory.json` files (e.g., `posts.json` for `posts/` directory)
@@ -141,9 +145,10 @@ project/
 - Merges with global data in data cascade
 
 #### Front Matter Processing
-- Supports YAML, JSON, and JavaScript front matter
+- Supports YAML and JSON front matter only
 - Highest priority in data cascade
 - Merged with all other data sources
+- **Security Note**: JavaScript front matter is NOT supported for security reasons
 
 ### Template Processing
 
