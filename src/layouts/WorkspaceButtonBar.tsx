@@ -38,12 +38,14 @@ import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   BombIcon,
+  BookOpen,
   Check,
   ChevronDown,
   ChevronLeft,
   CirclePlus,
   Delete,
   GlassesIcon,
+  Info,
   KeyboardIcon,
   Moon,
   Palette,
@@ -409,6 +411,20 @@ export function WorkspaceButtonBar() {
                 to="#"
               />
             </KeyboardShortcutsModal>
+
+            <BigButton
+              variant={variant}
+              icon={<Info strokeWidth="1" stroke="current" className="w-full h-full" />}
+              title="about"
+              to="/about"
+            />
+
+            <BigButton
+              variant={variant}
+              icon={<BookOpen strokeWidth="1" stroke="current" className="w-full h-full" />}
+              title="docs"
+              to="/docs"
+            />
 
             <BigButton
               variant={variant}

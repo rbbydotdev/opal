@@ -54,4 +54,4 @@ npm run build
 - Polished Stone Effect adapted from [@jhey's codepen](https://codepen.io/jh3y/pen/OPJyVGb)
 - [Codemirror 6](https://codemirror.net/)
 - [shadcn](https://ui.shadcn.com/)
-
+- Themes from [tweakcn](https://tweakcn.com/)

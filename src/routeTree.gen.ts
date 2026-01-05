@@ -23,6 +23,8 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppThemesRouteImport } from './routes/_app/themes'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
+import { Route as AppDocsRouteImport } from './routes/_app/docs'
+import { Route as AppAboutRouteImport } from './routes/_app/about'
 import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
 import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
@@ -98,6 +100,16 @@ const AppNewWorkspaceRoute = AppNewWorkspaceRouteImport.update({
   path: '/newWorkspace',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDocsRoute = AppDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAboutRoute = AppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWorkspaceWorkspaceNameRoute =
   AppWorkspaceWorkspaceNameRouteImport.update({
     id: '/$workspaceName',
@@ -135,6 +147,8 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/sandbox': typeof SandboxRoute
+  '/about': typeof AppAboutRoute
+  '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -155,6 +169,8 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/sandbox': typeof SandboxRoute
+  '/about': typeof AppAboutRoute
+  '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
   '/themes': typeof AppThemesRoute
@@ -176,6 +192,8 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
   '/sandbox': typeof SandboxRoute
+  '/_app/about': typeof AppAboutRoute
+  '/_app/docs': typeof AppDocsRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/themes': typeof AppThemesRoute
@@ -198,6 +216,8 @@ export interface FileRouteTypes {
     | '/playground'
     | '/preview'
     | '/sandbox'
+    | '/about'
+    | '/docs'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -218,6 +238,8 @@ export interface FileRouteTypes {
     | '/playground'
     | '/preview'
     | '/sandbox'
+    | '/about'
+    | '/docs'
     | '/newWorkspace'
     | '/settings'
     | '/themes'
@@ -238,6 +260,8 @@ export interface FileRouteTypes {
     | '/playground'
     | '/preview'
     | '/sandbox'
+    | '/_app/about'
+    | '/_app/docs'
     | '/_app/newWorkspace'
     | '/_app/settings'
     | '/_app/themes'
@@ -365,6 +389,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNewWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/docs': {
+      id: '/_app/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof AppDocsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/about': {
+      id: '/_app/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AppAboutRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/workspace/$workspaceName': {
       id: '/_app/workspace/$workspaceName'
       path: '/$workspaceName'
@@ -435,6 +473,8 @@ const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAboutRoute: typeof AppAboutRoute
+  AppDocsRoute: typeof AppDocsRoute
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppThemesRoute: typeof AppThemesRoute
@@ -444,6 +484,8 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAboutRoute: AppAboutRoute,
+  AppDocsRoute: AppDocsRoute,
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppThemesRoute: AppThemesRoute,
