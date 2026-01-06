@@ -38,7 +38,7 @@ export function useEditorDisplayTree(editorRealmId = MainEditorRealmId) {
   useEffect(() => {
     const debouncedUpdateListener = debounce(({ editorState }: { editorState: lexical.EditorState }) => {
       editorState?.read(() => updateDisplayTree(lexicalToTreeView(lexical.$getRoot())));
-    }, 500);
+    }, 100); // Reduced debounce for faster tree updates after drag/drop
     return editor?.registerUpdateListener(debouncedUpdateListener);
   }, [editor, updateDisplayTree]);
   return { displayTree, flatTree };

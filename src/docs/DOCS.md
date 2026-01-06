@@ -39,6 +39,31 @@ All of this happens client‑side — no servers or backend dependencies unless 
 - **Tree view**: In rich text mode, visualize document hierarchy by headings with drag-and-drop section reordering (undo with `Cmd/Ctrl + Z` in editor).
 - Standard undo/redo: `Cmd/Ctrl + Z`, `Shift + Cmd/Ctrl + Z`.
 
+### Tree View Section (Rich Text Mode)
+
+The tree view section provides a hierarchical visualization of your markdown document structure when editing in rich text mode.
+
+#### Navigation & Interaction
+- **Menu button expansion**: Click the menu button (plus icon) next to sections to expand and view their nested content
+- **Text highlighting**: Click on any text item in the tree to highlight and navigate to that element in the editor
+- **Visual hierarchy**: Document structure is displayed with proper indentation and visual bullets indicating content type
+- **Auto-sync**: Tree view updates automatically as you edit the document, reflecting changes in real-time
+
+#### Content Visualization
+- **Headings/Sections**: Displayed with "h" + level number bullets (h1, h2, h3, etc.) and show child count when expanded
+- **Paragraphs**: Shown with paragraph (¶) bullets and preview text content
+- **Lists**: Display as "[list]" containers with individual list items shown with bullet points (∙)
+- **Images**: Show thumbnails alongside filenames for quick visual identification
+- **Links**: Marked with link (🔗) bullets for easy identification
+
+#### Smart Features
+- **Empty state handling**: Shows helpful labels like "markdown only", "no editor / no rich-text", or "empty" when not applicable
+- **Performance optimization**: Uses virtualized scrolling for large documents (max height: 30vh with thin scrollbar)
+- **Collapsible structure**: Expand/collapse sections to focus on specific parts of your document
+- **Context awareness**: Only available in rich text mode for markdown files with an active editor
+
+Note: Drag and drop functionality is currently disabled in the codebase but the tree view maintains the structural foundation for future implementation.
+
 ---
 
 ## Working With Images
@@ -250,6 +275,17 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 - **Real‑time sync:** all open browser tabs stay in sync via BroadcastChannel.
 - **Smart notifications:** toast system for user feedback on operations and errors.
 - **Focus mode:** keep your editor clean while still tracking project state.
+
+
+---
+## Themes & Appearance- 
+
+- Themes can be switched via the stone menu or spotlight command palette.
+- Themes are available in light dark and system modes.
+
+### Themes
+
+![](/themes.png)
 
 ---
 

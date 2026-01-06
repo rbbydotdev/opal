@@ -26,6 +26,9 @@ import { twMerge } from "tailwind-merge";
 import { useEditorDisplayTreeCtx } from "./DisplayTreeContext";
 const { $createParagraphNode } = lexical;
 
+// Developer flag to enable/disable drag and drop functionality
+const ENABLE_DND = false;
+
 type DragState = {
   isDragging: boolean;
   draggingNodeIds: string[];
@@ -465,11 +468,11 @@ export function SidebarTreeViewMenu() {
         getDOMNode={getDOMNode}
         parent={displayTree}
         className="max-h-[30vh] overflow-y-auto scrollbar-thin"
-        dragState={dragState}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        dragState={ENABLE_DND ? dragState : undefined}
+        onDragStart={ENABLE_DND ? handleDragStart : undefined}
+        onDragOver={ENABLE_DND ? handleDragOver : undefined}
+        onDragLeave={ENABLE_DND ? handleDragLeave : undefined}
+        onDrop={ENABLE_DND ? handleDrop : undefined}
       />
     </>
   );
@@ -542,19 +545,19 @@ function SidebarTreeViewMenuContent({
 
   // Get visual feedback classes
   const getDropIndicatorClasses = (nodeId: string): string => {
-    if (dragState?.dragOverNode === nodeId) {
-      switch (dragState.dropPosition) {
-        case "before":
-          return "border-t-2 border-blue-500";
-        case "after":
-          return "border-b-2 border-blue-500";
-        case "inside":
-          return "bg-blue-100 border-blue-500 border-dashed border-2";
-        default:
-          return "";
-      }
+    if (!dragState || dragState.dragOverNode !== nodeId) {
+      return "";
     }
-    return "";
+    switch (dragState.dropPosition) {
+      case "before":
+        return "border-t-2 border-ring";
+      case "after":
+        return "border-b-2 border-ring";
+      case "inside":
+        return "bg-ring/10 border-ring border-dashed border-2";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -566,7 +569,7 @@ function SidebarTreeViewMenuContent({
 
         return (
           <SidebarMenuItem key={displayNode.id}>
-            <div className={twMerge(isDragging && "opacity-50", isDropTarget && "bg-blue-50", dropIndicatorClasses)}>
+            <div className={twMerge(isDragging && "opacity-50", isDropTarget && "bg-ring/5", dropIndicatorClasses)}>
               {isContainer(displayNode) ? (
                 <Collapsible
                   open={isExpanded(displayNode.id)}
@@ -704,7 +707,7 @@ const TreeViewMenuParent = ({
         className,
         "w-full flex cursor-pointer select-none group/dir my-0",
         isDragging && "opacity-50 cursor-grabbing",
-        !!onDragStart && "cursor-grab hover:ring-2 hover:ring-dashed hover:ring-blue-400"
+        !!onDragStart && "cursor-grab hover:ring-2 hover:ring-dashed hover:ring-ring"
       )}
       style={{ paddingLeft: depth + "rem" }}
     >
@@ -755,7 +758,7 @@ const TreeViewTreeMenuChild = ({
           className,
           "group cursor-pointer my-0",
           isDragging && "opacity-50 cursor-grabbing",
-          !!onDragStart && "cursor-grab hover:ring-2 hover:ring-dashed hover:ring-blue-400"
+          !!onDragStart && "cursor-grab hover:ring-2 hover:ring-dashed hover:ring-ring"
         )}
         tabIndex={0}
         title={node.type}

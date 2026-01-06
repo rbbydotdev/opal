@@ -42,7 +42,7 @@ function convertLexicalContentNode(
   const truncatedText = displayText.length > maxLength ? `${displayText.slice(0, maxLength)}...` : displayText;
 
   const viewNode: LexicalTreeViewNode = {
-    id: generateUniqueId(),
+    id: `view-${lexicalNode.getKey()}`, // Use lexical key for stable IDs
     type: lexicalNode.getType(),
     depth: currentDepth,
     displayText: truncatedText,
@@ -122,10 +122,9 @@ export function lexicalToTreeView(
   maxHeadingLevel = 6,
   maxLength = 32
 ): LexicalTreeViewNode {
-  nodeIdCounter = 0;
 
   const rootTreeViewNode: LexicalTreeViewNode = {
-    id: generateUniqueId(),
+    id: `view-${lexicalRoot.getKey()}`, // Use lexical key for stable IDs
     type: "root",
     displayText: "[document]",
     depth: 0,
@@ -162,7 +161,7 @@ export function lexicalToTreeView(
       const newParent = stack[stack.length - 1]!;
 
       const sectionNode: LexicalTreeViewNode = {
-        id: generateUniqueId(),
+        id: `view-${headingNode.getKey()}`, // Use lexical key for stable IDs
         type: "section",
         depth: level,
         displayText: getLexicalTextContent(headingNode),

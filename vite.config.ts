@@ -33,7 +33,7 @@ export default defineConfig(({ command, mode }) => {
     // Disable Hot Module Replacement
     plugins: [
       vitePluginMdToHTML({
-        resolveImageLinks: true,
+        resolveImageLinks: false,
       }),
       react({
         babel: {

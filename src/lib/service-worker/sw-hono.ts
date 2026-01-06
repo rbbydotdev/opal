@@ -347,6 +347,15 @@ app.get("/:path{.*\\.css}", resolveWorkspaceFromQueryOrContext, async (c) => {
 });
 
 app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrContext, async (c) => {
+  //if referrer is from docs page then skip this route
+
+  //get referrer from hono request
+  const referrer = c.req.raw.referrer || c.req.header("referer") || "";
+  const refUrl = referrer ? new URL(referrer) : null;
+  if (refUrl?.pathname.startsWith("/docs")) {
+    // bypass this route and let the network handle the request
+    return fetch(c.req.raw);
+  }
   const workspaceName = c.get("workspaceName");
   const filename = c.req.param("file");
   const url = new SuperUrl(c.req.url);
