@@ -364,7 +364,7 @@ app.get("/:file{.+\\.(jpg|jpeg|png|webp|svg)}", resolveWorkspaceFromQueryOrConte
   console.log(`Handling image request for: ${filename}`);
 
   const isSVG = filename.endsWith(".svg");
-  const isThumbnail = Thumb.isThumbURL(url);
+  const isThumbnail = Thumb.isThumbURL(c.req.url);
 
   // ---------- Cache Lookup ----------
   let cache: Cache | undefined;
