@@ -1,5 +1,6 @@
 import { Workspace } from "@/workspace/Workspace";
 import { Context } from "hono";
+import { logger } from "@/lib/service-worker/logger";
 
 // Workspace extractors - pure functions for different sources
 const extractWorkspaceFromUrl = (url: string): string | null => {
@@ -47,14 +48,21 @@ const workspaceValidator = (
 // Individual extractor functions for composition (only used by image/CSS routes)
 const extractFromSearchParams = (c: Context) => {
   const url = new URL(c.req.url);
-  return url.searchParams.get("workspaceName");
+  const result = url.searchParams.get("workspaceName");
+  logger.log(`[WORKSPACE] Extracting from search params: ${c.req.url} -> ${result}`);
+  return result;
 };
-const extractFromUrlPath = (c: Context) => extractWorkspaceFromUrl(c.req.url);
+const extractFromUrlPath = (c: Context) => {
+  const result = extractWorkspaceFromUrl(c.req.url);
+  logger.log(`[WORKSPACE] Extracting from URL path: ${c.req.url} -> ${result}`);
+  return result;
+};
 const extractFromReferrer = (c: Context) => {
   // In service worker, referrer comes from the request object, not headers
   const referrer = c.req.raw.referrer;
-  console.log(`Extracting from referrer: ${referrer}`);
-  return extractWorkspaceFromReferrer(referrer);
+  const result = extractWorkspaceFromReferrer(referrer);
+  logger.log(`[WORKSPACE] Extracting from referrer: ${referrer} -> ${result}`);
+  return result;
 };
 export const resolveWorkspaceFromQueryOrContext = workspaceValidator(
   { required: true },

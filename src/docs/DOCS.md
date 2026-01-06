@@ -1,7 +1,26 @@
 # Opal
 
-Opal is a lightweight, browser‑based markdown editor and static site builder designed for developers who care about speed, transparency, and ownership of their content.  
-It’s local‑first, powered by modern browser storage and service workers — fast, offline‑friendly, and Git‑aware.
+Opal is a lightweight, browser‑based markdown editor and static site builder designed for developers who care about speed, transparency, and ownership of their content.
+It's local‑first, powered by modern browser storage and service workers — fast, offline‑friendly, and Git‑aware.
+
+## Key Features
+
+### One-Click Static Site Publishing
+Deploy instantly to **Netlify**, **Cloudflare Pages**, **AWS S3**, **GitHub Pages**, or **Vercel** using OAuth or API key authentication. No complex build pipelines or server configurations required.
+
+### Runs Entirely in Your Browser
+**Zero backend dependencies** — everything lives in your browser. Projects can be stored purely in browser storage (IndexedDB) or mounted to local file directories. No server required except optional CORS proxies (which you can self-host).
+
+### Flexible File System Options
+- **Browser storage**: Fast IndexedDB persistence that survives browser sessions
+- **Local directory mounting**: Direct access to your file system with real disk persistence
+- **Hybrid approach**: Mix and match storage types per workspace
+
+### Offline-First Architecture
+Service worker-powered caching and processing means Opal works completely offline. Edit, build, and preview without an internet connection.
+
+### Complete Data Ownership
+Your content stays yours. Self-hostable, open source, and designed to work years into the future with no vendor lock-in.
 
 ---
 
@@ -293,7 +312,7 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 ### GitHub Template Sharing
 - **Easy template sharing**: Import templates directly from public GitHub repositories.
-- **URL format**: `opaleditor.com/import/gh/<owner>/<reponame>/<optional: branch>`
+- **URL format**: `opaledx.com/import/gh/<owner>/<reponame>/<optional: branch>`
   - Default branch used if not specified, falling back to "main".
 - **Manifest required**: Root-level manifest file: `{ version: 1, type: "template", navigate: "<file to navigate to when import finishes>" }`.
 - **Import process**: Manifest fetched first, user confirms download, creates IndexedDB workspace automatically.

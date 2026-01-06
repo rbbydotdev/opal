@@ -1,4 +1,3 @@
-import { initializeGlobalLogger } from "@/lib/initializeGlobalLogger";
 import "@/polyfill/Promise";
 import { RouterProvider, createRouter, redirect } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -19,8 +18,6 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
-
-(globalThis.console as any) = initializeGlobalLogger(console);
 
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/service-worker/logger";
 import { ClientDb } from "@/data/db/DBInstance";
 import { HistoryDB } from "@/editors/history/HistoryDB";
 import { NotFoundError } from "@/lib/errors/errors";
@@ -12,21 +13,21 @@ export async function handleMarkdownRender(
   documentId: string,
   editId: number
 ) {
-  console.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
+  logger.log(`Handling markdown render for workspace: ${workspaceName}, document: ${documentId}, edit: ${editId}`);
   const workspace = await SWWStore.tryWorkspace(workspaceName).then((w) => w.initNoListen());
   if (!workspace) throw new NotFoundError("Workspace not found");
 
   const cache = await Workspace.newCache(workspaceName).getCache();
   const cached = await cache.match(request); //c.req.raw
   if (cached) {
-    console.log(`Cache hit for markdown render: ${editId}`);
+    logger.log(`Cache hit for markdown render: ${editId}`);
     return cached;
   }
 
   // Get edit from database to check for existing preview blob
   const edit = await ClientDb.historyDocs.get(editId);
   if (!edit) {
-    console.error(`Edit not found: ${editId}`);
+    logger.error(`Edit not found: ${editId}`);
     throw new NotFoundError("Edit not found");
   }
 
@@ -34,10 +35,10 @@ export async function handleMarkdownRender(
 
   // Check if edit already has preview blob
   if (edit.preview) {
-    console.log(`Using existing preview blob for edit: ${editId}`);
+    logger.log(`Using existing preview blob for edit: ${editId}`);
     htmlContent = await edit.preview.text();
   } else {
-    console.log(`Generating new HTML for edit: ${editId}`);
+    logger.log(`Generating new HTML for edit: ${editId}`);
 
     // Create HistoryDB instance and reconstruct document
     const historyDB = new HistoryDB();

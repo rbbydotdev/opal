@@ -1,3 +1,4 @@
+import { logger } from "@/lib/service-worker/logger";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
@@ -21,7 +22,7 @@ export async function handleImageRequest(
     throw new NotFoundError(`Workspace not found: ${workspaceName}`);
   }
 
-  console.log(`Using workspace: ${workspace.name} for image request: ${pathname}`);
+  logger.log(`Using workspace: ${workspace.name} for image request: ${pathname}`);
 
   // Determine if this is a thumbnail request if not provided
   const isThumb = isThumbnail ?? pathname.includes("?thumb=");

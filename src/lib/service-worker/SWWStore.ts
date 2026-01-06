@@ -1,10 +1,11 @@
+import { logger } from "@/lib/service-worker/logger";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { Workspace } from "@/workspace/Workspace";
 
 //shared singleton for Service Worker to manage/cache workspaces
 export const SWWStore = new (class SwWorkspace {
   constructor() {
-    console.log("SWWStore initialized");
+    logger.log("SWWStore initialized");
   }
   private workspaces = new Map<string, Promise<Workspace>>();
 

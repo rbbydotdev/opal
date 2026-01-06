@@ -1,3 +1,4 @@
+import { logger } from "@/lib/service-worker/logger";
 import { coerceUint8Array } from "@/lib/coerceUint8Array";
 import { errF, isError, NotFoundError } from "@/lib/errors/errors";
 import { getMimeType } from "@/lib/mimeType";
@@ -26,7 +27,7 @@ export async function handleStyleSheetRequest(pathname: string, workspaceName: s
     if (isError(e, NotFoundError)) {
       return new Response("Error", { status: 404 });
     }
-    console.error(errF`Error in service worker: ${e}`.toString());
+    logger.error(errF`Error in service worker: ${e}`.toString());
     return new Response("Error", { status: 500 });
   }
 }
