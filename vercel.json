@@ -15,6 +15,10 @@
       "destination": "/$1.js"
     },
     {
+      "source": "/docs/(.*)",
+      "destination": "/index.html"
+    },
+    {
       "source": "/workspace/(.*)",
       "destination": "/index.html"
     },
