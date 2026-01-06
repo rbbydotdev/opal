@@ -1,4 +1,7 @@
+import { inorderWalk } from "@/components/filetree/inorderWalk";
+import { isListContainer, isListItem, isParent, isSection } from "@/components/filetree/isParent";
 import { EmptySidebarLabel } from "@/components/sidebar/EmptySidebarLabel";
+import { LexicalTreeDragPreview } from "@/components/sidebar/tree-view-section/LexicalTreeDragPreview";
 import {
   isContainer,
   isLeaf,
@@ -11,30 +14,27 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { MainEditorRealmId } from "@/editors/EditorConst";
 import { highlightMdxElement } from "@/editors/markdown/highlightMdxElement";
 import { scrollToEditorElement } from "@/editors/scrollToEditorElement";
+import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
 import { useTreeExpanderContext } from "@/features/tree-expander/TreeExpanderContext";
 import { useCurrentFilepath, useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { $createListItemNode, $createListNode, $isListItemNode, $isListNode, ListType } from "@lexical/list";
 import { lexical, rootEditor$, useRemoteMDXEditorRealm } from "@mdxeditor/editor";
-const { $createParagraphNode } = lexical;
 import { Slot } from "@radix-ui/react-slot";
 import { Dot, PlusIcon } from "lucide-react";
+import React, { useCallback, useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { inorderWalk } from "@/components/filetree/inorderWalk";
-import { isParent, isListContainer, isListItem, isSection } from "@/components/filetree/isParent";
-import { LexicalTreeDragPreview } from "@/components/sidebar/tree-view-section/LexicalTreeDragPreview";
-import { useDragImage } from "@/features/filetree-drag-and-drop/useDragImage";
-import React, { useState, useCallback } from "react";
 import { useEditorDisplayTreeCtx } from "./DisplayTreeContext";
+const { $createParagraphNode } = lexical;
 
 type DragState = {
   isDragging: boolean;
   draggingNodeIds: string[];
   draggingNodes: LexicalTreeViewNode[];
   dragOverNode: string | null;
-  dropPosition: 'before' | 'after' | 'inside' | null;
+  dropPosition: "before" | "after" | "inside" | null;
 };
 
-type DropPosition = 'before' | 'after' | 'inside';
+type DropPosition = "before" | "after" | "inside";
 
 export function SidebarTreeViewMenu() {
   const { currentWorkspace } = useWorkspaceContext();
@@ -62,37 +62,36 @@ export function SidebarTreeViewMenu() {
     const y = event.clientY - rect.top;
     const height = rect.height;
 
-    if (y < height * 0.25) return 'before';
-    if (y > height * 0.75) return 'after';
-    return 'inside';
+    if (y < height * 0.25) return "before";
+    if (y > height * 0.75) return "after";
+    return "inside";
   }, []);
 
   // Validate drop position based on hierarchy rules
-  const getHierarchyAwareDropPosition = useCallback((
-    sourceNode: LexicalTreeViewNode,
-    targetNode: LexicalTreeViewNode,
-    position: DropPosition
-  ): DropPosition | null => {
-    // Prevent dropping node onto itself or its children
-    if (sourceNode.lexicalNodeId === targetNode.lexicalNodeId) return null;
+  const getHierarchyAwareDropPosition = useCallback(
+    (sourceNode: LexicalTreeViewNode, targetNode: LexicalTreeViewNode, position: DropPosition): DropPosition | null => {
+      // Prevent dropping node onto itself or its children
+      if (sourceNode.lexicalNodeId === targetNode.lexicalNodeId) return null;
 
-    // Section/heading rules
-    if (isSection(targetNode)) {
-      if (isSection(sourceNode) && position === 'inside') {
-        // Only allow deeper sections inside
-        return (sourceNode.depth || 0) > (targetNode.depth || 0) ? 'inside' : null;
+      // Section/heading rules
+      if (isSection(targetNode)) {
+        if (isSection(sourceNode) && position === "inside") {
+          // Only allow deeper sections inside
+          return (sourceNode.depth || 0) > (targetNode.depth || 0) ? "inside" : null;
+        }
+        return position; // Allow before/after for sections
       }
-      return position; // Allow before/after for sections
-    }
 
-    // List-specific rules
-    if (isListContainer(targetNode) || isListItem(targetNode)) {
-      if (position === 'inside' && isListContainer(targetNode)) return 'inside';
-      if (isListItem(sourceNode) || isListContainer(sourceNode)) return position;
-    }
+      // List-specific rules
+      if (isListContainer(targetNode) || isListItem(targetNode)) {
+        if (position === "inside" && isListContainer(targetNode)) return "inside";
+        if (isListItem(sourceNode) || isListContainer(sourceNode)) return position;
+      }
 
-    return position;
-  }, []);
+      return position;
+    },
+    []
+  );
 
   // Helper to find node by id in the tree
   const findNodeById = useCallback((nodeId: string, tree: LexicalTreeViewNode): LexicalTreeViewNode | null => {
@@ -107,68 +106,85 @@ export function SidebarTreeViewMenu() {
   }, []);
 
   // Handle drag start
-  const handleDragStart = useCallback((event: React.DragEvent, node: LexicalTreeViewNode) => {
-    const nodeIds: string[] = [];
-    if (isParent(node)) {
-      inorderWalk(node, (n) => nodeIds.push(n.lexicalNodeId));
-    } else {
-      nodeIds.push(node.lexicalNodeId);
-    }
-    const draggingNodes = [node]; // For simplicity, just use the main node for preview
+  const handleDragStart = useCallback(
+    (event: React.DragEvent, node: LexicalTreeViewNode) => {
+      const nodeIds: string[] = [];
+      if (isParent(node)) {
+        inorderWalk(node, (n) => nodeIds.push(n.lexicalNodeId));
+      } else {
+        nodeIds.push(node.lexicalNodeId);
+      }
+      const draggingNodes = [node]; // For simplicity, just use the main node for preview
 
-    setDragState({
-      isDragging: true,
-      draggingNodeIds: nodeIds,
-      draggingNodes: draggingNodes,
-      dragOverNode: null,
-      dropPosition: null,
-    });
+      setDragState({
+        isDragging: true,
+        draggingNodeIds: nodeIds,
+        draggingNodes: draggingNodes,
+        dragOverNode: null,
+        dropPosition: null,
+      });
 
-    // Set drag preview
-    setReactDragImage(event, <LexicalTreeDragPreview nodes={draggingNodes} />);
+      // Set drag preview
+      setReactDragImage(event, <LexicalTreeDragPreview nodes={draggingNodes} />);
 
-    // Prepare data transfer (use text/plain like the old version)
-    try {
-      event.dataTransfer.setData('text/plain', nodeIds.join(','));
-      event.dataTransfer.effectAllowed = 'move';
-    } catch (e) {
-      console.error('Error setting drag data:', e);
-    }
+      // Prepare data transfer (use text/plain like the old version)
+      try {
+        event.dataTransfer.setData("text/plain", nodeIds.join(","));
+        event.dataTransfer.effectAllowed = "move";
+      } catch (e) {
+        console.error("Error setting drag data:", e);
+      }
 
-    // Cleanup on drag end
-    window.addEventListener('dragend', () => {
-      setDragState(prev => ({ ...prev, isDragging: false, draggingNodeIds: [], draggingNodes: [], dragOverNode: null, dropPosition: null }));
-    }, { once: true });
-  }, [setReactDragImage]);
+      // Cleanup on drag end
+      window.addEventListener(
+        "dragend",
+        () => {
+          setDragState((prev) => ({
+            ...prev,
+            isDragging: false,
+            draggingNodeIds: [],
+            draggingNodes: [],
+            dragOverNode: null,
+            dropPosition: null,
+          }));
+        },
+        { once: true }
+      );
+    },
+    [setReactDragImage]
+  );
 
   // Handle drag over
-  const handleDragOver = useCallback((event: React.DragEvent, node: LexicalTreeViewNode) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const handleDragOver = useCallback(
+    (event: React.DragEvent, node: LexicalTreeViewNode) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    const element = event.currentTarget as HTMLElement;
-    const position = getDropPosition(event, element);
-    const validPosition = getHierarchyAwareDropPosition(
-      { lexicalNodeId: dragState.draggingNodeIds[0] || '', type: 'unknown' } as LexicalTreeViewNode,
-      node,
-      position
-    );
+      const element = event.currentTarget as HTMLElement;
+      const position = getDropPosition(event, element);
+      const validPosition = getHierarchyAwareDropPosition(
+        { lexicalNodeId: dragState.draggingNodeIds[0] || "", type: "unknown" } as LexicalTreeViewNode,
+        node,
+        position
+      );
 
-    if (validPosition) {
-      event.dataTransfer.dropEffect = 'move';
-      setDragState(prev => ({
-        ...prev,
-        dragOverNode: node.lexicalNodeId,
-        dropPosition: validPosition,
-      }));
-    } else {
-      event.dataTransfer.dropEffect = 'none';
-    }
-  }, [dragState.draggingNodeIds, getDropPosition, getHierarchyAwareDropPosition]);
+      if (validPosition) {
+        event.dataTransfer.dropEffect = "move";
+        setDragState((prev) => ({
+          ...prev,
+          dragOverNode: node.lexicalNodeId,
+          dropPosition: validPosition,
+        }));
+      } else {
+        event.dataTransfer.dropEffect = "none";
+      }
+    },
+    [dragState.draggingNodeIds, getDropPosition, getHierarchyAwareDropPosition]
+  );
 
   // Handle drag leave
   const handleDragLeave = useCallback(() => {
-    setDragState(prev => ({ ...prev, dragOverNode: null, dropPosition: null }));
+    setDragState((prev) => ({ ...prev, dragOverNode: null, dropPosition: null }));
   }, []);
 
   // Helper functions for list operations
@@ -209,199 +225,204 @@ export function SidebarTreeViewMenu() {
     return true;
   }, []);
 
-  const wrapNodeIfNeeded = useCallback((draggedNode: lexical.LexicalNode, targetNode: lexical.LexicalNode): lexical.LexicalNode => {
-    const draggedType = draggedNode.getType();
-    const needsParagraphWrapper = draggedType === "image";
+  const wrapNodeIfNeeded = useCallback(
+    (draggedNode: lexical.LexicalNode, targetNode: lexical.LexicalNode): lexical.LexicalNode => {
+      const draggedType = draggedNode.getType();
+      const needsParagraphWrapper = draggedType === "image";
 
-    if (needsParagraphWrapper) {
-      const paragraphNode = $createParagraphNode();
-      paragraphNode.append(draggedNode);
-      return paragraphNode;
-    }
-
-    return draggedNode;
-  }, []);
-
-  const handleListAwareDrop = useCallback((
-    draggedNode: lexical.LexicalNode,
-    targetNode: lexical.LexicalNode,
-    position: DropPosition
-  ): boolean => {
-    const isDraggedList = $isListNode(draggedNode);
-    const isDraggedListItem = $isListItemNode(draggedNode);
-    const isTargetList = $isListNode(targetNode);
-    const isTargetListItem = $isListItemNode(targetNode);
-
-    // Case 1: List → List = Merge lists
-    if (isDraggedList && isTargetList) {
-      return mergeListIntoList(draggedNode, targetNode);
-    }
-
-    // Case 2: List → List Item = Find parent list and merge
-    if (isDraggedList && isTargetListItem) {
-      const targetParentList = findMergeableParent(targetNode);
-      if (targetParentList && $isListNode(targetParentList)) {
-        return mergeListIntoList(draggedNode, targetParentList);
+      if (needsParagraphWrapper) {
+        const paragraphNode = $createParagraphNode();
+        paragraphNode.append(draggedNode);
+        return paragraphNode;
       }
-      return false;
-    }
 
-    // Case 3: List Item → List = Move item to list
-    if (isDraggedListItem && isTargetList) {
-      draggedNode.remove();
-      if (position === "inside") {
-        targetNode.append(draggedNode);
-      } else {
-        targetNode.append(draggedNode);
+      return draggedNode;
+    },
+    []
+  );
+
+  const handleListAwareDrop = useCallback(
+    (draggedNode: lexical.LexicalNode, targetNode: lexical.LexicalNode, position: DropPosition): boolean => {
+      const isDraggedList = $isListNode(draggedNode);
+      const isDraggedListItem = $isListItemNode(draggedNode);
+      const isTargetList = $isListNode(targetNode);
+      const isTargetListItem = $isListItemNode(targetNode);
+
+      // Case 1: List → List = Merge lists
+      if (isDraggedList && isTargetList) {
+        return mergeListIntoList(draggedNode, targetNode);
       }
-      return true;
-    }
 
-    // Case 4: List Item → List Item = Move to parent list with position
-    if (isDraggedListItem && isTargetListItem) {
-      const targetParentList = findMergeableParent(targetNode);
-      if (targetParentList && $isListNode(targetParentList)) {
+      // Case 2: List → List Item = Find parent list and merge
+      if (isDraggedList && isTargetListItem) {
+        const targetParentList = findMergeableParent(targetNode);
+        if (targetParentList && $isListNode(targetParentList)) {
+          return mergeListIntoList(draggedNode, targetParentList);
+        }
+        return false;
+      }
+
+      // Case 3: List Item → List = Move item to list
+      if (isDraggedListItem && isTargetList) {
+        draggedNode.remove();
+        if (position === "inside") {
+          targetNode.append(draggedNode);
+        } else {
+          targetNode.append(draggedNode);
+        }
+        return true;
+      }
+
+      // Case 4: List Item → List Item = Move to parent list with position
+      if (isDraggedListItem && isTargetListItem) {
+        const targetParentList = findMergeableParent(targetNode);
+        if (targetParentList && $isListNode(targetParentList)) {
+          draggedNode.remove();
+          if (position === "before") {
+            targetNode.insertBefore(draggedNode);
+          } else if (position === "after") {
+            targetNode.insertAfter(draggedNode);
+          } else {
+            // inside: create nested list under target item
+            const nestedListType = getListTypeSecure(draggedNode) || "bullet";
+            const nestedList = $createListNode(nestedListType as ListType);
+            nestedList.append(draggedNode);
+            targetNode.append(nestedList);
+          }
+          return true;
+        }
+        return false;
+      }
+
+      // Case 5: List → Non-List = Place list adjacent
+      if (isDraggedList && !isTargetList && !isTargetListItem) {
         draggedNode.remove();
         if (position === "before") {
           targetNode.insertBefore(draggedNode);
         } else if (position === "after") {
           targetNode.insertAfter(draggedNode);
         } else {
-          // inside: create nested list under target item
-          const nestedListType = getListTypeSecure(draggedNode) || "bullet";
-          const nestedList = $createListNode(nestedListType as ListType);
-          nestedList.append(draggedNode);
-          targetNode.append(nestedList);
+          if (lexical.$isElementNode(targetNode)) {
+            targetNode.append(draggedNode);
+          } else {
+            targetNode.insertAfter(draggedNode);
+          }
         }
         return true;
       }
-      return false;
-    }
 
-    // Case 5: List → Non-List = Place list adjacent
-    if (isDraggedList && !isTargetList && !isTargetListItem) {
-      draggedNode.remove();
-      if (position === "before") {
-        targetNode.insertBefore(draggedNode);
-      } else if (position === "after") {
-        targetNode.insertAfter(draggedNode);
-      } else {
-        if (lexical.$isElementNode(targetNode)) {
-          targetNode.append(draggedNode);
-        } else {
-          targetNode.insertAfter(draggedNode);
-        }
-      }
-      return true;
-    }
+      // Case 6: List Item → Non-List = Create new list
+      if (isDraggedListItem && !isTargetList && !isTargetListItem) {
+        const listType = getListTypeSecure(draggedNode) || "bullet";
+        const newList = $createListNode(listType as ListType);
+        draggedNode.remove();
+        newList.append(draggedNode);
 
-    // Case 6: List Item → Non-List = Create new list
-    if (isDraggedListItem && !isTargetList && !isTargetListItem) {
-      const listType = getListTypeSecure(draggedNode) || "bullet";
-      const newList = $createListNode(listType as ListType);
-      draggedNode.remove();
-      newList.append(draggedNode);
-
-      if (position === "before") {
-        targetNode.insertBefore(newList);
-      } else if (position === "after") {
-        targetNode.insertAfter(newList);
-      } else {
-        if (lexical.$isElementNode(targetNode)) {
-          targetNode.append(newList);
-        } else {
+        if (position === "before") {
+          targetNode.insertBefore(newList);
+        } else if (position === "after") {
           targetNode.insertAfter(newList);
-        }
-      }
-      return true;
-    }
-
-    // Case 7: Non-List → List context = Wrap in list item
-    if (!isDraggedList && !isDraggedListItem && (isTargetList || isTargetListItem)) {
-      const newListItem = $createListItemNode();
-      const wrappedNode = wrapNodeIfNeeded(draggedNode, targetNode);
-
-      draggedNode.remove();
-      newListItem.append(wrappedNode);
-
-      if (isTargetList) {
-        targetNode.append(newListItem);
-      } else if (isTargetListItem) {
-        const targetParentList = findMergeableParent(targetNode);
-        if (targetParentList && $isListNode(targetParentList)) {
-          if (position === "before") {
-            targetNode.insertBefore(newListItem);
-          } else if (position === "after") {
-            targetNode.insertAfter(newListItem);
+        } else {
+          if (lexical.$isElementNode(targetNode)) {
+            targetNode.append(newList);
           } else {
-            targetNode.append(newListItem);
+            targetNode.insertAfter(newList);
           }
-          return true;
         }
-        return false;
+        return true;
       }
-      return true;
-    }
 
-    // Case 8: Non-List → Non-List = Original logic
-    if (!isDraggedList && !isDraggedListItem && !isTargetList && !isTargetListItem) {
-      draggedNode.remove();
-      const nodeToInsert = wrapNodeIfNeeded(draggedNode, targetNode);
+      // Case 7: Non-List → List context = Wrap in list item
+      if (!isDraggedList && !isDraggedListItem && (isTargetList || isTargetListItem)) {
+        const newListItem = $createListItemNode();
+        const wrappedNode = wrapNodeIfNeeded(draggedNode, targetNode);
 
-      if (position === "inside") {
-        if (lexical.$isElementNode(targetNode)) {
-          targetNode.append(nodeToInsert);
+        draggedNode.remove();
+        newListItem.append(wrappedNode);
+
+        if (isTargetList) {
+          targetNode.append(newListItem);
+        } else if (isTargetListItem) {
+          const targetParentList = findMergeableParent(targetNode);
+          if (targetParentList && $isListNode(targetParentList)) {
+            if (position === "before") {
+              targetNode.insertBefore(newListItem);
+            } else if (position === "after") {
+              targetNode.insertAfter(newListItem);
+            } else {
+              targetNode.append(newListItem);
+            }
+            return true;
+          }
+          return false;
+        }
+        return true;
+      }
+
+      // Case 8: Non-List → Non-List = Original logic
+      if (!isDraggedList && !isDraggedListItem && !isTargetList && !isTargetListItem) {
+        draggedNode.remove();
+        const nodeToInsert = wrapNodeIfNeeded(draggedNode, targetNode);
+
+        if (position === "inside") {
+          if (lexical.$isElementNode(targetNode)) {
+            targetNode.append(nodeToInsert);
+          } else {
+            targetNode.insertAfter(nodeToInsert);
+          }
+        } else if (position === "before") {
+          targetNode.insertBefore(nodeToInsert);
         } else {
           targetNode.insertAfter(nodeToInsert);
         }
-      } else if (position === "before") {
-        targetNode.insertBefore(nodeToInsert);
-      } else {
-        targetNode.insertAfter(nodeToInsert);
+        return true;
       }
-      return true;
-    }
 
-    console.warn("Unsupported list operation");
-    return false;
-  }, [getListTypeSecure, findMergeableParent, mergeListIntoList, wrapNodeIfNeeded]);
+      console.warn("Unsupported list operation");
+      return false;
+    },
+    [getListTypeSecure, findMergeableParent, mergeListIntoList, wrapNodeIfNeeded]
+  );
 
   // Handle drop
-  const handleDrop = useCallback(async (event: React.DragEvent, targetNode: LexicalTreeViewNode) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const handleDrop = useCallback(
+    async (event: React.DragEvent, targetNode: LexicalTreeViewNode) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    const nodeIdsData = event.dataTransfer.getData('text/plain');
-    if (!nodeIdsData || !dragState.dropPosition || !editor) return;
+      const nodeIdsData = event.dataTransfer.getData("text/plain");
+      if (!nodeIdsData || !dragState.dropPosition || !editor) return;
 
-    try {
-      const sourceNodeIds = nodeIdsData.split(',').filter(Boolean);
+      try {
+        const sourceNodeIds = nodeIdsData.split(",").filter(Boolean);
 
-      editor.update(() => {
-        for (const draggedNodeId of sourceNodeIds) {
-          const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
-          const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
+        editor.update(() => {
+          for (const draggedNodeId of sourceNodeIds) {
+            const draggedLexicalNode = lexical.$getNodeByKey(draggedNodeId);
+            const targetLexicalNode = lexical.$getNodeByKey(targetNode.lexicalNodeId);
 
-          if (draggedLexicalNode && targetLexicalNode) {
-            const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, dragState.dropPosition!);
-            if (!success) {
-              console.warn('Drop operation cancelled due to list structure constraints');
+            if (draggedLexicalNode && targetLexicalNode) {
+              const success = handleListAwareDrop(draggedLexicalNode, targetLexicalNode, dragState.dropPosition!);
+              if (!success) {
+                console.warn("Drop operation cancelled due to list structure constraints");
+              }
             }
           }
-        }
-      });
-    } catch (e) {
-      console.error('Error handling drop:', e);
-    } finally {
-      setDragState({
-        isDragging: false,
-        draggingNodeIds: [],
-        draggingNodes: [],
-        dragOverNode: null,
-        dropPosition: null,
-      });
-    }
-  }, [dragState.dropPosition, handleListAwareDrop, editor]);
+        });
+      } catch (e) {
+        console.error("Error handling drop:", e);
+      } finally {
+        setDragState({
+          isDragging: false,
+          draggingNodeIds: [],
+          draggingNodes: [],
+          dragOverNode: null,
+          dropPosition: null,
+        });
+      }
+    },
+    [dragState.dropPosition, handleListAwareDrop, editor]
+  );
 
   if (!currentWorkspace) {
     return (
@@ -523,17 +544,17 @@ function SidebarTreeViewMenuContent({
   const getDropIndicatorClasses = (nodeId: string): string => {
     if (dragState?.dragOverNode === nodeId) {
       switch (dragState.dropPosition) {
-        case 'before':
-          return 'border-t-2 border-blue-500';
-        case 'after':
-          return 'border-b-2 border-blue-500';
-        case 'inside':
-          return 'bg-blue-100 border-blue-500 border-dashed border-2';
+        case "before":
+          return "border-t-2 border-blue-500";
+        case "after":
+          return "border-b-2 border-blue-500";
+        case "inside":
+          return "bg-blue-100 border-blue-500 border-dashed border-2";
         default:
-          return '';
+          return "";
       }
     }
-    return '';
+    return "";
   };
 
   return (
@@ -545,11 +566,7 @@ function SidebarTreeViewMenuContent({
 
         return (
           <SidebarMenuItem key={displayNode.id}>
-            <div className={twMerge(
-              isDragging && "opacity-50",
-              isDropTarget && "bg-blue-50",
-              dropIndicatorClasses
-            )}>
+            <div className={twMerge(isDragging && "opacity-50", isDropTarget && "bg-blue-50", dropIndicatorClasses)}>
               {isContainer(displayNode) ? (
                 <Collapsible
                   open={isExpanded(displayNode.id)}
@@ -570,14 +587,12 @@ function SidebarTreeViewMenuContent({
                           isDragging={isDragging}
                         >
                           <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
-                            <span className="hover:underline flex" title={displayNode.type}>
-                              {displayNode.displayText ?? displayNode.type}
+                            <div className="hover:underline flex gap-2" title={displayNode.type}>
+                              <div className="w-20 truncate">{displayNode.displayText ?? displayNode.type}</div>
                               {displayNode.children && displayNode.children.length > 0 ? (
-                                <span className="text-xs ml-1 text-muted-foreground min-w-0 truncate">
-                                  ({displayNode.children.length})
-                                </span>
+                                <div className="text-xs text-muted-foreground">({displayNode.children.length})</div>
                               ) : null}
-                            </span>
+                            </div>
                           </HighlightNodeSelector>
                         </TreeViewMenuParent>
                       </SidebarMenuButton>

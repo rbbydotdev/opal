@@ -1,4 +1,5 @@
 /// <reference lib="dom" />
+/// <reference types="vite-plugin-md-to-html/types" />
 
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -48,3 +49,8 @@ type PreviewWorkerApi = {
 type ClassPropertiesOnly<T> = {
   [K in keyof T as T[K] extends Function ? never : K]: T[K];
 };
+
+// declare module "*.md" {
+//   const content: string;
+//   export default content;
+// }

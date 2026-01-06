@@ -144,6 +144,7 @@
     "unist-util-visit": "^5.0.0",
     "use-context-selector": "^2.0.0",
     "valtio": "^2.2.0",
+    "vite-plugin-md-to-html": "^0.0.18",
     "zod": "^3.25.76"
   },
   "devDependencies": {
