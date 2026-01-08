@@ -1,4 +1,4 @@
-import docs from "@/docs/DOCS.md";
+import docs from "@/docs/docs_.md";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/docs")({

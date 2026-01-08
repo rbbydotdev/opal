@@ -13,7 +13,7 @@ import { useDismissalState } from "@/hooks/useDismissalState";
 import { AlertTriangle, CheckCircle, ExternalLink, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export function CompatibilityAlert() {
+export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean } = {}) {
   let [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useDismissalState("compatibility-alert-dismissed", false);
   const [rememberDismissal, setRememberDismissal] = useState(false);
@@ -21,8 +21,8 @@ export function CompatibilityAlert() {
   const { hasCompatibilityIssues, features } = useBrowserCompat();
 
   useEffect(() => {
-    if (hasCompatibilityIssues && !isDismissed) setIsOpen(true);
-  }, [hasCompatibilityIssues, isDismissed]);
+    if (hasCompatibilityIssues && (!isDismissed || forceOpen)) setIsOpen(true);
+  }, [hasCompatibilityIssues, isDismissed, forceOpen]);
 
   const handleDismiss = () => {
     if (rememberDismissal) {
@@ -41,7 +41,7 @@ export function CompatibilityAlert() {
     }
   };
 
-  if (!hasCompatibilityIssues || isDismissed) {
+  if (!hasCompatibilityIssues || (isDismissed && !forceOpen)) {
     return null;
   }
 

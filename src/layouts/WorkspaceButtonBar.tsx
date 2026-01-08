@@ -1,4 +1,7 @@
 import { useConfirm } from "@/components/ConfirmContext";
+import { CompatibilityAlert } from "@/features/CompatibilityAlert";
+import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
+import { useDismissalState } from "@/hooks/useDismissalState";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -37,6 +40,7 @@ import { Workspace } from "@/workspace/Workspace";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   BombIcon,
   BookOpen,
   Check,
@@ -338,6 +342,9 @@ export function WorkspaceButtonBar() {
           })}
         >
           <div className="w-full flex flex-col gap-4">
+            {/* Compatibility Alert Button - Shows as first button when there are compatibility issues */}
+            <CompatibilityAlertButton variant={variant} />
+
             {devMode ? (
               <>
                 <BigButton
@@ -522,6 +529,48 @@ const ErrorBadge = () => {
     <div className="absolute top-0 right-3 w-5 h-5 p-1 flex items-center justify-center bg-destructive text-destructive-foreground rounded-full border-2">
       <span className="text-2xs font-mono text-bold bold">!</span>
     </div>
+  );
+};
+
+const CompatibilityAlertButton = ({ variant }: { variant: ButtonVariant }) => {
+  const { hasCompatibilityIssues } = useBrowserCompat();
+  const [showAlert, setShowAlert] = React.useState(false);
+
+  // Only show the button when there are compatibility issues
+  if (!hasCompatibilityIssues) {
+    return null;
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowAlert(true);
+  };
+
+  const RedNotificationDot = () => (
+    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background"></div>
+  );
+
+  return (
+    <>
+      <BigButton
+        variant={variant}
+        icon={
+          <div className="relative w-full h-full">
+            <AlertTriangle strokeWidth="1" stroke="current" className="w-full h-full" />
+            <RedNotificationDot />
+          </div>
+        }
+        title="compatibility"
+        to="#"
+        onClick={handleClick}
+      />
+      {showAlert && (
+        <CompatibilityAlert
+          forceOpen={true}
+          key={`compat-alert-${Date.now()}`}
+        />
+      )}
+    </>
   );
 };
 

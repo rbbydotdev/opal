@@ -1,3 +1,5 @@
+
+
 # Opal
 
 Opal is a lightweight, browser‑based markdown editor and static site builder designed for developers who care about speed, transparency, and ownership of their content.
@@ -6,20 +8,25 @@ It's local‑first, powered by modern browser storage and service workers — fa
 ## Key Features
 
 ### One-Click Static Site Publishing
+
 Deploy instantly to **Netlify**, **Cloudflare Pages**, **AWS S3**, **GitHub Pages**, or **Vercel** using OAuth or API key authentication. No complex build pipelines or server configurations required.
 
 ### Runs Entirely in Your Browser
+
 **Zero backend dependencies** — everything lives in your browser. Projects can be stored purely in browser storage (IndexedDB) or mounted to local file directories. No server required except optional CORS proxies (which you can self-host).
 
 ### Flexible File System Options
+
 - **Browser storage**: Fast IndexedDB persistence that survives browser sessions
 - **Local directory mounting**: Direct access to your file system with real disk persistence
 - **Hybrid approach**: Mix and match storage types per workspace
 
 ### Offline-First Architecture
+
 Service worker-powered caching and processing means Opal works completely offline. Edit, build, and preview without an internet connection.
 
 ### Complete Data Ownership
+
 Your content stays yours. Self-hostable, open source, and designed to work years into the future with no vendor lock-in.
 
 ---
@@ -27,6 +34,7 @@ Your content stays yours. Self-hostable, open source, and designed to work years
 ## Overview
 
 Opal gives you a full editing and publishing pipeline inside your browser:
+
 - **Edit** markdown or rich text.
 - **Preview** with live updates.
 - **Version & sync** via Git.
@@ -39,6 +47,7 @@ All of this happens client‑side — no servers or backend dependencies unless 
 ## Editing Experience
 
 ### Markdown & Rich Text
+
 - Supports **CommonMark** syntax (MDX planned but avoided in v1 for simplicity).
 - **Two editing modes**:
   - **Rich text mode** (MDX Editor): Structured editing with toolbar for headings, lists, dividers, paragraphs, and images. Currently MDX is disabled.
@@ -51,6 +60,7 @@ All of this happens client‑side — no servers or backend dependencies unless 
   - **Markdown prettification** available for consistent formatting.
 
 ### Edit History & Tree View
+
 - **Edit history**: Every change captured with debounced saving. Browse, preview, and restore previous edits with OK/Cancel confirmation.
 - **Virtualized history list** for performance with large edit counts.
 - **Edit previews**: Hover over edit items to see image and HTML previews (note: images may not show if moved since that edit).
@@ -79,6 +89,7 @@ Hierarchical visualization of your markdown document structure. Click elements t
 ## File & Sidebar Management
 
 ### File Operations
+
 - Files and folders are fully draggable within and between directories.
 - **Rename:** focus an item and press `Enter` to make it editable; submit with `Enter` or cancel with `Escape`/click away.
 - **Delete:** `Backspace/Delete` moves files to Trash (they remain restorable but are ignored by Git).
@@ -87,12 +98,14 @@ Hierarchical visualization of your markdown document structure. Click elements t
 - **Stock files**: Quick creation of example files and global CSS templates.
 
 ### Trash Management
+
 - Deleted files move to Trash (saved under `.trash` in OPFS mounts).
 - Files in Trash can be viewed, edited, and restored with a banner prompt.
 - **Permanent deletion** available from Trash menu - files are gone forever.
 - Trash files are excluded from version control.
 
 ### Sidebar Organization
+
 - **Drag and drop** sections to reorder - layout is remembered between sessions.
 - **Resize** sidebar by dragging the right-side divider.
 - Toggle sidebar: `Cmd/Ctrl + B`.
@@ -104,17 +117,20 @@ Hierarchical visualization of your markdown document structure. Click elements t
 ## Workspaces & Storage
 
 ### Workspace Creation & Management
+
 - Create isolated **workspaces** with custom names and storage types.
 - Each workspace receives a **colored multi-shape identicon** for visual recognition (name changes don't affect the icon).
 - **Workspace management**: Right-click workspace names for rename/delete options.
 - **Collapsible workspace bar**: Click the highlighted bar next to the stone menu to expand/contract and reclaim screen space.
 
 ### Storage Options
+
 - **IndexedDB**: Fast, persistent browser storage (recommended for most users).
 - **OPFS**: In-browser filesystem (virtually useless compared to IndexedDB, slower, but useful with OPFS file browser plugins).
 - **Mounted OPFS**: Direct access to a local directory for real disk persistence - **only storage type that survives browser history clearing**.
 
 ### Storage Limitations & Considerations
+
 - **Disk type is fixed** once created for data integrity.
 - **Mounted directory handling**: If you rename or move a mounted directory, the handle becomes corrupted - you'll get an option to browse and remount the new location.
 - **External file changes**: Files modified outside Opal in mounted OPFS won't immediately reflect and need a refresh (waiting for File Change Event API browser support).
@@ -165,6 +181,7 @@ Opal’s Git support aims for **practical utility over complexity**.
 ## Search
 
 ### Document & Global Search
+
 - **In‑document search**: Via `Cmd/Ctrl + F`, works in both editor modes.
 - **Global (Opal‑wide) search**: Finds text across all workspace source files.
   - **Current limitation**: Searches raw markdown (including markup) - meaning markdown syntax must be included in search terms.
@@ -172,6 +189,7 @@ Opal’s Git support aims for **practical utility over complexity**.
   - **Future consideration**: Markup-less search using flat 2D vectors referencing markdown tree nodes (similar to rich text search strategy).
 
 ### Spotlight Search Integration
+
 - **Filename search**: Accessible via spotlight (`Cmd/Ctrl + P`) across all workspaces.
 - **Fuzzy matching** with highlighted results and workspace grouping.
 - **Command integration**: Type `>` in spotlight to access command palette.
@@ -222,22 +240,6 @@ Opal can compile and publish your projects to static sites with a single click.
   - Cross-workspace file search with fuzzy matching and workspace grouping.
 - **Keyboard shortcuts help:** accessible via the stone menu or keyboard shortcut modal.
 
----
-
-## Service Worker Backbone
-
-### Core Functionality
-- **Central to performance**: Opal relies heavily on service worker for speed and efficiency.
-- **Image and file caching**: Handles caching of images and recently opened files with Cache API.
-- **Direct storage serving**: Serves assets directly from browser storage, avoiding blob setup/teardown overhead.
-- **RPC-like communication**: Fetch API requests act as typed RPC format, especially with Hono service worker mode.
-
-### Performance Benefits
-- **Snappy image loading**: Shared memory (not copied) for fast uploads and instant recall.
-- **Intelligent resource management**: Modern browsers automatically sleep/idle workers, reducing CPU and memory usage.
-- **Edit preview processing**: Delegated to service worker for compiled markdown caching.
-- **Network reduction**: Acts as internal request layer, reducing external network calls.
-- **Debugging advantage**: Request-based architecture makes debugging straightforward as "web requests".
 
 ---
 
@@ -255,6 +257,7 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 ## Global Styles
 
 ### CSS Hierarchy & Application
+
 - **`global.css`** (all lowercase, root directory): Special file that styles all markdown documents in **Freeform** mode.
 - **Built-in themes**: Choose from **Pico CSS** and **GitHub CSS** for subtle, attractive markdown styling.
 - **Sibling CSS files**: Each markdown file automatically loads its sibling CSS for local overrides and customizations.
@@ -276,7 +279,8 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 
 ---
-## Themes & Appearance- 
+
+## Themes & Appearance
 
 - Themes can be switched via the stone menu or spotlight command palette.
 - Themes are available in light dark and system modes.
@@ -290,6 +294,7 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 ## Template Imports
 
 ### GitHub Template Sharing
+
 - **Easy template sharing**: Import templates directly from public GitHub repositories.
 - **URL format**: `opaledx.com/import/gh/<owner>/<reponame>/<optional: branch>`
   - Default branch used if not specified, falling back to "main".
@@ -303,17 +308,20 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 ## Self-Hosting & Distribution
 
 ### Hosting Simplicity
+
 - **Static file hosting**: Run `npm run build` and serve files in `dist` with any static file server.
 - **No special requirements**: Beyond CORS proxy configuration, no server-side setup needed.
 - **Development server**: Use `npm start` for Vite's built-in static server, or `npx serve` in dist folder.
 - **Universal compatibility**: Host anywhere - Vercel, Cloudflare Pages, Netlify, or your own domain.
 
 ### Long-term Compatibility
+
 - **Future-proof design**: Zip up Opal dist with project files for use years later.
 - **Browser backward compatibility**: JavaScript engines excel at running legacy code.
 - **No vendor lock-in**: Entirely self-contained static application.
 
 ### CORS Proxy Setup
+
 - **Required for production**: Deploy your own CORS proxies using included Wrangler CLI configuration.
 - **Default limitations**: Included Cloudflare proxy is on free tier with usage limits.
 - **Self-hosting considerations**: Add your domain to whitelisted referrer list if hosting Opal on custom domain.
@@ -321,23 +329,46 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 ---
 
+
 ## Advanced Features
 
 ### Performance & Optimization
+
 - **Virtualized lists** in edit history and large file displays for smooth scrolling.
 - **Service worker caching** with intelligent cache management and RPC-style communication.
 - **Memory-efficient rendering** with lazy loading and optimized DOM updates.
 
 ### Developer Tools
+
 - **Developer mode** with workspace destruction, service worker management, and cache clearing.
 - **Build system diagnostics** with detailed logging and rollback capabilities.
 - **Advanced Git operations** with conflict resolution, branch management, and merge strategies.
 
 ### Accessibility & User Experience
+
 - **Keyboard navigation** throughout the application with focus management.
 - **Screen reader support** with proper ARIA labels and semantic markup.
 - **Responsive design** that adapts to different screen sizes and orientations.
 - **Error handling** with graceful degradation and user-friendly error messages.
+
+---
+
+## Service Workers
+
+### Core Functionality
+
+- **Central to performance**: Opal relies heavily on service worker for speed and efficiency.
+- **Image and file caching**: Handles caching of images and recently opened files with Cache API.
+- **Direct storage serving**: Serves assets directly from browser storage, avoiding blob setup/teardown overhead.
+- **RPC-like communication**: Fetch API requests act as typed RPC format, especially with Hono service worker mode.
+
+### Performance Benefits
+
+- **Snappy image loading**: Shared memory (not copied) for fast uploads and instant recall.
+- **Intelligent resource management**: Modern browsers automatically sleep/idle workers, reducing CPU and memory usage.
+- **Edit preview processing**: Delegated to service worker for compiled markdown caching.
+- **Network reduction**: Acts as internal request layer, reducing external network calls.
+- **Debugging advantage**: Request-based architecture makes debugging straightforward as "web requests".
 
 ---
 
