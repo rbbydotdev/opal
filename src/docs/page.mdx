@@ -1,9 +1,56 @@
 
 
-# Opal
+export const DocImage = ({ src }) => (
+  <div className="relative" style={{
+    position: "relative",
+  }}>
+    <img className="relative border-2 border-dashed rounded-lg" src={src} style={{
+      padding: "2rem",
+      width: "240px",
+      height: "240px",
+    }} />
+  </div>
+)
+
+<div className="mb-12 relative flex justify-center items-center w-full bg-white rounded-lg">
+
+  <div
+  style={{
+    backgroundImage: "url('/opal.svg')",
+    position: "absolute",
+    top: "0px",
+    width: "100%",
+    height: "100%",
+    backgroundRepeat: "repeat",
+    backgroundSize: "600px 600px",
+    left: "0px",
+    opacity:  0.2,
+  }}
+  ></div>
+  <img alt="Opal" title="Opal" src="/docs/drawn-opal.svg" style={{ width: "12rem", margin: "3rem", position:"relative", zIndex: 20 }} />
+</div>
+
+# Opal Documentation
 
 Opal is a lightweight, browser‑based markdown editor and static site builder designed for developers who care about speed, transparency, and ownership of their content.
 It's local‑first, powered by modern browser storage and service workers — fast, offline‑friendly, and Git‑aware.
+
+{/* <DocImage src="/docs/file-tree.svg" />
+<DocImage src="/docs/add-image.svg" />
+<DocImage src="/docs/browser-bolt.svg" />
+<DocImage src="/docs/dnd-image.svg" />
+<DocImage src="/docs/file-tree.svg" />
+<DocImage src="/docs/hash-headings.svg" />
+<DocImage src="/docs/markdown-tree.svg" />
+<DocImage src="/docs/new-ws-modal.svg" />
+<DocImage src="/docs/publish-modal.svg" />
+<DocImage src="/docs/trash-banner.svg" />
+<DocImage src="/docs/rich-text-tools.svg" />
+<DocImage src="/docs/md-arrow.svg" />
+<DocImage src="/docs/search-doc.svg" />
+<DocImage src="/docs/my-build.svg" /> 
+<DocImage src="/docs/stone-menu.svg" /> 
+<DocImage src="/docs/history-menu.svg" /> */}
 
 ## Key Features
 
@@ -100,7 +147,7 @@ Hierarchical visualization of your markdown document structure. Click elements t
 ### Trash Management
 
 - Deleted files move to Trash (saved under `.trash` in OPFS mounts).
-- Files in Trash can be viewed, edited, and restored with a banner prompt.
+- Files in Trash can be viewed, edited, and restored with the banner prompt, or via context menu options.
 - **Permanent deletion** available from Trash menu - files are gone forever.
 - Trash files are excluded from version control.
 
@@ -142,11 +189,13 @@ Hierarchical visualization of your markdown document structure. Click elements t
 ## Preview Modes
 
 ### Preview Options
+
 - **Side preview**: Toggle with `Cmd/Ctrl + |` for split-screen editing and preview.
 - **Full-window preview**: Click the window preview button on toolbar to open external preview window.
 - **Print preview**: Similar button opens print dialog (alternative: open new window and press `Cmd/Ctrl + P`).
 
 ### Preview Behavior
+
 - **Markdown rendering**: Always renders accurately with CSS styling.
 - **Template preview**: Makes best effort to preview templates, partials, or files requiring site data (may not always render perfectly).
 - **CSS integration**: Loads CSS for styling preview to match final output.
@@ -167,13 +216,13 @@ Hierarchical visualization of your markdown document structure. Click elements t
 
 ## Git Integration
 
-Opal’s Git support aims for **practical utility over complexity**.  
+Opal’s Git support aims for **practical utility over complexity**.
 
-- Add remote “connections” (e.g., GitHub) via the sidebar.  
-- Core actions: **Pull**, **Push**, **Sync**, **Commit**, **Branch**, **Merge**, **Reset**.  
-- “Main” and “Master” branches are locked from deletion.  
-- Opal sometimes adds temporary “switch commits” to avoid disruptive confirmation loops; these can be undone with Reset.  
-- All connections are shared across your workspaces.  
+- Add remote “connections” (e.g., GitHub) via the sidebar.
+- Core actions: **Pull**, **Push**, **Sync**, **Commit**, **Branch**, **Merge**, **Reset**.
+- “Main” and “Master” branches are locked from deletion.
+- Opal sometimes adds temporary “switch commits” to avoid disruptive confirmation loops; these can be undone with Reset.
+- All connections are shared across your workspaces.
 - Other Git servers are possible if you configure proper CORS and proxy rules.
 
 ---
@@ -201,27 +250,29 @@ Opal’s Git support aims for **practical utility over complexity**.
 Opal can compile and publish your projects to static sites with a single click.
 
 ### Builds
+
 - Compiles each project into static HTML “bundles”.
-- **Freeform build:** renders markdown inline with sibling and global CSS.  
-- **Template mode:** follows 11ty‑style directory rules.  
+- **Freeform build:** renders markdown inline with sibling and global CSS.
+- **Template mode:** follows 11ty‑style directory rules.
 - Every build is logged and stored with success/failure status for easy rollback.
 
 ### Deployments
-- Built bundles can be deployed to configured **targets**.  
-- Supported providers: **GitHub Pages**, **Cloudflare Pages**, **Vercel**, **Netlify**, **AWS S3**.  
-- Create a **connection** (auth/credentials) first, then a **target** (repo, site, bucket, etc).  
-- Deployment logs are saved and viewable per project.  
+
+- Built bundles can be deployed to configured **targets**.
+- Supported providers: **GitHub Pages**, **Cloudflare Pages**, **Vercel**, **Netlify**, **AWS S3**.
+- Create a **connection** (auth/credentials) first, then a **target** (repo, site, bucket, etc).
+- Deployment logs are saved and viewable per project.
 - The “View” button waits until deployment completes before opening your site.
 
 ---
 
 ## Uploads & Downloads
 
-- Upload via drag‑drop or sidebar.  
-- Supported: `SVG`, `PNG`, `JPG`, `WEBP`, `DOCX`.  
-- **DOCX** files are auto‑converted to markdown; extracted images are placed in a subfolder with the document’s name.  
-- **Download workspaces** as zipped archives — encrypted or not.  
-  - Encryption: **AES‑256**, file names remain visible.  
+- Upload via drag‑drop or sidebar.
+- Supported: `SVG`, `PNG`, `JPG`, `WEBP`, `DOCX`.
+- **DOCX** files are auto‑converted to markdown; extracted images are placed in a subfolder with the document’s name.
+- **Download workspaces** as zipped archives — encrypted or not.
+  - Encryption: **AES‑256**, file names remain visible.
   - Use a 16+ character password for strong protection.
 
 ---
@@ -240,16 +291,15 @@ Opal can compile and publish your projects to static sites with a single click.
   - Cross-workspace file search with fuzzy matching and workspace grouping.
 - **Keyboard shortcuts help:** accessible via the stone menu or keyboard shortcut modal.
 
-
 ---
 
 ## CORS & Hosting
 
-Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git and deployment.  
+Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git and deployment.
 
-- Opal ships with a **Cloudflare proxy** on the free tier — enough to start.  
-- For production, set up your own via **Wrangler CLI** (simple config provided).  
-- If self‑hosting Opal, add your domain to the **whitelisted referrer list**.  
+- Opal ships with a **Cloudflare proxy** on the free tier — enough to start.
+- For production, set up your own via **Wrangler CLI** (simple config provided).
+- If self‑hosting Opal, add your domain to the **whitelisted referrer list**.
 - Because Opal is a static frontend, you can host it anywhere — Vercel, Cloudflare Pages, Netlify, or your own domain.
 
 ---
@@ -276,7 +326,6 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 - **Real‑time sync:** all open browser tabs stay in sync via BroadcastChannel.
 - **Smart notifications:** toast system for user feedback on operations and errors.
 - **Focus mode:** keep your editor clean while still tracking project state.
-
 
 ---
 
@@ -329,7 +378,6 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 ---
 
-
 ## Advanced Features
 
 ### Performance & Optimization
@@ -374,9 +422,9 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 ## Notes to Self
 
-- Add a history dropdown for easier document recovery.  
-- Explore markup‑less search implementation.  
-- Introduce MDX support once the editor stabilizes.  
-- Monitor File Change Event API progress for mounted OPFS sync.  
-- Clarify “Freeform” vs “11ty” build behavior in documentation.  
+- Add a history dropdown for easier document recovery.
+- Explore markup‑less search implementation.
+- Introduce MDX support once the editor stabilizes.
+- Monitor File Change Event API progress for mounted OPFS sync.
+- Clarify “Freeform” vs “11ty” build behavior in documentation.
 - Improve CORS proxy documentation and detection flow.

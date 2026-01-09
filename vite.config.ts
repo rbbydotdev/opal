@@ -1,10 +1,11 @@
 // vite.config.ts
 
+import mdx from "@mdx-js/rollup";
 import { tanstackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
-import { vitePluginMdToHTML } from "vite-plugin-md-to-html";
+// import { vitePluginMdToHTML } from "vite-plugin-md-to-html";
 
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import svgr from "vite-plugin-svgr";
@@ -32,9 +33,10 @@ export default defineConfig(({ command, mode }) => {
       : undefined,
     // Disable Hot Module Replacement
     plugins: [
-      vitePluginMdToHTML({
-        resolveImageLinks: false,
-      }),
+      mdx(),
+      // vitePluginMdToHTML({
+      //   resolveImageLinks: false,
+      // }),
       react({
         babel: {
           plugins: ["babel-plugin-react-compiler"],

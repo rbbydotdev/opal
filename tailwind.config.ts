@@ -3,7 +3,7 @@ import tailwindAnimate from "tailwindcss-animate";
 import type { Config, PluginAPI } from "tailwindcss/types/config";
 export default {
   darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,mdx,md}"],
   theme: {
     extend: {
       fontFamily: {

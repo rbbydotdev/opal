@@ -1,4 +1,4 @@
-import docs from "@/docs/docs_.md";
+import DocsPageBody from "@/docs/page.mdx";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/docs")({
@@ -10,10 +10,9 @@ function DocsPage() {
     <div className="w-full h-screen max-h-screen flex flex-col bg-background">
       <div className="flex-1 overflow-hidden">
         {/* <iframe src="https://docs.opaledx.com" className="w-full h-full border-0" title="Opal Docs" /> */}
-        <div
-          className="!w-full !max-w-full h-full overflow-auto p-8 prose dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: docs }}
-        />
+        <div className="!w-full !max-w-full h-full overflow-auto p-8 prose dark:prose-invert">
+          <DocsPageBody />
+        </div>
       </div>
     </div>
   );

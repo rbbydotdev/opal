@@ -59,6 +59,7 @@
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@lexical/list": "^0.33.1",
     "@lezer/highlight": "^1.2.1",
+    "@mdx-js/rollup": "^3.1.1",
     "@mdxeditor/editor": "^3.39.1",
     "@octokit/auth-oauth-device": "^8.0.1",
     "@octokit/core": "^7.0.3",
