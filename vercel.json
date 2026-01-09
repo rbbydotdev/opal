@@ -19,6 +19,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/docs",
+      "destination": "/index.html"
+    },
+    {
       "source": "/workspace/(.*)",
       "destination": "/index.html"
     },
