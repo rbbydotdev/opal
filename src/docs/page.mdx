@@ -1,14 +1,19 @@
+import { ImageWithViewer } from "./ImageWithViewer";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
 
 
-export const DocImage = ({ src }) => (
+export const DocImage = ({ src, className, ...props }) => (
   <div className="relative" style={{
     position: "relative",
   }}>
-    <img className="relative border-2 border-dashed rounded-lg" src={src} style={{
-      padding: "2rem",
-      width: "240px",
-      height: "240px",
-    }} />
+    <img className={cn("p-4 w-96 h-96 relative border-2 border-dashed rounded-lg", className)} src={src}
+      {...props}
+    />
   </div>
 )
 
@@ -35,22 +40,25 @@ export const DocImage = ({ src }) => (
 Opal is a lightweight, browser‑based markdown editor and static site builder designed for developers who care about speed, transparency, and ownership of their content.
 It's local‑first, powered by modern browser storage and service workers — fast, offline‑friendly, and Git‑aware.
 
-{/* <DocImage src="/docs/file-tree.svg" />
-<DocImage src="/docs/add-image.svg" />
+
+{/* <DocImage src="/docs/add-image.svg" />
 <DocImage src="/docs/browser-bolt.svg" />
 <DocImage src="/docs/dnd-image.svg" />
 <DocImage src="/docs/file-tree.svg" />
 <DocImage src="/docs/hash-headings.svg" />
+<DocImage src="/docs/hello-world-editor.svg" />
+<DocImage src="/docs/history-menu.svg" className="w-[800px]" />
 <DocImage src="/docs/markdown-tree.svg" />
+<DocImage src="/docs/md-arrow.svg" />
+<DocImage src="/docs/my-build.svg" />
 <DocImage src="/docs/new-ws-modal.svg" />
 <DocImage src="/docs/publish-modal.svg" />
-<DocImage src="/docs/trash-banner.svg" />
 <DocImage src="/docs/rich-text-tools.svg" />
-<DocImage src="/docs/md-arrow.svg" />
 <DocImage src="/docs/search-doc.svg" />
-<DocImage src="/docs/my-build.svg" /> 
-<DocImage src="/docs/stone-menu.svg" /> 
-<DocImage src="/docs/history-menu.svg" /> */}
+<DocImage src="/docs/stone-menu.svg" />
+<DocImage src="/docs/trash-banner.svg" />
+<DocImage src="/docs/publish-providers.svg" />
+<DocImage src="/docs/git-mgmt.svg" /> */}
 
 ## Key Features
 
@@ -190,7 +198,7 @@ Hierarchical visualization of your markdown document structure. Click elements t
 
 ### Preview Options
 
-- **Side preview**: Toggle with `Cmd/Ctrl + |` for split-screen editing and preview.
+- **Side preview**: Toggle with `Cmd/Ctrl + \` for split-screen editing and preview.
 - **Full-window preview**: Click the window preview button on toolbar to open external preview window.
 - **Print preview**: Similar button opens print dialog (alternative: open new window and press `Cmd/Ctrl + P`).
 
@@ -336,7 +344,7 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 
 ### Themes
 
-![](/themes.png)
+<ImageWithViewer src="/themes.png" alt="Theme options" />
 
 ---
 
@@ -417,14 +425,3 @@ Some APIs (GitHub, Netlify, etc.) require CORS proxies for browser‑side Git an
 - **Edit preview processing**: Delegated to service worker for compiled markdown caching.
 - **Network reduction**: Acts as internal request layer, reducing external network calls.
 - **Debugging advantage**: Request-based architecture makes debugging straightforward as "web requests".
-
----
-
-## Notes to Self
-
-- Add a history dropdown for easier document recovery.
-- Explore markup‑less search implementation.
-- Introduce MDX support once the editor stabilizes.
-- Monitor File Change Event API progress for mounted OPFS sync.
-- Clarify “Freeform” vs “11ty” build behavior in documentation.
-- Improve CORS proxy documentation and detection flow.
