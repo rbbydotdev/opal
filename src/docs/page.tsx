@@ -245,22 +245,23 @@ export const DocsPageBody = () => (
               <span className="font-medium text-card-foreground">2. Configure OAuth Apps</span>
             </div>
             <p className="text-muted-foreground text-sm ml-6 mb-2">
-              Create OAuth apps with GitHub, Netlify, and Vercel. Update{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">src/lib/env.ts</code>:
+              Create OAuth apps with GitHub, Netlify, and Vercel. Copy{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">.env.example</code> to{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> and update your client IDs:
             </p>
             <div className="ml-6 bg-muted/30 rounded p-3">
               <code className="text-xs font-mono block space-y-1">
                 <div>
-                  <span className="text-muted-foreground">PUBLIC_GITHUB_CLIENT_ID:</span>{" "}
-                  <span className="text-accent-foreground">"your_github_id"</span>
+                  <span className="text-muted-foreground">VITE_PUBLIC_GITHUB_CLIENT_ID=</span>
+                  <span className="text-accent-foreground">your_github_id</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">PUBLIC_NETLIFY_CLIENT_ID:</span>{" "}
-                  <span className="text-accent-foreground">"your_netlify_id"</span>
+                  <span className="text-muted-foreground">VITE_PUBLIC_NETLIFY_CLIENT_ID=</span>
+                  <span className="text-accent-foreground">your_netlify_id</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">PUBLIC_VERCEL_CLIENT_ID:</span>{" "}
-                  <span className="text-accent-foreground">"your_vercel_id"</span>
+                  <span className="text-muted-foreground">VITE_PUBLIC_VERCEL_CLIENT_ID=</span>
+                  <span className="text-accent-foreground">your_vercel_id</span>
                 </div>
               </code>
             </div>
@@ -309,18 +310,18 @@ export const DocsPageBody = () => (
               </div>
               <div>
                 <p className="text-muted-foreground text-sm mb-2">
-                  Point your app to the deployed proxies in{" "}
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">src/lib/env.ts</code>:
+                  Update your <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> file to point to your
+                  deployed proxies:
                 </p>
                 <div className="bg-muted/30 rounded p-3">
                   <code className="text-xs font-mono block space-y-1">
                     <div>
-                      <span className="text-muted-foreground">GIT_PROTOCOL_PROXY:</span>{" "}
-                      <span className="text-accent-foreground">"https://your-git-proxy.workers.dev"</span>
+                      <span className="text-muted-foreground">VITE_GIT_PROTOCOL_PROXY=</span>
+                      <span className="text-accent-foreground">https://your-git-proxy.workers.dev</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">GITHUB_CORS_PROXY:</span>{" "}
-                      <span className="text-accent-foreground">"https://your-api-proxy.workers.dev"</span>
+                      <span className="text-muted-foreground">VITE_CORS_PROXY=</span>
+                      <span className="text-accent-foreground">https://your-api-proxy.workers.dev</span>
                     </div>
                   </code>
                 </div>

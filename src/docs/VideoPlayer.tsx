@@ -1,7 +1,7 @@
 import { MediaPlayer, MediaProvider } from "@vidstack/react";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import "@vidstack/react/player/styles/default/theme.css";
-import { ComponentProps, useState } from "react";
+import { ComponentProps, useRef, useState } from "react";
 
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
 
@@ -31,20 +31,29 @@ export function VideoPlayer({
   title?: string;
 }) {
   const [isModal, setIsModal] = useState(false);
+  const [savedTime, setSavedTime] = useState(0);
+  const playerRef = useRef<any>(null);
 
   const toggleModal = () => {
-    if ("startViewTransition" in document) {
-      (document as any).startViewTransition(() => {
-        setIsModal(!isModal);
-      });
-    } else {
-      setIsModal(!isModal);
+    // Capture current time and pause the video
+    if (playerRef.current) {
+      const currentTime = playerRef.current.currentTime;
+      setSavedTime(currentTime);
+      playerRef.current.pause();
     }
+    setIsModal(!isModal);
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       toggleModal();
+    }
+  };
+
+  const handlePlayerReady = () => {
+    // Restore the saved time when player is ready
+    if (playerRef.current && savedTime > 0) {
+      playerRef.current.currentTime = savedTime;
     }
   };
 
@@ -54,6 +63,7 @@ export function VideoPlayer({
       {!isModal && (
         <div className="relative w-full max-w-lg [&_.vds-time]:translate-y-[-26px] group">
           <MediaPlayer
+            ref={playerRef}
             title={title}
             src={src}
             className="w-full aspect-video rounded-lg overflow-hidden"
@@ -62,7 +72,7 @@ export function VideoPlayer({
             load="eager"
             autoPlay={false}
             controls
-            style={{ viewTransitionName: `video-${title?.replace(/\s+/g, "-").toLowerCase()}-inline` }}
+            onCanPlay={handlePlayerReady}
           >
             <MediaProvider>
               {src.includes(".m3u8") && <source src={src} type="application/x-mpegURL" />}
@@ -95,6 +105,7 @@ export function VideoPlayer({
         >
           <div className="relative w-full max-w-6xl mx-auto [&_.vds-time]:translate-y-[-26px]">
             <MediaPlayer
+              ref={playerRef}
               title={title}
               src={src}
               className="w-full aspect-video rounded-lg overflow-hidden"
@@ -103,7 +114,7 @@ export function VideoPlayer({
               load="eager"
               autoPlay={false}
               controls
-              style={{ viewTransitionName: `video-${title?.replace(/\s+/g, "-").toLowerCase()}-modal` }}
+              onCanPlay={handlePlayerReady}
             >
               <MediaProvider>
                 {src.includes(".m3u8") && <source src={src} type="application/x-mpegURL" />}
@@ -126,16 +137,6 @@ export function VideoPlayer({
           </div>
         </div>
       )}
-
-      <style>{`
-        @supports (view-transition-name: none) {
-          ::view-transition-old(*),
-          ::view-transition-new(*) {
-            animation-duration: 0.5s;
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-          }
-        }
-      `}</style>
     </>
   );
 }
