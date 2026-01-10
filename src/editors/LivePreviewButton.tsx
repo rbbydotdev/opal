@@ -3,7 +3,7 @@ import { useLivePreview } from "@/features/live-preview/useLivePreview";
 import { useResolvePathForPreview } from "@/features/live-preview/useResolvePathForPreview";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout.jsx";
 import { useWorkspaceContext, useWorkspaceRoute } from "@/workspace/WorkspaceContext";
-import { ExternalLink, Printer, X, Zap } from "lucide-react";
+import { Monitor, PanelRight, Printer, X } from "lucide-react";
 import { IS_MAC } from "../lib/isMac";
 
 export function LivePreviewButtons() {
@@ -29,7 +29,7 @@ export function LivePreviewButtons() {
             {right.isCollapsed ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="h-full flex justify-center items-center border-1">Open Preview</div>
-                <Zap size={36} className="!w-5 !h-5 stroke-primary-foreground" strokeWidth={2} />
+                <PanelRight size={36} className="!w-5 !h-5 stroke-primary-foreground" strokeWidth={2} />
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2">
@@ -46,7 +46,7 @@ export function LivePreviewButtons() {
         {!isOpen ? (
           <Button size="sm" className={"text-secondary rounded-l-none border-l-border"} onClick={openPreview} asChild>
             <span>
-              <ExternalLink size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={1} />
+              <Monitor size={32} className="!text-primary-foreground  !w-5 !h-5" strokeWidth={2} />
             </span>
           </Button>
         ) : (

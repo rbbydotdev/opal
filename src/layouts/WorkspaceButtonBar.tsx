@@ -1,7 +1,4 @@
 import { useConfirm } from "@/components/ConfirmContext";
-import { CompatibilityAlert } from "@/features/CompatibilityAlert";
-import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
-import { useDismissalState } from "@/hooks/useDismissalState";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { OpalSvg } from "@/components/OpalSvg";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,6 +19,8 @@ import { WorkspaceMenu } from "@/components/workspace/WorkspaceMenu";
 import { BuildDAO } from "@/data/dao/BuildDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
+import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
+import { CompatibilityAlert } from "@/features/CompatibilityAlert";
 import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
@@ -89,8 +88,6 @@ function BigButton({
 } & React.ComponentProps<typeof Link>) {
   const location = useLocation();
   const isActive = active ?? location.pathname === restProps.to;
-
-  // const { devMode, toggleDevMode } = useDevMode();
 
   const isSmall = variant === "sm";
 
@@ -564,12 +561,7 @@ const CompatibilityAlertButton = ({ variant }: { variant: ButtonVariant }) => {
         to="#"
         onClick={handleClick}
       />
-      {showAlert && (
-        <CompatibilityAlert
-          forceOpen={true}
-          key={`compat-alert-${Date.now()}`}
-        />
-      )}
+      {showAlert && <CompatibilityAlert forceOpen={true} key={`compat-alert-${Date.now()}`} />}
     </>
   );
 };

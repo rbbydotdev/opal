@@ -47,6 +47,8 @@ public/swe-worker*
 playwright-report/index.html
 playwright-report
 
+.wrangler
+
 
 dist/**/*
 public/assets/*.js
