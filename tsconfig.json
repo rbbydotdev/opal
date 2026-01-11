@@ -29,17 +29,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "./tailwind.config.ts",
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.d.ts",
-    "*.ts",
-    "*.d.ts"
-  ],
+  "include": ["./tailwind.config.ts", "./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "*.ts", "*.d.ts"],
   "exclude": [
     "node_modules",
     "dist",
+    "./dist/**/*",
     "proxies",
     "patches",
     "tools.ignore",

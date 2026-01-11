@@ -3,19 +3,17 @@ import "@vidstack/react/player/styles/default/layouts/video.css";
 import "@vidstack/react/player/styles/default/theme.css";
 import { ComponentProps, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
 
 export function VideoPlayerFigure({
   caption = "",
+  className,
   ...props
-}: { caption?: string } & ComponentProps<typeof VideoPlayer>) {
+}: { caption?: string; className?: string } & ComponentProps<typeof VideoPlayer>) {
   return (
-    <figure className="bg-card border border-border rounded-lg p-4">
-      <VideoPlayer
-        src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
-        thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
-        title="Create Workspace"
-      />
+    <figure className={cn("bg-card border border-border rounded-lg p-4", className)}>
+      <VideoPlayer src={props.src} thumbnails={props.thumbnails} title="Create Workspace" />
       <figcaption className="mt-4 text-center text-sm text-muted-foreground">{caption}</figcaption>
     </figure>
   );

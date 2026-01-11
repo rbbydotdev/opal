@@ -1,9 +1,9 @@
 import { DocsPageBody } from "@/docs/page";
 import { EditorSidebarLayout } from "@/layouts/EditorSidebarLayout";
+import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { BookOpen, Circle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/docs")({
   component: DocsPage,
@@ -42,7 +42,7 @@ function DocsSidebar() {
           });
 
         if (visibleSections.length > 0) {
-          setActiveSection(visibleSections[0].target.id);
+          setActiveSection(visibleSections[0]!.target.id);
         }
       },
       {
