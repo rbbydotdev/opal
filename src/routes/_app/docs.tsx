@@ -34,6 +34,7 @@ const sections: Section[] = [
       { id: "file-organization", title: "File Organization" },
       { id: "search-navigation", title: "Search & Navigation" },
       { id: "storage-options", title: "Storage Options" },
+      { id: "template-imports", title: "Template Imports" },
     ],
   },
   { id: "git", title: "Version Control with Git" },
@@ -51,7 +52,6 @@ const sections: Section[] = [
 
 function DocsSidebar() {
   const [activeSection, setActiveSection] = useState<string>("");
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -67,13 +67,6 @@ function DocsSidebar() {
         if (visibleSections.length > 0) {
           const activeId = visibleSections[0]!.target.id;
           setActiveSection(activeId);
-
-          // Auto-expand parent section if a subsection is active
-          sections.forEach((section) => {
-            if (section.subsections?.some((sub) => sub.id === activeId)) {
-              setExpandedSections((prev) => new Set(prev).add(section.id));
-            }
-          });
         }
       },
       {
@@ -107,18 +100,6 @@ function DocsSidebar() {
     }
   };
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) {
-        next.delete(sectionId);
-      } else {
-        next.add(sectionId);
-      }
-      return next;
-    });
-  };
-
   const isSectionOrSubsectionActive = (section: Section) => {
     if (activeSection === section.id) return true;
     return section.subsections?.some((sub) => sub.id === activeSection) || false;
@@ -133,18 +114,12 @@ function DocsSidebar() {
       <nav className="space-y-1">
         {sections.map((section) => {
           const hasSubsections = section.subsections && section.subsections.length > 0;
-          const isExpanded = expandedSections.has(section.id);
           const isActive = isSectionOrSubsectionActive(section);
 
           return (
             <div key={section.id}>
               <button
-                onClick={() => {
-                  if (hasSubsections) {
-                    toggleSection(section.id);
-                  }
-                  scrollToSection(section.id);
-                }}
+                onClick={() => scrollToSection(section.id)}
                 className={cn(
                   "w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 group",
                   activeSection === section.id
@@ -161,19 +136,10 @@ function DocsSidebar() {
                   )}
                 />
                 <span className="flex-1">{section.title}</span>
-                {hasSubsections && (
-                  <Circle
-                    className={cn(
-                      "w-1.5 h-1.5 transition-transform flex-shrink-0",
-                      isExpanded ? "rotate-90" : "",
-                      isActive ? "text-primary" : "text-muted-foreground/50"
-                    )}
-                  />
-                )}
               </button>
 
-              {/* Subsections */}
-              {hasSubsections && isExpanded && (
+              {/* Subsections - Always expanded */}
+              {hasSubsections && (
                 <div className="ml-4 mt-1 space-y-1 border-l-2 border-sidebar-border pl-2">
                   {section.subsections!.map((subsection) => (
                     <button

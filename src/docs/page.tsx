@@ -1,6 +1,7 @@
 import { OpalSvg } from "@/components/OpalSvg";
 import { Button } from "@/components/ui/button";
 import MDIcon from "@/icons/md.svg?react";
+import { useThemeContext } from "@/layouts/ThemeContext";
 import { cn } from "@/lib/utils";
 import {
   Activity,
@@ -56,20 +57,27 @@ import {
 } from "lucide-react";
 import { ImageWithViewer } from "./ImageWithViewer";
 import { VideoPlayer, VideoPlayerFigure } from "./VideoPlayer";
-export const DocImage = ({ src, className, ...props }: { src: string; className?: string }) => (
-  <div
-    className="relative flex justify-center"
-    style={{
-      position: "relative",
-    }}
-  >
-    <img
-      className={cn("p-4 w-full #max-w-2xl relative #border-2 #border-border rounded-lg", className)}
-      src={src}
-      {...props}
-    />
-  </div>
-);
+// import { useTheme
+export const DocImage = ({ src, className, ...props }: { src: string; className?: string }) => {
+  const { mode } = useThemeContext();
+  return (
+    <div
+      className="relative flex justify-center"
+      style={{
+        position: "relative",
+      }}
+    >
+      <img
+        className={cn("p-4 w-full #max-w-2xl relative rounded-lg", className, {
+          invert: mode === "dark",
+          "opacity-50": mode === "dark",
+        })}
+        src={src}
+        {...props}
+      />
+    </div>
+  );
+};
 
 export const FeatureCard = ({
   title,
@@ -357,6 +365,41 @@ export const DocsPageBody = () => (
 
       <div className="bg-card border border-border rounded-lg p-8 mb-8">
         <div className="flex items-center gap-3 mb-6">
+          <Rocket className="w-7 h-7 text-primary shrink-0" />
+          <h4 className="font-semibold text-lg text-card-foreground">Build and Publish Your Site</h4>
+        </div>
+
+        <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
+          <div className="flex justify-center">
+            <VideoPlayerFigure
+              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/stream.m3u8"
+              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/thumbnails.vtt"
+              caption="Complete workflow from build to live deployment"
+              title="Build and Publish"
+            />
+          </div>
+          <div>
+            <p className="text-muted-foreground mb-6">
+              Transform your markdown workspace into a static website and deploy it to your favorite hosting platform in
+              minutes.
+            </p>
+            <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+              <h5 className="font-semibold mb-3 text-accent-foreground">Quick Steps</h5>
+              <ul className="space-y-2 text-sm text-accent-foreground/90">
+                <li>✓ Choose a build strategy (Freeform or Template)</li>
+                <li>✓ Compile your workspace to static HTML</li>
+                <li>✓ Add a deployment connection (GitHub, Netlify, Vercel, etc.)</li>
+                <li>✓ Configure your deployment target</li>
+                <li>✓ Publish and monitor deployment status</li>
+                <li>✓ Each build is saved with success/failure status for later recall</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-8 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <Hammer className="w-7 h-7 text-primary shrink-0" />
           <h4 className="font-semibold text-lg text-card-foreground">Write Your First Document</h4>
         </div>
@@ -367,7 +410,7 @@ export const DocsPageBody = () => (
         <DocImage src="/docs/hello-editor.svg" className="w-[40rem]" />
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-8">
+      <div className="bg-card border border-border rounded-lg p-8 mb-8">
         <div className="flex items-center gap-3 mb-6">
           <Monitor className="w-7 h-7 text-primary shrink-0" />
           <h4 className="font-semibold text-lg text-card-foreground">Preview Your Work</h4>
@@ -642,7 +685,7 @@ export const DocsPageBody = () => (
             thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/thumbnails.vtt"
             title="Theme Select"
           />
-          <ImageWithViewer src="/themes.png" alt="Theme options" className="mt-4" />
+          <ImageWithViewer src="/themes.png" alt="Theme options" />
         </div>
       </SubSection>
     </Section>
@@ -846,6 +889,92 @@ export const DocsPageBody = () => (
               <li> Storage type fixed after creation</li>
             </ul>
           </div>
+        </div>
+      </SubSection>
+
+      <SubSection title="Template Imports" id="template-imports">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Download className="w-6 h-6 text-primary shrink-0" />
+            <h4 className="font-semibold text-lg text-card-foreground">Import Templates from GitHub</h4>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Quickly bootstrap new workspaces by importing templates from public GitHub repositories. This makes sharing
+            starter projects and templates effortless.
+          </p>
+          <div className="bg-muted/30 rounded-lg p-4 mb-6">
+            <h5 className="font-semibold mb-2 text-card-foreground text-sm">URL Format</h5>
+            <code className="text-sm font-mono text-accent-foreground block">
+              opaledx.com/import/gh/&lt;owner&gt;/&lt;reponame&gt;/&lt;optional: branch&gt;
+            </code>
+            <p className="text-xs text-muted-foreground mt-2">
+              If branch is not specified, the default branch will be used, falling back to "main"
+            </p>
+          </div>
+
+          <h5 className="font-semibold mb-3 text-card-foreground">How It Works</h5>
+          <ol className="space-y-3 mb-6 list-decimal ml-8 text-muted-foreground">
+            <li>Navigate to the import URL with a public GitHub repository</li>
+            <li>Opal fetches the manifest file from the repository root</li>
+            <li>You'll be prompted to confirm the import</li>
+            <li>A new workspace is created automatically using IndexedDB storage</li>
+            <li>After import completes, you'll be navigated to the file specified in the manifest</li>
+          </ol>
+
+          <div className="bg-accent/10 border border-accent/50 rounded-lg p-4 mb-6">
+            <h5 className="font-semibold mb-2 text-accent-foreground text-sm flex items-center gap-2">
+              <FileCode className="w-4 h-4 text-primary" />
+              Manifest File Requirements
+            </h5>
+            <p className="text-xs text-accent-foreground/90 mb-3">
+              Include a manifest file in your repository root with the following structure:
+            </p>
+            <div className="bg-accent/20 rounded p-3">
+              <code className="text-xs font-mono block">
+                {`{
+  "version": 1,
+  "type": "template",
+  "navigate": "path/to/file.md"
+}`}
+              </code>
+            </div>
+          </div>
+
+          {/* <div className="bg-card border-2 border-accent/30 rounded-lg p-5">
+            <h5 className="font-semibold mb-3 text-card-foreground flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Security Notes
+            </h5>
+            <ul className="space-y-2 text-muted-foreground text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-primary shrink-0">⚠</span>
+                <span>Only import templates from sources you trust</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary shrink-0">✓</span>
+                <span>All HTML, markdown, and SVG content is sanitized</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary shrink-0">ℹ</span>
+                <span>Templates are imported into an isolated IndexedDB workspace</span>
+              </li>
+            </ul>
+          </div> */}
+        </div>
+
+        <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6">
+          <h5 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+            <Sparkle className="w-5 h-5 text-primary" />
+            Why Use Template Imports?
+          </h5>
+          <p className="text-muted-foreground mb-4">
+            Template imports make sharing Opal projects seamless. Instead of manually setting up a Git repository and
+            pulling it down, users can click a single link and have a fully configured workspace ready to edit.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Perfect for documentation starters, blog templates, portfolio sites, or sharing example projects with new
+            Opal users.
+          </p>
         </div>
       </SubSection>
     </Section>

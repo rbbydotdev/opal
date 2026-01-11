@@ -1,19 +1,11 @@
-/**
- * Standalone Shadcn Theme Library
- * Apply themes from registry.json to any root element
- * No dependencies - just import your registry.json
- */
-
 import { invertColor } from "@/lib/colorUtils";
 
-// Import registry.json and type it as ThemeRegistry
 import { MDX_TREE_HIGHLIGHT_NAME } from "@/editors/markdown/highlightMdxElement";
 import { MDX_FOCUS_SEARCH_NAME, MDX_SEARCH_NAME } from "@/editors/markdown/searchPlugin";
 import { DEFAULT_THEME_STATE } from "@/features/theme/theme-constants";
 import registryJson from "./themes.json";
 
 export const registry: ThemeRegistry = registryJson as unknown as ThemeRegistry;
-// Types - annotate your registry.json import with these
 interface ThemeRegistry {
   items: ThemeRegistryItem[];
 }
