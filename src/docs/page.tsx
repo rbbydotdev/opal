@@ -25,7 +25,6 @@ import {
   HardDrive,
   History,
   Image,
-  Keyboard,
   KeyboardIcon,
   Link,
   ListTree,
@@ -121,6 +120,28 @@ export const Section = ({
   </section>
 );
 
+export const SubSection = ({
+  title,
+  children,
+  id,
+  className = "",
+}: {
+  title: string;
+  className?: string;
+  id?: string;
+  children: React.ReactNode;
+}) => (
+  <div className={cn("my-8", className)}>
+    <h3
+      className="text-2xl font-semibold mb-6 text-foreground flex items-center gap-2"
+      id={id || title.toLowerCase().replace(/ /g, "-")}
+    >
+      {title}
+    </h3>
+    {children}
+  </div>
+);
+
 export const DocsPageBody = () => (
   <>
     <div className="mb-16 relative flex justify-center items-center w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-border/50">
@@ -167,56 +188,82 @@ export const DocsPageBody = () => (
       </div>
     </a>
 
-    {/* <div className=" border-primary bg-accent/30 border rounded-lg p-6 mb-12">
-      <p className="text-base leading-relaxed text-accent-foreground">
-        <strong>Local‑first, powered by modern browser storage and service workers</strong> — fast, offline‑friendly,
-        and Git‑aware. Your content stays yours with zero backend dependencies.
-      </p>
-    </div> */}
+    {/* ========== 1. INTRODUCTION ========== */}
+    <Section title="Introduction" id="introduction">
+      <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6 mb-8">
+        <h4 className="font-semibold text-lg mb-3 text-foreground flex items-center gap-2">
+          <Lock className="text-primary" />
+          Core Philosophy
+        </h4>
+        <p className="text-muted-foreground mb-4 leading-relaxed">
+          Opal is built on three foundational principles: <strong>local-first</strong> architecture that keeps your data
+          in your control, <strong>offline-ready</strong> capabilities powered by service workers, and{" "}
+          <strong>complete ownership</strong> with no vendor lock-in. Your content stays yours
+        </p>
+      </div>
 
-    <Section title="Key Features" subtitle="Everything you need for modern content creation">
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <FeatureCard
-          title="One-Click Publishing"
-          icon={Rocket}
-          description="Deploy instantly to Netlify, Cloudflare Pages, AWS S3, GitHub Pages, or Vercel using OAuth or API key authentication. No complex build pipelines required."
-        />
-        <FeatureCard
-          title="Browser-Native"
-          icon={Zap}
-          description="Zero backend dependencies — everything lives in your browser. Projects stored in IndexedDB or mounted to local directories. No server required."
-        />
-        <FeatureCard
-          title="Flexible Storage"
-          icon={HardDrive}
-          description="Choose between browser storage, OPFS, or mounted local directories with real disk persistence. Mix and match per workspace."
-        />
-        <FeatureCard
-          title="Offline-First"
-          icon={Wifi}
-          description="Service worker-powered caching means Opal works completely offline. Edit, build, and preview without an internet connection."
-        />
-        <FeatureCard
-          title="Complete Ownership"
-          icon={Lock}
-          description="Your content stays yours. Self-hostable, open source, and designed to work years into the future with no vendor lock-in."
-        />
-        <FeatureCard
-          title="Git Integration"
-          icon={GitBranch}
-          description="Built-in Git support for version control, branching, merging, and syncing with remote repositories like GitHub."
-        />
+      <h4 className="font-semibold text-lg mb-4 text-foreground">Core Capabilities</h4>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5 text-primary" />
+            <span className="font-medium">Browser-Native</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Zero backend dependencies, works entirely in your browser</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Wifi className="w-5 h-5 text-primary" />
+            <span className="font-medium">Offline-First</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Edit, build, and preview without internet connection</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <GitBranch className="w-5 h-5 text-primary" />
+            <span className="font-medium">Git Integration</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Full version control with GitHub support built-in</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Rocket className="w-5 h-5 text-primary" />
+            <span className="font-medium">One-Click Publishing</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Deploy to Netlify, Vercel, Cloudflare, GitHub Pages, or S3</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <HardDrive className="w-5 h-5 text-primary" />
+            <span className="font-medium">Flexible Storage</span>
+          </div>
+          <p className="text-sm text-muted-foreground">IndexedDB, OPFS, or mounted local directories</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-medium">Self-Hostable</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Open source and designed for the long term</p>
+        </div>
       </div>
     </Section>
 
-    <Section title="Getting Started" subtitle="Quick tutorials to help you get up and running">
+    {/* ========== 2. QUICK START ========== */}
+    <Section title="Quick Start" subtitle="Get productive in minutes" id="quick-start">
       <div className="bg-card border border-border rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Terminal className="w-6 h-6 text-primary shrink-0" />
-          <h4 className="font-semibold text-lg text-card-foreground">Run Opal Locally</h4>
+          <h4 className="font-semibold text-lg text-card-foreground">Installation</h4>
         </div>
         <p className="text-muted-foreground mb-4">
-          Clone the repository and run Opal on your local machine for development or self-hosting.
+          <strong>Option 1:</strong> Use the hosted version at{" "}
+          <a href="https://opal.rbby.dev" className="text-primary hover:underline">
+            opal.rbby.dev
+          </a>
+        </p>
+        <p className="text-muted-foreground mb-4">
+          <strong>Option 2:</strong> Run locally for development or self-hosting:
         </p>
         <div className="bg-muted/30 rounded-lg p-4 font-mono text-sm space-y-2">
           <div className="text-muted-foreground">
@@ -229,480 +276,435 @@ export const DocsPageBody = () => (
             <span className="text-primary">$</span> npm install
           </div>
           <div className="text-muted-foreground">
-            <span className="text-primary">$</span> npm run dev{" "}
-            <span className="text-muted-foreground/60"># or npm run build</span>
+            <span className="text-primary">$</span> npm run dev
           </div>
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
+      <div className="bg-card border border-border rounded-lg p-8 mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <Cloud className="w-6 h-6 text-primary shrink-0" />
-          <h4 className="font-semibold text-lg text-card-foreground">Deploy Opal</h4>
+          <PlusCircle className="w-7 h-7 text-primary shrink-0" />
+          <h4 className="font-semibold text-lg text-card-foreground">Create Your First Workspace</h4>
         </div>
-        <div className="space-y-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Server className="w-4 h-4 text-primary" />
-              <span className="font-medium text-card-foreground">1. Static Site</span>
-            </div>
-            <p className="text-muted-foreground text-sm ml-6">
-              Deploy to any static host (Vercel, Cloudflare Pages, Netlify). Build and upload the{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">dist</code> directory.
-            </p>
+
+        <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
+          <div className="flex justify-center">
+            <VideoPlayerFigure
+              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
+              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
+              title="Create Workspace"
+              caption="Step-by-step guide to creating your first workspace"
+            />
           </div>
 
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Lock className="w-4 h-4 text-primary" />
-              <span className="font-medium text-card-foreground">2. Configure OAuth Apps</span>
-            </div>
-            <p className="text-muted-foreground text-sm ml-6 mb-2">
-              Create OAuth apps with GitHub, Netlify, and Vercel. Copy{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">.env.example</code> to{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> and update your client IDs:
+            <p className="text-muted-foreground mb-6">
+              Workspaces are isolated environments where you can organize your content. Each workspace has its own
+              storage, settings, and Git configuration.
             </p>
-            <div className="ml-6 bg-muted/30 rounded p-3">
-              <code className="text-xs font-mono block space-y-1">
-                <div>
-                  <span className="text-muted-foreground">VITE_PUBLIC_GITHUB_CLIENT_ID=</span>
-                  <span className="text-accent-foreground">your_github_id</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">VITE_PUBLIC_NETLIFY_CLIENT_ID=</span>
-                  <span className="text-accent-foreground">your_netlify_id</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">VITE_PUBLIC_VERCEL_CLIENT_ID=</span>
-                  <span className="text-accent-foreground">your_vercel_id</span>
-                </div>
-              </code>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Network className="w-4 h-4 text-primary" />
-              <span className="font-medium text-card-foreground">3. Deploy Proxies</span>
-            </div>
-            <div className="ml-6 space-y-4">
-              <div>
-                <p className="text-muted-foreground text-sm mb-2">Update allowed origins in proxy source files:</p>
-                <div className="space-y-2">
-                  <div className="bg-muted/30 rounded p-3">
-                    <div className="font-mono text-xs mb-1 text-muted-foreground">
-                      proxies/all-api-proxy/src/index.ts:8
-                    </div>
-                    <code className="text-xs font-mono">
-                      <span className="text-muted-foreground">const</span> ALLOWED_ORIGINS ={" "}
-                      <span className="text-accent-foreground">["https://yourdomain.com"]</span>
-                    </code>
-                  </div>
-                  <div className="bg-muted/30 rounded p-3">
-                    <div className="font-mono text-xs mb-1 text-muted-foreground">
-                      proxies/git-protocol-proxy/src/index.ts:1
-                    </div>
-                    <code className="text-xs font-mono">
-                      <span className="text-muted-foreground">const</span> ALLOWED_REFERRERS ={" "}
-                      <span className="text-accent-foreground">["https://yourdomain.com"]</span>
-                    </code>
-                  </div>
-                </div>
+            <h5 className="font-semibold mb-3 text-card-foreground">Storage Options</h5>
+            <div className="space-y-3">
+              <div className="bg-muted/50 rounded p-3">
+                <div className="font-medium text-sm mb-1">IndexedDB (Recommended)</div>
+                <div className="text-xs text-muted-foreground">Fast browser storage, perfect for most users</div>
               </div>
-              <div>
-                <p className="text-muted-foreground text-sm mb-2">
-                  Deploy proxies with Cloudflare Wrangler and set OAuth client secrets as environment variables:
-                </p>
-                <div className="bg-muted/30 rounded p-3">
-                  <code className="text-xs font-mono block space-y-1">
-                    <div>GITHUB_CLIENT_SECRET</div>
-                    <div>NETLIFY_CLIENT_SECRET</div>
-                    <div>VERCEL_CLIENT_SECRET</div>
-                  </code>
-                </div>
+              <div className="bg-muted/50 rounded p-3">
+                <div className="font-medium text-sm mb-1">OPFS</div>
+                <div className="text-xs text-muted-foreground">In-browser filesystem for plugin support</div>
               </div>
-              <div>
-                <p className="text-muted-foreground text-sm mb-2">
-                  Update your <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> file to point to your
-                  deployed proxies:
-                </p>
-                <div className="bg-muted/30 rounded p-3">
-                  <code className="text-xs font-mono block space-y-1">
-                    <div>
-                      <span className="text-muted-foreground">VITE_GIT_PROTOCOL_PROXY=</span>
-                      <span className="text-accent-foreground">https://your-git-proxy.workers.dev</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">VITE_CORS_PROXY=</span>
-                      <span className="text-accent-foreground">https://your-api-proxy.workers.dev</span>
-                    </div>
-                  </code>
-                </div>
+              <div className="bg-muted/50 rounded p-3">
+                <div className="font-medium text-sm mb-1">Mounted OPFS</div>
+                <div className="text-xs text-muted-foreground">Real disk access, survives history clearing</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-foreground flex items-center gap-2">
-          <Zap className="text-primary" />
-          Quick Start
-        </h4>
-        <ul className="space-y-4 text-muted-foreground">
-          <li>
-            <div className="flex gap-2 items-center">
-              <PlusCircle className="stroke-primary" /> Create and configure your first workspace
+      <div className="bg-card border border-border rounded-lg p-8 mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <GitBranch className="w-7 h-7 text-primary shrink-0" />
+          <h4 className="font-semibold text-lg text-card-foreground">Connect to GitHub</h4>
+        </div>
+
+        <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
+          <div className="flex justify-center">
+            {/* */}
+            <VideoPlayerFigure
+              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/stream.m3u8"
+              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/thumbnails.vtt"
+              caption="How to connect your workspace to GitHub"
+              title="Add GitHub Remote"
+            />
+          </div>
+          <div>
+            <p className="text-muted-foreground mb-6">
+              Add a GitHub remote to enable version control, collaboration, and cloud backup for your workspace.
+            </p>
+            <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+              <h5 className="font-semibold mb-3 text-accent-foreground">Git Features</h5>
+              <ul className="space-y-2 text-sm text-accent-foreground/90">
+                <li>✓ Push and pull changes</li>
+                <li>✓ Branch management</li>
+                <li>✓ Commit history</li>
+                <li>✓ Merge conflicts resolution</li>
+                <li>✓ OAuth or personal access token auth</li>
+              </ul>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-8 mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Hammer className="w-7 h-7 text-primary shrink-0" />
+          <h4 className="font-semibold text-lg text-card-foreground">Write Your First Document</h4>
+        </div>
+        <p className="text-muted-foreground mb-4">
+          Once your workspace is created, start writing in markdown. Use rich text mode for a visual editing experience
+          or source mode for direct markdown editing.
+        </p>
+        <DocImage src="/docs/hello-editor.svg" className="w-[40rem]" />
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Monitor className="w-7 h-7 text-primary shrink-0" />
+          <h4 className="font-semibold text-lg text-card-foreground">Preview Your Work</h4>
+        </div>
+        <p className="text-muted-foreground mb-4">
+          See your markdown rendered in real-time with the preview pane. Toggle between side preview, full window, or
+          print mode.
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-muted/30 rounded p-4 text-center">
+            <PanelRight className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-sm font-medium">Side Preview</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              <kbd className="bg-muted px-1.5 py-0.5 rounded">{"Cmd/Ctrl + \\"}</kbd>
+            </div>
+          </div>
+          <div className="bg-muted/30 rounded p-4 text-center">
+            <Monitor className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-sm font-medium">Full Window</div>
+            <div className="text-xs text-muted-foreground mt-1">External preview</div>
+          </div>
+          <div className="bg-muted/30 rounded p-4 text-center">
+            <Printer className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-sm font-medium">Print/PDF</div>
+            <div className="text-xs text-muted-foreground mt-1">Export to PDF</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6">
+        <h4 className="font-semibold text-lg mb-3 text-foreground">Next Steps</h4>
+        <p className="text-muted-foreground mb-4">
+          You're now ready to create content! Explore the sections below to learn about advanced features like Git
+          integration, building, and publishing.
+        </p>
+        <ul className="space-y-2 text-muted-foreground text-sm">
+          <li className="flex items-center gap-2">
+            <Edit className="w-4 h-4 text-primary" />
+            Learn about the editor's powerful features
           </li>
-          <li>
-            <div className="flex gap-2 items-center">
-              <Github className="stroke-primary" /> Connect to GitHub for version control
-            </div>
+          <li className="flex items-center gap-2">
+            <GitBranch className="w-4 h-4 text-primary" />
+            Set up version control with Git
           </li>
-          <li>
-            <div className="flex gap-2 items-center">
-              <Hammer className="stroke-primary" /> Build and Publish
-            </div>
+          <li className="flex items-center gap-2">
+            <Rocket className="w-4 h-4 text-primary" />
+            Build and publish your site
           </li>
         </ul>
       </div>
-
-      <div className="space-y-8 mb-12">
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-center gap-3 mb-4">
-            <PlusCircle className="w-7 h-7 text-primary shrink-0" />
-            <h3 className="text-2xl font-semibold text-foreground">Create Your First Workspace</h3>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
-                title="Create Workspace"
-                caption="Step-by-step guide to creating your first workspace"
-              />
-            </div>
-
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Workspaces are isolated environments where you can organize your content. Each workspace has its own
-                storage, settings, and Git configuration.
-              </p>
-              <h5 className="font-semibold mb-3 text-card-foreground">Storage Options</h5>
-              <div className="space-y-3">
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">IndexedDB (Recommended)</div>
-                  <div className="text-xs text-muted-foreground">Fast browser storage, perfect for most users</div>
-                </div>
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">OPFS</div>
-                  <div className="text-xs text-muted-foreground">In-browser filesystem for plugin support</div>
-                </div>
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">Mounted OPFS</div>
-                  <div className="text-xs text-muted-foreground">Real disk access, survives history clearing</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* <VideoPlayerFigure
-          src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-publish/stream.m3u8"
-          thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-publish/thumbnails.vtt"
-          caption="Create Workspace, Build and Publish"
-          title="Create Workspace, Build and Publish"
-          className="w-[500px]"
-        /> */}
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <GitBranch className="w-7 h-7 text-primary shrink-0" />
-            <span className="text-2xl font-semibold text-foreground">Connect to GitHub</span>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              {/* */}
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/thumbnails.vtt"
-                caption="How to connect your workspace to GitHub"
-                title="Add GitHub Remote"
-              />
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Add a GitHub remote to enable version control, collaboration, and cloud backup for your workspace.
-              </p>
-              <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
-                <h5 className="font-semibold mb-3 text-accent-foreground">Git Features</h5>
-                <ul className="space-y-2 text-sm text-accent-foreground/90">
-                  <li>✓ Push and pull changes</li>
-                  <li>✓ Branch management</li>
-                  <li>✓ Commit history</li>
-                  <li>✓ Merge conflicts resolution</li>
-                  <li>✓ OAuth or personal access token auth</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Hammer className="w-7 h-7 text-primary shrink-0" />
-            <span className="text-2xl font-semibold text-foreground">Build And Publish</span>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/thumbnails.vtt"
-                caption="How to build your project and publish to deployment targets"
-                title="Build And Publish"
-              />
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Compile your markdown workspace to static HTML and deploy to your favorite hosting platform with just a few
-                clicks.
-              </p>
-              <div className="bg-accent/10 border border-accent/50 rounded-lg p-6 mb-4">
-                <h5 className="font-semibold mb-3 text-accent-foreground">Build Strategies</h5>
-                <ul className="space-y-2 text-sm text-accent-foreground/90">
-                  <li>✓ Freeform - compile markdown in place with sibling CSS</li>
-                  <li>✓ Template - 11ty-style compilation for complex projects</li>
-                  <li>✓ Download builds as encrypted or unencrypted ZIP files</li>
-                </ul>
-              </div>
-              <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
-                <h5 className="font-semibold mb-3 text-accent-foreground">Deployment Targets</h5>
-                <ul className="space-y-2 text-sm text-accent-foreground/90">
-                  <li>✓ GitHub Pages</li>
-                  <li>✓ Netlify</li>
-                  <li>✓ Vercel</li>
-                  <li>✓ Cloudflare Pages</li>
-                  <li>✓ AWS S3</li>
-                </ul>
-              </div>
-              <a
-                href="#builds-and-deployment"
-                className="inline-flex items-center gap-2 text-sm text-primary hover:underline mt-4"
-              >
-                See detailed build and deployment workflow
-                <ArrowDown className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* <div className="bg-muted/30 border border-border rounded-lg p-6">
-        <h4 className="font-semibold text-lg mb-4 text-foreground">Next Steps</h4>
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-card rounded p-4">
-            <div className="font-medium mb-1">Start Editing</div>
-            <div className="text-sm text-muted-foreground">Create your first markdown file and start writing</div>
-          </div>
-          <div className="bg-card rounded p-4">
-            <div className="font-medium mb-1">Upload Images</div>
-            <div className="text-sm text-muted-foreground">Drag and drop images or paste directly</div>
-          </div>
-          <div className="bg-card rounded p-4">
-            <div className="font-medium mb-1">Build & Deploy</div>
-            <div className="text-sm text-muted-foreground">Publish your site to your favorite platform</div>
-          </div>
-        </div>
-      </div> */}
     </Section>
 
-    <Section title="Core Features" subtitle="Powerful editing and workflow capabilities">
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
+    {/* ========== 3. EDITOR & CONTENT CREATION ========== */}
+    <Section title="Editor & Content Creation" subtitle="Powerful tools for writing and styling" id="editor">
+      <SubSection title="Writing & Editing" id="writing-editing">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                <MDIcon className="text-primary w-8 h-8" /> Markdown Editing
+              </h4>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>✓ CommonMark syntax support</li>
+                <li>✓ Rich text mode with visual toolbar</li>
+                <li>✓ Source mode with CodeMirror 6</li>
+                <li>✓ Auto-save on every edit</li>
+                <li>
+                  ✓ Switch modes with{" "}
+                  <kbd className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">Cmd/Ctrl + ;</kbd>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <DocImage src="/docs/hello-editor.svg" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
+            <div>
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground items-center flex gap-2">
+                <Edit className="text-primary" /> Rich Text Tools
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Structured editing with intuitive toolbar for headings, lists, dividers, and more.
+              </p>
+            </div>
+            <DocImage src="/docs/rich-text-tools.svg" />
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
             <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-              <MDIcon className="text-primary w-8 h-8" /> Markdown & Rich Text
-            </h4>
-            <ul className="space-y-2 text-muted-foreground">
-              <li> CommonMark syntax support</li>
-              <li> Rich text mode with toolbar</li>
-              <li> Source mode with CodeMirror 6</li>
-              <li> Auto-save on every edit</li>
-              <li> Search and replace functionality</li>
-            </ul>
-          </div>
-          <div>
-            <DocImage src="/docs/hello-editor.svg" />
-          </div>
-        </div>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
-          <div>
-            <h4 className="font-semibold text-lg mb-3 text-card-foreground items-center flex gap-2">
-              <Edit className="text-primary" /> Rich Text Tools
+              <History className="text-primary" />
+              Edit History
             </h4>
             <p className="text-muted-foreground mb-4">
-              Structured editing with intuitive toolbar for headings, lists, dividers, and more.
+              Every change captured with browsable history. Preview and restore previous edits with confirmation.
             </p>
+            <DocImage src="/docs/history-abbrv.svg" className="w-full" />
           </div>
-          <DocImage src="/docs/rich-text-tools.svg" />
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <History className="text-primary" />
-            Edit History
-          </h4>
-          <p className="text-muted-foreground mb-4">
-            Every change captured with browsable history. Preview and restore previous edits with confirmation.
-          </p>
-          <DocImage src="/docs/history-abbrv.svg" className="w-full" />
-        </div>
-      </div>
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
-          <ListTree className="text-primary" /> Document Structure & Navigation
-        </h4>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="flex flex-col justify-between">
-            <p className="text-muted-foreground mb-4">
-              Visualize document hierarchy with the tree view. Click elements to navigate, drag to reorder sections.
-            </p>
-            <DocImage src="/docs/markdown-tree.svg" className="w-96" />
-          </div>
-          <div>
-            <p className="text-muted-foreground mb-4">
-              Quick navigation with heading anchors and section links for easy document traversal.
-            </p>
-            <DocImage src="/docs/hash-headings.svg" className="h-72" />
-          </div>
-        </div>
-      </div>
-    </Section>
-
-    <Section title="Working With Images" subtitle="Multiple upload methods with smart management">
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-              <Upload className="text-primary" /> Upload & Management
-            </h4>
-            <ul className="space-y-2 text-muted-foreground list-disc ml-8">
-              <li> Drop images from file manager</li>
-              <li> Paste directly into editor</li>
-              <li> Upload via sidebar</li>
-              <li> Automatic WebP conversion</li>
-              <li> Smart reference updates</li>
-              <li> Service worker caching</li>
-            </ul>
-          </div>
-          <div>
-            <DocImage src="/docs/add-image.svg" className="h-48" />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <SquareDashed className="text-primary" /> Drag & Drop
-          </h4>
-          <p className="text-muted-foreground mb-4">
-            Drag images directly into the editor for instant embedding with automatic optimization.
-          </p>
-          <DocImage src="/docs/dnd-image.svg" className="h-72" />
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Code2 className="text-primary" /> Markdown WYSIWYG & Source Editor
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+            <ListTree className="text-primary" /> Document Structure & Navigation
           </h4>
-          <p className="text-muted-foreground mb-4">Rich editing experience with full source mode support</p>
-          <DocImage src="/docs/md-arrow.svg" className="h-72" />
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="flex flex-col justify-between">
+              <p className="text-muted-foreground mb-4">
+                Visualize document hierarchy with the tree view. Click elements to navigate, drag to reorder sections.
+              </p>
+              <DocImage src="/docs/markdown-tree.svg" className="w-96" />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-4">
+                Quick navigation with heading anchors and section links for easy document traversal.
+              </p>
+              <DocImage src="/docs/hash-headings.svg" className="h-72" />
+            </div>
+          </div>
         </div>
-      </div>
-    </Section>
+      </SubSection>
 
-    <Section title="File and Sidebar Management" subtitle="Organized workspace with powerful file operations">
-      {/* <div className="grid md:grid-cols-2 gap-8 mb-8 bg-card">
-        <div>
-          <h4 className="font-semibold text-lg mb-4 text-card-foreground">File Tree</h4>
-          <p className="text-muted-foreground mb-4">
-            Drag and drop files between directories. Rename with Enter, delete with Backspace. Full keyboard navigation
-            support.
-          </p>
-          <DocImage src="/docs/file-tree.svg" />
+      <SubSection title="Working with Images" id="images">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                <Upload className="text-primary" /> Upload & Management
+              </h4>
+              <ul className="space-y-2 text-muted-foreground list-disc ml-8">
+                <li> Drop images from file manager</li>
+                <li> Paste directly into editor</li>
+                <li> Upload via sidebar</li>
+                <li> Automatic WebP conversion</li>
+                <li> Smart reference updates</li>
+                <li> Service worker caching</li>
+              </ul>
+            </div>
+            <div>
+              <DocImage src="/docs/add-image.svg" className="h-48" />
+            </div>
+          </div>
         </div>
 
-        <div>
-          <h4 className="font-semibold text-lg mb-4 text-card-foreground">Trash Management</h4>
-          <p className="text-muted-foreground mb-4">
-            Deleted files move to Trash where they can be restored or permanently deleted. Files in Trash are excluded
-            from Git.
-          </p>
-          <DocImage src="/docs/trash-banner.svg" />
-        </div>
-      </div> */}
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
-          <div>
-            <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
-              <FolderTree className="text-primary" />
-              File Tree
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <SquareDashed className="text-primary" /> Drag & Drop
             </h4>
             <p className="text-muted-foreground mb-4">
-              Drag and drop files between directories. Rename with Enter, delete with Backspace. Full keyboard
-              navigation support.
+              Drag images directly into the editor for instant embedding with automatic optimization.
             </p>
+            <DocImage src="/docs/dnd-image.svg" className="h-72" />
           </div>
-          <DocImage src="/docs/file-tree.svg" className="h-72" />
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
-          <div>
-            <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
-              <Trash2Icon className="text-primary" />
-              Trash Management
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <Code2 className="text-primary" /> Source Mode
             </h4>
-            <p className="text-muted-foreground mb-4">
-              Deleted files move to Trash where they can be restored or permanently deleted. Files in Trash are excluded
-              from Git.
-            </p>
-          </div>
-          <div className="h-full flex justify-center items-center">
-            <DocImage src="/docs/trash-banner.svg" className="h-48" />
+            <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
+            <DocImage src="/docs/md-arrow.svg" className="h-72" />
           </div>
         </div>
-      </div>
 
-      <div className="bg-card border border-accent rounded-lg p-6 mt-8">
-        <h4 className="font-semibold text-lg mb-3 text-accent-foreground">Sidebar Features</h4>
-        <div className="grid md:grid-cols-2 gap-6 text-accent-foreground/90">
-          <ul className="space-y-2 list-disc ml-4">
-            <li> Drag and drop to reorder sections</li>
-            <li> Resize sidebar by dragging divider</li>
-            <li>
-              Toggle with <kbd>Cmd/Ctrl + B</kbd>
-            </li>
-          </ul>
-          <ul className="space-y-2 list-disc ml-4">
-            <li>
-              Hold <kbd>Cmd/Ctrl</kbd> for quick toggles
-            </li>
-            <li> Layout remembered between sessions</li>
-            <li> Multiple section types available</li>
+        <div className="bg-accent/10 border border-accent/50 rounded-lg p-6 mt-8">
+          <h5 className="font-semibold mb-3 text-accent-foreground flex items-center gap-2">
+            <Sparkle className="w-5 h-5 text-primary" />
+            Why It Matters
+          </h5>
+          <p className="text-sm text-accent-foreground/90">
+            Opal's complete image pipeline handles everything: automatic WebP conversion, smart reference tracking that
+            updates markdown when images are renamed, service worker caching for instant loads, and even resize handles
+            in the editor with automatic HTML tag conversion.
+          </p>
+        </div>
+      </SubSection>
+
+      <SubSection title="Preview & Styling" id="preview-styling">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <PanelRight className="text-primary" />
+              Side Preview
+            </h4>
+            <div className="text-muted-foreground mb-2 text-sm">
+              <Button size="sm" className="pointer-events-none">
+                Open Preview
+                <PanelRight className="!w-5 !h-5" strokeWidth={2} />
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Split-screen editing with live markdown preview. Toggle with{" "}
+              <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">{"Cmd/Ctrl + \\"}</span>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <Monitor className="text-primary" />
+              Full Window
+            </h4>
+            <div className="text-muted-foreground mb-2 text-sm">
+              <Button size="sm" className="pointer-events-none">
+                <Monitor className="!w-5 !h-5" strokeWidth={2} />
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Opens external preview window for dual-monitor workflows.
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <Printer className="text-primary" />
+              Print Preview
+            </h4>
+            <div className="text-muted-foreground mb-2 text-sm">
+              <Button size="sm" className="pointer-events-none">
+                Print / PDF
+                <Printer className="!w-4 !h-4" />
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-sm">Opens print dialog for PDF export or printing.</div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h4 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
+            <Paintbrush className="text-primary" />
+            CSS Document Styling
+          </h4>
+          <p className="text-muted-foreground mb-4">
+            See live previews of your CSS styling and background patterns as you edit.
+          </p>
+          <VideoPlayer
+            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/stream.m3u8"
+            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/thumbnails.vtt"
+            title="Preview CSS Background"
+          />
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+            <FileCode className="text-primary" />
+            Global Styles
+          </h4>
+          <p className="text-muted-foreground mb-4">
+            Create a <code className="bg-muted px-1.5 py-0.5 rounded">global.css</code> file in your root directory to
+            style all markdown documents in Freeform mode.
+          </p>
+          <ul className="space-y-2 text-muted-foreground">
+            <li>✓ Built-in themes: Pico CSS and GitHub CSS</li>
+            <li>✓ Sibling CSS files for local overrides</li>
+            <li>✓ Different rules for template vs. Freeform builds</li>
           </ul>
         </div>
-      </div>
+
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+            <Palette className="text-primary" />
+            Themes
+          </h4>
+          <p className="text-muted-foreground mb-4">
+            Switch between light, dark, and system modes. Choose from multiple built-in themes via the stone menu or
+            command palette.
+          </p>
+          <VideoPlayerFigure
+            className="w-[500px]"
+            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/stream.m3u8"
+            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/thumbnails.vtt"
+            title="Theme Select"
+          />
+          <ImageWithViewer src="/themes.png" alt="Theme options" className="mt-4" />
+        </div>
+      </SubSection>
     </Section>
 
-    <Section title="Search & Navigation" subtitle="Find anything quickly across your workspace">
-      {/* <div className="grid md:grid-cols-2 gap-8 bg-card p-4 rounded-lg border">
+    {/* ========== 4. WORKSPACE MANAGEMENT ========== */}
+    <Section title="Workspace Management" subtitle="Organized, searchable, and flexible" id="workspace">
+      <SubSection title="File Organization" id="file-organization">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+                <FolderTree className="text-primary" />
+                File Tree
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Drag and drop files between directories. Rename with Enter, delete with Backspace. Full keyboard
+                navigation support.
+              </p>
+            </div>
+            <DocImage src="/docs/file-tree.svg" className="h-72" />
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+                <Trash2Icon className="text-primary" />
+                Trash Management
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Deleted files move to Trash where they can be restored or permanently deleted. Files in Trash are
+                excluded from Git.
+              </p>
+            </div>
+            <div className="h-full flex justify-center items-center">
+              <DocImage src="/docs/trash-banner.svg" className="h-48" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card border border-accent rounded-lg p-6 mt-8">
+          <h4 className="font-semibold text-lg mb-3 text-accent-foreground">Sidebar Features</h4>
+          <div className="grid md:grid-cols-2 gap-6 text-accent-foreground/90">
+            <ul className="space-y-2 list-disc ml-4">
+              <li> Drag and drop to reorder sections</li>
+              <li> Resize sidebar by dragging divider</li>
+              <li>
+                Toggle with <kbd>Cmd/Ctrl + B</kbd>
+              </li>
+            </ul>
+            <ul className="space-y-2 list-disc ml-4">
+              <li>
+                Hold <kbd>Cmd/Ctrl</kbd> for quick toggles
+              </li>
+              <li> Layout remembered between sessions</li>
+              <li> Multiple section types available</li>
+            </ul>
+          </div>
+        </div>
+      </SubSection>
+
+      <SubSection title="Search & Navigation" id="search-navigation">
+        {/* <div className="grid md:grid-cols-2 gap-8 bg-card p-4 rounded-lg border">
         <div>
           <h4 className="font-semibold text-lg mb-4 text-card-foreground">Global Search</h4>
           <p className="text-muted-foreground mb-4">
@@ -721,113 +723,135 @@ export const DocsPageBody = () => (
         </div>
       </div> */}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
-          <div>
-            <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
-              <Search className="text-primary" />
-              Global Search
-            </h4>
-            <p className="text-muted-foreground mb-4">
-              Search across all files with regex support. Use{" "}
-              <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">Cmd/Ctrl + F</span> to
-              search within your current workspace.
-            </p>
-          </div>
-          <DocImage src="/docs/search-doc.svg" className="h-72" />
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
-          <div>
-            <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
-              <Menu className="text-primary" />
-              Stone Menu
-            </h4>
-            <p className="text-muted-foreground mb-4">
-              Quick access to theme switching, developer mode, zoom controls, and workspace management.
-            </p>
-          </div>
-          <div className="h-full flex justify-center items-center">
-            <DocImage src="/docs/stone-menu-2.svg" className="h-72" />
-          </div>
-        </div>
-      </div>
-
-      <div className="my-4 w-[500px]">
-        <VideoPlayerFigure
-          caption="Searching across all files in the workspace with regex support"
-          src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/stream.m3u8"
-          thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/thumbnails.vtt"
-          title="Search Across Workspaces"
-        />
-      </div>
-    </Section>
-
-    <Section title="Customization & Themes" subtitle="Make Opal look the way you want">
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
-          <Palette className="text-primary" /> Theme Selection
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          Switch between light, dark, and system modes. Choose from multiple built-in themes via the stone menu or
-          command palette.
-        </p>
-        <VideoPlayerFigure
-          className="w-[500px]"
-          src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/stream.m3u8"
-          thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/thumbnails.vtt"
-          title="Theme Select"
-        />
-      </div>
-
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-card-foreground">Available Themes</h4>
-        <ImageWithViewer src="/themes.png" alt="Theme options" />
-      </div>
-    </Section>
-
-    <Section title="Workspaces & Storage" subtitle="Isolated environments with flexible storage options">
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <FeatureCard
-          title="IndexedDB"
-          icon={Zap}
-          description="Fast, persistent browser storage recommended for most users. Survives browser sessions but not history clearing."
-        />
-        <FeatureCard
-          title="OPFS"
-          icon={HardDrive}
-          description="In-browser filesystem useful with OPFS file browser plugins. Slower than IndexedDB but still fully browser-based."
-        />
-        <FeatureCard
-          title="Mounted OPFS"
-          icon={Download}
-          description="Direct access to a local directory with real disk persistence. Only storage type that survives browser history clearing."
-        />
-      </div>
-
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-card-foreground items-center gap-2 flex">
-          <OpalSvg className="rounded-full" /> Workspace Features
-        </h4>
         <div className="grid md:grid-cols-2 gap-6">
-          <ul className="space-y-2 text-muted-foreground list-disc ml-4">
-            <li> Isolated workspaces with custom names</li>
-            <li> Colored multi-shape identicons</li>
-            <li> Right-click for rename/delete options</li>
-            <li> Collapsible workspace bar</li>
-          </ul>
-          <ul className="space-y-2 text-muted-foreground list-disc ml-4">
-            <li> Cross-tab syncing via BroadcastChannel</li>
-            <li> Badge indicators for errors</li>
-            <li> Drag-to-resize functionality</li>
-            <li> Storage type fixed after creation</li>
+          <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+                <Search className="text-primary" />
+                Global Search
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Search across all files with regex support. Use{" "}
+                <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">Cmd/Ctrl + F</span> to
+                search within your current workspace.
+              </p>
+            </div>
+            <DocImage src="/docs/search-doc.svg" className="h-72" />
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+                <Menu className="text-primary" />
+                Stone Menu
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Quick access to theme switching, developer mode, zoom controls, and workspace management.
+              </p>
+            </div>
+            <div className="h-full flex justify-center items-center">
+              <DocImage src="/docs/stone-menu-2.svg" className="h-72" />
+            </div>
+          </div>
+        </div>
+
+        <div className="my-4 w-[500px]">
+          <VideoPlayerFigure
+            caption="Searching across all files in the workspace with regex support"
+            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/stream.m3u8"
+            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/thumbnails.vtt"
+            title="Search Across Workspaces"
+          />
+        </div>
+
+        <div className="bg-accent/20 border border-accent rounded-lg p-6 mt-8">
+          <h4 className="font-semibold text-lg mb-3 text-accent-foreground flex items-center gap-2">
+            <Command className="w-5 h-5 text-primary" />
+            Command Palette
+          </h4>
+          <p className="text-accent-foreground/90 mb-4 text-sm">
+            Press{" "}
+            <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono inline-block">
+              <kbd>Cmd/Ctrl + P</kbd>
+            </span>{" "}
+            to open Spotlight. Search for files by name <b>OR</b> type{" "}
+            <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono">&gt;</span> to access commands:
+          </p>
+          <ul className="space-y-2 text-accent-foreground/90 text-sm">
+            <li className="flex items-center gap-2">
+              <CirclePlus className="w-4 h-4 flex-shrink-0 text-primary" />
+              Create files, commit changes, initialize Git
+            </li>
+            <li className="flex items-center gap-2">
+              <Palette className="w-4 h-4 flex-shrink-0 text-primary" />
+              Change themes, manage workspaces
+            </li>
+            <li className="flex items-center gap-2">
+              <Filter className="w-4 h-4 flex-shrink-0 text-primary" />
+              Multi-step prompts with contextual filtering
+            </li>
+            <li className="flex items-center gap-2">
+              <Search className="w-4 h-4 flex-shrink-0 text-primary" />
+              Cross-workspace file search with fuzzy matching
+            </li>
           </ul>
         </div>
-      </div>
-    </Section>
-    {/* <DocImage src="/docs/lock-doc.svg" className="h-72" /> */}
 
-    <Section title="Git Integration" subtitle="Practical version control without complexity">
+        <div className="bg-accent/10 border border-accent/50 rounded-lg p-6 mt-8">
+          <h5 className="font-semibold mb-3 text-accent-foreground flex items-center gap-2">
+            <Sparkle className="w-5 h-5 text-primary" />
+            Why It Matters
+          </h5>
+          <p className="text-sm text-accent-foreground/90">
+            Cross-workspace search runs in a service worker off the main thread, keeping the UI responsive. With regex
+            support and fuzzy file matching, you can find anything across all your projects instantly.
+          </p>
+        </div>
+      </SubSection>
+
+      <SubSection title="Storage Options" id="storage-options">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <FeatureCard
+            title="IndexedDB"
+            icon={Zap}
+            description="Fast, persistent browser storage recommended for most users. Survives browser sessions but not history clearing."
+          />
+          <FeatureCard
+            title="OPFS"
+            icon={HardDrive}
+            description="In-browser filesystem useful with OPFS file browser plugins. Slower than IndexedDB but still fully browser-based."
+          />
+          <FeatureCard
+            title="Mounted OPFS"
+            icon={Download}
+            description="Direct access to a local directory with real disk persistence. Only storage type that survives browser history clearing."
+          />
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground items-center gap-2 flex">
+            <OpalSvg className="rounded-full" /> Workspace Features
+          </h4>
+          <div className="grid md:grid-cols-2 gap-6">
+            <ul className="space-y-2 text-muted-foreground list-disc ml-4">
+              <li> Isolated workspaces with custom names</li>
+              <li> Colored multi-shape identicons</li>
+              <li> Right-click for rename/delete options</li>
+              <li> Collapsible workspace bar</li>
+            </ul>
+            <ul className="space-y-2 text-muted-foreground list-disc ml-4">
+              <li> Cross-tab syncing via BroadcastChannel</li>
+              <li> Badge indicators for errors</li>
+              <li> Drag-to-resize functionality</li>
+              <li> Storage type fixed after creation</li>
+            </ul>
+          </div>
+        </div>
+      </SubSection>
+    </Section>
+
+    {/* ========== 5. VERSION CONTROL WITH GIT ========== */}
+    <Section title="Version Control with Git" subtitle="Practical version control without complexity" id="git">
       <div className="bg-card border border-border rounded-lg p-6 mb-8">
         <h4 className="font-semibold text-lg mb-4 text-card-foreground">Core Git Actions</h4>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -858,7 +882,7 @@ export const DocsPageBody = () => (
         </div>
       </div>
 
-      <div className="bg-accent/20 border border-accent rounded-lg p-6">
+      <div className="bg-accent/20 border border-accent rounded-lg p-6 mb-8">
         <ul className="space-y-2 text-accent-foreground/90">
           <li className="flex items-center gap-2">
             <Link className="w-4 h-4 flex-shrink-0 text-primary" />
@@ -882,92 +906,22 @@ export const DocsPageBody = () => (
           </li>
         </ul>
       </div>
+
+      <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+        <h5 className="font-semibold mb-3 text-accent-foreground flex items-center gap-2">
+          <Sparkle className="w-5 h-5 text-primary" />
+          Why It Matters
+        </h5>
+        <p className="text-sm text-accent-foreground/90">
+          Opal speaks the Git protocol directly in the browser using isomorphic-git. This isn't a Git-like
+          interface—it's real Git with full push, pull, branch, merge, and conflict resolution capabilities. Works with
+          GitHub out of the box, and potentially with other Git servers via CORS proxy.
+        </p>
+      </div>
     </Section>
 
-    <Section title="Preview Modes" subtitle="See your content before publishing">
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <PanelRight className="text-primary" />
-            Side Preview
-          </h4>
-          <div className="text-muted-foreground mb-2 text-sm">
-            <Button size="sm" className="pointer-events-none">
-              Open Preview
-              <PanelRight className="!w-5 !h-5" strokeWidth={2} />
-            </Button>
-          </div>
-          <div className="text-muted-foreground text-sm">
-            Split-screen editing with live markdown preview. Toggle with{" "}
-            <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">{"Cmd/Ctrl + \\"}</span>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Monitor className="text-primary" />
-            Full Window
-          </h4>
-          <div className="text-muted-foreground mb-2 text-sm">
-            <Button size="sm" className="pointer-events-none">
-              <Monitor className="!w-5 !h-5" strokeWidth={2} />
-            </Button>
-          </div>
-          <div className="text-muted-foreground text-sm">Opens external preview window for dual-monitor workflows.</div>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Printer className="text-primary" />
-            Print Preview
-          </h4>
-          <div className="text-muted-foreground mb-2 text-sm">
-            <Button size="sm" className="pointer-events-none">
-              Print / PDF
-              <Printer className="!w-4 !h-4" />
-            </Button>
-          </div>
-          <div className="text-muted-foreground text-sm">Opens print dialog for PDF export or printing.</div>
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center gap-2">
-          <Paintbrush className="text-primary" />
-          CSS Document Styling
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          See live previews of your CSS styling and background patterns as you edit.
-        </p>
-        <VideoPlayer
-          src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/stream.m3u8"
-          thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/thumbnails.vtt"
-          title="Preview CSS Background"
-        />
-      </div>
-
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-          <FileCode className="text-primary" />
-          Global Styles
-        </h4>
-        <p className="text-muted-foreground mb-4">
-          Create a <code className="bg-muted px-1.5 py-0.5 rounded">global.css</code> file in your root directory to
-          style all markdown documents in Freeform mode.
-        </p>
-        <ul className="space-y-2 text-muted-foreground">
-          <li> Built-in themes: Pico CSS and GitHub CSS</li>
-          <li> Sibling CSS files for local overrides</li>
-          <li> Different rules for template vs. Freeform builds</li>
-        </ul>
-      </div>
-
-      {/* <div className="bg-card border border-border rounded-lg p-6">
-        <DocImage src="/docs/browser-bolt.svg" />
-      </div> */}
-    </Section>
-
-    <Section title="Builds and Deployment" subtitle="From workspace to live site in four simple steps">
+    {/* ========== 6. BUILDING & PUBLISHING ========== */}
+    <Section title="Building & Publishing" subtitle="From workspace to live site" id="building-publishing">
       <div className="bg-accent/10 border border-accent/50 rounded-lg p-6 mb-8">
         <h4 className="font-semibold text-lg mb-4 text-accent-foreground">Complete Build & Deploy Workflow</h4>
         <p className="text-accent-foreground/90 mb-4">
@@ -1295,410 +1249,300 @@ export const DocsPageBody = () => (
       </div>
     </Section>
 
-    <Section title="Keyboard and Navigation" subtitle="Efficient keyboard-first workflow">
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-card-foreground">Essential Shortcuts</h4>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-            <span className="text-sm">Focus sidebar</span>
-            <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
-              <kbd>Esc × 2</kbd>
-            </span>
+    {/* ========== 7. SELF-HOSTING & ADVANCED ========== */}
+    <Section title="Self-Hosting & Advanced" subtitle="Deploy your own instance and dive deep" id="advanced">
+      <SubSection title="Self-Hosting Opal" id="self-hosting">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <Server className="text-primary" />
+              Static Hosting
+            </h4>
+            <p className="text-muted-foreground text-sm mb-4">
+              Run <code className="bg-muted px-1.5 py-0.5 rounded text-xs">npm run build</code> and serve the{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">dist</code> directory with any static file
+              server.
+            </p>
+            <ul className="space-y-2 text-muted-foreground text-sm">
+              <li>✓ Host on Vercel, Cloudflare Pages, Netlify</li>
+              <li>✓ Use your own domain</li>
+              <li>✓ No server-side setup required</li>
+            </ul>
           </div>
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-            <span className="text-sm">Spotlight / Commands</span>
-            <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
-              <kbd>Cmd/Ctrl + P</kbd>
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-            <span className="text-sm">Toggle sidebar</span>
-            <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
-              <kbd>Cmd/Ctrl + B</kbd>
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-            <span className="text-sm">Switch rich text and source mode</span>
-            <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
-              <kbd>Cmd/Ctrl + ;</kbd>
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
-            <span className="text-sm">Show preview</span>
-            <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
-              <kbd>Cmd/Ctrl + /</kbd>
-            </span>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+              <Network className="text-primary" />
+              CORS Proxy
+            </h4>
+            <p className="text-muted-foreground text-sm mb-4">
+              For production, deploy your own CORS proxies using included Wrangler CLI configuration.
+            </p>
+            <ul className="space-y-2 text-muted-foreground text-sm">
+              <li>✓ Default Cloudflare proxy included</li>
+              <li>✓ Add your domain to whitelist</li>
+              <li>✓ Simple configuration provided</li>
+            </ul>
           </div>
         </div>
-      </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 mb-8">
-        <h4 className="font-semibold text-lg mb-4 text-card-foreground">More Shortcuts</h4>
-        <p className="text-muted-foreground mb-4">
-          Click the <strong>Shortcuts</strong> button in the workspace button bar to view the complete list of keyboard
-          shortcuts and commands available in Opal.
-        </p>
-        <div className="flex justify-center">
-          <div className="w-20 py-2 gap-2 flex-col border-l-2 border-transparent flex items-center text-muted-foreground stroke-muted-foreground pointer-events-none opacity-90">
-            <div className="flex items-center justify-center flex-col w-full">
-              <div className="flex items-center justify-center w-8 h-8">
-                <KeyboardIcon strokeWidth="1" stroke="current" className="w-full h-full" />
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+            <Settings className="text-primary" />
+            Configuration Steps
+          </h4>
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-4 h-4 text-primary" />
+                <span className="font-medium text-card-foreground">1. Configure OAuth Apps</span>
               </div>
-              <div className="uppercase pt-2 text-center w-full text-3xs">shortcuts</div>
+              <p className="text-muted-foreground text-sm ml-6 mb-2">
+                Create OAuth apps with GitHub, Netlify, and Vercel. Copy{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">.env.example</code> to{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> and update your client IDs:
+              </p>
+              <div className="ml-6 bg-muted/30 rounded p-3">
+                <code className="text-xs font-mono block space-y-1">
+                  <div>
+                    <span className="text-muted-foreground">VITE_PUBLIC_GITHUB_CLIENT_ID=</span>
+                    <span className="text-accent-foreground">your_github_id</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">VITE_PUBLIC_NETLIFY_CLIENT_ID=</span>
+                    <span className="text-accent-foreground">your_netlify_id</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">VITE_PUBLIC_VERCEL_CLIENT_ID=</span>
+                    <span className="text-accent-foreground">your_vercel_id</span>
+                  </div>
+                </code>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Network className="w-4 h-4 text-primary" />
+                <span className="font-medium text-card-foreground">2. Deploy Proxies</span>
+              </div>
+              <div className="ml-6 space-y-4">
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">Update allowed origins in proxy source files:</p>
+                  <div className="space-y-2">
+                    <div className="bg-muted/30 rounded p-3">
+                      <div className="font-mono text-xs mb-1 text-muted-foreground">
+                        proxies/all-api-proxy/src/index.ts:8
+                      </div>
+                      <code className="text-xs font-mono">
+                        <span className="text-muted-foreground">const</span> ALLOWED_ORIGINS ={" "}
+                        <span className="text-accent-foreground">["https://yourdomain.com"]</span>
+                      </code>
+                    </div>
+                    <div className="bg-muted/30 rounded p-3">
+                      <div className="font-mono text-xs mb-1 text-muted-foreground">
+                        proxies/git-protocol-proxy/src/index.ts:1
+                      </div>
+                      <code className="text-xs font-mono">
+                        <span className="text-muted-foreground">const</span> ALLOWED_REFERRERS ={" "}
+                        <span className="text-accent-foreground">["https://yourdomain.com"]</span>
+                      </code>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">
+                    Deploy proxies with Cloudflare Wrangler and set OAuth client secrets as environment variables:
+                  </p>
+                  <div className="bg-muted/30 rounded p-3">
+                    <code className="text-xs font-mono block space-y-1">
+                      <div>GITHUB_CLIENT_SECRET</div>
+                      <div>NETLIFY_CLIENT_SECRET</div>
+                      <div>VERCEL_CLIENT_SECRET</div>
+                    </code>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">
+                    Update your <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> file to point to your
+                    deployed proxies:
+                  </p>
+                  <div className="bg-muted/30 rounded p-3">
+                    <code className="text-xs font-mono block space-y-1">
+                      <div>
+                        <span className="text-muted-foreground">VITE_GIT_PROTOCOL_PROXY=</span>
+                        <span className="text-accent-foreground">https://your-git-proxy.workers.dev</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">VITE_CORS_PROXY=</span>
+                        <span className="text-accent-foreground">https://your-api-proxy.workers.dev</span>
+                      </div>
+                    </code>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-accent/20 border border-accent rounded-lg p-6">
-        <h4 className="font-semibold text-lg mb-3 text-accent-foreground flex items-center gap-2">
-          <Command className="w-5 h-5 text-primary" />
-          Command Palette
-        </h4>
-        <p className="text-accent-foreground/90 mb-4 text-sm">
-          Press{" "}
-          <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono inline-block">
-            <kbd>Cmd/Ctrl + P</kbd>
-          </span>{" "}
-          to open Spotlight. Then you may search for files by name <b>OR</b> type{" "}
-          <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono">&gt;</span> to access these commands:
-        </p>
-        <ul className="space-y-2 text-accent-foreground/90 text-sm">
-          <li className="flex items-center gap-2">
-            <CirclePlus className="w-4 h-4 flex-shrink-0 text-primary" />
-            Create files, commit changes, initialize Git
-          </li>
-          <li className="flex items-center gap-2">
-            <Palette className="w-4 h-4 flex-shrink-0 text-primary" />
-            Change themes, manage workspaces
-          </li>
-          <li className="flex items-center gap-2">
-            <Filter className="w-4 h-4 flex-shrink-0 text-primary" />
-            Multi-step prompts with contextual filtering
-          </li>
-          <li className="flex items-center gap-2">
-            <Search className="w-4 h-4 flex-shrink-0 text-primary" />
-            Cross-workspace file search with fuzzy matching
-          </li>
-        </ul>
-      </div>
-    </Section>
-
-    <Section title="Self-Hosting and Distribution" subtitle="Deploy Opal anywhere you want">
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Server className="text-primary" />
-            Static Hosting
+        <div className="bg-card border rounded-lg p-6">
+          <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+            <Sparkle className="text-primary" /> Future-Proof Design
           </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Run npm run build and serve files in dist with any static file server. No special requirements needed.
+          <p className="text-muted-foreground">
+            Zip up Opal dist with project files for use years later. Browser backward compatibility and no vendor
+            lock-in ensure your content remains accessible.
           </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li> Host on Vercel, Cloudflare Pages, Netlify</li>
-            <li> Or use your own domain</li>
-            <li> No server-side setup required</li>
-          </ul>
         </div>
+      </SubSection>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Network className="text-primary" />
-            CORS Proxy
+      <SubSection title="Technical Deep Dives" id="technical">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+            <Activity className="text-primary" />
+            Service Workers
           </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            For production, deploy your own CORS proxies using included Wrangler CLI configuration.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li> Default Cloudflare proxy included</li>
-            <li> Add your domain to whitelist</li>
-            <li> Simple configuration provided</li>
-          </ul>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h5 className="font-semibold mb-3 text-card-foreground text-sm">Core Functionality</h5>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li className="flex items-center gap-2">
+                  <Database className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Image and file caching with Cache API
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Direct storage serving for speed
+                </li>
+                <li className="flex items-center gap-2">
+                  <Network className="w-4 h-4 flex-shrink-0 text-primary" />
+                  RPC-like communication with Hono
+                </li>
+                <li className="flex items-center gap-2">
+                  <Settings className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Intelligent resource management
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-3 text-card-foreground text-sm">Performance Benefits</h5>
+              <ul className="space-y-2 text-muted-foreground text-sm">
+                <li className="flex items-center gap-2">
+                  <Image className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Snappy image loading with shared memory
+                </li>
+                <li className="flex items-center gap-2">
+                  <Moon className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Automatic sleep/idle for efficiency
+                </li>
+                <li className="flex items-center gap-2">
+                  <FileCode className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Compiled markdown caching
+                </li>
+                <li className="flex items-center gap-2">
+                  <TrendingDown className="w-4 h-4 flex-shrink-0 text-primary" />
+                  Reduced external network calls
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-card border rounded-lg p-6">
-        <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
-          <Sparkle className="text-primary" /> Future-Proof Design
-        </h4>
-        <p>
-          Zip up Opal dist with project files for use years later. Browser backward compatibility and no vendor lock-in
-          ensure your content remains accessible.
-        </p>
-      </div>
-    </Section>
-
-    <Section title="What Makes Opal Different" subtitle="Features that set Opal apart">
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Image className="text-primary" />
-            Complete Image Pipeline
+        <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6">
+          <h4 className="font-semibold text-lg mb-3 text-foreground flex items-center gap-2">
+            <Zap className="text-primary" />
+            Performance Optimizations
           </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            From upload to publish, Opal handles images intelligently at every step.
+          <p className="text-muted-foreground mb-4">
+            Performance isn't an afterthought—it's built into every layer of Opal.
           </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Automatic WebP conversion for optimal file size
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Smart reference tracking updates markdown when images are renamed
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Service worker caching for instant load times
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Drag and drop, paste, or upload from sidebar
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Resize in editor with automatic HTML tag conversion
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Wifi className="text-primary" />
-            Offline & Local-First
-          </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Browser-native architecture means speed, privacy, and complete control.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              No sign-ups or accounts required
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              All data stored locally in your browser
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Works completely offline after initial load
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Service worker caching for instant performance
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              You own your data, no vendor lock-in
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Search className="text-primary" />
-            Cross-Workspace Search
-          </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Search across all your workspaces and documents without blocking the UI.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Search multiple workspaces simultaneously
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Powered by service worker for off-main-thread performance
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Regex support for advanced queries
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Search markdown source including markup
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Hammer className="text-primary" />
-            Full Build System
-          </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Transform markdown to production-ready HTML with layouts and templating.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Freeform builds for simple sites
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              11ty-style template compilation for complex projects
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              CSS inlining and global styles
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Build versioning and rollback support
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <GitBranch className="text-primary" />
-            Git Protocol Support
-          </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Real Git integration that speaks the Git protocol directly in the browser.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              GitHub fully tested and supported
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Potentially works with other Git servers via CORS proxy
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Push, pull, sync, branch, merge, and commit
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Conflict resolution built into source editor
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-            <Keyboard className="text-primary" />
-            Keyboard-First Design
-          </h4>
-          <p className="text-muted-foreground text-sm mb-4">
-            Built on shadcn/radix with keyboard navigation as a priority.
-          </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Full keyboard navigation throughout the app
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Accessible components from shadcn/radix
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Spotlight command palette for quick actions
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
-              Robust error handling and user feedback
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-6 mt-8">
-        <h4 className="font-semibold text-lg mb-3 text-foreground flex items-center gap-2">
-          <Zap className="text-primary" />
-          Optimized for Speed
-        </h4>
-        <p className="text-muted-foreground mb-4">
-          Performance isn't an afterthought—it's built into every layer of Opal.
-        </p>
-        <div className="grid md:grid-cols-2 gap-4">
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 flex-shrink-0 text-primary" />
-              React Compiler optimization for minimal re-renders
-            </li>
-            <li className="flex items-center gap-2">
-              <Database className="w-4 h-4 flex-shrink-0 text-primary" />
-              Service worker caching keeps everything fast
-            </li>
-            <li className="flex items-center gap-2">
-              <Code2 className="w-4 h-4 flex-shrink-0 text-primary" />
-              CodeMirror 6 for performant source editing
-            </li>
-          </ul>
-          <ul className="space-y-2 text-muted-foreground text-sm">
-            <li className="flex items-center gap-2">
-              <Edit className="w-4 h-4 flex-shrink-0 text-primary" />
-              Lexical-based rich text editor (via mdx-editor)
-            </li>
-            <li className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 flex-shrink-0 text-primary" />
-              All data and images stored locally for instant access
-            </li>
-            <li className="flex items-center gap-2">
-              <Activity className="w-4 h-4 flex-shrink-0 text-primary" />
-              Off-main-thread processing with service workers
-            </li>
-          </ul>
-        </div>
-      </div>
-    </Section>
-
-    <Section title="Service Workers" subtitle="Central to Opal's performance and offline capabilities">
-      <div className="bg-card border border-border rounded-lg p-6">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h4 className="font-semibold text-lg mb-3 text-card-foreground">Core Functionality</h4>
-            <ul className="space-y-2 text-muted-foreground">
+          <div className="grid md:grid-cols-2 gap-4">
+            <ul className="space-y-2 text-muted-foreground text-sm">
+              <li className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 flex-shrink-0 text-primary" />
+                React Compiler optimization for minimal re-renders
+              </li>
               <li className="flex items-center gap-2">
                 <Database className="w-4 h-4 flex-shrink-0 text-primary" />
-                Image and file caching with Cache API
+                Service worker caching keeps everything fast
               </li>
               <li className="flex items-center gap-2">
-                <Zap className="w-4 h-4 flex-shrink-0 text-primary" />
-                Direct storage serving for speed
-              </li>
-              <li className="flex items-center gap-2">
-                <Network className="w-4 h-4 flex-shrink-0 text-primary" />
-                RPC-like communication with Hono
-              </li>
-              <li className="flex items-center gap-2">
-                <Settings className="w-4 h-4 flex-shrink-0 text-primary" />
-                Intelligent resource management
+                <Code2 className="w-4 h-4 flex-shrink-0 text-primary" />
+                CodeMirror 6 for performant source editing
               </li>
             </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold text-lg mb-3 text-card-foreground">Performance Benefits</h4>
-            <ul className="space-y-2 text-muted-foreground">
+            <ul className="space-y-2 text-muted-foreground text-sm">
               <li className="flex items-center gap-2">
-                <Image className="w-4 h-4 flex-shrink-0 text-primary" />
-                Snappy image loading with shared memory
+                <Edit className="w-4 h-4 flex-shrink-0 text-primary" />
+                Lexical-based rich text editor (via mdx-editor)
               </li>
               <li className="flex items-center gap-2">
-                <Moon className="w-4 h-4 flex-shrink-0 text-primary" />
-                Automatic sleep/idle for efficiency
+                <HardDrive className="w-4 h-4 flex-shrink-0 text-primary" />
+                All data and images stored locally for instant access
               </li>
               <li className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 flex-shrink-0 text-primary" />
-                Compiled markdown caching
-              </li>
-              <li className="flex items-center gap-2">
-                <TrendingDown className="w-4 h-4 flex-shrink-0 text-primary" />
-                Reduced external network calls
+                <Activity className="w-4 h-4 flex-shrink-0 text-primary" />
+                Off-main-thread processing with service workers
               </li>
             </ul>
           </div>
         </div>
-      </div>
+      </SubSection>
+
+      <SubSection title="Keyboard Reference" id="keyboard-reference">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground">Essential Shortcuts</h4>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+              <span className="text-sm">Focus sidebar</span>
+              <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <kbd>Esc × 2</kbd>
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+              <span className="text-sm">Spotlight / Commands</span>
+              <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <kbd>Cmd/Ctrl + P</kbd>
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+              <span className="text-sm">Toggle sidebar</span>
+              <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <kbd>Cmd/Ctrl + B</kbd>
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+              <span className="text-sm">Switch rich text and source mode</span>
+              <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <kbd>Cmd/Ctrl + ;</kbd>
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
+              <span className="text-sm">Show preview</span>
+              <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <kbd>Cmd/Ctrl + /</kbd>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground">Complete Shortcut List</h4>
+          <p className="text-muted-foreground mb-4">
+            Click the <strong>Shortcuts</strong> button in the workspace button bar to view the complete list of
+            keyboard shortcuts and commands available in Opal.
+          </p>
+          <div className="flex justify-center">
+            <div className="w-20 py-2 gap-2 flex-col border-l-2 border-transparent flex items-center text-muted-foreground stroke-muted-foreground pointer-events-none opacity-90">
+              <div className="flex items-center justify-center flex-col w-full">
+                <div className="flex items-center justify-center w-8 h-8">
+                  <KeyboardIcon strokeWidth="1" stroke="current" className="w-full h-full" />
+                </div>
+                <div className="uppercase pt-2 text-center w-full text-3xs">shortcuts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SubSection>
     </Section>
   </>
 );
