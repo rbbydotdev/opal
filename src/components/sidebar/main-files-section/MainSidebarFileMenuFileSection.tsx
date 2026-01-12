@@ -45,6 +45,7 @@ import {
   FolderPlus,
   Globe,
   Info,
+  Package,
   Scissors,
   Trash2,
 } from "lucide-react";
@@ -116,6 +117,14 @@ export function MainSidebarFileMenuFileSection({
               addJsonFile={() =>
                 expandForNode(
                   addDirFile("file", focused || absPath("/"), "data.json", () => Promise.resolve(DefaultFile.JSON())),
+                  true
+                )
+              }
+              addManifestFile={() =>
+                expandForNode(
+                  addDirFile("file", focused || absPath("/"), "manifest.json", () =>
+                    Promise.resolve(DefaultFile.Manifest())
+                  ),
                   true
                 )
               }
@@ -249,6 +258,7 @@ const FileMenuActionButtonRow = ({
   addNunchucksFile?: () => void;
   addLiquidFile?: () => void;
   addJsonFile?: () => void;
+  addManifestFile?: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -327,6 +337,7 @@ const FileMenuCompactActions = ({
   addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
+  addManifestFile,
   setExpandAll,
   diskType,
   dirName,
@@ -344,6 +355,7 @@ const FileMenuCompactActions = ({
   addNunchucksFile: () => void;
   addLiquidFile: () => void;
   addJsonFile: () => void;
+  addManifestFile: () => void;
   addDir: () => void;
   setExpandAll: (expand: boolean) => void;
   diskType: string;
@@ -461,6 +473,10 @@ const FileMenuCompactActions = ({
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              <DropdownMenuItem onSelect={deferFn(addManifestFile)}>
+                <Package className="w-4 h-4 mr-2" />
+                manifest.json
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
@@ -516,6 +532,7 @@ const SidebarFileMenuFilesActions = ({
   addJsonFile,
   addGlobalCssFile,
   addHtmlFile,
+  addManifestFile,
   setExpandAll,
   diskType,
   dirName,
@@ -531,6 +548,7 @@ const SidebarFileMenuFilesActions = ({
   addNunchucksFile: () => void;
   addLiquidFile: () => void;
   addJsonFile: () => void;
+  addManifestFile: () => void;
   addDir: () => void;
   dirName: string | null;
   setExpandAll: (expand: boolean) => void;
@@ -597,6 +615,7 @@ const SidebarFileMenuFilesActions = ({
           addJsonFile={addJsonFile}
           addGlobalCssFile={addGlobalCssFile}
           addHtmlFile={addHtmlFile}
+          addManifestFile={addManifestFile}
           setExpandAll={setExpandAll}
           diskType={diskType}
           copyFiles={copyFiles}

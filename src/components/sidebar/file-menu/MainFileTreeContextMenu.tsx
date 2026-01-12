@@ -75,6 +75,8 @@ export const MainFileTreeContextMenu = ({
     addDirFile("file", fileNode.closestDir()!, "template.njk", () => Promise.resolve(DefaultFile.Nunchucks()));
   const addStockLiquidFile = () =>
     addDirFile("file", fileNode.closestDir()!, "template.liquid", () => Promise.resolve(DefaultFile.Liquid()));
+  const addManifestFile = () =>
+    addDirFile("file", fileNode.closestDir()!, "manifest.json", () => Promise.resolve(DefaultFile.Manifest()));
 
   const fnRef = useRef<null | (() => void)>(null);
   const deferredFn = (fn: () => void) => {
@@ -184,6 +186,10 @@ export const MainFileTreeContextMenu = ({
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
+            <ContextMenuItem onSelect={deferredFn(() => addManifestFile())}>
+              <Package className="mr-3 h-4 w-4" />
+              manifest.json
+            </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
 

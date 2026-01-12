@@ -73,6 +73,10 @@ function StockFilesMenuContent({ deferFn }: { deferFn: (fn: () => void) => () =>
         <FileTextIcon className="w-4 h-4 mr-2" />
         data.json
       </DropdownMenuItem>
+      <DropdownMenuItem onSelect={deferFn(() => addStockFile("manifest.json", DefaultFile.Manifest()))}>
+        <Package className="w-4 h-4 mr-2" />
+        manifest.json
+      </DropdownMenuItem>
     </>
   );
 }

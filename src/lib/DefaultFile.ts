@@ -58,6 +58,14 @@ export const DefaultFile = {
     return `{}`;
   },
 
+  Manifest: () => {
+    return `{
+  "version": 1,
+  "type": "template",
+  "navigate": "index.md"
+}`;
+  },
+
   Text: () => {
     return "";
   },

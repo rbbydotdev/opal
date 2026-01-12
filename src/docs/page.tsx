@@ -16,6 +16,8 @@ import {
   Download,
   Edit,
   FileCode,
+  FileCode2Icon,
+  FileTextIcon,
   Filter,
   FolderTree,
   GitBranch,
@@ -34,6 +36,7 @@ import {
   Monitor,
   Moon,
   Network,
+  Package,
   Paintbrush,
   Palette,
   PanelRight,
@@ -750,6 +753,122 @@ export const DocsPageBody = () => {
                 <li> Multiple section types available</li>
               </ul>
             </div>
+          </div>
+        </SubSection>
+
+        <SubSection title="Stock Files" id="stock-files">
+          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Package className="w-6 h-6 text-primary shrink-0" />
+              <h4 className="font-semibold text-lg text-card-foreground">Quick Start Templates</h4>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Stock files are pre-filled templates with full usage examples to help you get started quickly. Access
+              them from the file menu sidebar, context menu actions, or right-click menu in the file tree.
+            </p>
+
+            <h5 className="font-semibold mb-3 text-card-foreground">Available Stock Files</h5>
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-muted/50 rounded p-4">
+                <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                  <FileCode2Icon className="w-4 h-4 text-primary" />
+                  global.css
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Pre-configured global styles for your workspace. Available in two variants:
+                </p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc ml-4">
+                  <li>GitHub-style markdown CSS</li>
+                  <li>Pico.css minimal framework</li>
+                </ul>
+              </div>
+
+              <div className="bg-muted/50 rounded p-4">
+                <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-primary" />
+                  index.html
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Basic HTML5 boilerplate with proper structure and meta tags for quick prototyping.
+                </p>
+              </div>
+
+              <div className="bg-muted/50 rounded p-4">
+                <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                  <FileTextIcon className="w-4 h-4 text-primary" />
+                  Template Files
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">Example templates for static site generation:</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc ml-4">
+                  <li>template.mustache - Mustache syntax</li>
+                  <li>template.ejs - EJS syntax</li>
+                  <li>template.njk - Nunjucks syntax</li>
+                  <li>template.liquid - Liquid syntax</li>
+                </ul>
+              </div>
+
+              <div className="bg-muted/50 rounded p-4">
+                <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-primary" />
+                  manifest.json
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Template import manifest for sharing your workspace. Defines workspace metadata and entry point for
+                  GitHub template imports.
+                </p>
+              </div>
+
+              <div className="bg-muted/50 rounded p-4">
+                <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                  <FileTextIcon className="w-4 h-4 text-primary" />
+                  data.json
+                </div>
+                <p className="text-xs text-muted-foreground">Empty JSON object starter for template data files.</p>
+              </div>
+            </div>
+
+            <h5 className="font-semibold mb-3 text-card-foreground">How to Use</h5>
+            <div className="space-y-3 text-muted-foreground text-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">1</span>
+                </div>
+                <div>
+                  <strong className="text-card-foreground">From Sidebar:</strong> Click the{" "}
+                  <Package className="inline w-4 h-4" /> Stock Files button in the file menu actions
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">2</span>
+                </div>
+                <div>
+                  <strong className="text-card-foreground">From Context Menu:</strong> Right-click in the file tree and
+                  select <strong>Stock Files</strong> from the menu
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-primary">3</span>
+                </div>
+                <div>
+                  <strong className="text-card-foreground">Choose Your Template:</strong> Select the stock file you need
+                  and it will be created in the current directory with full example content
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+            <h5 className="font-semibold mb-3 text-accent-foreground flex items-center gap-2">
+              <Sparkle className="w-5 h-5 text-primary" />
+              Why Use Stock Files?
+            </h5>
+            <p className="text-sm text-accent-foreground/90">
+              Stock files save you from starting with empty files or searching for syntax examples. Each file comes
+              pre-populated with working examples and proper syntax, helping you understand how to use features like
+              templates, CSS frameworks, and workspace sharing without leaving the editor.
+            </p>
           </div>
         </SubSection>
 
