@@ -6,15 +6,19 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
   const [currentRunner, setRunner] = useState<T>(initialValue);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    setRunner(typeof initialValue === "function" ? initialValue() : initialValue);
-    return () => currentRunner.tearDown();
-  }, deps);
-  useEffect(() => currentRunner.tearDown, [currentRunner]);
-
   const status = useSyncExternalStore(currentRunner.onStatus, () => currentRunner.status);
   const logs = useSyncExternalStore(currentRunner.onLog, () => currentRunner.logs);
   const error = useSyncExternalStore(currentRunner.onError, () => currentRunner.error);
+  const reset = useCallback(() => {
+    setRunner(typeof initialValue === "function" ? initialValue() : initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    reset();
+  }, deps);
+
+  useEffect(() => currentRunner.tearDown, [currentRunner]);
+
   const execute = useCallback(
     (runner: T, options?: { signal?: AbortSignal }) => {
       // Create a new abort controller for this execution
@@ -51,5 +55,6 @@ export function useRunner<T extends Runner>(initialValue: T | (() => T), deps: a
     logs,
     status,
     error,
+    reset,
   };
 }

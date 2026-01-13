@@ -37,7 +37,7 @@ export function BuildModal({
   );
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const { runner, execute, setRunner, logs } = useRunner(
+  const { runner, reset, execute, setRunner, logs } = useRunner(
     () =>
       BuildRunnerFactory.Show({
         build: NULL_BUILD,
@@ -54,8 +54,9 @@ export function BuildModal({
   const handleOkay = () => setIsOpen(false);
 
   const handleOpenNew = useCallback(async () => {
+    reset();
     setIsOpen(true);
-  }, []);
+  }, [reset]);
 
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {

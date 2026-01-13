@@ -602,8 +602,8 @@ export const DocsPageBody = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex w-full">
+            <div className="w-full bg-card border border-border rounded-lg p-6">
               <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
                 <SquareDashed className="text-primary" /> Drag & Drop
               </h4>
@@ -1060,7 +1060,7 @@ export const DocsPageBody = () => {
             </p>
             <div className="bg-muted/30 rounded-lg p-4 mb-6">
               <h5 className="font-semibold mb-2 text-card-foreground text-sm">URL Format</h5>
-              <code className="text-sm font-mono text-accent-foreground block">
+              <code className="text-sm font-mono text-accent-foreground block overflow-scroll">
                 opaledx.com/import/gh/&lt;owner&gt;/&lt;reponame&gt;/&lt;optional: branch&gt;
               </code>
               <p className="text-xs text-muted-foreground mt-2">
@@ -1228,7 +1228,7 @@ export const DocsPageBody = () => {
         </div>
 
         {/* Step-by-step cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 p-4">
           <div className="bg-card border-2 border-primary/30 rounded-lg p-6 relative">
             <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
               1
@@ -1600,7 +1600,7 @@ export const DocsPageBody = () => {
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> and update your client IDs:
                 </p>
                 <div className="ml-6 bg-muted/30 rounded p-3">
-                  <code className="text-xs font-mono block space-y-1">
+                  <code className="text-xs font-mono block space-y-1 overflow-scroll">
                     <div>
                       <span className="text-muted-foreground">VITE_PUBLIC_GITHUB_CLIENT_ID=</span>
                       <span className="text-accent-foreground">your_github_id</span>
@@ -1630,16 +1630,16 @@ export const DocsPageBody = () => {
                         <div className="font-mono text-xs mb-1 text-muted-foreground">
                           proxies/all-api-proxy/src/index.ts:8
                         </div>
-                        <code className="text-xs font-mono">
+                        <code className="text-xs font-mono overflow-scroll">
                           <span className="text-muted-foreground">const</span> ALLOWED_ORIGINS ={" "}
                           <span className="text-accent-foreground">["https://yourdomain.com"]</span>
                         </code>
                       </div>
-                      <div className="bg-muted/30 rounded p-3">
+                      <div className="bg-muted/30 rounded p-3 overflow-scroll">
                         <div className="font-mono text-xs mb-1 text-muted-foreground">
                           proxies/git-protocol-proxy/src/index.ts:1
                         </div>
-                        <code className="text-xs font-mono">
+                        <code className="text-xs font-mono overflow-scroll">
                           <span className="text-muted-foreground">const</span> ALLOWED_REFERRERS ={" "}
                           <span className="text-accent-foreground">["https://yourdomain.com"]</span>
                         </code>

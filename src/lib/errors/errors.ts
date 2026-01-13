@@ -69,6 +69,9 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
 export function unwrapError(error: unknown) {
   return toErrorWithMessage(error).message;
 }
+export function unwrapErrorAbrv(error: unknown) {
+  return unwrapError(error).split("\n")[0];
+}
 
 export function isErrorWithCode(error: unknown, code?: string): boolean {
   return error instanceof Error && (code ? (error as { code?: string }).code === code : true);

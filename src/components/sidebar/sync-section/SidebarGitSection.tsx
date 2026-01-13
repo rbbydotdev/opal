@@ -44,7 +44,7 @@ import { WorkspaceRepoType } from "@/features/git-repo/useGitHooks";
 import { useWorkspaceGitRepo } from "@/features/git-repo/useWorkspaceGitRepo";
 import { useSingleItemExpander } from "@/features/tree-expander/useSingleItemExpander";
 import { useTimeAgoUpdater } from "@/hooks/useTimeAgoUpdater";
-import { NotFoundError, unwrapError } from "@/lib/errors/errors";
+import { isApplicationError, NotFoundError, unwrapError, unwrapErrorAbrv } from "@/lib/errors/errors";
 import { useErrorToss } from "@/lib/errors/errorToss";
 import { AbsPath } from "@/lib/paths2";
 import { cn } from "@/lib/utils";
@@ -415,15 +415,18 @@ export function SidebarGitSection({
           Fetch completed
         </span>
       );
-    } catch (err) {
+    } catch (error) {
+      const hint = isApplicationError(error) ? error.getHint() : unwrapErrorAbrv(error);
       fetchRef.current?.show(
-        <span className="flex items-center gap-2 justify-center w-full h-full">
-          <X size={10} />
-          Error Fetching, {unwrapError(err).split("\n")[0]}
+        <span className="flex flex-col items-center gap-1 justify-center w-full h-full text-center">
+          <span className="flex items-center gap-2">
+            <X size={10} />
+            {hint}
+          </span>
         </span>,
         "destructive"
       );
-      console.error("Error fetching remote:", err);
+      console.error("Error fetching remote:", error);
     } finally {
       setFetchPending(false);
     }

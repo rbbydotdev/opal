@@ -24,7 +24,7 @@ import { Mutex } from "async-mutex";
 import GIT, { AuthCallback, MergeResult } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
 import { nanoid } from "nanoid";
-import { gitAbbreviateRef } from "./gitAbbreviateRef";
+import { gitAbbreviateRef, parseRemoteRefShorthand } from "./gitAbbreviateRef";
 
 export interface GitRemote {
   name: string;
@@ -286,7 +286,29 @@ export class GitRepo {
       // nope
     }
 
-    throw new Error(`Unable to resolve ref "${ref}" to a branch, remote, tag, or commit oid`);
+    const error = new NotFoundError(`Unable to resolve ref "${ref}" to a branch, remote, tag, or commit oid`);
+
+    // Provide helpful hints based on the ref format
+    if (ref.includes("/")) {
+      const [remote] = ref.split("/", 2);
+      const remotes = await this.getRemotes();
+      const hasRemote = remotes.some((r) => r.name === remote);
+
+      if (!hasRemote) {
+        error.hint(`Remote "${remote}" not found. Add it first or check the remote name.`);
+      } else {
+        error.hint(`Branch not found on remote "${remote}". Try fetching from the remote first.`);
+      }
+    } else {
+      const branches = await this.getBranches();
+      if (branches.length === 0) {
+        error.hint("No branches exist yet. Create an initial commit to create your first branch.");
+      } else {
+        error.hint(`Branch "${ref}" not found. Available branches: ${branches.join(", ")}`);
+      }
+    }
+
+    throw error;
   }
 
   private toFullTagRef(tag: string): string {

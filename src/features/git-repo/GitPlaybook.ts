@@ -170,21 +170,48 @@ export class GitPlaybook {
     return false;
   };
 
-  async fetchRemote(remote: string) {
+  async fetchRemote(remote: string, { throwIfEmpty = true }: { throwIfEmpty?: boolean } = {}) {
     const remoteObj = await this.repo.getRemote(remote);
     if (!remoteObj) {
-      throw new Error(`Remote ${remote} not found`);
+      const error = new NotFoundError(`Remote ${remote} not found`);
+      error.hint("Add a remote repository first to fetch from it.");
+      throw error;
     }
     const { gitCorsProxy: corsProxy, RemoteAuth } = remoteObj;
 
     const onAuth = RemoteAuth ? GitAgentFromRemoteAuth(RemoteAuth).onAuth : undefined;
-    const result = await this.repo.fetch({
-      remote: remoteObj.name,
-      url: remoteObj.url,
-      corsProxy,
-      onAuth,
-    });
-    return result;
+    try {
+      const result = await this.repo.fetch({
+        remote: remoteObj.name,
+        url: remoteObj.url,
+        corsProxy,
+        onAuth,
+      });
+
+      // Check if fetch was successful but remote is empty
+      if (throwIfEmpty && !result.fetchHead) {
+        const emptyError = new ConflictError("Remote repository is empty");
+        emptyError.hint("The remote repository has no branches or commits yet.");
+        throw emptyError;
+      }
+
+      return result;
+    } catch (err) {
+      // Check for isomorphic-git HttpError
+      if (err instanceof git.Errors.HttpError) {
+        if (err.data.statusCode === 404) {
+          const fetchError = new ConflictError("Remote repository not found");
+          fetchError.hint("The repository doesn't exist at this URL. Check the repository URL.");
+          throw fetchError;
+        }
+        if (err.data.statusCode === 401) {
+          const authError = new ConflictError("Authentication failed");
+          authError.hint("Check your access token or credentials for this remote.");
+          throw authError;
+        }
+      }
+      throw err;
+    }
   }
 
   async initFromRemote(remote: GitRemote) {
@@ -240,9 +267,17 @@ export class GitPlaybook {
 
   async pull({ remote, ref }: { remote: string; ref?: string }) {
     const finalRef = ref || (await this.repo.currentBranch()) || null;
-    if (!finalRef) throw new Error("No current branch to pull");
+    if (!finalRef) {
+      const error = new ConflictError("No current branch to pull");
+      error.hint("Create an initial commit first to establish a branch.");
+      throw error;
+    }
     const remoteObj = await this.repo.getRemote(remote);
-    if (!remoteObj) throw new NotFoundError(`Remote ${remote} not found`);
+    if (!remoteObj) {
+      const error = new NotFoundError(`Remote ${remote} not found`);
+      error.hint("Add a remote repository first before attempting to pull.");
+      throw error;
+    }
     if (await this.repo.hasChanges()) {
       await this.addAllCommit({
         message: SYSTEM_COMMITS.PREPUSH,
@@ -250,12 +285,29 @@ export class GitPlaybook {
     }
 
     // First, fetch from the remote
-    await this.repo.fetch({
-      url: remoteObj.url,
-      remote: remoteObj.name,
-      corsProxy: remoteObj.gitCorsProxy,
-      onAuth: remoteObj.onAuth,
-    });
+    try {
+      const fetchResult = await this.repo.fetch({
+        url: remoteObj.url,
+        remote: remoteObj.name,
+        corsProxy: remoteObj.gitCorsProxy,
+        onAuth: remoteObj.onAuth,
+      });
+
+      // Check if fetch was successful but remote is empty
+      if (!fetchResult.fetchHead) {
+        const emptyError = new ConflictError("Remote repository is empty");
+        emptyError.hint("The remote repository has no commits yet. Push your local commits first.");
+        throw emptyError;
+      }
+    } catch (err) {
+      // Check for isomorphic-git HttpError with 404 status
+      if (err instanceof git.Errors.HttpError && err.data.statusCode === 404) {
+        const fetchError = new ConflictError("Remote repository not found");
+        fetchError.hint("The repository doesn't exist at this URL. Check the repository URL.");
+        throw fetchError;
+      }
+      throw err;
+    }
 
     // Then, merge the fetched branch with allowUnrelatedHistories
     const currentBranch = await this.repo.normalizeRef({ ref: finalRef });

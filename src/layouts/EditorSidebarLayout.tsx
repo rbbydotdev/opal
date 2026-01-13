@@ -146,8 +146,8 @@ export const EditorSidebarLayout = ({
     rightPaneEnabled,
   };
 
-  // --- Mouse Down Handlers ---
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  // --- Pointer Down Handlers ---
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (sidebarRef.current) {
       dragStartInfoRef.current = {
@@ -155,10 +155,12 @@ export const EditorSidebarLayout = ({
         initialDisplayWidth: sidebarRef.current.offsetWidth,
       };
       setIsResizing(true);
+      // Capture pointer for better mobile support
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
   };
 
-  const handleRightPaneMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleRightPanePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (rightPaneEnabled && rightPaneRef.current) {
       rightPaneDragStartInfoRef.current = {
@@ -166,12 +168,14 @@ export const EditorSidebarLayout = ({
         initialDisplayWidth: rightPaneRef.current.offsetWidth,
       };
       setRightPaneIsResizing(true);
+      // Capture pointer for better mobile support
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
   };
 
   // --- Resize Logic ---
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       const c = controlsRef.current;
       if (!c) return;
 
@@ -213,7 +217,7 @@ export const EditorSidebarLayout = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsResizing(false);
       setRightPaneIsResizing(false);
       dragStartInfoRef.current = null;
@@ -223,16 +227,23 @@ export const EditorSidebarLayout = ({
       document.body.style.cursor = "";
     };
 
+    const handlePointerCancel = () => {
+      // Handle edge cases where pointer interaction is canceled
+      handlePointerUp();
+    };
+
     if (isResizing || rightPaneIsResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", handlePointerUp);
+      document.addEventListener("pointercancel", handlePointerCancel);
       document.body.classList.add("select-none");
       document.body.style.cursor = "col-resize";
     }
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+      document.removeEventListener("pointercancel", handlePointerCancel);
       // Ensure cleanup happens on unmount as well
       document.body.classList.remove("select-none");
       document.body.style.cursor = "";
@@ -265,9 +276,10 @@ export const EditorSidebarLayout = ({
           aria-valuenow={currentDisplayWidth}
           aria-valuemin={COLLAPSED_STATE_WIDTH}
           aria-valuemax={MAX_RESIZABLE_WIDTH}
-          onMouseDown={handleMouseDown}
+          onPointerDown={handlePointerDown}
           id="editor-sidebar-resize-handle"
           className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+          style={{ touchAction: "none" }}
           title="Resize sidebar"
         ></div>
         <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
@@ -293,8 +305,9 @@ export const EditorSidebarLayout = ({
               aria-valuenow={rightPaneCurrentWidth}
               aria-valuemin={RIGHT_PANE_COLLAPSED_WIDTH}
               aria-valuemax={MAX_RIGHT_PANE_WIDTH}
-              onMouseDown={handleRightPaneMouseDown}
+              onPointerDown={handleRightPanePointerDown}
               className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
+              style={{ touchAction: "none" }}
               title="Resize right pane"
             ></div>
             <aside

@@ -75,7 +75,7 @@ export function GitRemoteDialog({
 }) {
   const defaultValues = {
     name: defaultName,
-    url: "https://github.com/rbbydotdev/test123",
+    url: "https://github.com/",
     gitCorsProxy: ENV.GIT_PROTOCOL_PROXY,
   };
 

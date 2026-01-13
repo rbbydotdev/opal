@@ -261,9 +261,9 @@ export function PublicationModalPublishContent({
                 Okay
               </Button>
               {destination?.destinationUrl && (
-                <ViewUrlButton url={destination.destinationUrl} variant="outline">
+                <ViewDeployButton url={destination.destinationUrl} variant="outline">
                   View
-                </ViewUrlButton>
+                </ViewDeployButton>
               )}
               {runner?.target.deploymentUrl && runner.target.deploymentUrl !== destination?.destinationUrl && (
                 <ViewDeployButton url={runner.target.deploymentUrl}>
@@ -271,9 +271,9 @@ export function PublicationModalPublishContent({
                 </ViewDeployButton>
               )}
               {!destination?.destinationUrl && runner?.target.effectiveUrl && (
-                <ViewUrlButton url={runner.target.effectiveUrl}>
+                <ViewDeployButton url={runner.target.effectiveUrl}>
                   View
-                </ViewUrlButton>
+                </ViewDeployButton>
               )}
             </div>
           </div>
