@@ -10,7 +10,6 @@ import { LivePreviewProvider } from "@/components/LivePreviewProvider";
 import { PromptProvider } from "@/components/Prompt";
 import { PublicationModalProvider } from "@/components/publish-modal/PubicationModalCmd";
 import { ErrorPopper } from "@/components/ui/error-popup";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DocHistoryProvider } from "@/editors/history/HistoryPlugin";
 import { BrowserCompatProvider } from "@/features/compat-checker/CompatChecker";
@@ -71,26 +70,24 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
                               <LivePreviewProvider>
                                 <GitStatusProvider>
                                   <PublicationModalProvider>
-                                    <SidebarProvider>
-                                      <BuildCreationProvider>
-                                        <PromptProvider>
-                                          <RemoteMDXEditorRealmProvider>
-                                            <ServiceWorker>
-                                              <div className="w-full flex">
-                                                <ErrorBoundary fallback={ErrorPlaque}>
-                                                  <div id={WS_BUTTON_BAR_ID} className="bg-muted">
-                                                    <ErrorBoundary fallback={ErrorMiniPlaque}>
-                                                      <WorkspaceButtonBar />
-                                                    </ErrorBoundary>
-                                                  </div>
-                                                  <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
-                                                </ErrorBoundary>
-                                              </div>
-                                            </ServiceWorker>
-                                          </RemoteMDXEditorRealmProvider>
-                                        </PromptProvider>
-                                      </BuildCreationProvider>
-                                    </SidebarProvider>
+                                    <BuildCreationProvider>
+                                      <PromptProvider>
+                                        <RemoteMDXEditorRealmProvider>
+                                          <ServiceWorker>
+                                            <div className="w-full h-full flex">
+                                              <ErrorBoundary fallback={ErrorPlaque}>
+                                                <div id={WS_BUTTON_BAR_ID} className="bg-muted">
+                                                  <ErrorBoundary fallback={ErrorMiniPlaque}>
+                                                    <WorkspaceButtonBar />
+                                                  </ErrorBoundary>
+                                                </div>
+                                                <ErrorBoundary fallback={ErrorPlaque}>{children}</ErrorBoundary>
+                                              </ErrorBoundary>
+                                            </div>
+                                          </ServiceWorker>
+                                        </RemoteMDXEditorRealmProvider>
+                                      </PromptProvider>
+                                    </BuildCreationProvider>
                                   </PublicationModalProvider>
                                 </GitStatusProvider>
                               </LivePreviewProvider>
