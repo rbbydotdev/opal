@@ -181,6 +181,7 @@ export const DocsPageBody = () => {
           style={{
             backgroundImage: "url('/opal.svg')",
             position: "absolute",
+            filter: mode === "dark" ? "invert(1) grayscale(1)" : "none",
             top: "0px",
             width: "100%",
             height: "100%",
@@ -191,13 +192,8 @@ export const DocsPageBody = () => {
           }}
         ></div>
         <div className="relative z-10 py-12 px-6 text-center">
-          <img
-            alt="Opal"
-            title="Opal"
-            src="/docs/opal-drawn.svg"
-            className={cn("w-32 sm:w-48 mx-auto mb-6", { invert: mode === "dark" })}
-          />
-          <h1 className="text-5xl font-bold mb-4 text-foreground sr-only">Opal Documentation</h1>
+          <img alt="Opal" title="Opal" src="/opal.svg" className={cn("w-32 sm:w-48 mx-auto mb-6 rounded-full")} />
+          <h1 className="text-5xl font-bold mb-4 text-foreground">Opal</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             A local-first markdown editor and static publisher—offline-ready, Git-aware, with complete self-custody and
             zero backend dependencies.
@@ -957,8 +953,8 @@ export const DocsPageBody = () => {
 
           <VideoPlayerFigure
             caption="Searching across all files in the workspace with regex support"
-            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/stream.m3u8"
-            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/thumbnails.vtt"
+            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-wide/stream.m3u8"
+            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-wide/thumbnails.vtt"
             title="Search Across Workspaces"
             className="max-w-[600px]"
           />
