@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SandboxRouteImport } from './routes/sandbox'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as AllSettingsRouteImport } from './routes/all-settings'
@@ -31,11 +30,6 @@ import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/
 import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_app/workspace/$workspaceName.$'
 import { Route as AppImportGhOwnerRepoSplatRouteImport } from './routes/_app/import/gh/$owner/$repo.$'
 
-const SandboxRoute = SandboxRouteImport.update({
-  id: '/sandbox',
-  path: '/sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
   path: '/preview',
@@ -146,7 +140,6 @@ export interface FileRoutesByFullPath {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/sandbox': typeof SandboxRoute
   '/about': typeof AppAboutRoute
   '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
@@ -168,7 +161,6 @@ export interface FileRoutesByTo {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/sandbox': typeof SandboxRoute
   '/about': typeof AppAboutRoute
   '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
@@ -191,7 +183,6 @@ export interface FileRoutesById {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/sandbox': typeof SandboxRoute
   '/_app/about': typeof AppAboutRoute
   '/_app/docs': typeof AppDocsRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
@@ -215,7 +206,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/sandbox'
     | '/about'
     | '/docs'
     | '/newWorkspace'
@@ -237,7 +227,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/sandbox'
     | '/about'
     | '/docs'
     | '/newWorkspace'
@@ -259,7 +248,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/sandbox'
     | '/_app/about'
     | '/_app/docs'
     | '/_app/newWorkspace'
@@ -283,7 +271,6 @@ export interface RootRouteChildren {
   AllSettingsRoute: typeof AllSettingsRoute
   PlaygroundRoute: typeof PlaygroundRoute
   PreviewRoute: typeof PreviewRoute
-  SandboxRoute: typeof SandboxRoute
   AuthGithubRoute: typeof AuthGithubRoute
   AuthNetlifyRoute: typeof AuthNetlifyRoute
   AuthVercelRoute: typeof AuthVercelRoute
@@ -291,13 +278,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sandbox': {
-      id: '/sandbox'
-      path: '/sandbox'
-      fullPath: '/sandbox'
-      preLoaderRoute: typeof SandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/preview': {
       id: '/preview'
       path: '/preview'
@@ -502,7 +482,6 @@ const rootRouteChildren: RootRouteChildren = {
   AllSettingsRoute: AllSettingsRoute,
   PlaygroundRoute: PlaygroundRoute,
   PreviewRoute: PreviewRoute,
-  SandboxRoute: SandboxRoute,
   AuthGithubRoute: AuthGithubRoute,
   AuthNetlifyRoute: AuthNetlifyRoute,
   AuthVercelRoute: AuthVercelRoute,

@@ -266,7 +266,7 @@ const _Handlers = {
         logger.log(
           `[HANDLER:ReplaceFiles] Processing file replacement | workspace: ${workspaceName} | pairs: ${paths.length}`
         );
-        return c.json({ paths: await handleFileReplace(new SuperUrl(c.req.url), workspaceName, paths) });
+        return c.json({ paths: await handleFileReplace(new URL(c.req.url), workspaceName, paths) });
       } catch (error) {
         logger.error(`Replace files error: ${error}`);
         throw error;
