@@ -1,6 +1,8 @@
 import { OpalSvg } from "@/components/OpalSvg";
 import { Button } from "@/components/ui/button";
+import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
 import MDIcon from "@/icons/md.svg?react";
+import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { useThemeContext } from "@/layouts/ThemeContext";
 import { cn } from "@/lib/utils";
 import {
@@ -58,8 +60,9 @@ import {
   Wifi,
   Zap,
 } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
 import { ImageWithViewer } from "./ImageWithViewer";
-import { VideoPlayer, VideoPlayerFigure } from "./VideoPlayer";
+import { VideoPlayerFigure } from "./VideoPlayer";
 // import { useTheme
 export const DocImage = ({ src, className, ...props }: { src: string; className?: string }) => {
   const { mode } = useThemeContext();
@@ -154,7 +157,23 @@ export const SubSection = ({
 );
 
 export const DocsPageBody = () => {
+  //hide left sidebar for mobile, quick hack
   const { mode } = useThemeContext();
+  // const isMobile = useIsMobile();
+  const {
+    capabilities: { isDesktopBrowser },
+  } = useBrowserCompat();
+  //shrink for mobile, quick ugly hack
+  const isMobile = !isDesktopBrowser; //useIsMobile();
+  const { left } = useSidebarPanes();
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    if (!mounted.current) {
+      if (isMobile && !left.isCollapsed) left.setIsCollapsed(true);
+
+      mounted.current = true;
+    }
+  }, [isMobile, left]);
   return (
     <>
       <div className="mb-16 relative flex justify-center items-center w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-border/50">
@@ -176,7 +195,7 @@ export const DocsPageBody = () => {
             alt="Opal"
             title="Opal"
             src="/docs/opal-drawn.svg"
-            className={cn("w-48 mx-auto mb-6", { invert: mode === "dark" })}
+            className={cn("w-32 sm:w-48 mx-auto mb-6", { invert: mode === "dark" })}
           />
           <h1 className="text-5xl font-bold mb-4 text-foreground sr-only">Opal Documentation</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -269,7 +288,7 @@ export const DocsPageBody = () => {
 
       {/* ========== 2. QUICK START ========== */}
       <Section title="Quick Start" subtitle="Get productive in minutes" id="quick-start">
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Terminal className="w-6 h-6 text-primary shrink-0" />
             <h4 className="font-semibold text-lg text-card-foreground">Installation</h4>
@@ -299,110 +318,112 @@ export const DocsPageBody = () => {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-8 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <PlusCircle className="w-7 h-7 text-primary shrink-0" />
-            <h4 className="font-semibold text-lg text-card-foreground">Create Your First Workspace</h4>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
-                title="Create Workspace"
-                caption="Step-by-step guide to creating your first workspace"
-              />
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <PlusCircle className="w-7 h-7 text-primary shrink-0" />
+              <h4 className="font-semibold text-lg text-card-foreground">Create Your First Workspace</h4>
             </div>
 
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Workspaces are isolated environments where you can organize your content. Each workspace has its own
-                storage, settings, and Git configuration.
-              </p>
-              <h5 className="font-semibold mb-3 text-card-foreground">Storage Options</h5>
-              <div className="space-y-3">
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">IndexedDB (Recommended)</div>
-                  <div className="text-xs text-muted-foreground">Fast browser storage, perfect for most users</div>
-                </div>
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">OPFS</div>
-                  <div className="text-xs text-muted-foreground">In-browser filesystem for plugin support</div>
-                </div>
-                <div className="bg-muted/50 rounded p-3">
-                  <div className="font-medium text-sm mb-1">Mounted OPFS</div>
-                  <div className="text-xs text-muted-foreground">Real disk access, survives history clearing</div>
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <VideoPlayerFigure
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
+                  title="Create Workspace"
+                  caption="Step-by-step guide to creating your first workspace"
+                />
+              </div>
+
+              <div>
+                <p className="text-muted-foreground mb-6">
+                  Workspaces are isolated environments where you can organize your content. Each workspace has its own
+                  storage, settings, and Git configuration.
+                </p>
+                <h5 className="font-semibold mb-3 text-card-foreground">Storage Options</h5>
+                <div className="space-y-3">
+                  <div className="bg-muted/50 rounded p-3">
+                    <div className="font-medium text-sm mb-1">IndexedDB (Recommended)</div>
+                    <div className="text-xs text-muted-foreground">Fast browser storage, perfect for most users</div>
+                  </div>
+                  <div className="bg-muted/50 rounded p-3">
+                    <div className="font-medium text-sm mb-1">OPFS</div>
+                    <div className="text-xs text-muted-foreground">In-browser filesystem for plugin support</div>
+                  </div>
+                  <div className="bg-muted/50 rounded p-3">
+                    <div className="font-medium text-sm mb-1">Mounted OPFS</div>
+                    <div className="text-xs text-muted-foreground">Real disk access, survives history clearing</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-8 mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <GitBranch className="w-7 h-7 text-primary shrink-0" />
-            <h4 className="font-semibold text-lg text-card-foreground">Connect to GitHub</h4>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              {/* */}
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/thumbnails.vtt"
-                caption="How to connect your workspace to GitHub"
-                title="Add GitHub Remote"
-              />
+          <div className="bg-card border border-border rounded-lg p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <GitBranch className="w-7 h-7 text-primary shrink-0" />
+              <h4 className="font-semibold text-lg text-card-foreground">Connect to GitHub</h4>
             </div>
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Add a GitHub remote to enable version control, collaboration, and cloud backup for your workspace.
-              </p>
-              <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
-                <h5 className="font-semibold mb-3 text-accent-foreground">Git Features</h5>
-                <ul className="space-y-2 text-sm text-accent-foreground/90">
-                  <li>✓ Push and pull changes</li>
-                  <li>✓ Branch management</li>
-                  <li>✓ Commit history</li>
-                  <li>✓ Merge conflicts resolution</li>
-                  <li>✓ OAuth or personal access token auth</li>
-                </ul>
+
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                {/* */}
+                <VideoPlayerFigure
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/thumbnails.vtt"
+                  caption="How to connect your workspace to GitHub"
+                  title="Add GitHub Remote"
+                />
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-6">
+                  Add a GitHub remote to enable version control, collaboration, and cloud backup for your workspace.
+                </p>
+                <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+                  <h5 className="font-semibold mb-3 text-accent-foreground">Git Features</h5>
+                  <ul className="space-y-2 text-sm text-accent-foreground/90">
+                    <li>✓ Push and pull changes</li>
+                    <li>✓ Branch management</li>
+                    <li>✓ Commit history</li>
+                    <li>✓ Merge conflicts resolution</li>
+                    <li>✓ OAuth or personal access token auth</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-card border border-border rounded-lg p-8 mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Rocket className="w-7 h-7 text-primary shrink-0" />
-            <h4 className="font-semibold text-lg text-card-foreground">Build and Publish Your Site</h4>
-          </div>
-
-          <div className="grid md:grid-cols-[600px_1fr] gap-8 items-start">
-            <div className="flex justify-center">
-              <VideoPlayerFigure
-                src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/stream.m3u8"
-                thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/thumbnails.vtt"
-                caption="Complete workflow from build to live deployment"
-                title="Build and Publish"
-              />
+          <div className="bg-card border border-border rounded-lg p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <Rocket className="w-7 h-7 text-primary shrink-0" />
+              <h4 className="font-semibold text-lg text-card-foreground">Build and Publish Your Site</h4>
             </div>
-            <div>
-              <p className="text-muted-foreground mb-6">
-                Transform your markdown workspace into a static website and deploy it to your favorite hosting platform
-                in minutes.
-              </p>
-              <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
-                <h5 className="font-semibold mb-3 text-accent-foreground">Quick Steps</h5>
-                <ul className="space-y-2 text-sm text-accent-foreground/90">
-                  <li>✓ Choose a build strategy (Freeform or Template)</li>
-                  <li>✓ Compile your workspace to static HTML</li>
-                  <li>✓ Add a deployment connection (GitHub, Netlify, Vercel, etc.)</li>
-                  <li>✓ Configure your deployment target</li>
-                  <li>✓ Publish and monitor deployment status</li>
-                  <li>✓ Each build is saved with success/failure status for later recall</li>
-                </ul>
+
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <VideoPlayerFigure
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/thumbnails.vtt"
+                  caption="Complete workflow from build to live deployment"
+                  title="Build and Publish"
+                />
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-6">
+                  Transform your markdown workspace into a static website and deploy it to your favorite hosting
+                  platform in minutes.
+                </p>
+                <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+                  <h5 className="font-semibold mb-3 text-accent-foreground">Quick Steps</h5>
+                  <ul className="space-y-2 text-sm text-accent-foreground/90">
+                    <li>✓ Choose a build strategy (Freeform or Template)</li>
+                    <li>✓ Compile your workspace to static HTML</li>
+                    <li>✓ Add a deployment connection (GitHub, Netlify, Vercel, etc.)</li>
+                    <li>✓ Configure your deployment target</li>
+                    <li>✓ Publish and monitor deployment status</li>
+                    <li>✓ Each build is saved with success/failure status for later recall</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -476,14 +497,14 @@ export const DocsPageBody = () => {
       {/* ========== 3. EDITOR & CONTENT CREATION ========== */}
       <Section title="Editor & Content Creation" subtitle="Powerful tools for writing and styling" id="editor">
         <SubSection title="Writing & Editing" id="writing-editing">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
                   <MDIcon className="text-primary w-8 h-8" /> Markdown Editing
                 </h4>
                 <ul className="space-y-2 text-muted-foreground">
-                  <li>✓ CommonMark syntax support</li>
+                  <li>✓ Github Flavored Markdown syntax support</li>
                   <li>✓ Rich text mode with visual toolbar</li>
                   <li>✓ Source mode with CodeMirror 6</li>
                   <li>✓ Auto-save on every edit</li>
@@ -493,8 +514,8 @@ export const DocsPageBody = () => {
                   </li>
                 </ul>
               </div>
-              <div>
-                <DocImage src="/docs/hello-editor.svg" />
+              <div className="flex justify-center items-center">
+                <DocImage src="/docs/md-arrow.svg" className="max-w-72" />
               </div>
             </div>
           </div>
@@ -533,20 +554,34 @@ export const DocsPageBody = () => {
                 <p className="text-muted-foreground mb-4">
                   Visualize document hierarchy with the tree view. Click elements to navigate, drag to reorder sections.
                 </p>
-                <DocImage src="/docs/markdown-tree.svg" className="w-96" />
               </div>
-              <div>
-                <p className="text-muted-foreground mb-4">
-                  Quick navigation with heading anchors and section links for easy document traversal.
-                </p>
-                <DocImage src="/docs/hash-headings.svg" className="h-72" />
+              <DocImage src="/docs/markdown-tree.svg" className="w-96" />
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-6 my-8">
+            <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+              <ListTree className="text-primary" />
+              Source Mode
+            </h4>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="flex flex-col justify-between">
+                <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
               </div>
+              <DocImage src="/docs/hash-headings.svg" className="w-72" />
             </div>
           </div>
         </SubSection>
 
+        {/* 
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                <Code2 className="text-primary" /> Source Mode
+              </h4>
+              <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
+              <DocImage src="/docs/hash-headings.svg" className="h-72" />
+            </div> */}
         <SubSection title="Working with Images" id="images">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
@@ -576,14 +611,6 @@ export const DocsPageBody = () => {
                 Drag images directly into the editor for instant embedding with automatic optimization.
               </p>
               <DocImage src="/docs/dnd-image.svg" className="h-72" />
-            </div>
-
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
-                <Code2 className="text-primary" /> Source Mode
-              </h4>
-              <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
-              <DocImage src="/docs/md-arrow.svg" className="h-72" />
             </div>
           </div>
 
@@ -657,14 +684,16 @@ export const DocsPageBody = () => {
             <p className="text-muted-foreground mb-4">
               See live previews of your CSS styling and background patterns as you edit.
             </p>
-            <VideoPlayer
+            <VideoPlayerFigure
               src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/stream.m3u8"
               thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/thumbnails.vtt"
-              title="Preview CSS Background"
+              title="Preview CSS Styling"
+              caption="Preview CSS Styling"
+              className="max-w-[600px]"
             />
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
               <FileCode className="text-primary" />
               Global Styles
@@ -680,7 +709,7 @@ export const DocsPageBody = () => {
             </ul>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
               <Palette className="text-primary" />
               Themes
@@ -690,10 +719,10 @@ export const DocsPageBody = () => {
               command palette.
             </p>
             <VideoPlayerFigure
-              className="w-[500px]"
               src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/stream.m3u8"
               thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/thumbnails.vtt"
               title="Theme Select"
+              className="max-w-[600px] my-4"
             />
             <ImageWithViewer src="/themes.png" alt="Theme options" />
           </div>
@@ -757,14 +786,14 @@ export const DocsPageBody = () => {
         </SubSection>
 
         <SubSection title="Stock Files" id="stock-files">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
               <Package className="w-6 h-6 text-primary shrink-0" />
               <h4 className="font-semibold text-lg text-card-foreground">Quick Start Templates</h4>
             </div>
             <p className="text-muted-foreground mb-6">
-              Stock files are pre-filled templates with full usage examples to help you get started quickly. Access
-              them from the file menu sidebar, context menu actions, or right-click menu in the file tree.
+              Stock files are pre-filled templates with full usage examples to help you get started quickly. Access them
+              from the file menu sidebar, context menu actions, or right-click menu in the file tree.
             </p>
 
             <h5 className="font-semibold mb-3 text-card-foreground">Available Stock Files</h5>
@@ -926,14 +955,13 @@ export const DocsPageBody = () => {
             </div>
           </div>
 
-          <div className="my-4 w-[500px]">
-            <VideoPlayerFigure
-              caption="Searching across all files in the workspace with regex support"
-              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/stream.m3u8"
-              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/thumbnails.vtt"
-              title="Search Across Workspaces"
-            />
-          </div>
+          <VideoPlayerFigure
+            caption="Searching across all files in the workspace with regex support"
+            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/stream.m3u8"
+            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-across-workspaces/thumbnails.vtt"
+            title="Search Across Workspaces"
+            className="max-w-[600px]"
+          />
 
           <div className="bg-accent/20 border border-accent rounded-lg p-6 mt-8">
             <h4 className="font-semibold text-lg mb-3 text-accent-foreground flex items-center gap-2">
@@ -999,7 +1027,7 @@ export const DocsPageBody = () => {
             />
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-4 text-card-foreground items-center gap-2 flex">
               <OpalSvg className="rounded-full" /> Workspace Features
             </h4>
@@ -1021,7 +1049,7 @@ export const DocsPageBody = () => {
         </SubSection>
 
         <SubSection title="Template Imports" id="template-imports">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
               <Download className="w-6 h-6 text-primary shrink-0" />
               <h4 className="font-semibold text-lg text-card-foreground">Import Templates from GitHub</h4>
@@ -1109,7 +1137,7 @@ export const DocsPageBody = () => {
 
       {/* ========== 5. VERSION CONTROL WITH GIT ========== */}
       <Section title="Version Control with Git" subtitle="Practical version control without complexity" id="git">
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
           <h4 className="font-semibold text-lg mb-4 text-card-foreground">Core Git Actions</h4>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-primary/10 rounded-lg">
@@ -1162,6 +1190,18 @@ export const DocsPageBody = () => {
               Support for custom Git servers with CORS configuration
             </li>
           </ul>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
+          <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
+            <GitMerge className="text-primary" />
+            Conflict Resolution
+          </h4>
+          <p className="text-muted-foreground mb-4">
+            When merge conflicts occur, Opal provides a visual editor to resolve them directly in the browser. Choose
+            between incoming changes, current changes, or edit manually to resolve conflicts.
+          </p>
+          <DocImage src="/docs/git-version-control.svg" className="w-[40rem]" />
         </div>
 
         <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
@@ -1543,7 +1583,7 @@ export const DocsPageBody = () => {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
               <Settings className="text-primary" />
               Configuration Steps
@@ -1653,7 +1693,7 @@ export const DocsPageBody = () => {
         </SubSection>
 
         <SubSection title="Technical Deep Dives" id="technical">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-4 text-card-foreground flex items-center gap-2">
               <Activity className="text-primary" />
               Service Workers
@@ -1746,7 +1786,7 @@ export const DocsPageBody = () => {
         </SubSection>
 
         <SubSection title="Keyboard Reference" id="keyboard-reference">
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <h4 className="font-semibold text-lg mb-4 text-card-foreground">Essential Shortcuts</h4>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">

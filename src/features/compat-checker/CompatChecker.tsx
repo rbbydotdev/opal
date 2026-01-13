@@ -25,7 +25,7 @@ function BrowserCompatProviderInternal({ children }: { children: React.ReactNode
   const featureLabels: Record<keyof typeof BrowserAbility, { name: string; description: string }> = {
     isDesktopBrowser: {
       name: "Desktop Browser Required",
-      description: "Mobile browsers are not supported due to responsiveness",
+      description: "Mobile browsers are not currently (coming soon)",
     },
     canUseIndexedDB: {
       name: "IndexedDB Support",

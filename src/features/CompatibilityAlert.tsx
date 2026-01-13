@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
 import { useDismissalState } from "@/hooks/useDismissalState";
-import { AlertTriangle, CheckCircle, ExternalLink, XCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, Book, CheckCircle, ExternalLink, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean } = {}) {
@@ -18,6 +19,7 @@ export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean 
   const [isDismissed, setIsDismissed] = useDismissalState("compatibility-alert-dismissed", false);
   const [rememberDismissal, setRememberDismissal] = useState(false);
 
+  const navigate = useNavigate();
   const { hasCompatibilityIssues, features } = useBrowserCompat();
 
   useEffect(() => {
@@ -100,10 +102,13 @@ export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean 
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.open("https://github.com/rbbydotdev/opal", "_blank")}
+                onClick={() => {
+                  void navigate({ to: "/docs" });
+                  setIsOpen(false);
+                }}
                 className="w-full sm:w-auto"
               >
-                <ExternalLink className="h-4 w-4" />
+                <Book className="h-4 w-4" />
                 Learn More
               </Button>
               <Button onClick={handleDismiss} className="w-full sm:w-auto">

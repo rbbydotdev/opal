@@ -97,8 +97,6 @@ export function useEditable<T extends TreeFile | TreeDir>({
       //select range of files
       e.preventDefault();
       e.stopPropagation();
-      // const focusedNode = currentWorkspace.disk.fileTree.nodeFromPath(focused);
-      // const range = currentWorkspace.disk.fileTree.findRange(treeNode, focusedNode!) ?? [];
       const range1 = flatTree.findIndex((p) => p === treeNode.path);
       const range2 = anchorIndex < 0 ? flatTree.indexOf(treeNode.path) : anchorIndex;
       const range = flatTree.slice(Math.min(range1, range2), Math.max(range1, range2) + 1);

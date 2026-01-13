@@ -12,7 +12,7 @@ export function VideoPlayerFigure({
   ...props
 }: { caption?: string; className?: string } & ComponentProps<typeof VideoPlayer>) {
   return (
-    <figure className={cn("bg-card border border-border rounded-lg p-4", className)}>
+    <figure className={cn("bg-card border border-border rounded-lg p-0 md:p-4", className)}>
       <VideoPlayer src={props.src} thumbnails={props.thumbnails} title="Create Workspace" />
       <figcaption className="mt-4 text-center text-sm text-muted-foreground">{caption}</figcaption>
     </figure>
@@ -59,7 +59,7 @@ export function VideoPlayer({
     <>
       {/* Inline Video Player */}
       {!isModal && (
-        <div className="relative w-full max-w-lg [&_.vds-time]:translate-y-[-26px] group">
+        <div className="relative w-full max-w-[600px] [&_.vds-time]:translate-y-[-26px] group">
           <MediaPlayer
             ref={playerRef}
             title={title}

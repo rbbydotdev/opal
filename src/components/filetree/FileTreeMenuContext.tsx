@@ -3,7 +3,7 @@ import { absPath, AbsPath, dirname } from "@/lib/paths2";
 import { Workspace } from "@/workspace/Workspace";
 import { useWorkspaceContext } from "@/workspace/WorkspaceContext";
 import { useLocation } from "@tanstack/react-router";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 const FileTreeMenuCtx = React.createContext<{
   anchorIndex: number;
@@ -122,7 +122,7 @@ export const FileTreeMenuCtxProvider = ({ children, scope }: { children: React.R
     return false;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const escapeKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setFileTreeCtx(() => ({

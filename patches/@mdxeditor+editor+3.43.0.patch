@@ -1,0 +1,86 @@
+diff --git a/node_modules/@mdxeditor/editor/dist/plugins/core/index.js b/node_modules/@mdxeditor/editor/dist/plugins/core/index.js
+index 633b343..7f3e980 100644
+--- a/node_modules/@mdxeditor/editor/dist/plugins/core/index.js
++++ b/node_modules/@mdxeditor/editor/dist/plugins/core/index.js
+@@ -362,13 +362,36 @@ const createActiveEditorSubscription$ = Appender(activeEditorSubscriptions$, (r,
+     }
+   ]);
+ });
++function fixCommonHtmlIssues(markdown) {
++  let fixed = markdown;
++
++  // Fix self-closing tags that aren't properly closed
++  // Match tags like <br>, <hr>, <img ...>, etc. that aren't self-closed
++  const selfClosingTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'param', 'source', 'track', 'wbr'];
++
++  selfClosingTags.forEach(tag => {
++    // Replace <tag> with <tag />
++    const simpleRegex = new RegExp(`<${tag}>`, 'gi');
++    fixed = fixed.replace(simpleRegex, `<${tag} />`);
++
++    // Replace <tag attr="value"> with <tag attr="value" />
++    const withAttrsRegex = new RegExp(`<${tag}\\s+([^>]*[^/])>`, 'gi');
++    fixed = fixed.replace(withAttrsRegex, `<${tag} $1 />`);
++  });
++
++  return fixed;
++}
++
+ function tryImportingMarkdown(r, node, markdownValue) {
++  // Pre-process markdown to fix common HTML issues
++  const fixedMarkdown = fixCommonHtmlIssues(markdownValue);
++
+   try {
+     importMarkdownToLexical({
+       root: node,
+       visitors: r.getValue(importVisitors$),
+       mdastExtensions: r.getValue(mdastExtensions$),
+-      markdown: markdownValue,
++      markdown: fixedMarkdown,
+       syntaxExtensions: r.getValue(syntaxExtensions$),
+       jsxComponentDescriptors: r.getValue(jsxComponentDescriptors$),
+       directiveDescriptors: r.getValue(directiveDescriptors$),
+@@ -377,12 +400,41 @@ function tryImportingMarkdown(r, node, markdownValue) {
+     r.pub(markdownProcessingError$, null);
+   } catch (e) {
+     if (e instanceof MarkdownParseError || e instanceof UnrecognizedMarkdownConstructError) {
++      // Try to import block by block to isolate the problematic content
++      const blocks = fixedMarkdown.split(/\n\n+/);
++
++      let hasError = false;
++      blocks.forEach((block, index) => {
++        if (block.trim() === '') return;
++
++        try {
++          importMarkdownToLexical({
++            root: node,
++            visitors: r.getValue(importVisitors$),
++            mdastExtensions: r.getValue(mdastExtensions$),
++            markdown: block,
++            syntaxExtensions: r.getValue(syntaxExtensions$),
++            jsxComponentDescriptors: r.getValue(jsxComponentDescriptors$),
++            directiveDescriptors: r.getValue(directiveDescriptors$),
++            codeBlockEditorDescriptors: r.getValue(codeBlockEditorDescriptors$)
++          });
++        } catch (blockError) {
++          hasError = true;
++
++          // Render this specific block as plain text
++          const paragraphNode = $createParagraphNode();
++          const textNode = new TextNode(block);
++          paragraphNode.append(textNode);
++          node.append(paragraphNode);
++        }
++      });
++
+       r.pubIn({
+         [markdown$]: markdownValue,
+-        [markdownProcessingError$]: {
++        [markdownProcessingError$]: hasError ? {
+           error: e.message,
+           source: markdownValue
+-        }
++        } : null
+       });
+     } else {
+       throw e;

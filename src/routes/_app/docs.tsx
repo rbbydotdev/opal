@@ -1,8 +1,9 @@
+import { Button } from "@/components/ui/button";
 import { DocsPageBody } from "@/docs/page";
-import { EditorSidebarLayout } from "@/layouts/EditorSidebarLayout";
+import { EditorSidebarLayout, useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, Circle } from "lucide-react";
+import { BookOpen, Circle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_app/docs")({
@@ -52,6 +53,7 @@ const sections: Section[] = [
 
 function DocsSidebar() {
   const [activeSection, setActiveSection] = useState<string>("");
+  const { left } = useSidebarPanes();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -110,6 +112,9 @@ function DocsSidebar() {
       <div className="flex items-center gap-2 mb-6 px-2">
         <BookOpen className="w-5 h-5 text-primary" />
         <h2 className="font-semibold text-lg">Contents</h2>
+        <Button variant="ghost" size="sm" onClick={() => left.setIsCollapsed(true)} className="ml-auto">
+          <X />
+        </Button>
       </div>
       <nav className="space-y-1">
         {sections.map((section) => {
@@ -125,8 +130,8 @@ function DocsSidebar() {
                   activeSection === section.id
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : isActive
-                    ? "text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      ? "text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                 )}
               >
                 <Circle
@@ -177,7 +182,7 @@ function DocsPage() {
       <EditorSidebarLayout
         sidebar={<DocsSidebar />}
         main={
-          <div className="h-full overflow-auto p-8">
+          <div className="h-full overflow-auto p-0 md:p-8">
             <DocsPageBody />
           </div>
         }

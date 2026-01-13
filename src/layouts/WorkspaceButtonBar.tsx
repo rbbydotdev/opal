@@ -60,7 +60,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import React from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import { useThemeContext } from "./ThemeContext";
 
@@ -298,7 +298,6 @@ function WorkspaceButtonBarContextMenu({ shrink }: { shrink: boolean }) {
   );
 }
 export function WorkspaceButtonBar() {
-  const { storedValue: shrink } = useShrink();
   const { pending } = useRequestSignals();
   const { currentWorkspace, workspaces } = useWorkspaceContext();
   const { storedValue: expand, setStoredValue: setExpand } = useLocalStorage("BigButtonBar/expand", false);
@@ -306,9 +305,21 @@ export function WorkspaceButtonBar() {
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
   const navigate = useNavigate();
+  const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
   const variant: ButtonVariant = shrink ? "sm" : "lg";
-
   const { devMode } = useDevMode();
+  const {
+    capabilities: { isDesktopBrowser },
+  } = useBrowserCompat();
+  //shrink for mobile, quick ugly hack
+  const isMobile = !isDesktopBrowser; //useIsMobile();
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    if (!mounted.current && isMobile) {
+      setShrink(true);
+      mounted.current = true;
+    }
+  }, [isMobile, setShrink]);
 
   return (
     <div className="flex relative">
@@ -531,7 +542,7 @@ const ErrorBadge = () => {
 
 const CompatibilityAlertButton = ({ variant }: { variant: ButtonVariant }) => {
   const { hasCompatibilityIssues } = useBrowserCompat();
-  const [showAlert, setShowAlert] = React.useState(false);
+  const [alertCount, setAlertCount] = React.useState(0);
 
   // Only show the button when there are compatibility issues
   if (!hasCompatibilityIssues) {
@@ -540,7 +551,7 @@ const CompatibilityAlertButton = ({ variant }: { variant: ButtonVariant }) => {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setShowAlert(true);
+    setAlertCount((prev) => prev + 1);
   };
 
   const RedNotificationDot = () => (
@@ -561,7 +572,7 @@ const CompatibilityAlertButton = ({ variant }: { variant: ButtonVariant }) => {
         to="#"
         onClick={handleClick}
       />
-      {showAlert && <CompatibilityAlert forceOpen={true} key={`compat-alert-${Date.now()}`} />}
+      {alertCount > 0 && <CompatibilityAlert forceOpen={true} key={`compat-alert-${alertCount}`} />}
     </>
   );
 };
