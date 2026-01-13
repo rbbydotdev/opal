@@ -328,8 +328,8 @@ export const DocsPageBody = () => {
             <div className="space-y-6">
               <div className="flex justify-center">
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace/thumbnails.vtt"
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-wide/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-wide/thumbnails.vtt"
                   title="Create Workspace"
                   caption="Step-by-step guide to creating your first workspace"
                 />
@@ -369,8 +369,8 @@ export const DocsPageBody = () => {
               <div className="flex justify-center">
                 {/* */}
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/add-github-remote/thumbnails.vtt"
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/git-add-remote-wide/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/git-add-remote-wide/thumbnails.vtt"
                   caption="How to connect your workspace to GitHub"
                   title="Add GitHub Remote"
                 />
@@ -402,8 +402,8 @@ export const DocsPageBody = () => {
             <div className="space-y-6">
               <div className="flex justify-center">
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish/thumbnails.vtt"
+                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish-wide/stream.m3u8"
+                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish-wide/thumbnails.vtt"
                   caption="Complete workflow from build to live deployment"
                   title="Build and Publish"
                 />
