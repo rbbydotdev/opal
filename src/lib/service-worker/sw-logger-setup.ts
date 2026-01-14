@@ -26,7 +26,7 @@ export function setupServiceWorkerLogger() {
   };
 
   function addHandlerIfControlled() {
-    if (navigator.serviceWorker.controller) {
+    if (navigator?.serviceWorker?.controller) {
       navigator.serviceWorker.addEventListener("message", handler);
     }
   }

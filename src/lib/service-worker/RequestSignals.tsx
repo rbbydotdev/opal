@@ -71,7 +71,7 @@ export class RequestSignals {
     if ("serviceWorker" in navigator) {
       // Handler for messages from the Service Worker
       function addHandlerIfControlled() {
-        if (navigator.serviceWorker.controller) {
+        if (navigator?.serviceWorker?.controller) {
           navigator.serviceWorker.addEventListener("message", handler as EventListener);
         }
       }

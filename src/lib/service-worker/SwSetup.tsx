@@ -3,7 +3,7 @@ import { useLayoutEffect, useState } from "react";
 import { setupServiceWorkerLogger } from "./sw-logger-setup";
 
 export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
-  const [ready, setReady] = useState(!!navigator.serviceWorker.controller);
+  const [ready, setReady] = useState(!!navigator?.serviceWorker?.controller);
   const { hasFeature } = useBrowserCompat();
 
   useLayoutEffect(() => {
@@ -20,7 +20,7 @@ export const ServiceWorker = ({ children }: { children?: React.ReactNode }) => {
 export async function setupServiceWorker(): Promise<void> {
   try {
     // Register the service worker if it's not controlling the page
-    if (!navigator.serviceWorker.controller) {
+    if (!navigator?.serviceWorker?.controller) {
       console.warn("Service Worker is not controlling the page.");
       await navigator.serviceWorker.register("/sw.js", {
         scope: "/",
