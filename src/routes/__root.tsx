@@ -1,6 +1,6 @@
 import "@/styles/styles.css";
 import { createRootRoute, Outlet, retainSearchParams } from "@tanstack/react-router";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 
 function RootComponent() {
