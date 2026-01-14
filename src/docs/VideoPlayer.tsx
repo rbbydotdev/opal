@@ -5,6 +5,7 @@ import { ComponentProps, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
+import { BrowserDetection } from "@/lib/BrowserDetection";
 
 export function VideoPlayerFigure({
   caption = "",
@@ -31,6 +32,7 @@ export function VideoPlayer({
   const [isModal, setIsModal] = useState(false);
   const [savedTime, setSavedTime] = useState(0);
   const playerRef = useRef<any>(null);
+  const isSafari = BrowserDetection.isSafari();
 
   const toggleModal = () => {
     // Capture current time and pause the video
@@ -55,6 +57,79 @@ export function VideoPlayer({
     }
   };
 
+  // Safari native video rendering
+  if (isSafari) {
+    return (
+      <>
+        {/* Inline Video Player */}
+        {!isModal && (
+          <div className="relative w-full max-w-[600px] group">
+            <video
+              ref={playerRef}
+              src={src}
+              title={title}
+              className="w-full aspect-video rounded-lg overflow-hidden bg-black"
+              crossOrigin="anonymous"
+              playsInline
+              preload="metadata"
+              controls
+              onLoadedMetadata={handlePlayerReady}
+            />
+
+            {/* Expand Button */}
+            <button
+              onClick={toggleModal}
+              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+              title="Open in modal"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Modal Video Player */}
+        {isModal && (
+          <div
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+            onClick={handleBackdropClick}
+          >
+            <div className="relative w-full max-w-6xl mx-auto">
+              <video
+                ref={playerRef}
+                src={src}
+                title={title}
+                className="w-full aspect-video rounded-lg overflow-hidden bg-black"
+                crossOrigin="anonymous"
+                playsInline
+                preload="metadata"
+                controls
+                onLoadedMetadata={handlePlayerReady}
+              />
+
+              {/* Close Button */}
+              <button
+                onClick={toggleModal}
+                className="absolute -top-12 right-0 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors duration-200"
+                title="Close modal"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Non-Safari: Use vidstack player
   return (
     <>
       {/* Inline Video Player */}
