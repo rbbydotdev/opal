@@ -15,6 +15,15 @@ A local-first markdown editor and static publisher—offline-ready, Git-aware, w
 - Template-based static site generation
 - Cross-workspace search and file navigation
 
+## Screenshots
+
+<p align="center">
+  <img src="/public/scrn1.webp" alt="screenshot 1" width="900px">
+</p>
+<p align="center">
+  <img src="/public/scrn2.webp" alt="screenshot 2" width="900px">
+</p>
+
 ## Get Started
 
 Visit **[opaledx.com](https://opaledx.com)** to start writing.
