@@ -37,6 +37,15 @@ npm install
 npm run dev
 ```
 
+## Hire Me 👋
+
+Opal Editor is completely free to use and own with absolutely no profit motive or incentive. Beyond creating a feature-rich Markdown editor and publisher for the open-source community, it also serves as a way for me to showcase my skills as a developer.
+
+If you like what you see and would like to hire me for your next project, feel free to reach out via [my website](https://rbby.dev) or by [email](mailto:robby.polana+opaledx@gmail.com).
+
+Enjoy!
+
+
 ## Credits
 
 - The workhorse of the WYSIWIG editing is from the great work of [@petyosi](https://github.com/petyosi) - [MDX-Editor](https://github.com/mdx-editor/editor)
