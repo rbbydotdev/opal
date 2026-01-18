@@ -63,7 +63,7 @@ export function GreetingsModal() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         style={quickZoomStyleHack}
-        className="[transform:none] left-0 top-0 right-0 w-full h-full max-w-none max-h-none rounded-none translate-x-0 translate-y-0 sm:[transform:translate(-50%,-50%)] sm:left-[50%] sm:top-[10vh] sm:right-auto sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[80vh] sm:rounded-lg flex flex-col"
+        className="left-0 top-0 right-0 w-full h-[100dvh] max-w-none max-h-none rounded-none translate-x-0 translate-y-0 p-4 pt-8 sm:[transform:translateX(-50%)] sm:left-[50%] sm:top-[10vh] sm:right-auto sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[80vh] sm:rounded-lg sm:p-6 flex flex-col overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle className="text-2xl">
