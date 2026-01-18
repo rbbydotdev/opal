@@ -3,8 +3,6 @@ import { BuildStrategy } from "@/data/dao/BuildRecord";
 import { Workspace } from "@/workspace/Workspace";
 import { BuildRunner } from "./BuildRunner";
 import { EleventyBuildRunner } from "./EleventyBuildRunner";
-import { BlogBuildRunner } from "./strategies/BlogBuildRunner";
-import { BookBuildRunner } from "./strategies/BookBuildRunner";
 import { FreeformBuildRunner } from "./strategies/FreeformBuildRunner";
 
 interface EleventyConfig {
@@ -22,10 +20,6 @@ export class BuildRunnerFactory {
     switch (build.strategy) {
       case "freeform":
         return FreeformBuildRunner.Show({ build, workspace });
-      case "book":
-        return BookBuildRunner.Show({ build, workspace });
-      case "blog":
-        return BlogBuildRunner.Show({ build, workspace });
       case "eleventy":
         return EleventyBuildRunner.Show({ build, workspace });
       default:
@@ -40,10 +34,6 @@ export class BuildRunnerFactory {
     switch (build.strategy) {
       case "freeform":
         return FreeformBuildRunner.Recall({ buildId, workspace });
-      case "book":
-        return BookBuildRunner.Recall({ buildId, workspace });
-      case "blog":
-        return BlogBuildRunner.Recall({ buildId, workspace });
       case "eleventy":
         return EleventyBuildRunner.Recall({ buildId, workspace });
       default:
@@ -67,10 +57,6 @@ export class BuildRunnerFactory {
     switch (strategy) {
       case "freeform":
         return FreeformBuildRunner.Create({ workspace, label, build });
-      case "book":
-        return BookBuildRunner.Create({ workspace, label, build });
-      case "blog":
-        return BlogBuildRunner.Create({ workspace, label, build });
       case "eleventy":
         return EleventyBuildRunner.Create({ workspace, label, build, config });
       default:

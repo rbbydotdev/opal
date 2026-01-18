@@ -112,5 +112,6 @@ export function useIsMobileAgent() {
   const {
     capabilities: { isDesktopBrowser },
   } = useBrowserCompat();
-  return !isDesktopBrowser;
+  return true;
+  // return !isDesktopBrowser;
 }

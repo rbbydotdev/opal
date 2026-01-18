@@ -108,6 +108,9 @@ export class Workspace {
   get remoteAuths() {
     return this._remoteAuths ?? [];
   }
+  get buildStrategy() {
+    return this.connector.buildStrategy;
+  }
 
   constructor(
     {

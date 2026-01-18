@@ -27,7 +27,7 @@ export function BuildModal({
     close: () => void;
   }>;
 }) {
-  const [strategy, setStrategy] = useState<BuildStrategy>("freeform");
+  const [strategy, setStrategy] = useState<BuildStrategy>(currentWorkspace.buildStrategy);
   const [isOpen, setIsOpen] = useState(false);
   const abortController = useModalSignal(isOpen, "operation cancelled by user");
   const { storedValue: showTimestamps, setStoredValue: setShowTimestamps } = useLocalStorage(
@@ -55,8 +55,9 @@ export function BuildModal({
 
   const handleOpenNew = useCallback(async () => {
     reset();
+    setStrategy(currentWorkspace.buildStrategy);
     setIsOpen(true);
-  }, [reset]);
+  }, [reset, currentWorkspace]);
 
   const handleOpenEdit = useCallback(
     async ({ buildId }: { buildId: string }) => {
@@ -155,20 +156,15 @@ export function BuildModal({
                     </span>
                   </div>
                 </SelectItem>
-                <SelectItem value="book" className="_p-4">
+                {/* TEMPORARILY DISABLED - 11ty functionality has bugs, hiding until fixed */}
+                {/* <SelectItem value="eleventy" className="_p-4">
                   <div className="flex flex-col items-start gap-1">
-                    <span className="font-medium">Book</span>
+                    <span className="font-medium">Eleventy (11ty)</span>
                     <span className="text-xs text-muted-foreground">
-                      Single page with table of contents for PDF printing
+                      Full 11ty-compatible SSG with data cascade and collections
                     </span>
                   </div>
-                </SelectItem>
-                <SelectItem value="blog" className="_p-4">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-medium">Blog</span>
-                    <span className="text-xs text-muted-foreground">Blog index with individual post pages</span>
-                  </div>
-                </SelectItem>
+                </SelectItem> */}
               </SelectContent>
             </Select>
           </div>

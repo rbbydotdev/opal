@@ -38,19 +38,42 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     },
     buildStrategy: "freeform",
   },
-  {
-    id: "blog",
-    name: "Blog",
-    description: "A simple blog setup with posts, styles, and sample content",
-    seedFiles: {
-      "/welcome.md": DefaultFile.BlogWelcome(),
-      "/index.md": DefaultFile.BlogIndex(),
-      "/posts/first-post.md": DefaultFile.BlogPost(),
-      "/posts/getting-started.md": DefaultFile.BlogGettingStarted(),
-      "/global.css": DefaultFile.GlobalCSS(),
-    },
-    buildStrategy: "blog",
-  },
+  // TEMPORARILY DISABLED - 11ty functionality has bugs, hiding until fixed
+  // {
+  //   id: "book",
+  //   name: "Book",
+  //   description: "11ty-based book with collections, data cascade, and table of contents",
+  //   seedFiles: {
+  //     "/index.md": DefaultFile.EleventyBookIndex(),
+  //     "/_includes/book-layout.njk": DefaultFile.EleventyBookLayout(),
+  //     "/_pages/chapter-1.md": DefaultFile.EleventyBookPage("Chapter 1: Introduction", 1),
+  //     "/_pages/chapter-2.md": DefaultFile.EleventyBookPage("Chapter 2: Getting Started", 2),
+  //     "/_pages/chapter-3.md": DefaultFile.EleventyBookPage("Chapter 3: Advanced Topics", 3),
+  //     "/_data/site.json": DefaultFile.EleventyBookSiteData(),
+  //     "/global.css": globalSeedCss,
+  //   },
+  //   navigate: "/index.md",
+  //   buildStrategy: "eleventy",
+  // },
+  // {
+  //   id: "blog",
+  //   name: "Blog",
+  //   description: "11ty-based blog with collections, layouts, and front matter",
+  //   seedFiles: {
+  //     "/index.md": DefaultFile.EleventyBlogIndex(),
+  //     "/_includes/blog-index.njk": DefaultFile.EleventyBlogIndexLayout(),
+  //     "/_includes/post-layout.njk": DefaultFile.EleventyBlogPostLayout(),
+  //     "/posts/welcome.md": DefaultFile.EleventyBlogPost("Welcome to My Blog", "Get started with this Eleventy-powered blog"),
+  //     "/posts/getting-started.md": DefaultFile.EleventyBlogPost(
+  //       "Getting Started with Eleventy",
+  //       "Learn how to use Eleventy for your blog"
+  //     ),
+  //     "/_data/site.json": DefaultFile.EleventyBlogSiteData(),
+  //     "/global.css": globalSeedCss,
+  //   },
+  //   navigate: "/index.md",
+  //   buildStrategy: "eleventy",
+  // },
 ];
 
 export const DefaultTemplate = WORKSPACE_TEMPLATES.find((t) => t.id === "blank")!;

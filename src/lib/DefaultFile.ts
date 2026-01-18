@@ -194,6 +194,226 @@ Start writing your own content and make this blog yours!
 `);
   },
 
+  // 11ty Book template helpers
+  EleventyBookLayout: () => {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} | {{ site.title }}</title>
+  <link rel="stylesheet" href="/global.css">
+  <style>
+    @media print {
+      .page-break { page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>{{ title }}</h1>
+    {{ content }}
+  </article>
+</body>
+</html>`;
+  },
+
+  EleventyBookIndex: () => {
+    return `---
+layout: book-layout.njk
+title: My Book
+permalink: /index.html
+---
+
+# Table of Contents
+
+{% for page in collections.bookPages | sort(attribute="data.order") %}
+<div class="toc-entry">
+  <a href="{{ page.url }}">{{ loop.index }}. {{ page.data.title }}</a>
+</div>
+{% endfor %}
+
+<div class="page-break"></div>
+
+{% for page in collections.bookPages | sort(attribute="data.order") %}
+<section class="book-page">
+  <h2>{{ loop.index }}. {{ page.data.title }}</h2>
+  {{ page.templateContent | safe }}
+</section>
+<div class="page-break"></div>
+{% endfor %}`;
+  },
+
+  EleventyBookPage: (title?: string, order?: number) => {
+    const pageTitle = title || "Chapter 1";
+    const pageOrder = order || 1;
+    return `---
+layout: book-layout.njk
+title: ${pageTitle}
+tags: bookPages
+order: ${pageOrder}
+---
+
+## Introduction
+
+This is the beginning of ${pageTitle}. Write your content here using Markdown.
+
+## Key Points
+
+- Point one
+- Point two
+- Point three
+
+## Conclusion
+
+Summary of the chapter goes here.`;
+  },
+
+  EleventyBookSiteData: () => {
+    return JSON.stringify(
+      {
+        title: "My Book",
+        author: "Author Name",
+        description: "A book built with Eleventy",
+      },
+      null,
+      2
+    );
+  },
+
+  // 11ty Blog template helpers
+  EleventyBlogPostLayout: () => {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} | {{ site.title }}</title>
+  <link rel="stylesheet" href="/global.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">← Back to Blog</a>
+    </nav>
+  </header>
+  <main>
+    <article>
+      <h1>{{ title }}</h1>
+      {% if date %}
+      <time datetime="{{ date | date: '%Y-%m-%d' }}">{{ date | date: '%B %d, %Y' }}</time>
+      {% endif %}
+      {% if tags %}
+      <div class="tags">
+        {% for tag in tags %}
+          {% if tag != "posts" %}
+          <span class="tag">{{ tag }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="content">
+        {{ content }}
+      </div>
+    </article>
+  </main>
+</body>
+</html>`;
+  },
+
+  EleventyBlogIndexLayout: () => {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site.title }}</title>
+  <link rel="stylesheet" href="/global.css">
+</head>
+<body>
+  <header>
+    <h1>{{ site.title }}</h1>
+    <p>{{ site.description }}</p>
+  </header>
+  <main>
+    {{ content }}
+  </main>
+  <footer>
+    <p>&copy; {{ site.year }} {{ site.author }}</p>
+  </footer>
+</body>
+</html>`;
+  },
+
+  EleventyBlogIndex: () => {
+    return `---
+layout: blog-index.njk
+title: Blog
+permalink: /index.html
+---
+
+## Recent Posts
+
+{% for post in collections.posts | reverse %}
+<article class="post-preview">
+  <h3><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+  <time datetime="{{ post.date | date: '%Y-%m-%d' }}">{{ post.date | date: '%B %d, %Y' }}</time>
+  {% if post.data.excerpt %}
+  <p>{{ post.data.excerpt }}</p>
+  {% endif %}
+  <a href="{{ post.url }}">Read more →</a>
+</article>
+{% endfor %}`;
+  },
+
+  EleventyBlogPost: (title?: string, excerpt?: string) => {
+    const postTitle = title || "My First Post";
+    const postExcerpt = excerpt || "This is my first blog post using Eleventy!";
+    const today = new Date().toISOString().split("T")[0];
+    return `---
+layout: post-layout.njk
+title: ${postTitle}
+date: ${today}
+tags:
+  - posts
+  - getting-started
+excerpt: ${postExcerpt}
+---
+
+## Welcome!
+
+This is your first blog post built with Eleventy. You can write your content here using Markdown.
+
+## Features
+
+- **Collections**: Posts are automatically grouped using the \`posts\` tag
+- **Layouts**: This post uses the \`post-layout.njk\` layout
+- **Front Matter**: Metadata like title, date, and tags are defined at the top
+- **Markdown**: Write your content in clean, simple Markdown
+
+## Next Steps
+
+1. Create more posts in the \`posts/\` directory
+2. Customize the layouts in \`_includes/\`
+3. Add global data in \`_data/\`
+4. Build your site!
+
+Happy blogging!`;
+  },
+
+  EleventyBlogSiteData: () => {
+    return JSON.stringify(
+      {
+        title: "My Eleventy Blog",
+        author: "Your Name",
+        description: "A blog built with Eleventy",
+        year: new Date().getFullYear(),
+      },
+      null,
+      2
+    );
+  },
+
   fromPath: (path: AbsPath, title?: string): string => {
     const pathStr = path.toString();
 

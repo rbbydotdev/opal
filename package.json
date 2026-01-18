@@ -21,6 +21,8 @@
     "test:debug": "playwright test --debug",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
+    "test:unit": "tsx src/services/build/BuildStrategies.test.ts",
+    "test:build": "tsx src/services/build/BuildStrategies.test.ts",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler pages deploy dist",
     "pages:dev": "wrangler pages dev dist"

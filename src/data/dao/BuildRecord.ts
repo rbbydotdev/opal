@@ -2,7 +2,7 @@ import { DiskJType } from "@/data/disk/DiskType";
 import { AbsPath } from "@/lib/paths2";
 import { LogLine } from "@/types/RunnerTypes";
 
-export type BuildStrategy = "freeform" | "book" | "blog" | "eleventy";
+export type BuildStrategy = "freeform" | "eleventy";
 
 export interface BuildRecord {
   guid: string;

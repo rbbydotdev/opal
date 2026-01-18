@@ -13,18 +13,21 @@ import { useDismissalState } from "@/hooks/useDismissalState";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Book, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQueryState } from "nuqs";
 
 export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean } = {}) {
   let [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useDismissalState("compatibility-alert-dismissed", false);
   const [rememberDismissal, setRememberDismissal] = useState(false);
+  const [refParam] = useQueryState("ref");
 
   const navigate = useNavigate();
   const { hasCompatibilityIssues, features } = useBrowserCompat();
 
   useEffect(() => {
-    if (hasCompatibilityIssues && (!isDismissed || forceOpen)) setIsOpen(true);
-  }, [hasCompatibilityIssues, isDismissed, forceOpen]);
+    // Don't show if greetings modal is open (refParam exists)
+    if (hasCompatibilityIssues && (!isDismissed || forceOpen) && !refParam) setIsOpen(true);
+  }, [hasCompatibilityIssues, isDismissed, forceOpen, refParam]);
 
   const handleDismiss = () => {
     if (rememberDismissal) {
@@ -103,7 +106,8 @@ export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean 
               <Button
                 variant="outline"
                 onClick={() => {
-                  void navigate({ to: "/docs" });
+                  //@ts-ignore
+                  void navigate({ to: "/docs/" });
                   setIsOpen(false);
                 }}
                 className="w-full sm:w-auto"
