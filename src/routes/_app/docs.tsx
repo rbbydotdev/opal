@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { DocsPageBody } from "@/docs/page";
+import { SpotlightSearch } from "@/features/spotlight/SpotlightSearch";
+import { useHomeSpotlightCommands } from "@/features/spotlight/useHomeSpotlightCommands";
 import { EditorSidebarLayout, useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { BookOpen, Circle, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_app/docs")({
   component: DocsPage,
@@ -54,50 +56,123 @@ const sections: Section[] = [
 function DocsSidebar() {
   const [activeSection, setActiveSection] = useState<string>("");
   const { left } = useSidebarPanes();
+  const programmaticTargetRef = useRef<string | null>(null);
+  const activeSectionRef = useRef<string>("");
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Find the first intersecting section
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => {
-            // Sort by position in viewport (topmost first)
-            return a.boundingClientRect.top - b.boundingClientRect.top;
-          });
+  // Keep ref in sync with state
+  activeSectionRef.current = activeSection;
 
-        if (visibleSections.length > 0) {
-          const activeId = visibleSections[0]!.target.id;
-          setActiveSection(activeId);
-        }
-      },
-      {
-        rootMargin: "-20% 0px -60% 0px", // Trigger when section is in upper portion of viewport
-        threshold: [0, 0.1, 0.5, 1],
-      }
-    );
+  // Helper to calculate which section is currently topmost in viewport
+  const calculateTopmostSection = (): string | null => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return null;
 
-    // Observe all sections and subsections
+    const allSectionIds: string[] = [];
     sections.forEach((section) => {
-      const element = document.getElementById(section.id);
-      if (element) {
-        observer.observe(element);
+      allSectionIds.push(section.id);
+      if (section.subsections) {
+        section.subsections.forEach((sub) => allSectionIds.push(sub.id));
       }
-      // Observe subsections
-      section.subsections?.forEach((subsection) => {
-        const subElement = document.getElementById(subsection.id);
-        if (subElement) {
-          observer.observe(subElement);
-        }
-      });
     });
 
-    return () => observer.disconnect();
+    // Get the container's bounding rect to calculate positions relative to viewport
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const viewportTop = containerRect.top + 100; // 100px from the top of the container
+
+    let closestSection: string | null = null;
+    let closestDistance = Infinity;
+
+    allSectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (!element) return;
+
+      const elementRect = element.getBoundingClientRect();
+      const elementTop = elementRect.top;
+
+      // Only consider sections at or above the viewport reference point
+      if (elementTop <= viewportTop) {
+        const distance = viewportTop - elementTop;
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = id;
+        }
+      }
+    });
+
+    return closestSection;
+  };
+
+  useEffect(() => {
+    // Find the main content scroll container - it's inside EditorSidebarLayout
+    const findScrollContainer = () => {
+      // The main content area with overflow-auto
+      const containers = document.querySelectorAll(".h-full.overflow-auto");
+      // Find the one that contains the docs content (not the sidebar)
+      for (let i = 0; i < containers.length; i++) {
+        const container = containers[i] as HTMLElement;
+        if (container.querySelector("#introduction")) {
+          return container;
+        }
+      }
+      return null;
+    };
+
+    const scrollContainer = findScrollContainer();
+    if (!scrollContainer) {
+      console.warn("Docs scroll container not found");
+      return;
+    }
+
+    // Store in ref for use by other functions
+    scrollContainerRef.current = scrollContainer;
+
+    const handleScroll = () => {
+      // If we're doing a programmatic scroll, ignore all scroll events
+      // The scrollend event will re-enable tracking when animation completes
+      if (programmaticTargetRef.current) {
+        return;
+      }
+
+      // Normal user scrolling - update based on calculation
+      const calculatedSection = calculateTopmostSection();
+      if (calculatedSection && calculatedSection !== activeSectionRef.current) {
+        setActiveSection(calculatedSection);
+      }
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Set initial active section
+    const initialSection = calculateTopmostSection();
+    if (initialSection) {
+      setActiveSection(initialSection);
+    }
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const scrollToSection = (id: string) => {
+    // Optimistically set the active section immediately
+    setActiveSection(id);
+
+    // Mark this as the programmatic scroll target
+    programmaticTargetRef.current = id;
+
     const element = document.getElementById(id);
-    if (element) {
+    const scrollContainer = scrollContainerRef.current;
+
+    if (element && scrollContainer) {
+      // Listen for when the smooth scroll completes
+      const handleScrollEnd = () => {
+        // Re-enable scroll tracking
+        programmaticTargetRef.current = null;
+        scrollContainer.removeEventListener("scrollend", handleScrollEnd);
+      };
+
+      scrollContainer.addEventListener("scrollend", handleScrollEnd, { once: true });
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
@@ -111,7 +186,7 @@ function DocsSidebar() {
     <div className="h-full bg-sidebar p-4 overflow-auto">
       <div className="flex items-center gap-2 mb-6 px-2">
         <BookOpen className="w-5 h-5 text-primary" />
-        <h2 className="font-semibold text-lg">Contents</h2>
+        <h2 className="font-semibold text-lg">Opal Documentation</h2>
         <Button variant="ghost" size="sm" onClick={() => left.setIsCollapsed(true)} className="ml-auto">
           <X />
         </Button>
@@ -177,17 +252,28 @@ function DocsSidebar() {
 }
 
 function DocsPage() {
+  const { cmdMap, commands } = useHomeSpotlightCommands();
+
   return (
-    <div className="min-w-0 h-full flex w-full">
-      <EditorSidebarLayout
-        sidebar={<DocsSidebar />}
-        main={
-          <div className="h-full overflow-auto p-0 md:p-8">
-            <DocsPageBody />
-          </div>
-        }
-        rightPaneEnabled={false}
+    <>
+      <div className="min-w-0 h-full flex w-full">
+        <EditorSidebarLayout
+          sidebar={<DocsSidebar />}
+          main={
+            <div className="h-full overflow-auto p-0 md:p-8">
+              <DocsPageBody />
+            </div>
+          }
+          rightPaneEnabled={false}
+        />
+      </div>
+      <SpotlightSearch
+        files={[]}
+        commands={commands}
+        cmdMap={cmdMap}
+        placeholder="Spotlight Search..."
+        useFilenameSearch={true}
       />
-    </div>
+    </>
   );
 }

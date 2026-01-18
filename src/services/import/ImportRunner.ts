@@ -9,6 +9,7 @@ import { WorkspaceDefaultManifest, WorkspaceImportManifestType } from "@/service
 import { Runner } from "@/types/RunnerInterfaces";
 import { Workspace } from "@/workspace/Workspace";
 import { join } from "path";
+import { sanitizeIfNeeded } from "@/features/import/sanitize";
 
 export type ImportState = {
   status: "idle" | "success" | "pending" | "error";
@@ -125,7 +126,9 @@ export abstract class BaseImportRunner<TConfig = any> extends ObservableRunner<I
           continue;
         }
         abortSignal?.throwIfAborted();
-        await this.tmpDisk.writeFileRecursive(absPath(file.path), await file.content());
+        const content = await file.content();
+        const sanitized = sanitizeIfNeeded(file.path, content);
+        await this.tmpDisk.writeFileRecursive(absPath(file.path), sanitized);
         this.log(`Imported file: ${file.path}`, "info");
       }
 

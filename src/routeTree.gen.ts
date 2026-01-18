@@ -23,10 +23,8 @@ import { Route as AppThemesRouteImport } from './routes/_app/themes'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppNewWorkspaceRouteImport } from './routes/_app/newWorkspace'
 import { Route as AppDocsRouteImport } from './routes/_app/docs'
-import { Route as AppAboutRouteImport } from './routes/_app/about'
 import { Route as AppWorkspaceWorkspaceNameRouteImport } from './routes/_app/workspace/$workspaceName'
 import { Route as AppWorkspaceWorkspaceNameIndexRouteImport } from './routes/_app/workspace/$workspaceName/index'
-import { Route as AppWorkspaceWorkspaceNameSettingsRouteImport } from './routes/_app/workspace/$workspaceName/settings'
 import { Route as AppWorkspaceWorkspaceNameSplatRouteImport } from './routes/_app/workspace/$workspaceName.$'
 import { Route as AppImportGhOwnerRepoSplatRouteImport } from './routes/_app/import/gh/$owner/$repo.$'
 
@@ -99,11 +97,6 @@ const AppDocsRoute = AppDocsRouteImport.update({
   path: '/docs',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAboutRoute = AppAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppWorkspaceWorkspaceNameRoute =
   AppWorkspaceWorkspaceNameRouteImport.update({
     id: '/$workspaceName',
@@ -114,12 +107,6 @@ const AppWorkspaceWorkspaceNameIndexRoute =
   AppWorkspaceWorkspaceNameIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
-  } as any)
-const AppWorkspaceWorkspaceNameSettingsRoute =
-  AppWorkspaceWorkspaceNameSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
     getParentRoute: () => AppWorkspaceWorkspaceNameRoute,
   } as any)
 const AppWorkspaceWorkspaceNameSplatRoute =
@@ -140,7 +127,6 @@ export interface FileRoutesByFullPath {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/about': typeof AppAboutRoute
   '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
@@ -152,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
-  '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
   '/import/gh/$owner/$repo/$': typeof AppImportGhOwnerRepoSplatRoute
 }
@@ -161,7 +146,6 @@ export interface FileRoutesByTo {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/about': typeof AppAboutRoute
   '/docs': typeof AppDocsRoute
   '/newWorkspace': typeof AppNewWorkspaceRoute
   '/settings': typeof AppSettingsRoute
@@ -172,7 +156,6 @@ export interface FileRoutesByTo {
   '/auth/vercel': typeof AuthVercelRoute
   '/': typeof AppIndexRoute
   '/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
-  '/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameIndexRoute
   '/import/gh/$owner/$repo/$': typeof AppImportGhOwnerRepoSplatRoute
 }
@@ -183,7 +166,6 @@ export interface FileRoutesById {
   '/all-settings': typeof AllSettingsRoute
   '/playground': typeof PlaygroundRoute
   '/preview': typeof PreviewRoute
-  '/_app/about': typeof AppAboutRoute
   '/_app/docs': typeof AppDocsRoute
   '/_app/newWorkspace': typeof AppNewWorkspaceRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -195,7 +177,6 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/workspace/$workspaceName': typeof AppWorkspaceWorkspaceNameRouteWithChildren
   '/_app/workspace/$workspaceName/$': typeof AppWorkspaceWorkspaceNameSplatRoute
-  '/_app/workspace/$workspaceName/settings': typeof AppWorkspaceWorkspaceNameSettingsRoute
   '/_app/workspace/$workspaceName/': typeof AppWorkspaceWorkspaceNameIndexRoute
   '/_app/import/gh/$owner/$repo/$': typeof AppImportGhOwnerRepoSplatRoute
 }
@@ -206,7 +187,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/about'
     | '/docs'
     | '/newWorkspace'
     | '/settings'
@@ -218,7 +198,6 @@ export interface FileRouteTypes {
     | '/'
     | '/workspace/$workspaceName'
     | '/workspace/$workspaceName/$'
-    | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName/'
     | '/import/gh/$owner/$repo/$'
   fileRoutesByTo: FileRoutesByTo
@@ -227,7 +206,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/about'
     | '/docs'
     | '/newWorkspace'
     | '/settings'
@@ -238,7 +216,6 @@ export interface FileRouteTypes {
     | '/auth/vercel'
     | '/'
     | '/workspace/$workspaceName/$'
-    | '/workspace/$workspaceName/settings'
     | '/workspace/$workspaceName'
     | '/import/gh/$owner/$repo/$'
   id:
@@ -248,7 +225,6 @@ export interface FileRouteTypes {
     | '/all-settings'
     | '/playground'
     | '/preview'
-    | '/_app/about'
     | '/_app/docs'
     | '/_app/newWorkspace'
     | '/_app/settings'
@@ -260,7 +236,6 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/workspace/$workspaceName'
     | '/_app/workspace/$workspaceName/$'
-    | '/_app/workspace/$workspaceName/settings'
     | '/_app/workspace/$workspaceName/'
     | '/_app/import/gh/$owner/$repo/$'
   fileRoutesById: FileRoutesById
@@ -376,13 +351,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDocsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/about': {
-      id: '/_app/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AppAboutRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/workspace/$workspaceName': {
       id: '/_app/workspace/$workspaceName'
       path: '/$workspaceName'
@@ -395,13 +363,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/workspace/$workspaceName/'
       preLoaderRoute: typeof AppWorkspaceWorkspaceNameIndexRouteImport
-      parentRoute: typeof AppWorkspaceWorkspaceNameRoute
-    }
-    '/_app/workspace/$workspaceName/settings': {
-      id: '/_app/workspace/$workspaceName/settings'
-      path: '/settings'
-      fullPath: '/workspace/$workspaceName/settings'
-      preLoaderRoute: typeof AppWorkspaceWorkspaceNameSettingsRouteImport
       parentRoute: typeof AppWorkspaceWorkspaceNameRoute
     }
     '/_app/workspace/$workspaceName/$': {
@@ -423,15 +384,12 @@ declare module '@tanstack/react-router' {
 
 interface AppWorkspaceWorkspaceNameRouteChildren {
   AppWorkspaceWorkspaceNameSplatRoute: typeof AppWorkspaceWorkspaceNameSplatRoute
-  AppWorkspaceWorkspaceNameSettingsRoute: typeof AppWorkspaceWorkspaceNameSettingsRoute
   AppWorkspaceWorkspaceNameIndexRoute: typeof AppWorkspaceWorkspaceNameIndexRoute
 }
 
 const AppWorkspaceWorkspaceNameRouteChildren: AppWorkspaceWorkspaceNameRouteChildren =
   {
     AppWorkspaceWorkspaceNameSplatRoute: AppWorkspaceWorkspaceNameSplatRoute,
-    AppWorkspaceWorkspaceNameSettingsRoute:
-      AppWorkspaceWorkspaceNameSettingsRoute,
     AppWorkspaceWorkspaceNameIndexRoute: AppWorkspaceWorkspaceNameIndexRoute,
   }
 
@@ -453,7 +411,6 @@ const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppAboutRoute: typeof AppAboutRoute
   AppDocsRoute: typeof AppDocsRoute
   AppNewWorkspaceRoute: typeof AppNewWorkspaceRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -464,7 +421,6 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAboutRoute: AppAboutRoute,
   AppDocsRoute: AppDocsRoute,
   AppNewWorkspaceRoute: AppNewWorkspaceRoute,
   AppSettingsRoute: AppSettingsRoute,

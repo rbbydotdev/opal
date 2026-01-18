@@ -86,14 +86,10 @@ export function PublicationModalDestinationContent({
 
   const currentRemoteAuthId = formValues.remoteAuthId;
 
-  const remoteAuth = useMemo(
-    () => {
-      const matchedAuth = remoteAuths.find((ra) => ra.guid === currentRemoteAuthId) || NULL_REMOTE_AUTH;
-      return RemoteAuthDAO.FromJSON(matchedAuth);
-    },
-    // ? RemoteAuthDAO.FromJSONSafe(remoteAuths.find((ra) => ra.guid === currentRemoteAuthId), currentRemoteAuthId)
-    [currentRemoteAuthId, remoteAuths]
-  );
+  const remoteAuth = useMemo(() => {
+    const matchedAuth = remoteAuths.find((ra) => ra.guid === currentRemoteAuthId) || NULL_REMOTE_AUTH;
+    return RemoteAuthDAO.FromJSON(matchedAuth);
+  }, [currentRemoteAuthId, remoteAuths]);
 
   const debouncedFormValues = useDebounce(formValues, 500);
   useEffect(() => {

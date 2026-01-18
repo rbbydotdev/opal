@@ -1,6 +1,5 @@
 import { BuildInfo } from "@/components/publish-modal/BuildInfo";
 import { PublishViewType } from "@/components/publish-modal/PublishModalStack";
-import { ViewUrlButton } from "@/components/publish-modal/ViewUrlButton";
 import { ViewDeployButton } from "@/components/publish-modal/ViewDeployButton";
 import { RemoteAuthSourceIconComponent } from "@/components/remote-auth/RemoteAuthSourceIcon";
 import { RemoteAuthTemplates, typeSource } from "@/components/remote-auth/RemoteAuthTemplate";
@@ -22,7 +21,6 @@ import { DeployRunner } from "@/services/deploy/DeployRunner";
 import { Workspace } from "@/workspace/Workspace";
 import {
   AlertTriangle,
-  ArrowUpRightIcon,
   CheckCircle,
   Clock,
   Loader,
@@ -71,10 +69,6 @@ export function PublicationModalPublishContent({
     () => DeployRunner.Show({ destination, deploy }),
     [destination, deploy]
   );
-  // const { runner, execute, logs } = useRunner<DeployRunner<any>>(DeployRunner.Show({ destination, deploy }), [
-  //   destination,
-  //   deploy,
-  // ]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -266,14 +260,10 @@ export function PublicationModalPublishContent({
                 </ViewDeployButton>
               )}
               {runner?.target.deploymentUrl && runner.target.deploymentUrl !== destination?.destinationUrl && (
-                <ViewDeployButton url={runner.target.deploymentUrl}>
-                  View Deploy
-                </ViewDeployButton>
+                <ViewDeployButton url={runner.target.deploymentUrl}>View Deploy</ViewDeployButton>
               )}
               {!destination?.destinationUrl && runner?.target.effectiveUrl && (
-                <ViewDeployButton url={runner.target.effectiveUrl}>
-                  View
-                </ViewDeployButton>
+                <ViewDeployButton url={runner.target.effectiveUrl}>View</ViewDeployButton>
               )}
             </div>
           </div>

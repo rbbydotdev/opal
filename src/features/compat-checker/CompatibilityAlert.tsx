@@ -11,7 +11,7 @@ import {
 import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
 import { useDismissalState } from "@/hooks/useDismissalState";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Book, CheckCircle, ExternalLink, XCircle } from "lucide-react";
+import { AlertTriangle, Book, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean } = {}) {
@@ -96,10 +96,10 @@ export function CompatibilityAlert({ forceOpen = false }: { forceOpen?: boolean 
           </div>
           <div className="flex-shrink-0 flex-col gap-3 pt-4">
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="secondary" className="w-full sm:w-auto">
+              {/* <Button variant="secondary" className="w-full sm:w-auto">
                 <ExternalLink className="h-4 w-4" />
                 Watch Demo
-              </Button>
+              </Button> */}
               <Button
                 variant="outline"
                 onClick={() => {

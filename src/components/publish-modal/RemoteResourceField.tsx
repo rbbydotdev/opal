@@ -36,11 +36,9 @@ export function RemoteResourceRoot<T extends FieldValues, K extends FieldPath<T>
   const [mode, setMode] = useState<RemoteResourceMode>("input");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (mode === "input" && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [mode]);
+  if (mode === "input" && inputRef.current && document.activeElement !== inputRef.current) {
+    inputRef.current.focus();
+  }
 
   const contextValue: RemoteResourceContextValue<T, K> = {
     mode,
@@ -160,7 +158,6 @@ export function RemoteResourceCreate({
   }
 
   if (mode !== "create") return null;
-  //useEffect mode === "create" ???
   const handleCreateSubmit = async () => {
     try {
       pauseCloseRef.current = true;

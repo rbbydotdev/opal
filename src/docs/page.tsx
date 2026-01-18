@@ -57,7 +57,7 @@ import {
   Trash2Icon,
   TrendingDown,
   Upload,
-  Wifi,
+  WifiOff,
   Zap,
 } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
@@ -246,7 +246,7 @@ export const DocsPageBody = () => {
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Wifi className="w-5 h-5 text-primary" />
+              <WifiOff className="w-5 h-5 text-primary" />
               <span className="font-medium">Offline-First</span>
             </div>
             <p className="text-sm text-muted-foreground">Edit, build, and preview without internet connection</p>
@@ -291,8 +291,8 @@ export const DocsPageBody = () => {
           </div>
           <p className="text-muted-foreground mb-4">
             <strong>Option 1:</strong> Use the hosted version at{" "}
-            <a href="https://opal.rbby.dev" className="text-primary hover:underline">
-              opal.rbby.dev
+            <a href="https://opaledx.com" className="text-primary hover:underline">
+              opaledx.com
             </a>
           </p>
           <p className="text-muted-foreground mb-4">
@@ -568,7 +568,7 @@ export const DocsPageBody = () => {
           </div>
         </SubSection>
 
-        {/* 
+        {/*
             <div className="bg-card border border-border rounded-lg p-6">
               <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
                 <Code2 className="text-primary" /> Source Mode
@@ -576,6 +576,77 @@ export const DocsPageBody = () => {
               <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
               <DocImage src="/docs/hash-headings.svg" className="h-72" />
             </div> */}
+        <SubSection title="Importing Files" id="importing-files">
+          <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                  <Upload className="text-primary" /> Supported File Types
+                </h4>
+                <ul className="space-y-2 text-muted-foreground list-disc ml-8">
+                  <li>Markdown files (.md)</li>
+                  <li>Word documents (.docx)</li>
+                  <li>Images (PNG, JPG, GIF, WebP)</li>
+                  <li>Drag & drop from file manager</li>
+                  <li>Paste directly into editor</li>
+                  <li>Upload via sidebar</li>
+                </ul>
+              </div>
+              <div className="flex flex-col justify-center">
+                <p className="text-muted-foreground text-sm">
+                  Import files seamlessly into your workspace with automatic format detection and conversion.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                <FileTextIcon className="text-primary" />
+                Markdown Import
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Drop .md files directly into the editor or workspace. Existing markdown files are instantly ready to
+                edit with full syntax support.
+              </p>
+              <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-6">
+                <li>Preserves formatting and structure</li>
+                <li>Maintains internal links and references</li>
+                <li>Immediate preview and editing</li>
+              </ul>
+            </div>
+
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h4 className="font-semibold text-lg mb-3 text-card-foreground flex items-center gap-2">
+                <FileTextIcon className="text-primary" />
+                DOCX Import
+              </h4>
+              <p className="text-muted-foreground mb-4">
+                Import Word documents with automatic conversion to markdown. Formatting, headings, and structure are
+                preserved during conversion.
+              </p>
+              <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-6">
+                <li>Converts to clean markdown</li>
+                <li>Preserves headings and lists</li>
+                <li>Extracts embedded images</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
+            <h5 className="font-semibold mb-3 text-accent-foreground flex items-center gap-2">
+              <Sparkle className="w-5 h-5 text-primary" />
+              Quick Import
+            </h5>
+            <p className="text-sm text-accent-foreground/90">
+              Simply drag files from your desktop or file manager directly into the editor or workspace sidebar. Opal
+              automatically detects the file type and handles the import process, converting documents to markdown when
+              needed and organizing images in your workspace.
+            </p>
+          </div>
+        </SubSection>
+
         <SubSection title="Working with Images" id="images">
           <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
             <div className="grid md:grid-cols-2 gap-8">

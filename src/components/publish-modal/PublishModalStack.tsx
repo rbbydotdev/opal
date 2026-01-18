@@ -14,7 +14,7 @@ import { useModalSignal } from "@/lib/useModalSignal";
 import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { ArrowLeft, ArrowUpRight, Globe, Zap } from "lucide-react";
-import { useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { useCallback, useImperativeHandle, useState } from "react";
 
 export type PublishViewType = "publish" | "destination" | "connection";
 
@@ -82,13 +82,10 @@ export function PublishModalStack({
     popView();
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      setIsOpen(false);
-      setPreferredConnection(null);
-      setDeploy(null);
-    }
-  }, [isOpen]);
+  if (!isOpen && preferredConnection !== null && deploy !== null) {
+    setPreferredConnection(null);
+    setDeploy(null);
+  }
 
   const { currentView, pushView, replaceView, popView, resetToDefault, canGoBack } =
     useViewStack<PublishViewType>("publish");

@@ -24,11 +24,14 @@ export function useWatchElement<T extends Element = Element>(
 
     return () => observer.disconnect();
   }, [selector]);
-  useEffect(() => {
-    if (weakRef.current?.deref() && !element && element !== weakRef.current?.deref()) {
-      setElement(weakRef.current?.deref()!);
-    }
-  }, [element]);
+  if (
+    weakRef.current?.deref() &&
+    !element &&
+    element !== weakRef.current?.deref() &&
+    element !== weakRef.current?.deref()!
+  ) {
+    setElement(weakRef.current?.deref()!);
+  }
 
   return element;
 }

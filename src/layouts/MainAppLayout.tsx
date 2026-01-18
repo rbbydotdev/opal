@@ -13,7 +13,8 @@ import { ErrorPopper } from "@/components/ui/error-popup";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DocHistoryProvider } from "@/editors/history/HistoryPlugin";
 import { BrowserCompatProvider } from "@/features/compat-checker/CompatChecker";
-import { CompatibilityAlert } from "@/features/CompatibilityAlert";
+import { CompatibilityAlert } from "@/features/compat-checker/CompatibilityAlert";
+import { GreetingsModal } from "@/features/greetings/GreetingsModal";
 import { WindowContextProviderComponent } from "@/features/live-preview/WindowContext";
 import { LocalStorageProvider } from "@/features/local-storage/LocalStorageProvider";
 import { useZoom } from "@/hooks/useZoom";
@@ -59,6 +60,7 @@ export function MainAppLayout({ children }: MainAppLayoutProps) {
             <BrowserCompatProvider>
               <Toaster />
               <CompatibilityAlert />
+              <GreetingsModal />
               <AsyncWindowErrorBoundary>
                 <ErrorPopper>
                   <ErrorBoundary fallback={WorkspaceErrorBoundaryFallback}>

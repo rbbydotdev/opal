@@ -60,9 +60,7 @@ export function TooltipToast({
   return (
     <TooltipProvider>
       <Tooltip open={visible}>
-        <TooltipTrigger asChild>
-          <span>{children}</span>
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
         <TooltipContent
           {...props}
           className={cn(className, {

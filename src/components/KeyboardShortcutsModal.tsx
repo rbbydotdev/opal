@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { IS_MAC } from "@/lib/isMac";
 import fuzzysort from "fuzzysort";
 import { KeyboardIcon } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { KeyboardShortcutsSearch } from "./KeyboardShortcutsSearch";
 
 const KeyboardSections = ["General", "Sidebar", "Layout", "Editor", "Navigation", "Search", "File Explorer"] as const;
@@ -197,11 +197,9 @@ export function KeyboardShortcutsModal({ children }: { children: React.ReactNode
   const sectionOrder = KeyboardSections;
 
   // Reset search when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setSearchValue("");
-    }
-  }, [isOpen]);
+  if (!isOpen && searchValue !== "") {
+    setSearchValue("");
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

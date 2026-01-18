@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Workspace } from "@/workspace/Workspace";
 import { WorkspaceRouteType } from "@/workspace/WorkspaceContext";
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
-import { useEffect } from "react";
 export const EditableDir = ({
   depth,
   className,
@@ -53,12 +52,10 @@ export const EditableDir = ({
 
   const { setFileTreeCtx } = useFileTreeMenuCtx();
 
-  useEffect(() => {
+  if (linkRef.current && isFocused && !isEditing && document.activeElement !== linkRef.current) {
     //weird edge case hmmmmmmm keeps focus after editing
-    if (linkRef.current && isFocused && !isEditing) {
-      linkRef.current.focus();
-    }
-  }, [isFocused, isEditing, linkRef]);
+    linkRef.current.focus();
+  }
 
   return (
     <div>

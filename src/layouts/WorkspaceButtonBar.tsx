@@ -20,7 +20,8 @@ import { BuildDAO } from "@/data/dao/BuildDAO";
 import { WorkspaceDAO } from "@/data/dao/WorkspaceDAO";
 import { DiskDAO } from "@/data/disk/DiskDAO";
 import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
-import { CompatibilityAlert } from "@/features/CompatibilityAlert";
+import { CompatibilityAlert } from "@/features/compat-checker/CompatibilityAlert";
+import { useGreetingsModal } from "@/features/greetings/GreetingsModal";
 import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { ALL_THEMES } from "@/features/theme/theme-lib";
 import { ThemePreview } from "@/features/theme/ThemePreview";
@@ -304,10 +305,12 @@ export function WorkspaceButtonBar() {
   const { storedValue: spin } = useWorkspacButtonBarSpin();
   const coalescedWorkspace = !currentWorkspace?.isNull ? currentWorkspace : workspaces[0];
   const otherWorkspacesCount = workspaces.filter((ws) => ws.guid !== coalescedWorkspace?.guid).length;
+
   const navigate = useNavigate();
   const { storedValue: shrink, setStoredValue: setShrink } = useShrink();
   const variant: ButtonVariant = shrink ? "sm" : "lg";
   const { devMode } = useDevMode();
+  const { openAsAbout } = useGreetingsModal();
   const {
     capabilities: { isDesktopBrowser },
   } = useBrowserCompat();
@@ -430,8 +433,9 @@ export function WorkspaceButtonBar() {
             <BigButton
               variant={variant}
               icon={<Info strokeWidth="1" stroke="current" className="w-full h-full" />}
+              to="#"
               title="about"
-              to="/about"
+              onClick={openAsAbout}
             />
 
             <BigButton

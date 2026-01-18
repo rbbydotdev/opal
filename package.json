@@ -102,6 +102,7 @@
     "dexie": "^4.0.10",
     "dexie-react-hooks": "^1.1.7",
     "diff-match-patch": "^1.0.5",
+    "dompurify": "^3.3.1",
     "dotenv": "^17.2.3",
     "eta": "^4.0.1",
     "fflate": "^0.8.2",

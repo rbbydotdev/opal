@@ -40,17 +40,8 @@ function OAuthCallback() {
       const error = urlParams.get("error");
       const errorDescription = urlParams.get("error_description");
 
-      // console.log("URL parameters:", {
-      //   code: code?.substring(0, 10) + "...",
-      //   state,
-      //   error,
-      //   errorDescription,
-      // });
-
       const channelName = "oauth-callback";
-      // console.log("Callback: Creating channel with name:", channelName);
       const channel = new OAuthCbChannel(channelName);
-      // console.log("Callback: Initializing channel...");
       channel.init();
 
       if (error) {
@@ -62,12 +53,6 @@ function OAuthCallback() {
 
         setStatus("error");
         setError(errorMsg);
-
-        // Keep window open for debugging
-        // setTimeout(() => {
-        //   console.log('Auto-closing window in 10 seconds for debugging...');
-        //   window.close();
-        // }, 10000)
         return;
       }
 
@@ -80,23 +65,14 @@ function OAuthCallback() {
         setStatus("error");
         setError(errorMsg);
 
-        // setTimeout(() => {
-        //   console.log('Auto-closing window in 10 seconds for debugging...');
-        //   window.close();
-        // }, 10000)
         return;
       }
 
       try {
-        // console.log("Callback: Sending authorization code to parent window");
-
         // Send the authorization code to parent window for token exchange
         await channel.emit(OAuthCbEvents.AUTHORIZATION_CODE, { code, state: state || "" });
-
         // Don't assume success - wait for parent to respond
         setStatus("processing");
-        // console.log("Callback: Authorization code sent, waiting for parent response...");
-
         // Listen for parent's response
         channel.once(OAuthCbEvents.SUCCESS, () => {
           setStatus("success");
@@ -121,11 +97,6 @@ function OAuthCallback() {
 
         setStatus("error");
         setError(errorMsg);
-
-        // setTimeout(() => {
-        //   console.log('Auto-closing window in 10 seconds for debugging...');
-        //   window.close();
-        // }, 10000)
       }
     };
 
