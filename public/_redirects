@@ -6,7 +6,6 @@
 
 # SPA routes - fallback to index.html for client-side routing
 /auth/* /index.html 200
-/docs/* /index.html 200
 /docs /index.html 200
 /workspace/* /index.html 200
 /preview/* /index.html 200
