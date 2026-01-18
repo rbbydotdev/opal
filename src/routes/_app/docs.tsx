@@ -278,7 +278,7 @@ function DocsPage() {
           floatSidebar={isMobile}
           sidebar={<DocsSidebar />}
           main={
-            <div className="h-full overflow-y-auto overflow-x-clip p-0 md:p-8">
+            <div className="h-full overflow-auto overflow-x-clip p-0 md:p-8">
               <DocsPageBody />
             </div>
           }
