@@ -1,18 +1,38 @@
-# Cloudflare Pages SPA configuration
-# Static files should be served directly
+# ----------------------------------------
+# 1. Explicit static assets (MUST be first)
+# ----------------------------------------
+
 /download.zip /download.zip 200
 /@static/* /@static/:splat 200
 /*.js /:splat.js 200
+/*.css /:splat.css 200
+/*.png /:splat.png 200
+/*.svg /:splat.svg 200
+/*.woff2 /:splat.woff2 200
 
-# SPA routes - fallback to index.html for client-side routing
+# ----------------------------------------
+# 2. SPA routes (exact + splat)
+# ----------------------------------------
+
+/auth /index.html 200
 /auth/* /index.html 200
+
 /docs /index.html 200
+
+/workspace /index.html 200
 /workspace/* /index.html 200
-/preview/* /index.html 200
+
 /preview /index.html 200
+/preview/* /index.html 200
+
 /settings /index.html 200
 /newWorkspace /index.html 200
+
+/import /index.html 200
 /import/* /index.html 200
 
-# Catch-all fallback for any other routes
+# ----------------------------------------
+# 3. Final fallback (LAST)
+# ----------------------------------------
+
 /* /index.html 200
