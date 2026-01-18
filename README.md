@@ -2,13 +2,13 @@
 
 # Opal
 
-A local-first markdown editor and static publisher—offline-ready, Git-aware, with complete self-custody and zero backend dependencies.
+A local-first markdown editor and static publisher—no-server-required, Git-aware, with complete self-custody and zero backend dependencies.
 
 ## Features
 
 - WYSIWYG & raw markdown editing with CodeMirror
 - Local-first storage (IndexedDB, OPFS, or mounted filesystem)
-- Offline-ready with service workers
+- no-server-required with service workers
 - Image support with automatic WebP conversion
 - Full Git integration with GitHub support
 - One-click publishing to Netlify, Vercel, Cloudflare Pages, GitHub Pages, or S3

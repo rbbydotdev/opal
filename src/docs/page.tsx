@@ -195,8 +195,8 @@ export const DocsPageBody = () => {
           <img alt="Opal" title="Opal" src="/opal.svg" className={cn("w-32 sm:w-48 mx-auto mb-6 rounded-full")} />
           <h1 className="text-5xl font-bold mb-4 text-foreground">Opal</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            A local-first markdown editor and static publisher—offline-ready, Git-aware, with complete self-custody and
-            zero backend dependencies.
+            A local-first markdown editor and static publisher—no-server-required, Git-aware, with complete self-custody
+            and zero backend dependencies.
           </p>
         </div>
       </div>
@@ -230,7 +230,7 @@ export const DocsPageBody = () => {
           </h4>
           <p className="text-muted-foreground mb-4 leading-relaxed">
             Opal is built on three foundational principles: <strong>local-first</strong> architecture that keeps your
-            data in your control, <strong>offline-ready</strong> capabilities powered by service workers, and{" "}
+            data in your control, <strong>no-server-required</strong> capabilities powered by service workers, and{" "}
             <strong>complete ownership</strong> with no vendor lock-in. Your content stays yours
           </p>
         </div>
