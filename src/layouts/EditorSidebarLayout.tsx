@@ -4,7 +4,7 @@ import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
 import { cn } from "@/lib/utils";
 import { PanelLeft } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // --- Configuration Constants ---
 const MIN_RESIZABLE_WIDTH = 200;
@@ -251,6 +251,14 @@ export const EditorSidebarLayout = ({
     };
   }, [isResizing, rightPaneIsResizing, rightPaneEnabled, panes.left.displayWidth]);
 
+  const resizeSidebarStyle = useMemo(
+    () => ({
+      touchAction: "none",
+      ...(floatSidebar ? { left: `${currentDisplayWidth}px` } : {}),
+    }),
+    [currentDisplayWidth, floatSidebar]
+  );
+
   return (
     <div
       className="flex w-full flex-col bg-card"
@@ -259,7 +267,7 @@ export const EditorSidebarLayout = ({
       }}
     >
       <div
-        className="flex w-full overflow-clip border"
+        className="flex w-full overflow-clip border relative"
         style={{
           height: "calc(100vh - 1.5rem)",
         }}
@@ -281,8 +289,13 @@ export const EditorSidebarLayout = ({
           aria-valuemax={MAX_RESIZABLE_WIDTH}
           onPointerDown={handlePointerDown}
           id="editor-sidebar-resize-handle"
-          className="flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary"
-          style={{ touchAction: "none" }}
+          className={cn(
+            "flex h-screen w-2 flex-shrink-0 cursor-col-resize items-center justify-center overflow-clip border-r-2 bg-sidebar hover:bg-sidebar-accent active:bg-sidebar-primary",
+            {
+              "absolute z-50": floatSidebar,
+            }
+          )}
+          style={resizeSidebarStyle}
           title="Resize sidebar"
         ></div>
         <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
