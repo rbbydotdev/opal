@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { TooltipToast, useTooltipToastCmd } from "@/components/ui/tooltip-toast";
+import { useIsMobileAgent } from "@/features/compat-checker/CompatChecker";
 import { BookOpen, Briefcase, Github, HardDrive, Image, Monitor, Rocket, Share2, Zap } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 export const useGreetingsModal = () => {
   const [refParam, setRefParam] = useQueryState("ref");
@@ -15,6 +16,17 @@ export const useGreetingsModal = () => {
 export function GreetingsModal() {
   const { refParam, setRefParam } = useGreetingsModal();
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobileAgent();
+
+  const quickZoomStyleHack = useMemo(
+    () =>
+      isMobile
+        ? {
+            zoom: 0.85,
+          }
+        : {},
+    [isMobile]
+  );
 
   const { show: showToast, cmdRef: toastRef } = useTooltipToastCmd();
 
@@ -49,7 +61,10 @@ export function GreetingsModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg top-[10vh] max-h-[80vh]">
+      <DialogContent
+        style={quickZoomStyleHack}
+        className="[transform:none] left-0 top-0 right-0 w-full h-full max-w-none max-h-none rounded-none translate-x-0 translate-y-0 sm:[transform:translate(-50%,-50%)] sm:left-[50%] sm:top-[10vh] sm:right-auto sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[80vh] sm:rounded-lg flex flex-col"
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {refParam === "0" ? (
@@ -123,7 +138,7 @@ export function GreetingsModal() {
             </Button>
 
             <Button variant="outline" className="flex h-auto py-3 gap-2" asChild>
-              <a href="/docs" onClick={() => handleOpenChange(false)}>
+              <a href="/docs/" onClick={() => handleOpenChange(false)}>
                 <BookOpen className="w-5 h-5" />
                 <span className="text-xs">Read Docs</span>
               </a>

@@ -442,7 +442,7 @@ export function WorkspaceButtonBar() {
               variant={variant}
               icon={<BookOpen strokeWidth="1" stroke="current" className="w-full h-full" />}
               title="docs"
-              to="/docs"
+              to="/docs/"
             />
 
             <BigButton

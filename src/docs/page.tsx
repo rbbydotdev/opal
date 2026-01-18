@@ -74,7 +74,7 @@ export const DocImage = ({ src, className, ...props }: { src: string; className?
       }}
     >
       <img
-        className={cn("p-4 w-full #max-w-2xl relative rounded-lg", className, {
+        className={cn("p-4 w-full  relative rounded-lg", className, {
           invert: mode === "dark",
           "opacity-50": mode === "dark",
         })}
@@ -101,7 +101,7 @@ export const FeatureCard = ({
       </div>
     )}
     <h3 className="font-semibold text-lg mb-2 text-card-foreground">{title}</h3>
-    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{description}</p>
   </div>
 );
 
@@ -122,7 +122,7 @@ export const Section = ({
     {title && (
       <div className="mb-8">
         <h2
-          className="text-3xl font-bold mb-2 text-foreground border-l-4 border-l-primary p-4 bg-primary/5"
+          className="text-3xl pl-12 sm:pl-0 font-bold mb-2 text-foreground border-l-4 border-l-primary p-4 bg-primary/5"
           id={id || title.toLowerCase().replace(/ /g, "-")}
         >
           {title}
@@ -147,7 +147,7 @@ export const SubSection = ({
 }) => (
   <div className={cn("my-8", className)}>
     <h3
-      className="text-2xl font-semibold mb-6 text-foreground flex items-center gap-2"
+      className="text-2xl pl-12 sm:pl-0 font-semibold mb-6 text-foreground flex items-center gap-2"
       id={id || title.toLowerCase().replace(/ /g, "-")}
     >
       {title}
@@ -169,6 +169,7 @@ export const DocsPageBody = () => {
       mounted.current = true;
     }
   }, [isMobile, left]);
+
   return (
     <>
       <div
@@ -214,9 +215,11 @@ export const DocsPageBody = () => {
           <div className="flex-1">
             <div className="font-semibold text-foreground flex items-center gap-2 mb-1">
               View on GitHub
-              <span className="text-xs font-mono text-muted-foreground">rbbydotdev/opal</span>
+              <span className="text-xs font-mono overflow-x-auto  text-muted-foreground">rbbydotdev/opal</span>
             </div>
-            <p className="text-sm text-muted-foreground">Open source, self-hostable, and built for the long term</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Open source, self-hostable, and built for the long term
+            </p>
           </div>
         </div>
       </a>
@@ -242,42 +245,50 @@ export const DocsPageBody = () => {
               <Zap className="w-5 h-5 text-primary" />
               <span className="font-medium">Browser-Native</span>
             </div>
-            <p className="text-sm text-muted-foreground">Zero backend dependencies, works entirely in your browser</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Zero backend dependencies, works entirely in your browser
+            </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <WifiOff className="w-5 h-5 text-primary" />
               <span className="font-medium">Offline-First</span>
             </div>
-            <p className="text-sm text-muted-foreground">Edit, build, and preview without internet connection</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Edit, build, and preview without internet connection
+            </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <GitBranch className="w-5 h-5 text-primary" />
               <span className="font-medium">Git Integration</span>
             </div>
-            <p className="text-sm text-muted-foreground">Full version control with GitHub support built-in</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Full version control with GitHub support built-in
+            </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Rocket className="w-5 h-5 text-primary" />
               <span className="font-medium">One-Click Publishing</span>
             </div>
-            <p className="text-sm text-muted-foreground">Deploy to Netlify, Vercel, Cloudflare, GitHub Pages, or S3</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Deploy to Netlify, Vercel, Cloudflare, GitHub Pages, or S3
+            </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <HardDrive className="w-5 h-5 text-primary" />
               <span className="font-medium">Flexible Storage</span>
             </div>
-            <p className="text-sm text-muted-foreground">IndexedDB, OPFS, or mounted local directories</p>
+            <p className="text-xs md:text-sm text-muted-foreground">IndexedDB, OPFS, or mounted local directories</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5 text-primary" />
               <span className="font-medium">Self-Hostable</span>
             </div>
-            <p className="text-sm text-muted-foreground">Open source and designed for the long term</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Open source and designed for the long term</p>
           </div>
         </div>
       </Section>
@@ -298,7 +309,7 @@ export const DocsPageBody = () => {
           <p className="text-muted-foreground mb-4">
             <strong>Option 2:</strong> Run locally for development or self-hosting:
           </p>
-          <div className="bg-muted/30 rounded-lg p-4 font-mono text-sm space-y-2">
+          <div className="bg-muted/30 rounded-lg p-4 font-mono overflow-x-auto  text-sm space-y-2">
             <div className="text-muted-foreground">
               <span className="text-primary">$</span> git clone https://github.com/rbbydotdev/opal
             </div>
@@ -377,7 +388,7 @@ export const DocsPageBody = () => {
                 </p>
                 <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
                   <h5 className="font-semibold mb-3 text-accent-foreground">Git Features</h5>
-                  <ul className="space-y-2 text-sm text-accent-foreground/90">
+                  <ul className="space-y-2 text-xs md:text-sm text-accent-foreground/90">
                     <li>✓ Push and pull changes</li>
                     <li>✓ Branch management</li>
                     <li>✓ Commit history</li>
@@ -411,7 +422,7 @@ export const DocsPageBody = () => {
                 </p>
                 <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
                   <h5 className="font-semibold mb-3 text-accent-foreground">Quick Steps</h5>
-                  <ul className="space-y-2 text-sm text-accent-foreground/90">
+                  <ul className="space-y-2 text-xs md:text-sm text-accent-foreground/90">
                     <li>✓ Choose a build strategy (Freeform or Template)</li>
                     <li>✓ Compile your workspace to static HTML</li>
                     <li>✓ Add a deployment connection (GitHub, Netlify, Vercel, etc.)</li>
@@ -473,7 +484,7 @@ export const DocsPageBody = () => {
             You're now ready to create content! Explore the sections below to learn about advanced features like Git
             integration, building, and publishing.
           </p>
-          <ul className="space-y-2 text-muted-foreground text-sm">
+          <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
             <li className="flex items-center gap-2">
               <Edit className="w-4 h-4 text-primary" />
               Learn about the editor's powerful features
@@ -506,7 +517,9 @@ export const DocsPageBody = () => {
                   <li>✓ Auto-save on every edit</li>
                   <li>
                     ✓ Switch modes with{" "}
-                    <kbd className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">Cmd/Ctrl + ;</kbd>
+                    <kbd className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono overflow-x-auto ">
+                      Cmd/Ctrl + ;
+                    </kbd>
                   </li>
                 </ul>
               </div>
@@ -593,7 +606,7 @@ export const DocsPageBody = () => {
                 </ul>
               </div>
               <div className="flex flex-col justify-center">
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-xs md:text-sm">
                   Import files seamlessly into your workspace with automatic format detection and conversion.
                 </p>
               </div>
@@ -610,7 +623,7 @@ export const DocsPageBody = () => {
                 Drop .md files directly into the editor or workspace. Existing markdown files are instantly ready to
                 edit with full syntax support.
               </p>
-              <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-6">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm list-disc ml-6">
                 <li>Preserves formatting and structure</li>
                 <li>Maintains internal links and references</li>
                 <li>Immediate preview and editing</li>
@@ -626,7 +639,7 @@ export const DocsPageBody = () => {
                 Import Word documents with automatic conversion to markdown. Formatting, headings, and structure are
                 preserved during conversion.
               </p>
-              <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-6">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm list-disc ml-6">
                 <li>Converts to clean markdown</li>
                 <li>Preserves headings and lists</li>
                 <li>Extracts embedded images</li>
@@ -639,7 +652,7 @@ export const DocsPageBody = () => {
               <Sparkle className="w-5 h-5 text-primary" />
               Quick Import
             </h5>
-            <p className="text-sm text-accent-foreground/90">
+            <p className="text-xs md:text-sm text-accent-foreground/90">
               Simply drag files from your desktop or file manager directly into the editor or workspace sidebar. Opal
               automatically detects the file type and handles the import process, converting documents to markdown when
               needed and organizing images in your workspace.
@@ -686,7 +699,7 @@ export const DocsPageBody = () => {
               <Sparkle className="w-5 h-5 text-primary" />
               Why It Matters
             </h5>
-            <p className="text-sm text-accent-foreground/90">
+            <p className="text-xs md:text-sm text-accent-foreground/90">
               Opal's complete image pipeline handles everything: automatic WebP conversion, smart reference tracking
               that updates markdown when images are renamed, service worker caching for instant loads, and even resize
               handles in the editor with automatic HTML tag conversion.
@@ -707,9 +720,11 @@ export const DocsPageBody = () => {
                   <PanelRight className="!w-5 !h-5" strokeWidth={2} />
                 </Button>
               </div>
-              <div className="text-muted-foreground text-sm">
+              <div className="text-muted-foreground text-xs md:text-sm">
                 Split-screen editing with live markdown preview. Toggle with{" "}
-                <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">{"Cmd/Ctrl + \\"}</span>
+                <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono overflow-x-auto  inline-block">
+                  {"Cmd/Ctrl + \\"}
+                </span>
               </div>
             </div>
 
@@ -723,7 +738,7 @@ export const DocsPageBody = () => {
                   <Monitor className="!w-5 !h-5" strokeWidth={2} />
                 </Button>
               </div>
-              <div className="text-muted-foreground text-sm">
+              <div className="text-muted-foreground text-xs md:text-sm">
                 Opens external preview window for dual-monitor workflows.
               </div>
             </div>
@@ -739,7 +754,9 @@ export const DocsPageBody = () => {
                   <Printer className="!w-4 !h-4" />
                 </Button>
               </div>
-              <div className="text-muted-foreground text-sm">Opens print dialog for PDF export or printing.</div>
+              <div className="text-muted-foreground text-xs md:text-sm">
+                Opens print dialog for PDF export or printing.
+              </div>
             </div>
           </div>
 
@@ -924,7 +941,7 @@ export const DocsPageBody = () => {
             </div>
 
             <h5 className="font-semibold mb-3 text-card-foreground">How to Use</h5>
-            <div className="space-y-3 text-muted-foreground text-sm">
+            <div className="space-y-3 text-muted-foreground text-xs md:text-sm">
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-xs font-bold text-primary">1</span>
@@ -960,7 +977,7 @@ export const DocsPageBody = () => {
               <Sparkle className="w-5 h-5 text-primary" />
               Why Use Stock Files?
             </h5>
-            <p className="text-sm text-accent-foreground/90">
+            <p className="text-xs md:text-sm text-accent-foreground/90">
               Stock files save you from starting with empty files or searching for syntax examples. Each file comes
               pre-populated with working examples and proper syntax, helping you understand how to use features like
               templates, CSS frameworks, and workspace sharing without leaving the editor.
@@ -997,7 +1014,7 @@ export const DocsPageBody = () => {
                 </h4>
                 <p className="text-muted-foreground mb-4">
                   Search across all files with regex support. Use{" "}
-                  <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline-block">
+                  <span className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono overflow-x-auto  inline-block">
                     Shift + Cmd/Ctrl + F
                   </span>
                   to open search.
@@ -1035,15 +1052,16 @@ export const DocsPageBody = () => {
               <Command className="w-5 h-5 text-primary" />
               Command Palette
             </h4>
-            <p className="text-accent-foreground/90 mb-4 text-sm">
+            <p className="text-accent-foreground/90 mb-4 text-xs md:text-sm">
               Press{" "}
-              <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono inline-block">
+              <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono overflow-x-auto  inline-block">
                 <kbd>Cmd/Ctrl + P</kbd>
               </span>{" "}
               to open Spotlight. Search for files by name <b>OR</b> type{" "}
-              <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono">&gt;</span> to access commands:
+              <span className="bg-accent/30 px-1.5 py-0.5 rounded text-xs font-mono overflow-x-auto ">&gt;</span> to
+              access commands:
             </p>
-            <ul className="space-y-2 text-accent-foreground/90 text-sm">
+            <ul className="space-y-2 text-accent-foreground/90 text-xs md:text-sm">
               <li className="flex items-center gap-2">
                 <CirclePlus className="w-4 h-4 flex-shrink-0 text-primary" />
                 Create files, commit changes, initialize Git
@@ -1068,7 +1086,7 @@ export const DocsPageBody = () => {
               <Sparkle className="w-5 h-5 text-primary" />
               Why It Matters
             </h5>
-            <p className="text-sm text-accent-foreground/90">
+            <p className="text-xs md:text-sm text-accent-foreground/90">
               Cross-workspace search runs in a service worker off the main thread, keeping the UI responsive. With regex
               support and fuzzy file matching, you can find anything across all your projects instantly.
             </p>
@@ -1127,7 +1145,7 @@ export const DocsPageBody = () => {
             </p>
             <div className="bg-muted/30 rounded-lg p-4 mb-6">
               <h5 className="font-semibold mb-2 text-card-foreground text-sm">URL Format</h5>
-              <code className="text-sm font-mono text-accent-foreground block overflow-scroll">
+              <code className="text-sm font-mono overflow-x-auto  text-accent-foreground block overflow-scroll">
                 opaledx.com/import/gh/&lt;owner&gt;/&lt;reponame&gt;/&lt;optional: branch&gt;
               </code>
               <p className="text-xs text-muted-foreground mt-2">
@@ -1153,7 +1171,7 @@ export const DocsPageBody = () => {
                 Include a manifest file in your repository root with the following structure:
               </p>
               <div className="bg-accent/20 rounded p-3">
-                <code className="text-xs font-mono block">
+                <code className="text-xs font-mono overflow-x-auto  block">
                   {`{
   "version": 1,
   "type": "template",
@@ -1168,7 +1186,7 @@ export const DocsPageBody = () => {
               <Shield className="w-5 h-5 text-primary" />
               Security Notes
             </h5>
-            <ul className="space-y-2 text-muted-foreground text-sm">
+            <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary shrink-0">⚠</span>
                 <span>Only import templates from sources you trust</span>
@@ -1194,7 +1212,7 @@ export const DocsPageBody = () => {
               Template imports make sharing Opal projects seamless. Instead of manually setting up a Git repository and
               pulling it down, users can click a single link and have a fully configured workspace ready to edit.
             </p>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs md:text-sm">
               Perfect for documentation starters, blog templates, portfolio sites, or sharing example projects with new
               Opal users.
             </p>
@@ -1276,7 +1294,7 @@ export const DocsPageBody = () => {
             <Sparkle className="w-5 h-5 text-primary" />
             Why It Matters
           </h5>
-          <p className="text-sm text-accent-foreground/90">
+          <p className="text-xs md:text-sm text-accent-foreground/90">
             Opal speaks the Git protocol directly in the browser using isomorphic-git. This isn't a Git-like
             interface—it's real Git with full push, pull, branch, merge, and conflict resolution capabilities. Works
             with GitHub out of the box, and potentially with other Git servers via CORS proxy.
@@ -1304,7 +1322,7 @@ export const DocsPageBody = () => {
               <Hammer className="w-12 h-12 text-primary" />
             </div>
             <h4 className="font-semibold text-center mb-3 text-card-foreground">Build Your Project</h4>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               Select a build strategy and compile your workspace to static HTML
             </p>
           </div>
@@ -1317,7 +1335,7 @@ export const DocsPageBody = () => {
               <Link className="w-12 h-12 text-primary" />
             </div>
             <h4 className="font-semibold text-center mb-3 text-card-foreground">Add a Connection</h4>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               Connect your preferred hosting platform with OAuth or API keys
             </p>
           </div>
@@ -1330,7 +1348,7 @@ export const DocsPageBody = () => {
               <Settings className="w-12 h-12 text-primary" />
             </div>
             <h4 className="font-semibold text-center mb-3 text-card-foreground">Configure Target</h4>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               Set up your deployment destination with platform-specific settings
             </p>
           </div>
@@ -1343,7 +1361,7 @@ export const DocsPageBody = () => {
               <Rocket className="w-12 h-12 text-primary" />
             </div>
             <h4 className="font-semibold text-center mb-3 text-card-foreground">Publish</h4>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               Deploy your site and monitor the live status with real-time feedback
             </p>
           </div>
@@ -1385,7 +1403,7 @@ export const DocsPageBody = () => {
                 </div>
 
                 <h5 className="font-semibold mb-3 text-card-foreground">Build Management</h5>
-                <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-4">
+                <ul className="space-y-2 text-muted-foreground text-xs md:text-sm list-disc ml-4">
                   <li>Each build saved separately with success/failure status</li>
                   <li>Multiple builds can exist simultaneously</li>
                   <li>Access build history in the builds list</li>
@@ -1423,7 +1441,7 @@ export const DocsPageBody = () => {
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div>
                 <h5 className="font-semibold mb-3 text-card-foreground">Where to Add</h5>
-                <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-4">
+                <ul className="space-y-2 text-muted-foreground text-xs md:text-sm list-disc ml-4">
                   <li>From the sidebar Connections section</li>
                   <li>Directly in the Build modal</li>
                   <li>Reuse existing connections from Git remotes (GitHub)</li>
@@ -1452,7 +1470,7 @@ export const DocsPageBody = () => {
             </div>
 
             <div className="bg-accent/10 border border-accent/50 rounded p-4">
-              <p className="text-sm text-accent-foreground/90">
+              <p className="text-xs md:text-sm text-accent-foreground/90">
                 <strong>Shared Across Workspaces:</strong> Connections are global and available to all your workspaces,
                 making it easy to deploy multiple projects to the same platform.
               </p>
@@ -1553,7 +1571,7 @@ export const DocsPageBody = () => {
                 </p>
 
                 <h5 className="font-semibold mb-3 text-card-foreground">Publishing Process</h5>
-                <ul className="space-y-2 text-muted-foreground text-sm list-disc ml-4 mb-6">
+                <ul className="space-y-2 text-muted-foreground text-xs md:text-sm list-disc ml-4 mb-6">
                   <li>Click the Publish button in the Build modal</li>
                   <li>Deployment process begins and logs in real-time</li>
                   <li>Success or failure notification displays</li>
@@ -1561,7 +1579,7 @@ export const DocsPageBody = () => {
                 </ul>
 
                 <h5 className="font-semibold mb-3 text-card-foreground">Site Status Monitoring</h5>
-                <p className="text-muted-foreground text-sm mb-3">
+                <p className="text-muted-foreground text-xs md:text-sm mb-3">
                   The View button includes a spinner that polls your site's favicon to detect when it's live. This helps
                   you know when your deployment is fully propagated.
                 </p>
@@ -1573,7 +1591,7 @@ export const DocsPageBody = () => {
                 </div>
 
                 <h5 className="font-semibold mb-3 text-card-foreground mt-6">Deployment Logs</h5>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-xs md:text-sm">
                   All deployment attempts are saved with detailed logs. Access them in the Deployment tab to review past
                   publishes, debug issues, or track your deployment history.
                 </p>
@@ -1622,12 +1640,12 @@ export const DocsPageBody = () => {
                 <Server className="text-primary" />
                 Static Hosting
               </h4>
-              <p className="text-muted-foreground text-sm mb-4">
+              <p className="text-muted-foreground text-xs md:text-sm mb-4">
                 Run <code className="bg-muted px-1.5 py-0.5 rounded text-xs">npm run build</code> and serve the{" "}
                 <code className="bg-muted px-1.5 py-0.5 rounded text-xs">dist</code> directory with any static file
                 server.
               </p>
-              <ul className="space-y-2 text-muted-foreground text-sm">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                 <li>✓ Host on Vercel, Cloudflare Pages, Netlify</li>
                 <li>✓ Use your own domain</li>
                 <li>✓ No server-side setup required</li>
@@ -1639,10 +1657,10 @@ export const DocsPageBody = () => {
                 <Network className="text-primary" />
                 CORS Proxy
               </h4>
-              <p className="text-muted-foreground text-sm mb-4">
+              <p className="text-muted-foreground text-xs md:text-sm mb-4">
                 For production, deploy your own CORS proxies using included Wrangler CLI configuration.
               </p>
-              <ul className="space-y-2 text-muted-foreground text-sm">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                 <li>✓ Default Cloudflare proxy included</li>
                 <li>✓ Add your domain to whitelist</li>
                 <li>✓ Simple configuration provided</li>
@@ -1661,13 +1679,13 @@ export const DocsPageBody = () => {
                   <Lock className="w-4 h-4 text-primary" />
                   <span className="font-medium text-card-foreground">1. Configure OAuth Apps</span>
                 </div>
-                <p className="text-muted-foreground text-sm ml-6 mb-2">
+                <p className="text-muted-foreground text-xs md:text-sm ml-6 mb-2">
                   Create OAuth apps with GitHub, Netlify, and Vercel. Copy{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">.env.example</code> to{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> and update your client IDs:
                 </p>
                 <div className="ml-6 bg-muted/30 rounded p-3">
-                  <code className="text-xs font-mono block space-y-1 overflow-scroll">
+                  <code className="text-xs font-mono overflow-x-auto  block space-y-1 overflow-scroll">
                     <div>
                       <span className="text-muted-foreground">VITE_PUBLIC_GITHUB_CLIENT_ID=</span>
                       <span className="text-accent-foreground">your_github_id</span>
@@ -1691,22 +1709,24 @@ export const DocsPageBody = () => {
                 </div>
                 <div className="ml-6 space-y-4">
                   <div>
-                    <p className="text-muted-foreground text-sm mb-2">Update allowed origins in proxy source files:</p>
+                    <p className="text-muted-foreground text-xs md:text-sm mb-2">
+                      Update allowed origins in proxy source files:
+                    </p>
                     <div className="space-y-2">
                       <div className="bg-muted/30 rounded p-3">
-                        <div className="font-mono text-xs mb-1 text-muted-foreground">
+                        <div className="font-mono overflow-x-auto  text-xs mb-1 text-muted-foreground">
                           proxies/all-api-proxy/src/index.ts:8
                         </div>
-                        <code className="text-xs font-mono overflow-scroll">
+                        <code className="text-xs font-mono overflow-x-auto  overflow-scroll">
                           <span className="text-muted-foreground">const</span> ALLOWED_ORIGINS ={" "}
                           <span className="text-accent-foreground">["https://yourdomain.com"]</span>
                         </code>
                       </div>
                       <div className="bg-muted/30 rounded p-3 overflow-scroll">
-                        <div className="font-mono text-xs mb-1 text-muted-foreground">
+                        <div className="font-mono overflow-x-auto  text-xs mb-1 text-muted-foreground">
                           proxies/git-protocol-proxy/src/index.ts:1
                         </div>
-                        <code className="text-xs font-mono overflow-scroll">
+                        <code className="text-xs font-mono overflow-x-auto  overflow-scroll">
                           <span className="text-muted-foreground">const</span> ALLOWED_REFERRERS ={" "}
                           <span className="text-accent-foreground">["https://yourdomain.com"]</span>
                         </code>
@@ -1714,11 +1734,11 @@ export const DocsPageBody = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-sm mb-2">
+                    <p className="text-muted-foreground text-xs md:text-sm mb-2">
                       Deploy proxies with Cloudflare Wrangler and set OAuth client secrets as environment variables:
                     </p>
                     <div className="bg-muted/30 rounded p-3">
-                      <code className="text-xs font-mono block space-y-1">
+                      <code className="text-xs font-mono overflow-x-auto  block space-y-1">
                         <div>GITHUB_CLIENT_SECRET</div>
                         <div>NETLIFY_CLIENT_SECRET</div>
                         <div>VERCEL_CLIENT_SECRET</div>
@@ -1726,12 +1746,12 @@ export const DocsPageBody = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-sm mb-2">
+                    <p className="text-muted-foreground text-xs md:text-sm mb-2">
                       Update your <code className="bg-muted px-1 py-0.5 rounded text-xs">.env</code> file to point to
                       your deployed proxies:
                     </p>
                     <div className="bg-muted/30 rounded p-3">
-                      <code className="text-xs font-mono block space-y-1">
+                      <code className="text-xs font-mono overflow-x-auto  block space-y-1">
                         <div>
                           <span className="text-muted-foreground">VITE_GIT_PROTOCOL_PROXY=</span>
                           <span className="text-accent-foreground">https://your-git-proxy.workers.dev</span>
@@ -1768,7 +1788,7 @@ export const DocsPageBody = () => {
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h5 className="font-semibold mb-3 text-card-foreground text-sm">Core Functionality</h5>
-                <ul className="space-y-2 text-muted-foreground text-sm">
+                <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                   <li className="flex items-center gap-2">
                     <Database className="w-4 h-4 flex-shrink-0 text-primary" />
                     Image and file caching with Cache API
@@ -1789,7 +1809,7 @@ export const DocsPageBody = () => {
               </div>
               <div>
                 <h5 className="font-semibold mb-3 text-card-foreground text-sm">Performance Benefits</h5>
-                <ul className="space-y-2 text-muted-foreground text-sm">
+                <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                   <li className="flex items-center gap-2">
                     <Image className="w-4 h-4 flex-shrink-0 text-primary" />
                     Snappy image loading with shared memory
@@ -1820,7 +1840,7 @@ export const DocsPageBody = () => {
               Performance isn't an afterthought—it's built into every layer of Opal.
             </p>
             <div className="grid md:grid-cols-2 gap-4">
-              <ul className="space-y-2 text-muted-foreground text-sm">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                 <li className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 flex-shrink-0 text-primary" />
                   React Compiler optimization for minimal re-renders
@@ -1834,7 +1854,7 @@ export const DocsPageBody = () => {
                   CodeMirror 6 for performant source editing
                 </li>
               </ul>
-              <ul className="space-y-2 text-muted-foreground text-sm">
+              <ul className="space-y-2 text-muted-foreground text-xs md:text-sm">
                 <li className="flex items-center gap-2">
                   <Edit className="w-4 h-4 flex-shrink-0 text-primary" />
                   Lexical-based rich text editor (via mdx-editor)
@@ -1858,31 +1878,31 @@ export const DocsPageBody = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                 <span className="text-sm">Focus sidebar</span>
-                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono overflow-x-auto ">
                   <kbd>Esc × 2</kbd>
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                 <span className="text-sm">Spotlight / Commands</span>
-                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono overflow-x-auto ">
                   <kbd>Cmd/Ctrl + P</kbd>
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                 <span className="text-sm">Toggle sidebar</span>
-                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono overflow-x-auto ">
                   <kbd>Cmd/Ctrl + B</kbd>
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                 <span className="text-sm">Switch rich text and source mode</span>
-                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono overflow-x-auto ">
                   <kbd>Cmd/Ctrl + ;</kbd>
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                 <span className="text-sm">Show preview</span>
-                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono">
+                <span className="bg-primary/20 px-2 py-1 rounded text-xs font-mono overflow-x-auto ">
                   <kbd>Cmd/Ctrl + /</kbd>
                 </span>
               </div>
