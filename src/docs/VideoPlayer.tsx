@@ -3,9 +3,9 @@ import "@vidstack/react/player/styles/default/layouts/video.css";
 import "@vidstack/react/player/styles/default/theme.css";
 import { ComponentProps, useRef, useState } from "react";
 
+import { BrowserDetection } from "@/lib/BrowserDetection";
 import { cn } from "@/lib/utils";
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
-import { BrowserDetection } from "@/lib/BrowserDetection";
 
 export function VideoPlayerFigure({
   caption = "",
@@ -21,8 +21,10 @@ export function VideoPlayerFigure({
 }
 
 export function VideoPlayer({
-  src = "https://files.vidstack.io/sprite-fight/hls/stream.m3u8",
-  thumbnails = "https://files.vidstack.io/sprite-fight/thumbnails.vtt",
+  // src = "https://files.vidstack.io/sprite-fight/hls/stream.m3u8",
+  // thumbnails = "https://files.vidstack.io/sprite-fight/thumbnails.vtt",
+  src,
+  thumbnails,
   title,
 }: {
   src: string;

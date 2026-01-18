@@ -21,7 +21,9 @@
     "test:debug": "playwright test --debug",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler pages deploy dist",
+    "pages:dev": "wrangler pages dev dist"
   },
   "overrides": {
     "dexie": "^4.0.10",
@@ -85,7 +87,6 @@
     "@tanstack/react-router": "^1.143.11",
     "@tanstack/react-virtual": "^3.13.14",
     "@tanstack/router-vite-plugin": "^1.139.14",
-    "@vercel/analytics": "^1.6.1",
     "@vercel/sdk": "^1.18.2",
     "@vidstack/react": "^1.12.13",
     "@zip.js/zip.js": "^2.7.62",
@@ -187,7 +188,8 @@
     "typescript-eslint": "^8.31.1",
     "vite": "^6.3.5",
     "vite-plugin-node-polyfills": "^0.24.0",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "wrangler": "^4.59.2"
   },
   "engines": {
     "node": ">=22.19.0"

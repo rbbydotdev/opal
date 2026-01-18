@@ -1,0 +1,3 @@
+# Custom headers for Cloudflare Pages
+/*
+  Service-Worker-Allowed: /

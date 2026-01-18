@@ -324,8 +324,8 @@ export const DocsPageBody = () => {
             <div className="space-y-6">
               <div className="flex justify-center">
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-wide/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/create-workspace-wide/thumbnails.vtt"
+                  src="https://video.opaledx.com/videos/create-workspace-wide/stream.m3u8"
+                  thumbnails="https://video.opaledx.com/videos/create-workspace-wide/thumbnails.vtt"
                   title="Create Workspace"
                   caption="Step-by-step guide to creating your first workspace"
                 />
@@ -365,8 +365,8 @@ export const DocsPageBody = () => {
               <div className="flex justify-center">
                 {/* */}
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/git-add-remote-wide/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/git-add-remote-wide/thumbnails.vtt"
+                  src="https://video.opaledx.com/videos/git-add-remote-wide/stream.m3u8"
+                  thumbnails="https://video.opaledx.com/videos/git-add-remote-wide/thumbnails.vtt"
                   caption="How to connect your workspace to GitHub"
                   title="Add GitHub Remote"
                 />
@@ -398,8 +398,8 @@ export const DocsPageBody = () => {
             <div className="space-y-6">
               <div className="flex justify-center">
                 <VideoPlayerFigure
-                  src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish-wide/stream.m3u8"
-                  thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/build-and-publish-wide/thumbnails.vtt"
+                  src="https://video.opaledx.com/videos/build-and-publish-wide/stream.m3u8"
+                  thumbnails="https://video.opaledx.com/videos/build-and-publish-wide/thumbnails.vtt"
                   caption="Complete workflow from build to live deployment"
                   title="Build and Publish"
                 />
@@ -752,8 +752,8 @@ export const DocsPageBody = () => {
               See live previews of your CSS styling and background patterns as you edit.
             </p>
             <VideoPlayerFigure
-              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/stream.m3u8"
-              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/preview-css-background/thumbnails.vtt"
+              src="https://video.opaledx.com/videos/preview-css-background/stream.m3u8"
+              thumbnails="https://video.opaledx.com/videos/preview-css-background/thumbnails.vtt"
               title="Preview CSS Styling"
               caption="Preview CSS Styling"
               className="max-w-[600px]"
@@ -786,8 +786,8 @@ export const DocsPageBody = () => {
               command palette.
             </p>
             <VideoPlayerFigure
-              src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/stream.m3u8"
-              thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/theme-select/thumbnails.vtt"
+              src="https://video.opaledx.com/videos/theme-select/stream.m3u8"
+              thumbnails="https://video.opaledx.com/videos/theme-select/thumbnails.vtt"
               title="Theme Select"
               className="max-w-[600px] my-4"
             />
@@ -1024,8 +1024,8 @@ export const DocsPageBody = () => {
 
           <VideoPlayerFigure
             caption="Searching across all files in the workspace with regex support"
-            src="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-wide/stream.m3u8"
-            thumbnails="https://pub-d8a7f3e39c4e457da52f43047c6edf27.r2.dev/videos/search-wide/thumbnails.vtt"
+            src="https://video.opaledx.com/videos/search-wide/stream.m3u8"
+            thumbnails="https://video.opaledx.com/videos/search-wide/thumbnails.vtt"
             title="Search Across Workspaces"
             className="max-w-[600px]"
           />
