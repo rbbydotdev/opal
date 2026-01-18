@@ -136,7 +136,10 @@ export class VercelClient {
     }
   }
 
-  async deploy({ projectName, files }: { projectName: string; files: UniversalDeployFile[] }, { signal }: { signal?: AbortSignal } = {}) {
+  async deploy(
+    { projectName, files }: { projectName: string; files: UniversalDeployFile[] },
+    { signal }: { signal?: AbortSignal } = {}
+  ) {
     // Convert raw file objects to Vercel's InlinedFile format
     const inlinedFiles: InlinedFile[] = await Promise.all(
       files.map(
@@ -148,22 +151,25 @@ export class VercelClient {
       )
     );
 
-    const deployment = await this.vercel.deployments.createDeployment({
-      requestBody: {
-        name: projectName,
-        files: inlinedFiles,
-        projectSettings: {
-          framework: null,
-          buildCommand: null,
-          outputDirectory: ".",
-          installCommand: null,
-          devCommand: null,
-          rootDirectory: null,
+    const deployment = await this.vercel.deployments.createDeployment(
+      {
+        requestBody: {
+          name: projectName,
+          files: inlinedFiles,
+          projectSettings: {
+            framework: null,
+            buildCommand: null,
+            outputDirectory: ".",
+            installCommand: null,
+            devCommand: null,
+            rootDirectory: null,
+          },
         },
       },
-    }, {
-      signal,
-    });
+      {
+        signal,
+      }
+    );
 
     return deployment;
   }

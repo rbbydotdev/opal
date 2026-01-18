@@ -171,7 +171,12 @@ export const DocsPageBody = () => {
   }, [isMobile, left]);
   return (
     <>
-      <div className="mb-16 relative flex justify-center items-center w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-border/50">
+      <div
+        className={cn(
+          "mb-16 relative flex justify-center items-center w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-border/50",
+          { "ml-2": isMobile }
+        )}
+      >
         <div
           style={{
             backgroundImage: "url('/opal.svg')",
