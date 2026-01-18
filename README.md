@@ -1,8 +1,17 @@
 <p align="center"><img src="public/opal-circle.svg"  alt="Opal Editor" width="200"></p>
 
+
+
 # Opal
 
 A local-first markdown editor and static publisher—no-server-required, Git-aware, with complete self-custody and zero backend dependencies.
+
+---
+
+<p align="center"><a href="https://discord.gg/stmxJYPPxu"><img src="https://img.shields.io/badge/join_me_on-discord-blue?logo=discord&logoColor=white&color=%235865F2">
+</a></p>
+
+
 
 ## Features
 
