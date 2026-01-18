@@ -105,28 +105,14 @@ function DocsSidebar() {
   };
 
   useEffect(() => {
-    // Find the main content scroll container - it's inside EditorSidebarLayout
-    const findScrollContainer = () => {
-      // The main content area with overflow-auto
-      const containers = document.querySelectorAll(".h-full.overflow-auto");
-      // Find the one that contains the docs content (not the sidebar)
-      for (let i = 0; i < containers.length; i++) {
-        const container = containers[i] as HTMLElement;
-        if (container.querySelector("#introduction")) {
-          return container;
-        }
-      }
-      return null;
-    };
-
-    const scrollContainer = findScrollContainer();
+    const scrollContainer = document.querySelector("[data-docs-page-main]");
     if (!scrollContainer) {
       console.warn("Docs scroll container not found");
       return;
     }
 
     // Store in ref for use by other functions
-    scrollContainerRef.current = scrollContainer;
+    scrollContainerRef.current = scrollContainer! as HTMLElement;
 
     const handleScroll = () => {
       // If we're doing a programmatic scroll, ignore all scroll events
@@ -278,7 +264,7 @@ function DocsPage() {
           floatSidebar={isMobile}
           sidebar={<DocsSidebar />}
           main={
-            <div className="h-full overflow-auto overflow-x-clip p-0 md:p-8">
+            <div data-docs-page-main className="h-full overflow-auto overflow-x-clip p-0 md:p-8">
               <DocsPageBody />
             </div>
           }

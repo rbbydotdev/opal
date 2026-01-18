@@ -122,7 +122,7 @@ export const Section = ({
     {title && (
       <div className="mb-8">
         <h2
-          className="text-3xl pl-12 sm:pl-0 font-bold mb-2 text-foreground border-l-4 border-l-primary p-4 bg-primary/5"
+          className="text-3xl pl-12  font-bold mb-2 text-foreground border-l-4 border-l-primary p-4 bg-primary/5"
           id={id || title.toLowerCase().replace(/ /g, "-")}
         >
           {title}
@@ -147,7 +147,7 @@ export const SubSection = ({
 }) => (
   <div className={cn("my-8", className)}>
     <h3
-      className="text-2xl pl-12 sm:pl-0 font-semibold mb-6 text-foreground flex items-center gap-2"
+      className="text-2xl pl-12 font-semibold mb-6 text-foreground flex items-center gap-2"
       id={id || title.toLowerCase().replace(/ /g, "-")}
     >
       {title}
