@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { DocsPageBody } from "@/docs/page";
+import { useIsMobileAgent } from "@/features/compat-checker/CompatChecker";
 import { SpotlightSearch } from "@/features/spotlight/SpotlightSearch";
 import { useHomeSpotlightCommands } from "@/features/spotlight/useHomeSpotlightCommands";
 import { EditorSidebarLayout, useSidebarPanes } from "@/layouts/EditorSidebarLayout";
@@ -154,7 +155,10 @@ function DocsSidebar() {
     };
   }, []);
 
+  const isMobile = useIsMobileAgent();
+
   const scrollToSection = (id: string) => {
+    left.setIsCollapsed(true);
     // Optimistically set the active section immediately
     setActiveSection(id);
 
@@ -183,15 +187,26 @@ function DocsSidebar() {
   };
 
   return (
-    <div className="h-full bg-sidebar p-4 overflow-auto">
+    <div className="docs-sidebar h-full bg-sidebar p-4 overflow-auto">
       <div className="flex items-center gap-2 mb-6 px-2">
-        <BookOpen className="w-5 h-5 text-primary" />
+        <BookOpen className="w-5 h-5 text-primary flex-shrink-0" />
         <h2 className="font-semibold text-lg">Opal Documentation</h2>
         <Button variant="ghost" size="sm" onClick={() => left.setIsCollapsed(true)} className="ml-auto">
           <X />
         </Button>
       </div>
-      <nav className="space-y-1">
+      <nav
+        className="space-y-1"
+        tabIndex={0}
+        onBlur={(e) => {
+          if (isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
+            left.setIsCollapsed(true);
+          }
+        }}
+        ref={(el) => {
+          if (isMobile) el?.focus();
+        }}
+      >
         {sections.map((section) => {
           const hasSubsections = section.subsections && section.subsections.length > 0;
           const isActive = isSectionOrSubsectionActive(section);
@@ -254,10 +269,13 @@ function DocsSidebar() {
 function DocsPage() {
   const { cmdMap, commands } = useHomeSpotlightCommands();
 
+  const isMobile = useIsMobileAgent();
+
   return (
     <>
       <div className="min-w-0 h-full flex w-full">
         <EditorSidebarLayout
+          floatSidebar={isMobile}
           sidebar={<DocsSidebar />}
           main={
             <div className="h-full overflow-auto p-0 md:p-8">

@@ -2,6 +2,7 @@ import { MadeByMe } from "@/components/MadeByMe";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/features/local-storage/useLocalStorage";
 import { WS_BUTTON_BAR_ID } from "@/layouts/layout";
+import { cn } from "@/lib/utils";
 import { PanelLeft } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -99,13 +100,13 @@ export const EditorSidebarLayout = ({
   sidebar,
   main,
   rightPane,
-  // renderHiddenSidebar,
+  floatSidebar = false,
   rightPaneEnabled = true,
 }: {
   sidebar: React.ReactNode;
   main: React.ReactNode;
   rightPane?: React.ReactNode;
-  // renderHiddenSidebar?: boolean;
+  floatSidebar?: boolean;
   rightPaneEnabled?: boolean;
 }) => {
   // --- Pane States (persisted) ---
@@ -266,7 +267,9 @@ export const EditorSidebarLayout = ({
         <aside
           ref={sidebarRef}
           style={{ width: `${currentDisplayWidth}px` }}
-          className="relative flex-shrink-0 overflow-y-auto"
+          className={cn("relative flex-shrink-0 overflow-y-auto", {
+            "absolute z-50 h-full": floatSidebar,
+          })}
         >
           {sidebar}
         </aside>
@@ -284,7 +287,7 @@ export const EditorSidebarLayout = ({
         ></div>
         <main className="relative min-w-32 flex-col flex flex-grow overflow-hidden">
           {panes.left.isCollapsed && (
-            <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg  scale-75 -translate-x-6 -translate-y-2 sm:scale-100 sm:translate-x-0 sm:translate-y-0">
+            <div className="absolute top-0 left-0 pl-2 bg-card p-1 z-50 flex aspect-square h-12 w-12 items-center justify-center rounded-r-lg  scale-75 -translate-x-4 -translate-y-2 sm:scale-100 sm:translate-x-0 sm:translate-y-0">
               <Button
                 onClick={() => panes.left.setIsCollapsed(false)}
                 title="Show sidebar (Cmd+B)"

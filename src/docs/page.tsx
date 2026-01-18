@@ -1,6 +1,6 @@
 import { OpalSvg } from "@/components/OpalSvg";
 import { Button } from "@/components/ui/button";
-import { useBrowserCompat } from "@/features/compat-checker/CompatChecker";
+import { useIsMobileAgent } from "@/features/compat-checker/CompatChecker";
 import MDIcon from "@/icons/md.svg?react";
 import { useSidebarPanes } from "@/layouts/EditorSidebarLayout";
 import { useThemeContext } from "@/layouts/ThemeContext";
@@ -159,12 +159,7 @@ export const SubSection = ({
 export const DocsPageBody = () => {
   //hide left sidebar for mobile, quick hack
   const { mode } = useThemeContext();
-  // const isMobile = useIsMobile();
-  const {
-    capabilities: { isDesktopBrowser },
-  } = useBrowserCompat();
-  //shrink for mobile, quick ugly hack
-  const isMobile = !isDesktopBrowser; //useIsMobile();
+  const isMobile = useIsMobileAgent();
   const { left } = useSidebarPanes();
   const mounted = useRef(false);
   useLayoutEffect(() => {
