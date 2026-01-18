@@ -41,7 +41,7 @@ A local-first markdown editor and static publisher—no-server-required, Git-awa
 
 Visit **[opaledx.com](https://opaledx.com)** to start writing.
 
-**[Read the full documentation](https://opaledx.com/docs)**
+**[Read the full documentation](https://opaledx.com/docs/)**
 
 ## Development
 
