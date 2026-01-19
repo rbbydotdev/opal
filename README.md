@@ -12,8 +12,8 @@ A local-first markdown editor and static publisher—no-server-required, Git-awa
 <p align="center"><a href="https://discord.gg/stmxJYPPxu"><img src="https://img.shields.io/discord/1462443556152017094?color=%235865F2&label=Discord&logo=discord&logoColor=%23fff" alt="Join us on Discord">
 </a> 
 <img src="https://img.shields.io/badge/PRs-welcome-blue.svg" alt="PRs welcome">
-<img src="https://img.shields.io/twitter/follow/rbbydotdev?style=social" alt="Follow on X">
-</p>
+<a href="https://x.com/rbbydotdev"><img src="https://img.shields.io/twitter/follow/rbbydotdev?style=social" alt="Follow on X">
+</a></p>
 
 
 
