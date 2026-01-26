@@ -144,7 +144,7 @@ function DocsSidebar() {
   const isMobile = useIsMobileAgent();
 
   const scrollToSection = (id: string) => {
-    left.setIsCollapsed(true);
+    if (isMobile) left.setIsCollapsed(true);
     // Optimistically set the active section immediately
     setActiveSection(id);
 

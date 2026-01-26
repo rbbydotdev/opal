@@ -591,7 +591,7 @@ function SidebarTreeViewMenuContent({
                         >
                           <HighlightNodeSelector getDOMNode={() => getDOMNode(displayNode.lexicalNodeId)}>
                             <div className="hover:underline flex gap-2" title={displayNode.type}>
-                              <div className="w-20 truncate">{displayNode.displayText ?? displayNode.type}</div>
+                              <div className="w-full truncate">{displayNode.displayText ?? displayNode.type}</div>
                               {displayNode.children && displayNode.children.length > 0 ? (
                                 <div className="text-xs text-muted-foreground">({displayNode.children.length})</div>
                               ) : null}

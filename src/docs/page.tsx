@@ -445,7 +445,7 @@ export const DocsPageBody = () => {
             Once your workspace is created, start writing in markdown. Use rich text mode for a visual editing
             experience or source mode for direct markdown editing.
           </p>
-          <DocImage src="/docs/hello-editor.svg" className="w-[40rem]" />
+          <DocImage src="/docs-assets/hello-editor.svg" className="w-[40rem]" />
         </div>
 
         <div className="bg-card border border-border rounded-lg p-8 mb-8">
@@ -524,7 +524,7 @@ export const DocsPageBody = () => {
                 </ul>
               </div>
               <div className="flex justify-center items-center">
-                <DocImage src="/docs/md-arrow.svg" className="max-w-72" />
+                <DocImage src="/docs-assets/md-arrow.svg" className="max-w-72" />
               </div>
             </div>
           </div>
@@ -539,7 +539,7 @@ export const DocsPageBody = () => {
                   Structured editing with intuitive toolbar for headings, lists, dividers, and more.
                 </p>
               </div>
-              <DocImage src="/docs/rich-text-tools.svg" />
+              <DocImage src="/docs-assets/rich-text-tools.svg" />
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
@@ -550,7 +550,7 @@ export const DocsPageBody = () => {
               <p className="text-muted-foreground mb-4">
                 Every change captured with browsable history. Preview and restore previous edits with confirmation.
               </p>
-              <DocImage src="/docs/history-abbrv.svg" className="w-full" />
+              <DocImage src="/docs-assets/history-abbrv.svg" className="w-full" />
             </div>
           </div>
 
@@ -564,7 +564,7 @@ export const DocsPageBody = () => {
                   Visualize document hierarchy with the tree view. Click elements to navigate, drag to reorder sections.
                 </p>
               </div>
-              <DocImage src="/docs/markdown-tree.svg" className="w-96" />
+              <DocImage src="/docs-assets/markdown-tree.svg" className="w-96" />
             </div>
           </div>
           <div className="bg-card border border-border rounded-lg p-6 my-8">
@@ -576,7 +576,7 @@ export const DocsPageBody = () => {
               <div className="flex flex-col justify-between">
                 <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
               </div>
-              <DocImage src="/docs/hash-headings.svg" className="w-72" />
+              <DocImage src="/docs-assets/hash-headings.svg" className="w-72" />
             </div>
           </div>
         </SubSection>
@@ -587,7 +587,7 @@ export const DocsPageBody = () => {
                 <Code2 className="text-primary" /> Source Mode
               </h4>
               <p className="text-muted-foreground mb-4">Edit markdown source directly with CodeMirror</p>
-              <DocImage src="/docs/hash-headings.svg" className="h-72" />
+              <DocImage src="/docs-assets/hash-headings.svg" className="h-72" />
             </div> */}
         <SubSection title="Importing Files" id="importing-files">
           <div className="bg-card border border-border rounded-lg p-2 md:p-6 mb-8">
@@ -677,7 +677,7 @@ export const DocsPageBody = () => {
                 </ul>
               </div>
               <div>
-                <DocImage src="/docs/add-image.svg" className="h-48" />
+                <DocImage src="/docs-assets/add-image.svg" className="h-48" />
               </div>
             </div>
           </div>
@@ -690,7 +690,7 @@ export const DocsPageBody = () => {
               <p className="text-muted-foreground mb-4">
                 Drag images directly into the editor for instant embedding with automatic optimization.
               </p>
-              <DocImage src="/docs/dnd-image.svg" className="h-72" />
+              <DocImage src="/docs-assets/dnd-image.svg" className="h-72" />
             </div>
           </div>
 
@@ -828,7 +828,7 @@ export const DocsPageBody = () => {
                   navigation support.
                 </p>
               </div>
-              <DocImage src="/docs/file-tree.svg" className="h-72" />
+              <DocImage src="/docs-assets/file-tree.svg" className="h-72" />
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
@@ -843,7 +843,7 @@ export const DocsPageBody = () => {
                 </p>
               </div>
               <div className="h-full flex justify-center items-center">
-                <DocImage src="/docs/trash-banner.svg" className="h-48" />
+                <DocImage src="/docs-assets/trash-banner.svg" className="h-48" />
               </div>
             </div>
           </div>
@@ -993,7 +993,7 @@ export const DocsPageBody = () => {
             Search across all files with regex support. Keyboard shortcut Cmd/Ctrl + P for spotlight search with fuzzy
             matching.
           </p>
-          <DocImage src="/docs/search-doc.svg" className="h-72" />
+          <DocImage src="/docs-assets/search-doc.svg" className="h-72" />
         </div>
 
         <div>
@@ -1001,7 +1001,7 @@ export const DocsPageBody = () => {
           <p className="text-muted-foreground mb-4">
             Quick access to theme switching, developer mode, zoom controls, and workspace management.
           </p>
-          <DocImage src="/docs/stone-menu.svg" className="h-72" />
+          <DocImage src="/docs-assets/stone-menu.svg" className="h-72" />
         </div>
       </div> */}
 
@@ -1020,7 +1020,7 @@ export const DocsPageBody = () => {
                   to open search.
                 </p>
               </div>
-              <DocImage src="/docs/search-doc.svg" className="h-72" />
+              <DocImage src="/docs-assets/search-doc.svg" className="h-72" />
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6 flex justify-between flex-col">
@@ -1034,7 +1034,7 @@ export const DocsPageBody = () => {
                 </p>
               </div>
               <div className="h-full flex justify-center items-center">
-                <DocImage src="/docs/stone-menu-2.svg" className="h-72" />
+                <DocImage src="/docs-assets/stone-menu-2.svg" className="h-72" />
               </div>
             </div>
           </div>
@@ -1286,7 +1286,7 @@ export const DocsPageBody = () => {
             When merge conflicts occur, Opal provides a visual editor to resolve them directly in the browser. Choose
             between incoming changes, current changes, or edit manually to resolve conflicts.
           </p>
-          <DocImage src="/docs/git-version-control.svg" className="w-[40rem]" />
+          <DocImage src="/docs-assets/git-version-control.svg" className="w-[40rem]" />
         </div>
 
         <div className="bg-accent/10 border border-accent/50 rounded-lg p-6">
@@ -1415,7 +1415,7 @@ export const DocsPageBody = () => {
                 </ul>
               </div>
               <div className="flex items-center justify-center">
-                <DocImage src="/docs/my-build-2.svg" className="w-full" />
+                <DocImage src="/docs-assets/my-build-2.svg" className="w-full" />
               </div>
             </div>
           </div>
@@ -1597,7 +1597,7 @@ export const DocsPageBody = () => {
                 </p>
               </div>
               <div className="flex items-center justify-center">
-                <DocImage src="/docs/publish-providers-2.svg" className="w-full" />
+                <DocImage src="/docs-assets/publish-providers-2.svg" className="w-full" />
               </div>
             </div>
           </div>
