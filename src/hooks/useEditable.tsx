@@ -141,10 +141,8 @@ export function useEditable<T extends TreeFile | TreeDir>({
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      // e.stopPropagation();
-      if (virtual) {
-        currentWorkspace.removeVirtualfile(virtual);
-      }
+      if (virtual) currentWorkspace.removeVirtualfile(virtual);
+
       setFileName(relPath(basename(fullPath)));
       setFileTreeCtx({
         anchorIndex: -1,

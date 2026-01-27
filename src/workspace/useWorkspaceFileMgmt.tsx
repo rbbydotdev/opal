@@ -356,17 +356,13 @@ export function useWorkspaceFileMgmt(currentWorkspace: Workspace, { tossError = 
         const wantPath = joinPath(dirname(origNode.path), relPath(fileName));
         if (type === "new") {
           if (origNode.isTreeFile()) {
-            return (
-              (await newFile(
-                wantPath,
-                origNode.isTreeNodeWithContent()
-                  ? await origNode.virtualContent()
-                  : defaultFileContentFromPath(wantPath),
-                {
-                  redirect: true,
-                }
-              )) ?? null
-            );
+            const content = origNode.isTreeNodeWithContent()
+              ? await origNode.virtualContent()
+              : defaultFileContentFromPath(wantPath);
+            const filePath = await newFile(wantPath, content, {
+              redirect: true,
+            });
+            return filePath ?? null;
           } else {
             return newDir(wantPath);
           }

@@ -202,6 +202,16 @@ export abstract class BaseFileTree<TRoot extends TreeDir = TreeDir> {
     return result;
   };
 
+  removeVirtualNodeByPath(path: AbsPath) {
+    const node = this.map.get(path);
+    if (node && node.isVirtual) {
+      this.removeSelfByPathFromParent(path, node);
+      this.map.delete(path);
+      return true;
+    }
+    return false;
+  }
+
   removeNodeByPath(path: AbsPath) {
     const node = this.map.get(path);
     if (node) {

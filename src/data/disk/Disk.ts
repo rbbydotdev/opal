@@ -156,7 +156,9 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
 
   latestIndexListener(callback: (fileTree: TreeDir, trigger?: IndexTrigger | void) => void) {
+    //on first call, emit current index if available
     if (this.fileTree.initialIndex) callback(this.fileTree.root);
+    //listen for future updates
     return OmniBus.onType<DiskEventsLocalFullPayload, "index">(Disk.IDENT, "index", async (trigger) => {
       if (trigger.diskId === this.guid) {
         // Same disk, different instance = cross-instance event
@@ -520,9 +522,9 @@ export abstract class Disk<TContext extends DiskContext = DiskContext> {
   }
 
   removeVirtualFile(path: AbsPath) {
-    this.fileTree.removeNodeByPath(path);
+    this.fileTree.removeVirtualNodeByPath(path);
     //TODO donno why indexing
-    void this.local.emit(DiskEvents.INDEX);
+    this.local.emit(DiskEvents.INDEX);
   }
 
   addVirtualFile(options: {
